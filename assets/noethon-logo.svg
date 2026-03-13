@@ -1,0 +1,22 @@
+<svg width="320" height="120" viewBox="0 0 320 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="noethonBlue" x1="68" y1="10" x2="140" y2="88" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7BD4FF"/>
+      <stop offset="0.45" stop-color="#2E8BFF"/>
+      <stop offset="1" stop-color="#0D4F87"/>
+    </linearGradient>
+    <filter id="glow" x="42" y="0" width="118" height="98" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="7" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#glow)">
+    <path d="M58 16H84V61.3L112.4 16H138V86H112V40.7L83.8 86H58V16Z" fill="url(#noethonBlue)"/>
+    <path d="M73 31H84V69H73V31Z" fill="#0A2944" fill-opacity="0.88"/>
+    <path d="M123 31H112V69H123V31Z" fill="#0A2944" fill-opacity="0.88"/>
+  </g>
+  <text x="160" y="74" fill="#78AEE0" font-family="Space Grotesk, Arial, sans-serif" font-size="34" letter-spacing="11">NOETHON</text>
+</svg>
