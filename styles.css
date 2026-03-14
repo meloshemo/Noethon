@@ -260,11 +260,13 @@ h2 {
   font-size: clamp(2.2rem, 5vw, 4.1rem);
   letter-spacing: -0.06em;
   color: var(--text-dark);
+  font-weight: 700;
 }
 
 h3 {
   font-size: 1.5rem;
   letter-spacing: -0.04em;
+  font-weight: 700;
 }
 
 .hero-text,
@@ -434,6 +436,14 @@ h3 {
   color: rgba(17, 22, 29, 0.62);
 }
 
+.editorial-section .section-heading .eyebrow,
+.thesis-section .section-heading .eyebrow,
+.contact-section .section-heading .eyebrow,
+.platform-section .section-heading .eyebrow,
+.roadmap-section .section-heading .eyebrow {
+  color: #215f66;
+}
+
 .stack-secondary strong {
   display: block;
   font-size: 1.35rem;
@@ -490,7 +500,7 @@ h3 {
 }
 
 .light-section h2 {
-  color: var(--text-light);
+  color: inherit;
 }
 
 .editorial-layout,
@@ -511,13 +521,17 @@ h3 {
   box-shadow: var(--shadow-soft);
 }
 
+.statement-card p {
+  color: rgba(17, 22, 29, 0.84);
+}
+
 .statement-card.subtle {
   background: rgba(255, 250, 244, 0.68);
 }
 
 .platform-section,
 .roadmap-section {
-  color: var(--text-light);
+  color: var(--text-dark);
 }
 
 .platform-grid,
@@ -537,6 +551,14 @@ h3 {
   padding: 26px;
 }
 
+.platform-section .section-heading h2,
+.roadmap-section .section-heading h2,
+.editorial-section .section-heading h2,
+.thesis-section .section-heading h2,
+.contact-section .section-heading h2 {
+  color: var(--text-dark);
+}
+
 .dark-card {
   background: linear-gradient(180deg, #13202c, #0c141c);
 }
@@ -547,10 +569,7 @@ h3 {
 .glow-card h3,
 .investor-copy p,
 .investor-grid article,
-.manifesto-card,
-.roadmap-grid article,
-.roadmap-grid h3,
-.roadmap-grid p {
+.manifesto-card {
   color: var(--text-light);
 }
 
@@ -580,7 +599,7 @@ h3 {
 }
 
 .thesis-copy p {
-  color: var(--muted-dark);
+  color: rgba(17, 22, 29, 0.82);
 }
 
 .thesis-panel {
@@ -596,6 +615,21 @@ h3 {
 }
 
 .thesis-panel article strong {
+  color: var(--text-dark);
+}
+
+.roadmap-grid article {
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--shadow-soft);
+  color: var(--text-dark);
+}
+
+.roadmap-grid span {
+  color: rgba(17, 22, 29, 0.56);
+}
+
+.roadmap-grid h3,
+.roadmap-grid p {
   color: var(--text-dark);
 }
 
