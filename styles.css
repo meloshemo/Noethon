@@ -53,12 +53,16 @@ body {
 .cursor-glow {
   position: fixed;
   inset: auto auto 0 0;
-  width: 280px;
-  height: 280px;
+  width: 420px;
+  height: 420px;
   border-radius: 999px;
   pointer-events: none;
-  background: radial-gradient(circle, rgba(43, 134, 255, 0.1), transparent 68%);
-  filter: blur(20px);
+  background:
+    radial-gradient(circle, rgba(66, 208, 201, 0.18) 0%, rgba(66, 208, 201, 0.1) 18%, transparent 48%),
+    radial-gradient(circle, rgba(43, 134, 255, 0.24) 0%, rgba(43, 134, 255, 0.14) 26%, transparent 70%);
+  filter: blur(28px);
+  opacity: 0.95;
+  mix-blend-mode: screen;
   transform: translate(-50%, -50%);
   z-index: 0;
 }
