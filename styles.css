@@ -438,8 +438,11 @@ h3 {
 
 .editorial-section .section-heading .eyebrow,
 .thesis-section .section-heading .eyebrow,
+.platform-section .section-heading .eyebrow {
+  color: #3fb8bf;
+}
+
 .contact-section .section-heading .eyebrow,
-.platform-section .section-heading .eyebrow,
 .roadmap-section .section-heading .eyebrow {
   color: #215f66;
 }
@@ -559,12 +562,15 @@ h3 {
   padding: 26px;
 }
 
-.platform-section .section-heading h2,
 .roadmap-section .section-heading h2,
-.editorial-section .section-heading h2,
-.thesis-section .section-heading h2,
 .contact-section .section-heading h2 {
   color: var(--text-dark);
+}
+
+.editorial-section .section-heading h2,
+.platform-section .section-heading h2,
+.thesis-section .section-heading h2 {
+  color: var(--text-light);
 }
 
 .dark-card {
@@ -603,11 +609,11 @@ h3 {
 
 .thesis-copy {
   max-width: 62ch;
-  color: var(--text-dark);
+  color: var(--text-light);
 }
 
 .thesis-copy p {
-  color: rgba(13, 19, 26, 0.9);
+  color: rgba(245, 239, 231, 0.82);
 }
 
 .thesis-copy p + p {
