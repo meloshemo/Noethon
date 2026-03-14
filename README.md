@@ -54,7 +54,7 @@ GitHub Pages is the best fit for the current stage because:
 - If you later move to Vercel or Netlify, the site structure can stay almost exactly the same.
 
 ## Custom Domain
-- Current custom domain target: `notheon.com`
+- Current custom domain target: `noethon.com`
 - GitHub Pages will use the included `CNAME` file during deployment.
 - After DNS is configured, set the custom domain in `Settings > Pages` and enable HTTPS.
 

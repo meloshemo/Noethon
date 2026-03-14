@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://notheon.com/sitemap.xml
+Sitemap: https://noethon.com/sitemap.xml
