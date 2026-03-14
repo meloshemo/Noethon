@@ -1,14 +1,14 @@
 :root {
   --bg-ink: #070d14;
   --bg-ocean: #0c1825;
-  --bg-paper: #efe7dc;
-  --paper-strong: #faf5ee;
+  --bg-paper: #f5efe7;
+  --paper-strong: #fffaf4;
   --text-light: #f5efe7;
-  --text-dark: #11161d;
+  --text-dark: #0d131a;
   --muted-light: rgba(245, 239, 231, 0.72);
-  --muted-dark: rgba(17, 22, 29, 0.68);
+  --muted-dark: rgba(13, 19, 26, 0.8);
   --line: rgba(255, 255, 255, 0.12);
-  --line-dark: rgba(17, 22, 29, 0.08);
+  --line-dark: rgba(13, 19, 26, 0.12);
   --blue: #2b86ff;
   --blue-soft: #80cbff;
   --teal: #42d0c9;
@@ -44,7 +44,7 @@ body {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  opacity: 0.09;
+  opacity: 0.045;
   background-image: radial-gradient(rgba(255, 255, 255, 0.6) 0.45px, transparent 0.45px);
   background-size: 10px 10px;
   mix-blend-mode: soft-light;
@@ -57,7 +57,7 @@ body {
   height: 280px;
   border-radius: 999px;
   pointer-events: none;
-  background: radial-gradient(circle, rgba(43, 134, 255, 0.18), transparent 68%);
+  background: radial-gradient(circle, rgba(43, 134, 255, 0.1), transparent 68%);
   filter: blur(20px);
   transform: translate(-50%, -50%);
   z-index: 0;
@@ -495,6 +495,13 @@ h3 {
   margin-bottom: 30px;
 }
 
+.editorial-section .section-heading,
+.thesis-section .section-heading,
+.roadmap-section .section-heading,
+.contact-section .section-heading {
+  margin-bottom: 34px;
+}
+
 .section-heading.compact {
   grid-template-columns: 1fr;
 }
@@ -516,17 +523,18 @@ h3 {
 
 .statement-card {
   padding: 34px;
-  background: rgba(255, 255, 255, 0.84);
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(13, 19, 26, 0.08);
   color: var(--text-dark);
   box-shadow: var(--shadow-soft);
 }
 
 .statement-card p {
-  color: rgba(17, 22, 29, 0.84);
+  color: rgba(13, 19, 26, 0.9);
 }
 
 .statement-card.subtle {
-  background: rgba(255, 250, 244, 0.68);
+  background: rgba(255, 250, 244, 0.92);
 }
 
 .platform-section,
@@ -599,7 +607,11 @@ h3 {
 }
 
 .thesis-copy p {
-  color: rgba(17, 22, 29, 0.82);
+  color: rgba(13, 19, 26, 0.9);
+}
+
+.thesis-copy p + p {
+  margin-top: 18px;
 }
 
 .thesis-panel {
@@ -609,7 +621,8 @@ h3 {
 
 .thesis-panel article {
   padding: 22px;
-  background: rgba(255, 255, 255, 0.86);
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(13, 19, 26, 0.08);
   color: var(--text-dark);
   box-shadow: var(--shadow-soft);
 }
@@ -619,18 +632,23 @@ h3 {
 }
 
 .roadmap-grid article {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(13, 19, 26, 0.08);
   box-shadow: var(--shadow-soft);
   color: var(--text-dark);
 }
 
 .roadmap-grid span {
-  color: rgba(17, 22, 29, 0.56);
+  color: rgba(13, 19, 26, 0.62);
 }
 
 .roadmap-grid h3,
 .roadmap-grid p {
   color: var(--text-dark);
+}
+
+.roadmap-grid p {
+  color: rgba(13, 19, 26, 0.88);
 }
 
 .thesis-panel article.active {
@@ -689,9 +707,14 @@ h3 {
   max-width: 760px;
   padding: 30px;
   border-radius: 28px;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(13, 19, 26, 0.08);
   color: var(--text-dark);
   box-shadow: var(--shadow-soft);
+}
+
+.contact-card p {
+  color: rgba(13, 19, 26, 0.88);
 }
 
 .contact-card a {
