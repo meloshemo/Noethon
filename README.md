@@ -53,6 +53,11 @@ GitHub Pages is the best fit for the current stage because:
 - When you buy the domain, add a `CNAME` file and update GitHub Pages custom domain settings.
 - If you later move to Vercel or Netlify, the site structure can stay almost exactly the same.
 
+## Custom Domain
+- Current custom domain target: `notheon.com`
+- GitHub Pages will use the included `CNAME` file during deployment.
+- After DNS is configured, set the custom domain in `Settings > Pages` and enable HTTPS.
+
 ## Notes
 - Replace hello@noethon.com with the final working address.
 - Add the final claimed LinkedIn/social links before publishing.

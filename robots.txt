@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://meloshemo.github.io/Noethon/sitemap.xml
+Sitemap: https://notheon.com/sitemap.xml
