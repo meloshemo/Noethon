@@ -60,10 +60,11 @@ body {
   background:
     radial-gradient(circle, rgba(66, 208, 201, 0.24) 0%, rgba(66, 208, 201, 0.12) 16%, rgba(66, 208, 201, 0.05) 28%, transparent 52%),
     radial-gradient(circle, rgba(43, 134, 255, 0.32) 0%, rgba(43, 134, 255, 0.2) 22%, rgba(43, 134, 255, 0.08) 38%, transparent 70%),
-    radial-gradient(circle, rgba(7, 13, 20, 0.08) 0%, rgba(7, 13, 20, 0.04) 30%, transparent 62%);
+    radial-gradient(circle, rgba(7, 13, 20, 0.16) 0%, rgba(7, 13, 20, 0.09) 32%, transparent 68%);
   box-shadow:
     0 0 120px rgba(43, 134, 255, 0.18),
-    0 0 180px rgba(66, 208, 201, 0.1);
+    0 0 180px rgba(66, 208, 201, 0.1),
+    0 0 210px rgba(7, 13, 20, 0.14);
   filter: blur(26px);
   opacity: 1;
   mix-blend-mode: normal;
