@@ -53,21 +53,29 @@ body {
 .cursor-glow {
   position: fixed;
   inset: auto auto 0 0;
-  width: 128px;
-  height: 128px;
+  width: 420px;
+  height: 420px;
   border-radius: 999px;
   pointer-events: none;
   background:
-    radial-gradient(circle, rgba(112, 196, 255, 0.42) 0%, rgba(55, 156, 255, 0.26) 20%, rgba(55, 156, 255, 0.12) 38%, rgba(7, 13, 20, 0.05) 52%, transparent 68%);
-  box-shadow:
-    0 0 18px rgba(43, 134, 255, 0.22),
-    0 0 34px rgba(43, 134, 255, 0.12),
-    0 0 42px rgba(7, 13, 20, 0.08);
-  filter: blur(8px);
-  opacity: 0.9;
-  mix-blend-mode: normal;
+    radial-gradient(circle, rgba(66, 208, 201, 0.18) 0%, rgba(66, 208, 201, 0.1) 18%, transparent 48%),
+    radial-gradient(circle, rgba(43, 134, 255, 0.24) 0%, rgba(43, 134, 255, 0.14) 26%, transparent 70%);
+  filter: blur(28px);
+  opacity: 0.95;
+  mix-blend-mode: screen;
   transform: translate(-50%, -50%);
   z-index: 0;
+}
+
+body.cursor-glow-on-light .cursor-glow {
+  background:
+    radial-gradient(circle, rgba(66, 208, 201, 0.18) 0%, rgba(66, 208, 201, 0.11) 18%, transparent 48%),
+    radial-gradient(circle, rgba(43, 134, 255, 0.26) 0%, rgba(43, 134, 255, 0.16) 26%, transparent 70%),
+    radial-gradient(circle, rgba(7, 13, 20, 0.11) 0%, rgba(7, 13, 20, 0.04) 30%, transparent 66%);
+  box-shadow:
+    0 0 96px rgba(43, 134, 255, 0.12),
+    0 0 120px rgba(7, 13, 20, 0.08);
+  mix-blend-mode: normal;
 }
 
 .site-shell {

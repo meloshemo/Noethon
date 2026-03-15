@@ -1,6 +1,15 @@
 const yearNode = document.getElementById("year");
 const topbar = document.querySelector("[data-topbar]");
 const cursorGlow = document.querySelector(".cursor-glow");
+const lightGlowSurfaceSelector = [
+  ".roadmap-section",
+  ".contact-section",
+  ".statement-card",
+  ".light-card",
+  ".thesis-panel article",
+  ".roadmap-grid article",
+  ".contact-card",
+].join(", ");
 
 if (yearNode) {
   yearNode.textContent = new Date().getFullYear();
@@ -23,6 +32,10 @@ if (cursorGlow && window.matchMedia("(pointer: fine)").matches) {
     (event) => {
       cursorGlow.style.left = `${event.clientX}px`;
       cursorGlow.style.top = `${event.clientY}px`;
+
+      const hoveredNode = document.elementFromPoint(event.clientX, event.clientY);
+      const isLightSurface = hoveredNode?.closest(lightGlowSurfaceSelector);
+      document.body.classList.toggle("cursor-glow-on-light", Boolean(isLightSurface));
     },
     { passive: true }
   );
