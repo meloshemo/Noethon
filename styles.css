@@ -53,20 +53,20 @@ body {
 .cursor-glow {
   position: fixed;
   inset: auto auto 0 0;
-  width: 420px;
-  height: 420px;
+  width: 280px;
+  height: 280px;
   border-radius: 999px;
   pointer-events: none;
   background:
-    radial-gradient(circle, rgba(66, 208, 201, 0.24) 0%, rgba(66, 208, 201, 0.12) 16%, rgba(66, 208, 201, 0.05) 28%, transparent 52%),
-    radial-gradient(circle, rgba(43, 134, 255, 0.32) 0%, rgba(43, 134, 255, 0.2) 22%, rgba(43, 134, 255, 0.08) 38%, transparent 70%),
-    radial-gradient(circle, rgba(7, 13, 20, 0.16) 0%, rgba(7, 13, 20, 0.09) 32%, transparent 68%);
+    radial-gradient(circle, rgba(66, 208, 201, 0.26) 0%, rgba(66, 208, 201, 0.14) 18%, rgba(66, 208, 201, 0.06) 30%, transparent 54%),
+    radial-gradient(circle, rgba(43, 134, 255, 0.34) 0%, rgba(43, 134, 255, 0.22) 24%, rgba(43, 134, 255, 0.1) 40%, transparent 72%),
+    radial-gradient(circle, rgba(7, 13, 20, 0.14) 0%, rgba(7, 13, 20, 0.08) 34%, transparent 70%);
   box-shadow:
-    0 0 120px rgba(43, 134, 255, 0.18),
-    0 0 180px rgba(66, 208, 201, 0.1),
-    0 0 210px rgba(7, 13, 20, 0.14);
-  filter: blur(26px);
-  opacity: 1;
+    0 0 72px rgba(43, 134, 255, 0.18),
+    0 0 108px rgba(66, 208, 201, 0.1),
+    0 0 124px rgba(7, 13, 20, 0.12);
+  filter: blur(18px);
+  opacity: 0.98;
   mix-blend-mode: normal;
   transform: translate(-50%, -50%);
   z-index: 0;
