@@ -67,6 +67,11 @@
               We connect meter events, field workflows, asset context and service intelligence so operators can move
               faster, respond earlier and manage growth with less fragmentation.
             </p>
+            <div class="hero-trust-strip">
+              <span>Built for grid edge operations</span>
+              <span>Designed for phased deployment</span>
+              <span>Structured for utility teams</span>
+            </div>
             <div class="hero-metrics">
               <article>
                 <strong>4</strong>
@@ -99,14 +104,19 @@
                 <span>NOETHON COMMAND CENTER</span>
                 <span class="surface-state">grid edge live</span>
               </div>
-              <div class="hero-console">
-                <div class="console-main">
+              <div class="hero-console hero-console-serious">
+                <div class="console-main console-main-serious">
                   <div class="console-topline">
                     <span>North corridor utility region</span>
-                    <span>92 active signals</span>
+                    <span>Operational view</span>
                   </div>
-                  <div class="console-map" aria-hidden="true">
+                  <div class="console-map console-map-serious" aria-hidden="true">
                     <div class="map-grid"></div>
+                    <div class="map-zones">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </div>
                     <div class="map-node node-a"></div>
                     <div class="map-node node-b"></div>
                     <div class="map-node node-c"></div>
@@ -114,31 +124,31 @@
                     <div class="map-link link-a"></div>
                     <div class="map-link link-b"></div>
                     <div class="map-link link-c"></div>
-                    <div class="map-pulse"></div>
+                    <div class="map-caption caption-a">Electric service area</div>
+                    <div class="map-caption caption-b">Water response district</div>
+                    <div class="map-caption caption-c">Gas monitoring corridor</div>
                   </div>
-                  <div class="console-chart" aria-hidden="true">
-                    <span class="chart-line chart-line-a"></span>
-                    <span class="chart-line chart-line-b"></span>
-                    <span class="chart-line chart-line-c"></span>
-                    <span class="chart-dot dot-a"></span>
-                    <span class="chart-dot dot-b"></span>
-                    <span class="chart-dot dot-c"></span>
+                  <div class="console-table" aria-hidden="true">
+                    <div><span>Domain</span><span>Status</span><span>Priority</span></div>
+                    <div><span>Electric</span><span>Stable</span><span>High watch</span></div>
+                    <div><span>Water</span><span>Monitored</span><span>Leak queue</span></div>
+                    <div><span>Gas</span><span>Secured</span><span>Routine</span></div>
                   </div>
                 </div>
-                <aside class="console-sidebar">
-                  <div class="sidebar-card">
-                    <span class="sidebar-label">Priority queue</span>
-                    <strong>17 active</strong>
+                <aside class="console-sidebar console-sidebar-serious">
+                  <div class="sidebar-card sidebar-card-list">
+                    <span class="sidebar-label">Active focus</span>
+                    <strong>Regional exception management</strong>
                     <ul>
-                      <li>Voltage anomalies</li>
-                      <li>Leak alerts</li>
-                      <li>Field dispatch holds</li>
+                      <li>Voltage anomalies under review</li>
+                      <li>Water leak escalations synchronized</li>
+                      <li>Gas dispatch coverage confirmed</li>
                     </ul>
                   </div>
-                  <div class="sidebar-card sidebar-accent">
-                    <span class="sidebar-label">Response index</span>
+                  <div class="sidebar-card sidebar-card-metric">
+                    <span class="sidebar-label">Coordination score</span>
                     <strong>84%</strong>
-                    <p>Teams are operating from a shared view of meter events, service context and field status.</p>
+                    <p>Shared context across meter events, field crews and service operations.</p>
                   </div>
                 </aside>
               </div>
@@ -261,18 +271,15 @@
           <div class="utility-grid">
             <article class="utility-card utility-electricity">
               <div class="utility-visual utility-visual-electricity" aria-hidden="true">
-                <span class="utility-visual-label">Grid status</span>
-                <div class="utility-bars">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                  <span></span>
+                <div class="utility-visual-head">
+                  <span class="utility-visual-label">Grid status</span>
+                  <strong>Electricity</strong>
                 </div>
-                <div class="utility-wave utility-wave-electricity"></div>
-                <div class="utility-mini-panel">
-                  <strong>98.4%</strong>
-                  <span>service visibility</span>
+                <div class="utility-line utility-line-electricity"></div>
+                <div class="utility-chip-row">
+                  <span>Outage view</span>
+                  <span>Voltage events</span>
+                  <span>Revenue protection</span>
                 </div>
               </div>
               <span class="utility-kicker">Electricity</span>
@@ -286,15 +293,15 @@
             </article>
             <article class="utility-card utility-gas">
               <div class="utility-visual utility-visual-gas" aria-hidden="true">
-                <span class="utility-visual-label">Pressure watch</span>
-                <div class="utility-pipeline">
-                  <span></span>
-                  <span></span>
-                  <span></span>
+                <div class="utility-visual-head">
+                  <span class="utility-visual-label">Pressure watch</span>
+                  <strong>Gas</strong>
                 </div>
-                <div class="utility-mini-panel">
-                  <strong>12</strong>
-                  <span>critical routes monitored</span>
+                <div class="utility-line utility-line-gas"></div>
+                <div class="utility-chip-row">
+                  <span>Leak escalation</span>
+                  <span>Safety response</span>
+                  <span>Service control</span>
                 </div>
               </div>
               <span class="utility-kicker">Gas</span>
@@ -308,15 +315,15 @@
             </article>
             <article class="utility-card utility-water">
               <div class="utility-visual utility-visual-water" aria-hidden="true">
-                <span class="utility-visual-label">Flow health</span>
-                <div class="utility-rings">
-                  <span></span>
-                  <span></span>
-                  <span></span>
+                <div class="utility-visual-head">
+                  <span class="utility-visual-label">Flow health</span>
+                  <strong>Water</strong>
                 </div>
-                <div class="utility-mini-panel">
-                  <strong>6 min</strong>
-                  <span>average leak escalation window</span>
+                <div class="utility-line utility-line-water"></div>
+                <div class="utility-chip-row">
+                  <span>Leak detection</span>
+                  <span>District view</span>
+                  <span>Consumption anomalies</span>
                 </div>
               </div>
               <span class="utility-kicker">Water</span>
@@ -330,16 +337,15 @@
             </article>
             <article class="utility-card utility-city">
               <div class="utility-visual utility-visual-city" aria-hidden="true">
-                <span class="utility-visual-label">Urban network</span>
-                <div class="utility-city-grid">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                  <span></span>
+                <div class="utility-visual-head">
+                  <span class="utility-visual-label">Urban network</span>
+                  <strong>Smart City</strong>
                 </div>
-                <div class="utility-mini-panel">
-                  <strong>1 view</strong>
-                  <span>shared asset and service context</span>
+                <div class="utility-line utility-line-city"></div>
+                <div class="utility-chip-row">
+                  <span>Lighting assets</span>
+                  <span>Distributed sensing</span>
+                  <span>Cross team context</span>
                 </div>
               </div>
               <span class="utility-kicker">Smart City</span>
