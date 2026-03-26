@@ -1,0 +1,30 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" rx="32" fill="#071018"/>
+  <rect x="24" y="24" width="1152" height="582" rx="24" fill="url(#paint0_linear)" stroke="rgba(255,255,255,0.08)"/>
+  <circle cx="932" cy="162" r="146" fill="#2580F6" fill-opacity="0.16"/>
+  <circle cx="932" cy="162" r="72" fill="#86D3FF" fill-opacity="0.18"/>
+  <path d="M710 186L798 222L884 176L974 216L1058 160" stroke="#86D3FF" stroke-width="6" stroke-linecap="round"/>
+  <path d="M710 238L796 198L888 248L972 214L1062 256" stroke="#56D4C3" stroke-width="4" stroke-linecap="round" opacity="0.9"/>
+  <rect x="84" y="86" width="156" height="50" rx="25" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.12)"/>
+  <circle cx="112" cy="111" r="7" fill="#56D4C3"/>
+  <text x="132" y="118" fill="#F6F1E9" font-family="IBM Plex Sans, Arial, sans-serif" font-size="18" font-weight="600">Noethon</text>
+  <text x="84" y="230" fill="#F6F1E9" font-family="Sora, Arial, sans-serif" font-size="62" font-weight="700" letter-spacing="-2.5">Operational intelligence</text>
+  <text x="84" y="298" fill="#F6F1E9" font-family="Sora, Arial, sans-serif" font-size="62" font-weight="700" letter-spacing="-2.5">for multi utility networks</text>
+  <text x="84" y="364" fill="rgba(246,241,233,0.74)" font-family="IBM Plex Sans, Arial, sans-serif" font-size="26" font-weight="500">Electricity, gas, water and smart city operations in one coordinated platform.</text>
+  <rect x="84" y="428" width="208" height="92" rx="20" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.08)"/>
+  <text x="112" y="466" fill="#86D3FF" font-family="Sora, Arial, sans-serif" font-size="34" font-weight="700">4</text>
+  <text x="112" y="500" fill="rgba(246,241,233,0.68)" font-family="IBM Plex Sans, Arial, sans-serif" font-size="18" font-weight="500">utility domains</text>
+  <rect x="316" y="428" width="248" height="92" rx="20" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.08)"/>
+  <text x="344" y="466" fill="#86D3FF" font-family="Sora, Arial, sans-serif" font-size="34" font-weight="700">1</text>
+  <text x="344" y="500" fill="rgba(246,241,233,0.68)" font-family="IBM Plex Sans, Arial, sans-serif" font-size="18" font-weight="500">shared operating layer</text>
+  <rect x="774" y="324" width="292" height="180" rx="24" fill="rgba(7,16,25,0.76)" stroke="rgba(255,255,255,0.08)"/>
+  <text x="808" y="370" fill="rgba(246,241,233,0.54)" font-family="IBM Plex Sans, Arial, sans-serif" font-size="16" font-weight="600" letter-spacing="1.4">GRID EDGE LIVE</text>
+  <text x="808" y="418" fill="#F6F1E9" font-family="Sora, Arial, sans-serif" font-size="34" font-weight="700">Coordinated response</text>
+  <text x="808" y="454" fill="rgba(246,241,233,0.68)" font-family="IBM Plex Sans, Arial, sans-serif" font-size="18" font-weight="500">AMI signals, field workflows and service events in one operational view.</text>
+  <defs>
+    <linearGradient id="paint0_linear" x1="64" y1="44" x2="1132" y2="586" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0D1A27"/>
+      <stop offset="1" stop-color="#0A1520"/>
+    </linearGradient>
+  </defs>
+</svg>

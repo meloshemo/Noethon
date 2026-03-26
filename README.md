@@ -42,11 +42,11 @@ GitHub Pages is the best fit for the current stage because:
 
 ## Google Search Console
 1. Open Google Search Console and choose `URL prefix`.
-2. Enter `https://meloshemo.github.io/Noethon/`.
+2. Enter `https://noethon.com/`.
 3. Use the HTML file or HTML tag verification method that Google provides.
-4. After verification, submit `https://meloshemo.github.io/Noethon/sitemap.xml` in the `Sitemaps` section.
+4. After verification, submit `https://noethon.com/sitemap.xml` in the `Sitemaps` section.
 5. Use `URL Inspection` to request indexing for the homepage.
-6. When you move to a custom domain later, add the new domain as a separate property and submit a new sitemap.
+6. Also add the `Domain` property for `noethon.com` if you want broader DNS-level reporting across domain variants.
 
 ## Domain Later
 - Keep publishing with the default GitHub Pages URL for now.

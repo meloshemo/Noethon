@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
 
+Host: noethon.com
 Sitemap: https://noethon.com/sitemap.xml
