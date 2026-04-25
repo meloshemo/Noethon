@@ -1,22 +1,22 @@
 :root {
-  --bg-ink: #071018;
-  --bg-ocean: #102234;
-  --bg-paper: #f4efe6;
-  --paper-strong: #fffaf2;
-  --text-light: #f6f1e9;
-  --text-dark: #0f1822;
-  --muted-light: rgba(246, 241, 233, 0.72);
-  --muted-dark: rgba(15, 24, 34, 0.78);
-  --line: rgba(255, 255, 255, 0.12);
-  --line-dark: rgba(15, 24, 34, 0.12);
+  --bg-ink: #f7fafc;
+  --bg-ocean: #eaf3fa;
+  --bg-paper: #ffffff;
+  --paper-strong: #f4f8fb;
+  --text-light: #183148;
+  --text-dark: #071018;
+  --muted-light: rgba(24, 49, 72, 0.62);
+  --muted-dark: rgba(7, 16, 25, 0.18);
+  --line: rgba(24, 49, 72, 0.10);
+  --line-dark: rgba(7, 16, 25, 0.08);
   --blue: #2580f6;
   --blue-soft: #86d3ff;
   --teal: #5ad3c0;
   --amber: #d79f4d;
   --bronze: #8f6840;
-  --slate: #183148;
-  --shadow-heavy: 0 28px 90px rgba(0, 0, 0, 0.3);
-  --shadow-soft: 0 18px 44px rgba(7, 13, 20, 0.11);
+  --slate: #eaf3fa;
+  --shadow-heavy: 0 28px 90px rgba(37, 128, 246, 0.08);
+  --shadow-soft: 0 18px 44px rgba(37, 128, 246, 0.06);
   --radius-xl: 34px;
   --radius-lg: 26px;
   --radius-md: 18px;
@@ -35,11 +35,11 @@ body {
   margin: 0;
   font-family: "IBM Plex Sans", sans-serif;
   background:
-    radial-gradient(circle at 14% 2%, rgba(37, 128, 246, 0.22), transparent 24%),
-    radial-gradient(circle at 88% 10%, rgba(215, 159, 77, 0.16), transparent 20%),
-    radial-gradient(circle at 55% 24%, rgba(90, 211, 192, 0.08), transparent 20%),
-    linear-gradient(180deg, #061018 0%, #0f2133 46%, var(--bg-paper) 46%, var(--bg-paper) 100%);
-  color: var(--text-light);
+    radial-gradient(circle at 14% 2%, rgba(37, 128, 246, 0.10), transparent 24%),
+    radial-gradient(circle at 88% 10%, rgba(215, 159, 77, 0.08), transparent 20%),
+    radial-gradient(circle at 55% 24%, rgba(90, 211, 192, 0.04), transparent 20%),
+    linear-gradient(180deg, var(--bg-paper) 0%, var(--bg-ocean) 100%);
+  color: var(--text-dark);
   overflow-x: hidden;
 }
 
@@ -103,15 +103,15 @@ body.cursor-glow-on-light .cursor-glow {
   padding: 14px 18px;
   border: 1px solid var(--line);
   border-radius: 999px;
-  background: rgba(7, 15, 22, 0.68);
+  background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(24px);
   transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
   box-shadow: 0 14px 36px rgba(0, 0, 0, 0.14);
 }
 
 .topbar.is-scrolled {
-  background: rgba(7, 15, 22, 0.9);
-  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(234, 243, 250, 0.98);
+  border-color: rgba(24, 49, 72, 0.10);
 }
 
 .brand,
@@ -140,7 +140,7 @@ body.cursor-glow-on-light .cursor-glow {
 
 .nav a,
 .nav-cta {
-  color: var(--muted-light);
+  color: var(--blue);
   font-size: 0.95rem;
   font-weight: 500;
 }
@@ -148,7 +148,7 @@ body.cursor-glow-on-light .cursor-glow {
 .nav a:hover,
 .nav-cta:hover,
 .contact-card a:hover {
-  color: var(--text-light);
+  color: var(--text-dark);
 }
 
 .nav-cta,
@@ -159,11 +159,13 @@ body.cursor-glow-on-light .cursor-glow {
 
 .nav-cta {
   padding: 12px 18px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, #f7fafc 0%, #eaf3fa 100%);
+  color: var(--blue);
 }
 
 .hero {
+    background: linear-gradient(120deg, #f7fafc 60%, #eaf3fa 100%);
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(360px, 0.85fr);
@@ -372,9 +374,10 @@ h3 {
 .hero-status-row article {
   padding: 16px 18px;
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
-  backdrop-filter: blur(18px);
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, #fff 80%, #eaf3fa 100%);
+  color: var(--text-dark);
+  backdrop-filter: blur(8px);
 }
 
 .hero-metrics strong,
@@ -1152,8 +1155,10 @@ h3 {
 .utility-card {
   padding: 30px;
   border-radius: 30px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: var(--shadow-heavy);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-soft);
+  background: linear-gradient(180deg, #fff 80%, #eaf3fa 100%);
+  color: var(--text-dark);
   overflow: hidden;
 }
 
@@ -1165,7 +1170,8 @@ h3 {
   min-height: 132px;
   margin: -30px -30px 22px;
   padding: 18px 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, #eaf3fa 80%, #f7fafc 100%);
   overflow: hidden;
 }
 
