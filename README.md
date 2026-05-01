@@ -40,10 +40,23 @@ GitHub Pages is the best fit for the current stage because:
 5. Under `Build and deployment`, select `GitHub Actions`.
 6. The included workflow will publish the site automatically.
 
+## Google Search Console
+1. Open Google Search Console and choose `URL prefix`.
+2. Enter `https://noethon.com/`.
+3. Use the HTML file or HTML tag verification method that Google provides.
+4. After verification, submit `https://noethon.com/sitemap.xml` in the `Sitemaps` section.
+5. Use `URL Inspection` to request indexing for the homepage.
+6. Also add the `Domain` property for `noethon.com` if you want broader DNS-level reporting across domain variants.
+
 ## Domain Later
 - Keep publishing with the default GitHub Pages URL for now.
 - When you buy the domain, add a `CNAME` file and update GitHub Pages custom domain settings.
 - If you later move to Vercel or Netlify, the site structure can stay almost exactly the same.
+
+## Custom Domain
+- Current custom domain target: `noethon.com`
+- GitHub Pages will use the included `CNAME` file during deployment.
+- After DNS is configured, set the custom domain in `Settings > Pages` and enable HTTPS.
 
 ## Notes
 - Replace hello@noethon.com with the final working address.
