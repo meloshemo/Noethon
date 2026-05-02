@@ -1,6 +1,6 @@
 :root {
   --font-body: "Public Sans", sans-serif;
-  --font-display: "Instrument Sans", sans-serif;
+  --font-display: "Sora", sans-serif;
   --bg-ink: #071018;
   --bg-ocean: #102234;
   --bg-paper: #f4efe6;
@@ -265,6 +265,7 @@ body.cursor-glow-on-light .cursor-glow {
   font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0.16em;
+  text-align: center;
   text-transform: uppercase;
 }
 
@@ -274,6 +275,7 @@ h3 {
   margin: 0;
   font-family: var(--font-display);
   line-height: 0.99;
+  text-align: center;
 }
 
 h1 {
@@ -342,7 +344,9 @@ h3 {
 }
 
 .hero-copy {
-  max-width: 640px;
+  max-width: 760px;
+  margin: 0 auto;
+  text-align: center;
 }
 
 .hero-story-rail {
@@ -400,6 +404,7 @@ h3 {
   flex-wrap: wrap;
   gap: 12px;
   margin-top: 22px;
+  justify-content: center;
 }
 
 .hero-trust-strip span {
@@ -424,6 +429,7 @@ h3 {
   flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 20px;
+  justify-content: center;
 }
 
 .hero-band span,
@@ -478,6 +484,7 @@ h3 {
   flex-wrap: wrap;
   gap: 14px;
   margin-top: 30px;
+  justify-content: center;
 }
 
 .button {
@@ -513,6 +520,7 @@ h3 {
   margin-top: 30px;
   color: rgba(245, 239, 231, 0.64);
   font-size: 0.88rem;
+  justify-content: center;
   text-transform: uppercase;
   letter-spacing: 0.12em;
 }
@@ -1064,7 +1072,7 @@ h3 {
 .world-section {
   position: relative;
   margin: -12px 0 24px;
-  padding: 72px 46px 46px;
+  padding: 84px 56px 52px;
   border-radius: 40px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: linear-gradient(180deg, #09131c 0%, #102739 48%, #1a4760 100%);
@@ -1089,7 +1097,8 @@ h3 {
 }
 
 .world-section .section-heading {
-  margin-bottom: 18px;
+  max-width: 980px;
+  margin: 0 auto 18px;
 }
 
 .world-section .eyebrow {
@@ -1102,7 +1111,8 @@ h3 {
 }
 
 .world-section h2 {
-  max-width: 11ch;
+  max-width: 14ch;
+  margin: 0 auto;
 }
 
 .world-intro,
@@ -1113,8 +1123,9 @@ h3 {
 }
 
 .world-intro {
-  max-width: 66ch;
-  margin: 0 0 28px;
+  max-width: 74ch;
+  margin: 0 auto 34px;
+  text-align: center;
 }
 
 .world-stage {
@@ -1833,10 +1844,13 @@ h3 {
 
 .section-heading {
   display: grid;
-  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  grid-template-columns: 1fr;
   gap: 24px;
-  align-items: end;
-  margin-bottom: 30px;
+  align-items: center;
+  justify-items: center;
+  max-width: 980px;
+  margin: 0 auto 30px;
+  text-align: center;
 }
 
 .editorial-section .section-heading,
@@ -1847,7 +1861,7 @@ h3 {
 }
 
 .section-heading.compact {
-  grid-template-columns: 1fr;
+  max-width: 920px;
 }
 
 .light-section h2 {
