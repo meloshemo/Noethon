@@ -1,4 +1,6 @@
 :root {
+  --font-body: "Public Sans", sans-serif;
+  --font-display: "Instrument Sans", sans-serif;
   --bg-ink: #071018;
   --bg-ocean: #102234;
   --bg-paper: #f4efe6;
@@ -33,7 +35,7 @@ html {
 
 body {
   margin: 0;
-  font-family: "IBM Plex Sans", sans-serif;
+  font-family: var(--font-body);
   background:
     radial-gradient(circle at 14% 2%, rgba(37, 128, 246, 0.22), transparent 24%),
     radial-gradient(circle at 88% 10%, rgba(215, 159, 77, 0.16), transparent 20%),
@@ -270,8 +272,8 @@ h1,
 h2,
 h3 {
   margin: 0;
-  font-family: "Sora", sans-serif;
-  line-height: 0.95;
+  font-family: var(--font-display);
+  line-height: 0.99;
 }
 
 h1 {
@@ -282,21 +284,38 @@ h1 {
 
 .hero h1 {
   max-width: 11ch;
-  font-size: clamp(2.4rem, 4.8vw, 4.7rem);
+  font-size: clamp(2.5rem, 4.9vw, 4.9rem);
   line-height: 0.92;
 }
 
 h2 {
-  font-size: clamp(1.55rem, 3.1vw, 2.35rem);
-  letter-spacing: -0.04em;
+  font-size: clamp(1.6rem, 3vw, 2.45rem);
+  letter-spacing: -0.045em;
   color: var(--text-dark);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 h3 {
-  font-size: 1.12rem;
-  letter-spacing: -0.04em;
+  font-size: 1.08rem;
+  letter-spacing: -0.03em;
+  line-height: 1.18;
   font-weight: 700;
+}
+
+.hero-story-rail strong,
+.hero-metrics strong,
+.hero-status-row strong,
+.sidebar-card strong,
+.stack-secondary strong,
+.world-float-card strong,
+.world-stage-caption strong,
+.insight-sidebar h2,
+.insight-focus strong,
+.insight-card h3,
+.insight-bar-column strong,
+.insight-gauge-labels strong,
+.insight-compare-row strong {
+  font-family: var(--font-display);
 }
 
 .hero-text,
@@ -311,13 +330,14 @@ h3 {
 .utility-card p,
 .utility-card li,
 .footer {
-  line-height: 1.72;
-  font-size: 1.03rem;
+  line-height: 1.68;
+  font-size: 1rem;
 }
 
 .hero-text {
   max-width: 62ch;
   margin: 24px 0 0;
+  font-size: 1.04rem;
   color: var(--muted-light);
 }
 
