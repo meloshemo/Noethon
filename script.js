@@ -2,12 +2,14 @@ const yearNode = document.getElementById("year");
 const topbar = document.querySelector("[data-topbar]");
 const cursorGlow = document.querySelector(".cursor-glow");
 const lightGlowSurfaceSelector = [
-  ".roadmap-section",
+  ".product-section",
+  ".usecase-section",
+  ".workflow-section",
   ".contact-section",
-  ".statement-card",
-  ".light-card",
-  ".thesis-panel article",
-  ".roadmap-grid article",
+  ".product-card",
+  ".usecase-card",
+  ".workflow-step",
+  ".pilot-card:not(.pilot-card-primary)",
   ".contact-card",
 ].join(", ");
 
