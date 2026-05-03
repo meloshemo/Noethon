@@ -45,18 +45,36 @@ if (cursorGlow && window.matchMedia("(pointer: fine)").matches) {
 
 const revealNodes = document.querySelectorAll(".reveal");
 
-const observer = new IntersectionObserver(
-  (entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add("is-visible");
-        observer.unobserve(entry.target);
-      }
-    });
-  },
-  {
-    threshold: 0.16,
-  }
-);
+const revealNode = (node) => {
+  node.classList.add("is-visible");
+};
 
-revealNodes.forEach((node) => observer.observe(node));
+if (!("IntersectionObserver" in window)) {
+  revealNodes.forEach(revealNode);
+} else {
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          revealNode(entry.target);
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    {
+      threshold: 0.01,
+      rootMargin: "0px 0px 12% 0px",
+    }
+  );
+
+  const initialRevealBoundary = window.innerHeight * 1.12;
+
+  revealNodes.forEach((node) => {
+    if (node.getBoundingClientRect().top <= initialRevealBoundary) {
+      revealNode(node);
+      return;
+    }
+
+    observer.observe(node);
+  });
+}
