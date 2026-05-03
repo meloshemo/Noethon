@@ -3027,10 +3027,12 @@ h3 {
   align-items: center;
   min-height: 34px;
   padding: 0 12px;
+  max-width: calc(100% - 36px);
   border-radius: 999px;
   font-size: 0.76rem;
   font-weight: 700;
   letter-spacing: 0.06em;
+  z-index: 1;
 }
 
 .pill-water {
@@ -3051,7 +3053,7 @@ h3 {
 
 .pill-gas {
   right: 18px;
-  bottom: 18px;
+  bottom: 62px;
   background: rgba(215, 159, 77, 0.14);
   color: #f0c88f;
   border: 1px solid rgba(215, 159, 77, 0.24);
