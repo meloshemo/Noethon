@@ -9,7 +9,7 @@
  * large sample of generated ones, and fails loudly on anything impossible.
  */
 
-import { PHYS, PENGUIN, ICE, scaleForLevel, CRAFTED_LEVELS } from '../src/game/config.js';
+import { PHYS, PENGUIN, ICE, STORM, scaleForLevel, CRAFTED_LEVELS } from '../src/game/config.js';
 import { LEVELS, WATER_Y } from '../src/game/levels.js';
 import { generateLevel } from '../src/game/generator.js';
 
@@ -90,11 +90,15 @@ function check(def, { tutorial = false } = {}) {
     // land — roughly 40% in — not from the far edge.
     const fuse = fuseOf(a);
     if (fuse != null) {
-      const speed = PHYS.moveSpeed * (1 - PENGUIN.speedPenaltyPerScale * (scale - 1));
-      const walkable = fuse * speed;
-      if (a.w * LANDING > walkable) {
+      const runSpeed = PHYS.moveSpeed * (1 - PENGUIN.speedPenaltyPerScale * (scale - 1));
+      const walkable = fuse * runSpeed;
+      // A geyser has to be escapable from its near edge, not from where you
+      // typically land: getting caught on one is not a near miss, it is a
+      // launch into the sea. So it gets the full width plus a safety margin.
+      const need = a.type === 'burst' ? a.w / 0.85 : a.w * LANDING;
+      if (need > walkable) {
         fail(
-          `${i}. buz (${a.type}) ${a.w}px genişliğinde ama ${fuse}s içinde ancak ${Math.round(walkable)}px koşulabilir`,
+          `${i}. buz (${a.type}) ${a.w}px genişliğinde, ${Math.round(need)}px koşmak gerekiyor ama ${fuse}s içinde ancak ${Math.round(walkable)}px koşulabilir`,
         );
       }
       const steppingStone = a.type === 'trap' || a.type === 'fall';
@@ -159,6 +163,49 @@ function check(def, { tutorial = false } = {}) {
     const onFloe = floes.find((f) => cx > f.x - 20 && cx < f.x + f.w + 20);
     if (onFloe) fail(`orka buzun altında değil boşlukta olmalı (x=${h.x})`);
     if ((h.period ?? 3.4) < 2.4) fail(`orka çok sık çıkıyor (period=${h.period})`);
+  }
+
+  // --- storms ---------------------------------------------------------
+  // A storm must never be an unwinnable wall. Two things keep it fair: the
+  // wind has to pulse (so there is a lull to move in) and it must not be so
+  // strong that the penguin cannot make headway even at full surge.
+  const speed = PHYS.moveSpeed * (1 - PENGUIN.speedPenaltyPerScale * (scale - 1));
+  for (const h of def.hazards ?? []) {
+    if (h.kind !== 'storm') continue;
+    const period = h.period ?? STORM.period;
+    const power = Math.abs(h.power ?? 300);
+    if (period < 2.6) fail(`fırtına çok sık esiyor (period=${period})`);
+    // At peak, walking into the wind must still be net forward motion.
+    const groundPush = power * STORM.groundFactor;
+    if (groundPush >= PHYS.groundAccel * 0.45) {
+      fail(`fırtına yerde çok güçlü: ${Math.round(groundPush)} vs ivme ${PHYS.groundAccel}`);
+    }
+    // Airborne drift over one full jump must stay under half a jump's reach,
+    // or a jump taken inside the zone can never be aimed.
+    const airtime = 0.66;
+    const drift = power * airtime * airtime * 0.5;
+    if (drift > reach.distance * 0.5) {
+      fail(`fırtına havada çok savuruyor: ${Math.round(drift)}px, erişimin yarısı ${Math.round(reach.distance * 0.5)}px`);
+    }
+    // There has to be ice inside the zone to shelter on.
+    const inside = floes.filter((f) => f.x + f.w > h.x && f.x < h.x + h.w);
+    if (inside.length < 2) fail(`fırtına bölgesinde sığınacak buz yok (x=${h.x})`);
+  }
+
+  // --- the speed fish -------------------------------------------------
+  for (const f of def.speedFish ?? []) {
+    const ok = floes.some((p) => {
+      const dx = Math.max(p.x - f.x, f.x - (p.x + p.w), 0);
+      const dy = p.y - f.y;
+      return dx <= reach.distance * 0.5 && dy <= reach.height * 0.95 && dy > -40;
+    });
+    if (!ok) fail(`hız balığı erişilemez (${f.x}, ${f.y})`);
+    // It is a detour by design; sitting at head height on the running line
+    // would make it a freebie rather than a decision.
+    const onLine = floes.some(
+      (p) => f.x > p.x - 10 && f.x < p.x + p.w + 10 && p.y - f.y < 55 && p.y - f.y > -10,
+    );
+    if (onLine) warn(`hız balığı ana hattın üstünde duruyor (${f.x}, ${f.y})`);
   }
 
   // Landing on a floe must always be above the water line.

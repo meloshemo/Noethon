@@ -483,6 +483,10 @@ export class Renderer {
   }
 
   _fish(ctx, world, time) {
+    for (const f of world.boosts ?? []) {
+      if (f.taken) continue;
+      this._speedFish(ctx, f, time);
+    }
     for (const f of world.fish) {
       if (f.taken) continue;
       const bob = Math.sin(f.phase) * 4;
@@ -548,6 +552,83 @@ export class Renderer {
       }
       ctx.restore();
     }
+  }
+
+  /**
+   * The speed fish: crimson body, gold lightning, and a halo that pulses hard
+   * enough to be spotted from across a gap. It has to read as "different and
+   * worth a detour" at a glance, not as a fourth collectible.
+   */
+  _speedFish(ctx, f, time) {
+    const cx = f.x + f.w / 2;
+    const cy = f.y + f.h / 2 + Math.sin(f.phase) * 5;
+    const pulse = 0.6 + 0.4 * Math.sin(time * 7 + f.phase);
+
+    ctx.save();
+    ctx.translate(cx, cy);
+
+    // Halo
+    const halo = ctx.createRadialGradient(0, 0, 3, 0, 0, 34 + pulse * 10);
+    halo.addColorStop(0, `rgba(255,80,90,${0.35 * pulse})`);
+    halo.addColorStop(0.5, `rgba(255,190,60,${0.18 * pulse})`);
+    halo.addColorStop(1, 'rgba(255,190,60,0)');
+    ctx.fillStyle = halo;
+    ctx.fillRect(-46, -46, 92, 92);
+
+    ctx.rotate(Math.sin(f.phase * 0.8) * 0.14);
+
+    // Body
+    const g = ctx.createLinearGradient(-14, -10, 14, 10);
+    g.addColorStop(0, '#ff3b48');
+    g.addColorStop(1, '#c8102e');
+    ctx.fillStyle = g;
+    ctx.shadowColor = 'rgba(255,60,72,0.7)';
+    ctx.shadowBlur = 16;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 15, 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(12, 0);
+    ctx.lineTo(23, -9);
+    ctx.lineTo(23, 9);
+    ctx.closePath();
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Gold lightning down the flank
+    ctx.fillStyle = '#ffd23f';
+    ctx.beginPath();
+    ctx.moveTo(2, -8);
+    ctx.lineTo(-5, 0);
+    ctx.lineTo(-1, 0);
+    ctx.lineTo(-5, 8);
+    ctx.lineTo(5, -1);
+    ctx.lineTo(1, -1);
+    ctx.closePath();
+    ctx.fill();
+
+    // Eye
+    ctx.fillStyle = '#fff3d0';
+    ctx.beginPath();
+    ctx.arc(-8, -3, 2.6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#5a0d16';
+    ctx.beginPath();
+    ctx.arc(-8, -3, 1.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Sparks orbiting the halo
+    ctx.strokeStyle = `rgba(255,210,63,${pulse})`;
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 3; i++) {
+      const a = time * 4 + (i * Math.PI * 2) / 3;
+      const r = 24 + pulse * 5;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+      ctx.lineTo(Math.cos(a) * (r + 6), Math.sin(a) * (r + 6));
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 
   _checkpoints(ctx, world, time) {
@@ -730,6 +811,50 @@ export class Renderer {
           ctx.stroke();
           ctx.restore();
         }
+      } else if (h.kind === 'storm') {
+        const dir = Math.sign(h.power ?? -1);
+        const t = h.intensity ?? 0;
+        ctx.save();
+
+        // Haze: the whole stretch greys out as the surge builds.
+        ctx.globalAlpha = 0.06 + t * 0.16;
+        ctx.fillStyle = '#cfe4f5';
+        ctx.fillRect(h.x, h.y, h.w, h.h);
+
+        // Driven snow — long, near-horizontal streaks. Density and lean both
+        // track the surge, so the wind is readable before it hits.
+        ctx.globalAlpha = 0.14 + t * 0.5;
+        ctx.strokeStyle = '#eaf6ff';
+        ctx.lineCap = 'round';
+        const lines = Math.round(14 + t * 22);
+        const speed = this.reducedMotion ? 0 : 1;
+        for (let i = 0; i < lines; i++) {
+          const seed = i * 97.13;
+          const yy = h.y + ((seed * 7.7) % h.h);
+          const len = 26 + ((seed * 3.3) % 46) * (0.5 + t);
+          const travel = (time * speed * (420 + t * 520) + seed * 31) % (h.w + 200);
+          const sx = dir < 0 ? h.x + h.w + 100 - travel : h.x - 100 + travel;
+          ctx.lineWidth = 1 + ((seed % 3) * 0.6);
+          ctx.beginPath();
+          ctx.moveTo(sx, yy);
+          ctx.lineTo(sx + len * dir, yy + len * 0.18);
+          ctx.stroke();
+        }
+
+        // Edge markers, so the zone has a boundary you can stand behind.
+        ctx.globalAlpha = 0.25 + t * 0.35;
+        ctx.strokeStyle = '#9fd0ee';
+        ctx.setLineDash([10, 12]);
+        ctx.lineWidth = 2;
+        for (const ex of [h.x, h.x + h.w]) {
+          ctx.beginPath();
+          ctx.moveTo(ex, h.y);
+          ctx.lineTo(ex, h.y + h.h);
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+        ctx.lineCap = 'butt';
+        ctx.restore();
       } else if (h.kind === 'gust') {
         ctx.save();
         ctx.globalAlpha = 0.22;
@@ -757,6 +882,21 @@ export class Renderer {
 
   _penguin(ctx, world, time) {
     const p = world.player;
+
+    // Afterimages first, so the live bird draws on top of its own streak.
+    if (p.charge > 0 && !this.reducedMotion) {
+      for (const g of p.trail) {
+        const a = Math.max(0, g.life / 0.22);
+        ctx.save();
+        ctx.globalAlpha = a * 0.4;
+        ctx.fillStyle = a > 0.5 ? '#ff5560' : '#ffd23f';
+        ctx.beginPath();
+        ctx.ellipse(g.x + p.w / 2, g.y + p.h * 0.55, p.w * 0.42, p.h * 0.46, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
     const cx = p.x + p.w / 2;
     const by = p.y + p.h;
     const sx = p.squashX;
@@ -765,7 +905,13 @@ export class Renderer {
 
     // Down colour darkens as the chick grows up.
     const t = clamp((s - 1) / 0.62, 0, 1);
-    const body = `rgb(${Math.round(lerp(88, 26, t))}, ${Math.round(lerp(100, 36, t))}, ${Math.round(lerp(118, 52, t))})`;
+    let body = `rgb(${Math.round(lerp(88, 26, t))}, ${Math.round(lerp(100, 36, t))}, ${Math.round(lerp(118, 52, t))})`;
+    if (p.charge > 0) {
+      // Crimson, not merely tinted — at speed he should look like a different
+      // animal from across the screen.
+      const k = clamp(p.charge / 0.6, 0, 1);
+      body = `rgb(${Math.round(lerp(38, 176, k))}, ${Math.round(lerp(46, 28, k))}, ${Math.round(lerp(62, 40, k))})`;
+    }
 
     ctx.save();
     ctx.translate(cx, by);
@@ -868,6 +1014,42 @@ export class Renderer {
     }
 
     ctx.restore();
+
+    // Charged aura: a crimson glow with gold lightning snapping off it. Drawn
+    // after the bird so it reads as energy coming off him, not paint on him.
+    if (p.charge > 0) {
+      const cx2 = p.x + p.w / 2;
+      const cy2 = p.y + p.h * 0.5;
+      // The last second flickers, which is the warning that it is running out.
+      const fade = p.charge < 1 ? 0.35 + 0.65 * Math.abs(Math.sin(time * 22)) : 1;
+
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      const aura = ctx.createRadialGradient(cx2, cy2, p.w * 0.2, cx2, cy2, p.w * 1.5);
+      aura.addColorStop(0, `rgba(255,70,80,${0.34 * fade})`);
+      aura.addColorStop(0.55, `rgba(255,190,60,${0.16 * fade})`);
+      aura.addColorStop(1, 'rgba(255,190,60,0)');
+      ctx.fillStyle = aura;
+      ctx.fillRect(cx2 - p.w * 1.6, cy2 - p.h * 1.6, p.w * 3.2, p.h * 3.2);
+
+      ctx.strokeStyle = `rgba(255,215,80,${0.9 * fade})`;
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      for (let i = 0; i < 3; i++) {
+        const a = time * 13 + (i * Math.PI * 2) / 3;
+        const r0 = p.w * 0.55;
+        const r1 = p.w * (0.9 + 0.25 * Math.sin(time * 30 + i));
+        const mx = Math.cos(a) * (r0 + r1) * 0.5 + Math.sin(time * 25 + i) * 5;
+        const my = Math.sin(a) * (r0 + r1) * 0.5;
+        ctx.beginPath();
+        ctx.moveTo(cx2 + Math.cos(a) * r0, cy2 + Math.sin(a) * r0);
+        ctx.lineTo(cx2 + mx, cy2 + my);
+        ctx.lineTo(cx2 + Math.cos(a) * r1, cy2 + Math.sin(a) * r1);
+        ctx.stroke();
+      }
+      ctx.lineCap = 'butt';
+      ctx.restore();
+    }
   }
 
   /* ---------------------------------------------------------------- */

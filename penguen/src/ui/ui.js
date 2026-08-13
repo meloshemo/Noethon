@@ -88,6 +88,8 @@ export class UI {
       dailyState: $('dailyState'),
       dailyStreak: $('dailyStreak'),
       hudShield: $('hudShield'),
+      chargeBar: $('chargeBar'),
+      chargeFill: $('chargeFill'),
     };
 
     this._buildLegend();
@@ -306,6 +308,14 @@ export class UI {
     this.el.hudFish.textContent = `${world.fishTaken}/${world.fish.length}`;
     this.el.hudDeaths.textContent = String(world.deaths + runDeaths);
     this.el.hudTime.textContent = formatTime(world.elapsed);
+
+    // Speed charge — only on screen while it is actually running.
+    const charge = world.player.charge ?? 0;
+    this.el.chargeBar.hidden = charge <= 0;
+    if (charge > 0) {
+      this.el.chargeFill.style.width = `${Math.min(100, (charge / 4.5) * 100)}%`;
+      this.el.chargeBar.classList.toggle('is-fading', charge < 1);
+    }
 
     this.el.hudShield.hidden = world.maxShields <= 0;
     this.el.hudShield.classList.toggle('is-spent', world.shields <= 0);

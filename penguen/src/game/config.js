@@ -69,8 +69,14 @@ export const ICE = {
   respawn: 2.6,
   /** Shake amplitude while a floe is cracking. */
   shake: 2.2,
-  /** "burst": warning time before the geyser fires. */
-  burstWarn: 0.5,
+  /**
+   * "burst": warning time before the geyser fires.
+   *
+   * Unlike cracking ice — where being caught on it is survivable if you were
+   * heading off anyway — a geyser throws you, so the window has to cover the
+   * worst case: landing on the very near edge and running the whole width.
+   */
+  burstWarn: 0.6,
   /** "burst": how hard it throws the penguin. */
   burstUp: -1180,
   burstSide: 210,
@@ -78,6 +84,43 @@ export const ICE = {
   snapTrigger: 0.26,
   /** "snap": stays gone this long, so the retry is a fair one. */
   snapRespawn: 1.5,
+};
+
+/**
+ * Antarctic storm zones.
+ *
+ * Unlike a gust — a narrow column you cross — a storm is a stretch of coast
+ * where the wind is simply against you. It pulses rather than blowing flat,
+ * because a constant headwind is just a slower walk, while a pulsing one is a
+ * decision: push through the lull, or wait out the surge on solid ice.
+ */
+export const STORM = {
+  /** Seconds per surge cycle. */
+  period: 3.6,
+  /** Fraction of the cycle spent at full strength. */
+  surge: 0.34,
+  /** Wind during the lull, as a fraction of full power. */
+  lull: 0.22,
+  /** How much of the wind is felt with both feet on the ice. */
+  groundFactor: 0.6,
+  /** Seconds of visible build-up before a surge peaks. */
+  warn: 0.55,
+};
+
+/**
+ * The speed fish.
+ *
+ * A single red-and-gold fish per level that turns the penguin into a streak of
+ * lightning for a few seconds. It is never on the main line — always a detour —
+ * so taking it is a bet: the boost saves far more time than the detour costs,
+ * but only if you can still hit your landings at half again the speed.
+ */
+export const BOOST = {
+  duration: 4.5,
+  speed: 0.5,
+  jump: 0.06,
+  /** Extra coins for grabbing one. */
+  reward: 10,
 };
 
 /** Assist mode is offered after this many deaths on the same level. */
@@ -118,6 +161,8 @@ export const STAR_RULES = {
 export const REWARDS = {
   /** Per fish picked up in a level. */
   perFish: 3,
+  /** The speed fish pays extra — it is harder to reach and easy to skip. */
+  perBoost: 10,
   /** First time a level is cleared. */
   firstClear: 12,
   /** Per new star earned (never paid twice for the same star). */

@@ -142,6 +142,17 @@ matematiksel olarak imkânsız üç sıçrama dahil.
 | Gayzer | Kabarcıklar, basınç halkası | Basınca tıslar; yarım saniye sonra seni havaya fırlatır |
 | Kaçan | İnce bir çatlak çizgisi | Alçak ve cazip; tam inerken kaybolur |
 
+## Hız balığı
+
+Bölüm başına bir tane: kırmızı gövde, altın şimşek, göz kırpan bir hale. Yuttuğun
+an penguen kızıla dönüyor, arkasında iz bırakıyor ve **%50 daha hızlı** koşuyor —
+4,5 saniye boyunca. Son bir saniyede yanıp sönerek bitmek üzere olduğunu söylüyor.
+
+Hep ana hattın dışında duruyor, yani almak bir bahis: sapmanın maliyeti var ama
+kazandığı süre çok daha fazla — eğer bir buçuk kat hızda inişlerini
+tutturabilirsen. Doğrulayıcı hem erişilebilir olduğunu hem de yol üstünde
+durmadığını kontrol ediyor.
+
 ## Tehlikeler
 
 - **Buz sarkıtı** — altından geçince titrer, sonra düşer.
@@ -150,6 +161,10 @@ matematiksel olarak imkânsız üç sıçrama dahil.
 - **Orka** — boşluktan sıçrar. Önce yüzgeci suyu yarar, sonra kendisi çıkar.
   Suyun altındayken zararsız, havadayken ölümcül.
 - **Rüzgar** — öldürmez ama havada seni iter.
+- **Fırtına** — dar bir sütun değil, geniş bir kuşak. Rüzgar sürekli sana karşı
+  ve dalgalar hâlinde geliyor: sertken yürürken bile geri püskürtüyor, dinince
+  yol veriyor. Sabit essin isteseydik sadece yavaş bir yürüyüş olurdu; dalgalı
+  olunca karar hâline geliyor — dinginlikte koş, sertlikte sağlam buzda bekle.
 
 ---
 

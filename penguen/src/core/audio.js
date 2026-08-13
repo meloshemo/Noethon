@@ -123,6 +123,18 @@ export class Audio {
     this._tone({ freq: NOTES.G5, dur: 0.14, type: 'triangle', gain: 0.18, delay: 0.07 });
   }
 
+  /** Swallowing the speed fish — a rising electric zap. */
+  charge() {
+    this._tone({ freq: 220, slide: 1400, dur: 0.22, type: 'sawtooth', gain: 0.14 });
+    this._tone({ freq: 660, slide: 900, dur: 0.3, type: 'triangle', gain: 0.16, delay: 0.05 });
+    this._noise({ dur: 0.28, gain: 0.16, filter: 3600, q: 1.4, delay: 0.02 });
+  }
+
+  /** A storm surge arriving. */
+  windSurge() {
+    this._noise({ dur: 1.1, gain: 0.13, filter: 620, q: 0.4 });
+  }
+
   checkpoint() {
     this._tone({ freq: NOTES.C5, dur: 0.14, type: 'sine', gain: 0.18 });
     this._tone({ freq: NOTES.G5, dur: 0.2, type: 'sine', gain: 0.16, delay: 0.09 });

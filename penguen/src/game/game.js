@@ -243,6 +243,12 @@ export class Game {
     let coins = w.fishTaken * REWARDS.perFish;
     const breakdown = [{ label: 'Balık', value: coins }];
 
+    if (w.boostsTaken > 0) {
+      const v = w.boostsTaken * REWARDS.perBoost;
+      coins += v;
+      breakdown.push({ label: 'Hız enerjisi', value: v });
+    }
+
     if (!prev) {
       coins += REWARDS.firstClear;
       breakdown.push({ label: 'İlk geçiş', value: REWARDS.firstClear });
@@ -290,6 +296,11 @@ export class Game {
 
     let coins = w.fishTaken * REWARDS.perFish;
     const breakdown = [{ label: 'Balık', value: coins }];
+    if (w.boostsTaken > 0) {
+      const v = w.boostsTaken * REWARDS.perBoost;
+      coins += v;
+      breakdown.push({ label: 'Hız enerjisi', value: v });
+    }
     if (first) {
       coins += REWARDS.daily;
       breakdown.push({ label: 'Günün bölümü', value: REWARDS.daily });

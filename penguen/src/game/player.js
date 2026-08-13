@@ -6,7 +6,7 @@
  * exactly what the early levels need.
  */
 
-import { PHYS, PENGUIN } from './config.js';
+import { PHYS, PENGUIN, BOOST } from './config.js';
 import { clamp, damp, rectsOverlap } from '../core/util.js';
 
 export class Player {
@@ -14,6 +14,10 @@ export class Player {
     this.scale = 1;
     /** Shop upgrades, resolved to plain multipliers by the world. */
     this.boost = { jump: 0, speed: 0, grip: 0, wind: 0 };
+    /** Speed-fish charge: seconds remaining. */
+    this.charge = 0;
+    /** Afterimages, so the boost reads as speed rather than as a colour. */
+    this.trail = [];
     this.reset(0, 0);
   }
 
@@ -58,6 +62,19 @@ export class Player {
     this.landedThisFrame = false;
     this.jumpedThisFrame = false;
     this.launched = 0;
+    this.charge = 0;
+    this.trail.length = 0;
+  }
+
+  /** Swallowed a speed fish. Refreshes rather than stacks. */
+  energise(seconds = BOOST.duration) {
+    this.charge = Math.max(this.charge, seconds);
+    this.squashX = 0.82;
+    this.squashY = 1.2;
+  }
+
+  get charged() {
+    return this.charge > 0;
   }
 
   get box() {
@@ -70,12 +87,12 @@ export class Player {
 
   get jumpVelocity() {
     const base = PHYS.jumpVelocity * (1 - PENGUIN.jumpPenaltyPerScale * (this.scale - 1));
-    return base * (1 + this.boost.jump);
+    return base * (1 + this.boost.jump + (this.charged ? BOOST.jump : 0));
   }
 
   get moveSpeed() {
     const base = PHYS.moveSpeed * (1 - PENGUIN.speedPenaltyPerScale * (this.scale - 1));
-    return base * (1 + this.boost.speed);
+    return base * (1 + this.boost.speed + (this.charged ? BOOST.speed : 0));
   }
 
   /**
@@ -98,6 +115,17 @@ export class Player {
       : PHYS.airFriction;
 
     this.launched = Math.max(0, this.launched - dt);
+    this.charge = Math.max(0, this.charge - dt);
+
+    if (this.charge > 0) {
+      // Sampled positions, oldest first — the renderer fades them out behind.
+      this.trail.push({ x: this.x, y: this.y, f: this.facing, life: 0.22 });
+      if (this.trail.length > 8) this.trail.shift();
+    }
+    for (let i = this.trail.length - 1; i >= 0; i--) {
+      this.trail[i].life -= dt;
+      if (this.trail[i].life <= 0) this.trail.splice(i, 1);
+    }
 
     const target = intent.axis * this.moveSpeed;
     if (this.launched > 0) {
@@ -105,7 +133,8 @@ export class Player {
       // still fight for a landing, which is what keeps this fair.
       this.vx += intent.axis * PHYS.airAccel * 0.25 * dt;
     } else if (intent.axis !== 0) {
-      const rate = slippery && this.onGround ? accel * (0.35 + 0.65 * this.boost.grip) : accel;
+      const boosted = this.charged ? 1.35 : 1;
+      const rate = (slippery && this.onGround ? accel * (0.35 + 0.65 * this.boost.grip) : accel) * boosted;
       this.vx += Math.sign(target - this.vx) * rate * dt;
       // Don't overshoot the target speed in a single step.
       if (Math.sign(target - this.vx) !== Math.sign(target) && Math.abs(this.vx) > Math.abs(target)) {

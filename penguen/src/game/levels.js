@@ -183,6 +183,7 @@ export const LEVELS = [
       F(1760, GROUND, 210),
     ],
     fish: [{ x: 600, y: 350 }, { x: 1080, y: 330 }, { x: 1700, y: 340 }],
+    speedFish: [{ x: 720, y: 318 }],
     signs: [{ x: 110, y: GROUND - 96, text: 'Buz sana doğru gelirken zıpla' }],
   },
 
@@ -236,6 +237,7 @@ export const LEVELS = [
       { kind: 'icicle', x: 1880, y: 150, w: 24, h: 46 },
     ],
     fish: [{ x: 620, y: 350 }, { x: 1230, y: 340 }, { x: 1760, y: 330 }],
+    speedFish: [{ x: 1030, y: 348 }],
     signs: [{ x: 640, y: GROUND - 110, text: 'Yukarı bak!' }],
   },
 
@@ -267,6 +269,7 @@ export const LEVELS = [
       { kind: 'icicle', x: 1760, y: 150, w: 24, h: 46 },
     ],
     fish: [{ x: 700, y: 348 }, { x: 1380, y: 330 }, { x: 1930, y: 340 }],
+    speedFish: [{ x: 1200, y: 348 }],
     signs: [{ x: 370, y: GROUND - 106, text: 'Fokun üstünden zıpla' }],
   },
 
@@ -274,8 +277,8 @@ export const LEVELS = [
   {
     id: 11,
     name: 'Kutup Rüzgarı',
-    subtitle: 'Yeni: rüzgar',
-    intro: 'Rüzgar seni havada iter. Karşı yöne yaslan.',
+    subtitle: 'Yeni: rüzgar ve fırtına',
+    intro: 'Rüzgar seni havada iter. Fırtına kuşağında ise yürürken bile geri püskürtür — dinginliği bekle.',
     target: 50,
     worldW: 2300,
     spawn: { x: 100, y: GROUND },
@@ -293,11 +296,17 @@ export const LEVELS = [
     ],
     hazards: [
       { kind: 'gust', x: 520, y: 180, w: 130, h: 330, power: -300 },
-      { kind: 'gust', x: 1330, y: 180, w: 140, h: 330, power: 340 },
+      // The storm sits over a long run of solid ice on purpose: the first one
+      // you meet should be about reading the wind, not about a hard jump.
+      { kind: 'storm', x: 1140, y: 120, w: 520, h: 400, power: -300, phase: 0.15 },
       { kind: 'icicle', x: 1820, y: 130, w: 24, h: 46 },
     ],
     fish: [{ x: 580, y: 340 }, { x: 1100, y: 330 }, { x: 1930, y: 330 }],
-    signs: [{ x: 360, y: GROUND - 106, text: 'Rüzgara karşı yön ver' }],
+    speedFish: [{ x: 700, y: 314 }],
+    signs: [
+      { x: 360, y: GROUND - 106, text: 'Rüzgara karşı yön ver' },
+      { x: 1240, y: 300, text: 'Fırtına: sert estiğinde bekle, dinince koş' },
+    ],
   },
 
   /* ------------------------------------------------------------- 12 */
@@ -419,6 +428,7 @@ export const LEVELS = [
     ],
     hazards: [{ kind: 'icicle', x: 1030, y: 130, w: 24, h: 46 }],
     fish: [{ x: 480, y: 320 }, { x: 1150, y: 300 }, { x: 2100, y: 320 }],
+    speedFish: [{ x: 1520, y: 314 }],
   },
 
   /* ------------------------------------------------------------- 16 */
@@ -450,6 +460,7 @@ export const LEVELS = [
       { kind: 'icicle', x: 2020, y: 130, w: 24, h: 46 },
     ],
     fish: [{ x: 490, y: 330 }, { x: 1160, y: 330 }, { x: 2150, y: 320 }],
+    speedFish: [{ x: 1540, y: 348 }],
   },
 
   /* ------------------------------------------------------------- 17 */
@@ -534,7 +545,7 @@ export const LEVELS = [
     checkpoints: [{ x: 1340, y: GROUND }],
     floes: [
       F(30, GROUND, 220),
-      F(360, GROUND, 160, 'burst'),
+      F(370, GROUND, 150, 'burst'),
       F(650, GROUND, 190),
       F(970, 404, 150, 'burst'),
       F(1250, GROUND, 180),
@@ -543,6 +554,7 @@ export const LEVELS = [
       F(2170, GROUND, 220),
     ],
     fish: [{ x: 585, y: 360 }, { x: 1185, y: 336 }, { x: 1780, y: 336 }],
+    speedFish: [{ x: 1340, y: 348 }],
     signs: [
       { x: 370, y: GROUND - 106, text: 'Tıslamayı duyunca hemen zıpla!' },
       { x: 1570, y: 300, text: 'Bu gayzer kendi kendine patlıyor — say ve geç' },
@@ -563,7 +575,7 @@ export const LEVELS = [
     floes: [
       F(30, GROUND, 220),
       F(350, 404, 150, 'crack'),
-      F(620, GROUND, 170, 'burst'),
+      F(640, GROUND, 150, 'burst'),
       F(910, GROUND, 190),
       F(1210, 404, 150, 'burst', { burstPeriod: 2.8 }),
       F(1470, GROUND, 160, 'crack'),
@@ -598,6 +610,7 @@ export const LEVELS = [
       { kind: 'orca', x: 1622, y: WATER, w: 56, h: 120, height: 245, period: 3.1, phase: 0.55 },
     ],
     fish: [{ x: 630, y: 350 }, { x: 1300, y: 330 }, { x: 1980, y: 336 }],
+    speedFish: [{ x: 1470, y: 348 }],
     signs: [{ x: 400, y: GROUND - 106, text: 'Yüzgeç çıktıysa zıplama — bekle' }],
   },
 
@@ -657,6 +670,7 @@ export const LEVELS = [
       F(2190, GROUND, 220),
     ],
     fish: [{ x: 585, y: 350 }, { x: 1180, y: 330 }, { x: 2120, y: 336 }],
+    speedFish: [{ x: 1330, y: 348 }],
     signs: [{ x: 360, y: GROUND - 106, text: 'Alçak buzlar tuzak — üstünden uç' }],
   },
 
@@ -673,7 +687,7 @@ export const LEVELS = [
     checkpoints: [{ x: 1360, y: GROUND }],
     floes: [
       F(30, GROUND, 220),
-      F(350, 404, 160, 'burst'),
+      F(360, 404, 150, 'burst'),
       F(640, GROUND, 180),
       F(880, 470, 70, 'snap'),
       F(960, GROUND, 170),
@@ -705,20 +719,22 @@ export const LEVELS = [
     floes: [
       F(30, GROUND, 220),
       F(350, GROUND, 160, 'crack'),
-      F(640, 404, 170, 'burst'),
+      F(660, 404, 150, 'burst'),
       F(940, GROUND, 190),
       F(1260, 404, 160, 'slip'),
       F(1520, GROUND, 190),
-      F(1840, 404, 160, 'burst', { burstPeriod: 3, burstPhase: 0.45 }),
+      F(1850, 404, 150, 'burst', { burstPeriod: 3, burstPhase: 0.45 }),
       F(2120, GROUND, 170),
       F(2380, GROUND, 200),
     ],
     hazards: [
       { kind: 'gust', x: 830, y: 150, w: 120, h: 370, power: 340 },
+      { kind: 'storm', x: 1180, y: 110, w: 620, h: 410, power: -330, phase: 0.4, period: 3.2 },
       { kind: 'orca', x: 1732, y: WATER, w: 56, h: 120, height: 245, period: 3, phase: 0.3 },
       { kind: 'gust', x: 2010, y: 150, w: 120, h: 370, power: -320 },
     ],
     fish: [{ x: 570, y: 336 }, { x: 1160, y: 330 }, { x: 2290, y: 336 }],
+    speedFish: [{ x: 1590, y: 318 }],
   },
 
   /* ------------------------------------------------------------- 26 */
@@ -772,6 +788,7 @@ export const LEVELS = [
       F(2290, GROUND, 200),
     ],
     fish: [{ x: 620, y: 336 }, { x: 1370, y: 336 }, { x: 2200, y: 336 }],
+    speedFish: [{ x: 1540, y: 322 }],
     signs: [{ x: 360, y: GROUND - 106, text: 'Üçü sırayla patlıyor — ortada durma' }],
   },
 
@@ -804,6 +821,7 @@ export const LEVELS = [
       { kind: 'icicle', x: 1480, y: 130, w: 24, h: 46 },
     ],
     fish: [{ x: 600, y: 340 }, { x: 1360, y: 330 }, { x: 2320, y: 336 }],
+    speedFish: [{ x: 1260, y: 348 }],
   },
 
   /* ------------------------------------------------------------- 29 */
@@ -833,9 +851,11 @@ export const LEVELS = [
     hazards: [
       { kind: 'gust', x: 1030, y: 150, w: 120, h: 370, power: -330 },
       { kind: 'orca', x: 1272, y: WATER, w: 56, h: 120, height: 245, period: 3.1, phase: 0.5 },
+      { kind: 'storm', x: 1390, y: 110, w: 560, h: 410, power: -320, phase: 0.2, period: 3.4 },
       { kind: 'icicle', x: 2000, y: 120, w: 24, h: 46 },
     ],
     fish: [{ x: 530, y: 330 }, { x: 1300, y: 330 }, { x: 2310, y: 320 }],
+    speedFish: [{ x: 1485, y: 322 }],
   },
 
   /* ------------------------------------------------------------- 30 */
@@ -872,6 +892,7 @@ export const LEVELS = [
       { kind: 'gust', x: 2600, y: 150, w: 110, h: 370, power: -300 },
     ],
     fish: [{ x: 520, y: 320 }, { x: 1290, y: 320 }, { x: 2600, y: 310 }],
+    speedFish: [{ x: 2280, y: 314 }],
   },
 ];
 

@@ -1430,3 +1430,59 @@ kbd {
 @container stage (max-height: 520px) {
   .missions { display: none; }
 }
+
+/* ========================================================= Speed charge */
+
+.charge {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 0.2rem 0.5rem;
+  align-self: stretch;
+  animation: toast-in var(--t-base) var(--e-out);
+}
+
+.charge__bolt {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 1.2rem;
+  height: 1.2rem;
+  color: #ffd23f;
+  filter: drop-shadow(0 0 6px rgba(255, 90, 80, 0.8));
+}
+
+.charge__bolt svg {
+  width: 100%;
+  height: 100%;
+}
+
+.charge__track {
+  flex: 1;
+  height: 5px;
+  border-radius: var(--r-full);
+  background: rgba(255, 90, 80, 0.2);
+  overflow: hidden;
+}
+
+.charge__track i {
+  display: block;
+  height: 100%;
+  width: 100%;
+  border-radius: var(--r-full);
+  background: linear-gradient(90deg, #ff3b48, #ffd23f);
+  box-shadow: 0 0 10px rgba(255, 90, 80, 0.7);
+  transition: width 90ms linear;
+}
+
+.charge.is-fading {
+  animation: charge-flicker 0.24s steps(2, end) infinite;
+}
+
+@keyframes charge-flicker {
+  50% { opacity: 0.45; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .charge.is-fading { animation: none; }
+}

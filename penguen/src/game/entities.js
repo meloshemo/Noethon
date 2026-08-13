@@ -5,7 +5,7 @@
  * `{x, y, w, h}` box that the collision code in level.js consumes.
  */
 
-import { ICE } from './config.js';
+import { ICE, STORM } from './config.js';
 import { clamp, easeOutCubic, lerp } from '../core/util.js';
 
 /* ------------------------------------------------------------------ */
@@ -302,6 +302,7 @@ export class Floe {
  *   seal   — patrols back and forth
  *   gust   — wind column, pushes but never kills
  *   orca   — breaches out of the gap on a timer, lethal at the top of its arc
+ *   storm  — a stretch of coast with the wind against you, surging in waves
  */
 export class Hazard {
   constructor(def) {
@@ -324,10 +325,13 @@ export class Hazard {
     this.height = def.height ?? 220;
     this.period = def.period ?? 3.4;
     this.rise = 0; // 0..1 along the breach arc
+    // Storm: 0..1 wind strength this frame, and whether it is still building.
+    this.intensity = 0;
+    this.building = false;
   }
 
   get lethal() {
-    if (this.kind === 'gust') return false;
+    if (this.kind === 'gust' || this.kind === 'storm') return false;
     // An orca only bites while it is actually out of the water.
     if (this.kind === 'orca') return this.rise > 0.12;
     return true;
@@ -379,6 +383,21 @@ export class Hazard {
         this.strength = (this.power ?? 320) * (0.6 + 0.4 * Math.sin(time * 2.2 + this.phase * 6));
         break;
       }
+      case 'storm': {
+        // One surge per period with a visible build-up, then a lull long
+        // enough to cross in. The player is never asked to fight a flat wall
+        // of wind — they are asked to read the rhythm.
+        const cycle = (((time * s) / (this.period ?? STORM.period)) + this.phase) % 1;
+        const warnFrac = STORM.warn / (this.period ?? STORM.period);
+        let t;
+        if (cycle < warnFrac) t = STORM.lull + (1 - STORM.lull) * (cycle / warnFrac);
+        else if (cycle < warnFrac + STORM.surge) t = 1;
+        else t = STORM.lull + (1 - STORM.lull) * Math.max(0, 1 - (cycle - warnFrac - STORM.surge) / 0.22);
+        this.intensity = t;
+        this.building = cycle < warnFrac;
+        this.strength = (this.power ?? -320) * t;
+        break;
+      }
       case 'orca': {
         // One clean sine arc per period, spending most of the cycle underwater
         // so the gap is crossable — the fin shows first, then the whale.
@@ -408,14 +427,23 @@ export class Hazard {
 /* ------------------------------------------------------------------ */
 
 export class Fish {
-  constructor(def) {
+  constructor(def, kind = 'normal') {
+    this.kind = kind;
     this.x = def.x;
     this.y = def.y;
-    this.w = 22;
-    this.h = 16;
+    this.baseX = def.x;
+    this.baseY = def.y;
+    // The speed fish is bigger and easier to grab — it is already a detour,
+    // so it should not also be a precision test.
+    this.w = kind === 'speed' ? 30 : 22;
+    this.h = kind === 'speed' ? 22 : 16;
     this.taken = false;
     this.phase = Math.random() * Math.PI * 2;
     this.pop = 0;
+  }
+
+  get isSpeed() {
+    return this.kind === 'speed';
   }
 
   update(dt) {
@@ -430,6 +458,8 @@ export class Fish {
   reset() {
     this.taken = false;
     this.pop = 0;
+    this.x = this.baseX;
+    this.y = this.baseY;
   }
 }
 

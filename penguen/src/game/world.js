@@ -8,7 +8,7 @@
 
 import { Floe, Hazard, Fish, Checkpoint } from './entities.js';
 import { Player } from './player.js';
-import { VIEW, ASSIST, ICE, scaleForLevel, upgradeEffect } from './config.js';
+import { VIEW, ASSIST, ICE, STORM, BOOST, REWARDS, scaleForLevel, upgradeEffect } from './config.js';
 import { WATER_Y } from './levels.js';
 import { clamp, damp, rectsOverlap, rand } from '../core/util.js';
 
@@ -30,7 +30,9 @@ export class World {
 
     this.floes = (def.floes ?? []).map((d, i) => new Floe(d, i));
     this.hazards = (def.hazards ?? []).map((d) => new Hazard(d));
-    this.fish = (def.fish ?? []).map((d) => new Fish(d));
+    this.fish = (def.fish ?? []).map((d) => new Fish(d, 'normal'));
+    /** Speed fish are scored separately, so the 3-fish star stays a 3-fish star. */
+    this.boosts = (def.speedFish ?? []).map((d) => new Fish(d, 'speed'));
     this.checkpoints = (def.checkpoints ?? []).map((d) => new Checkpoint(d));
     this.signs = def.signs ?? [];
     this.goal = { x: def.goal.x, y: def.goal.y, w: 54, h: 64, pulse: 0 };
@@ -70,6 +72,7 @@ export class World {
     /** Counters the mission system reads after a run. */
     this.burstDodges = 0;
     this.orcaPasses = 0;
+    this.boostsTaken = 0;
     this._orcaSeen = new Set();
 
     this.player.reset(this.spawn.x, this.spawn.y);
@@ -119,6 +122,7 @@ export class World {
 
     for (const f of this.floes) f.update(dt, this.time, fx);
     for (const f of this.fish) f.update(dt);
+    for (const f of this.boosts) f.update(dt);
     for (const c of this.checkpoints) c.update(dt);
     for (const h of this.hazards) h.update(dt, this.time, this.player, this.hazardSpeed);
     this.goal.pulse = (this.goal.pulse + dt * 2) % (Math.PI * 2);
@@ -137,13 +141,17 @@ export class World {
       return;
     }
 
-    // Wind gusts push the penguin while airborne.
+    // Wind. A gust is a column you cross; a storm is a stretch of coast where
+    // the wind is simply against you and you have to time the lulls.
     let push = 0;
+    this.windPressure = 0;
     for (const h of this.hazards) {
-      if (h.kind !== 'gust') continue;
+      if (h.kind !== 'gust' && h.kind !== 'storm') continue;
       if (!rectsOverlap(this.player.box, h.box)) continue;
-      const raw = (h.strength ?? h.power ?? 0) * (this.player.onGround ? 0.35 : 1);
+      const ground = h.kind === 'storm' ? STORM.groundFactor : 0.35;
+      const raw = (h.strength ?? h.power ?? 0) * (this.player.onGround ? ground : 1);
       push += raw * (1 - this.player.boost.wind);
+      if (h.kind === 'storm') this.windPressure = Math.max(this.windPressure, h.intensity ?? 0);
     }
 
     // "snap" ice decides to vanish while the player is still in the air, so it
@@ -233,7 +241,7 @@ export class World {
     if (this.magnetRange > 0) {
       const px = this.player.centerX;
       const py = this.player.y + this.player.h / 2;
-      for (const f of this.fish) {
+      for (const f of [...this.fish, ...this.boosts]) {
         if (f.taken) continue;
         const dx = px - (f.x + f.w / 2);
         const dy = py - (f.y + f.h / 2);
@@ -252,6 +260,19 @@ export class World {
       this.fishTaken++;
       this.audio.fish();
       this.particles.sparkle(f.x + f.w / 2, f.y + f.h / 2);
+    }
+
+    for (const f of this.boosts) {
+      if (f.taken || !rectsOverlap(this.player.box, f.box)) continue;
+      f.taken = true;
+      f.pop = 1;
+      this.boostsTaken++;
+      this.player.energise(BOOST.duration);
+      this.audio.charge();
+      this.particles.sparkle(f.x + f.w / 2, f.y + f.h / 2, '#ff3b48');
+      this.particles.sparkle(f.x + f.w / 2, f.y + f.h / 2, '#ffd23f');
+      this.shake(4);
+      this.showHint('Hız enerjisi!', 1.4);
     }
     for (const c of this.checkpoints) {
       if (c.active || !rectsOverlap(this.player.box, c.box)) continue;
@@ -362,6 +383,10 @@ export class World {
     // Floes reset so a broken path never soft-locks the player after a death.
     for (const f of this.floes) f.reset();
     for (const h of this.hazards) h.reset();
+    // Speed fish come back on a retry; the normal three stay taken so a death
+    // never costs you collectibles you already earned this run.
+    for (const f of this.boosts) f.reset();
+    this.boostsTaken = 0;
     this.particles.puff(this.respawn.x, this.respawn.y, 10);
     this._centerCamera();
   }
@@ -378,6 +403,11 @@ export class World {
     this.camera.x = damp(this.camera.x, targetX, 7, dt);
     this.camera.y = damp(this.camera.y, targetY, 5, dt);
     this.camera.shake = damp(this.camera.shake, 0, 9, dt);
+  }
+
+  /** Coins the speed fish are worth this run. */
+  get boostCoins() {
+    return this.boostsTaken * REWARDS.perBoost;
   }
 
   /** Star rating for the run that just finished. */

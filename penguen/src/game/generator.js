@@ -99,6 +99,8 @@ export function generateLevel(id, opts = {}) {
     // Traps and falling floes are stepping stones, never walkways.
     if (type === 'trap') w = Math.min(w, Math.floor(walkable(ICE.trapDelay)));
     else if (type === 'fall') w = Math.min(w, Math.floor(walkable(0.35)));
+    // A geyser must be crossable end to end inside its warning, with margin.
+    else if (type === 'burst') w = Math.min(w, Math.floor(ICE.burstWarn * speed * 0.82));
 
     // Landing on a narrow short-fuse floe needs precision, so never ask for a
     // maximum-distance jump to reach one.
@@ -235,8 +237,45 @@ export function generateLevel(id, opts = {}) {
     }
   }
 
+  // --- storms -----------------------------------------------------------
+  // One at most, and only over a long enough stretch that there is somewhere
+  // to stand and wait out a surge.
+  if (d > 0.35 && rng() < 0.45) {
+    const start = 2 + Math.floor(rng() * Math.max(1, floes.length - 6));
+    const a = floes[start];
+    const bIdx = Math.min(floes.length - 2, start + 3);
+    const b = floes[bIdx];
+    if (a && b && b.x + b.w - a.x > 380) {
+      hazards.push({
+        kind: 'storm',
+        x: Math.round(a.x - 40),
+        y: 110,
+        w: Math.round(b.x + b.w - a.x + 80),
+        h: 410,
+        power: -Math.round(lerp(280, 340, rng())),
+        period: +lerp(3.2, 3.8, rng()).toFixed(2),
+        phase: +rng().toFixed(2),
+      });
+    }
+  }
+
+  // --- the speed fish ---------------------------------------------------
+  // Always a detour: parked high over a floe, never on the running line.
+  const speedFish = [];
+  if (floes.length > 5) {
+    const pool = floes.filter((f) => f.type !== 'snap' && f.w >= 120).slice(2, -1);
+    if (pool.length) {
+      const host = pool[Math.floor(rng() * pool.length)];
+      speedFish.push({
+        x: Math.round(host.x + host.w / 2 - 15),
+        y: Math.round(host.y - lerp(78, 100, rng())),
+      });
+    }
+  }
+
   return {
     id,
+    speedFish,
     name: opts.name ?? NAMES[Math.abs(id - CRAFTED_LEVELS - 1) % NAMES.length],
     subtitle: opts.subtitle ?? `Sonsuz kaçış — bölüm ${id}`,
     intro: null,
