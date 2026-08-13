@@ -1,0 +1,20 @@
+{
+  "name": "Pengu — Antarktika'dan Kaçış",
+  "short_name": "Pengu",
+  "description": "Yeni doğmuş bir penguen, eriyen buzlar arasında Antarktika'dan kaçmaya çalışıyor.",
+  "lang": "tr",
+  "start_url": ".",
+  "scope": ".",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#050d1c",
+  "theme_color": "#08132a",
+  "icons": [
+    {
+      "src": "assets/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

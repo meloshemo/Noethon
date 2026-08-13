@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<title>Pengu — Antarktika'dan Kaçış</title>
+<meta name="description" content="Yeni doğmuş bir penguen, eriyen buzlar arasında Antarktika'dan kaçmaya çalışıyor. Zıpla, buzlar kırılmadan geç, salı yakala." />
+<meta name="theme-color" content="#08132a" />
+<meta name="color-scheme" content="dark" />
+
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Pengu — Antarktika'dan Kaçış" />
+<meta property="og:description" content="Eriyen buzlar, kırılan zeminler ve büyüyen bir penguen. Kaçabilecek misin?" />
+<meta property="og:image" content="assets/og-card.svg" />
+
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="assets/favicon.svg" />
+<link rel="manifest" href="manifest.webmanifest" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="styles/tokens.css" />
+<link rel="stylesheet" href="styles/base.css" />
+<link rel="stylesheet" href="styles/ui.css" />
+</head>
+<body>
+
+<div class="app" id="app">
+  <div class="stage" id="stage">
+    <canvas id="game" aria-label="Oyun alanı" role="img"></canvas>
+
+    <!-- ─────────────────────────────  HUD  ───────────────────────────── -->
+    <div class="hud" id="hud" hidden>
+      <div class="hud__bar">
+        <div class="hud__group">
+          <span class="chip chip--level" id="hudLevel">Bölüm 1</span>
+          <span class="chip" id="hudName">İlk Adımlar</span>
+        </div>
+
+        <div class="hud__group hud__group--right">
+          <span class="chip chip--stat" title="Toplanan balık">
+            <svg viewBox="0 0 24 16" class="icon" aria-hidden="true"><path d="M14 8c0 3-3.6 5.5-7 5.5S1 11 1 8s2.6-5.5 6-5.5S14 5 14 8Z" fill="currentColor"/><path d="M14.5 8 22 3v10l-7.5-5Z" fill="currentColor"/></svg>
+            <span id="hudFish">0/3</span>
+          </span>
+          <span class="chip chip--stat" title="Deneme">
+            <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7Z" fill="currentColor"/></svg>
+            <span id="hudDeaths">0</span>
+          </span>
+          <span class="chip chip--time" id="hudTime">00:00.00</span>
+          <button class="icon-btn" id="pauseBtn" aria-label="Duraklat">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.4" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.4" fill="currentColor"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="progress" aria-hidden="true">
+        <div class="progress__fill" id="progressFill"></div>
+        <div class="progress__pin" id="progressPin"></div>
+      </div>
+
+      <div class="toast" id="toast" hidden></div>
+    </div>
+
+    <!-- ──────────────────────  Touch controls  ─────────────────────── -->
+    <div class="touch" id="touch" hidden>
+      <div class="touch__side touch__side--left">
+        <button class="pad" id="padLeft" aria-label="Sol">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7" stroke="currentColor" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="pad" id="padRight" aria-label="Sağ">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7" stroke="currentColor" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <div class="touch__side touch__side--right">
+        <button class="pad pad--jump" id="padJump" aria-label="Zıpla">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 5 12h4v7h6v-7h4L12 4Z" fill="currentColor"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ────────────────────────  Overlays  ─────────────────────────── -->
+    <div class="overlay" id="overlay" data-screen="title">
+
+      <!-- Title -->
+      <section class="screen screen--title" data-name="title">
+        <div class="brand">
+          <div class="brand__mark" aria-hidden="true">
+            <svg viewBox="0 0 64 64"><ellipse cx="32" cy="40" rx="17" ry="19" fill="#26364a"/><ellipse cx="32" cy="42" rx="11" ry="14" fill="#f6fbff"/><ellipse cx="32" cy="20" rx="13" ry="11" fill="#26364a"/><ellipse cx="26" cy="19" rx="3.4" ry="3.8" fill="#fff"/><ellipse cx="37" cy="19" rx="3.4" ry="3.8" fill="#fff"/><circle cx="26.8" cy="19.4" r="1.7" fill="#0e1723"/><circle cx="37.4" cy="19.4" r="1.7" fill="#0e1723"/><path d="M32 23.5 39 26l-7 2.5Z" fill="#ff9c3f"/><ellipse cx="25" cy="58" rx="5" ry="2.4" fill="#ff9c3f"/><ellipse cx="39" cy="58" rx="5" ry="2.4" fill="#ff9c3f"/></svg>
+          </div>
+          <h1 class="brand__title">Pengu</h1>
+          <p class="brand__tagline">Antarktika'dan Kaçış</p>
+        </div>
+
+        <p class="screen__lede">
+          Buzlar eriyor. Yeni doğmuş bir penguensin ve kuzeye açılan sala ulaşman gerek.
+          Ama her buz seni taşımaz.
+        </p>
+
+        <div class="actions">
+          <button class="btn btn--primary btn--xl" id="playBtn">
+            <span id="playLabel">Oyna</span>
+            <small id="playSub" class="btn__sub">Bölüm 1</small>
+          </button>
+          <div class="actions__row">
+            <button class="btn" id="levelsBtn">Bölümler</button>
+            <button class="btn" id="howtoBtn">Nasıl oynanır</button>
+            <button class="btn" id="settingsBtn">Ayarlar</button>
+          </div>
+        </div>
+
+        <p class="screen__foot" id="titleStats"></p>
+      </section>
+
+      <!-- Level select -->
+      <section class="screen screen--levels" data-name="levels" hidden>
+        <header class="screen__head">
+          <button class="btn btn--ghost btn--back" data-back>← Geri</button>
+          <h2 class="screen__title">Bölümler</h2>
+          <span class="screen__meta" id="levelsMeta"></span>
+        </header>
+        <div class="levels" id="levelGrid"></div>
+        <p class="screen__foot">18 bölümden sonra sonsuz mod başlar — her bölüm biraz daha zorlu.</p>
+      </section>
+
+      <!-- How to play -->
+      <section class="screen screen--howto" data-name="howto" hidden>
+        <header class="screen__head">
+          <button class="btn btn--ghost btn--back" data-back>← Geri</button>
+          <h2 class="screen__title">Nasıl oynanır</h2>
+        </header>
+
+        <div class="cards">
+          <article class="card">
+            <h3 class="card__title">Kontroller</h3>
+            <ul class="keys">
+              <li><kbd>←</kbd><kbd>→</kbd><span>Yürü</span></li>
+              <li><kbd>Boşluk</kbd><span>Zıpla — basılı tut, yükseğe çık</span></li>
+              <li><kbd>R</kbd><span>Bölümü baştan başlat</span></li>
+              <li><kbd>Esc</kbd><span>Duraklat</span></li>
+            </ul>
+            <p class="card__note">Dokunmatik ekranda alttaki tuşları kullan.</p>
+          </article>
+
+          <article class="card">
+            <h3 class="card__title">Buz türleri</h3>
+            <ul class="legend" id="iceLegend"></ul>
+          </article>
+
+          <article class="card">
+            <h3 class="card__title">İpuçları</h3>
+            <ul class="tips">
+              <li>Koşarken zıplarsan daha uzağa gidersin.</li>
+              <li>Kenardan düşsen bile kısa bir an zıplayabilirsin — acele etme.</li>
+              <li>Her bölümde 3 balık var. Hepsini toplarsan ikinci yıldız senindir.</li>
+              <li>Bölüm ilerledikçe penguen büyür: daha ağır zıplar, daha geniş yer ister.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <!-- Settings -->
+      <section class="screen screen--settings" data-name="settings" hidden>
+        <header class="screen__head">
+          <button class="btn btn--ghost btn--back" data-back>← Geri</button>
+          <h2 class="screen__title">Ayarlar</h2>
+        </header>
+
+        <div class="settings">
+          <label class="row">
+            <span class="row__text"><strong>Ses efektleri</strong><small>Zıplama, kırılma, su sesi</small></span>
+            <input type="checkbox" id="setSfx" class="switch" />
+          </label>
+          <label class="row">
+            <span class="row__text"><strong>Müzik</strong><small>Sakin arka plan melodisi</small></span>
+            <input type="checkbox" id="setMusic" class="switch" />
+          </label>
+          <label class="row">
+            <span class="row__text"><strong>Az hareket</strong><small>Sarsıntı, kar ve parçacıkları azaltır</small></span>
+            <input type="checkbox" id="setMotion" class="switch" />
+          </label>
+          <label class="row">
+            <span class="row__text"><strong>Kolay mod</strong><small>Buzlar geç kırılır, tuzaklar yavaşlar</small></span>
+            <input type="checkbox" id="setAssist" class="switch" />
+          </label>
+        </div>
+
+        <div class="danger">
+          <button class="btn btn--danger" id="resetBtn">İlerlemeyi sıfırla</button>
+          <p class="danger__note">Tüm bölümler, yıldızlar ve rekorlar silinir.</p>
+        </div>
+      </section>
+
+      <!-- Pause -->
+      <section class="screen screen--sheet" data-name="pause" hidden>
+        <div class="sheet">
+          <h2 class="sheet__title">Duraklatıldı</h2>
+          <p class="sheet__meta" id="pauseMeta"></p>
+          <div class="sheet__actions">
+            <button class="btn btn--primary" id="resumeBtn">Devam et</button>
+            <button class="btn" id="retryBtn">Baştan başla</button>
+            <button class="btn btn--ghost" id="menuBtn">Ana menü</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Level complete -->
+      <section class="screen screen--sheet" data-name="complete" hidden>
+        <div class="sheet sheet--win">
+          <p class="sheet__kicker" id="winKicker">Bölüm tamam</p>
+          <h2 class="sheet__title" id="winTitle">İlk Adımlar</h2>
+
+          <div class="stars" id="winStars" role="img" aria-label="Yıldızlar">
+            <span class="star" data-i="0"></span>
+            <span class="star" data-i="1"></span>
+            <span class="star" data-i="2"></span>
+          </div>
+
+          <dl class="results">
+            <div><dt>Süre</dt><dd id="winTime">—</dd></div>
+            <div><dt>Balık</dt><dd id="winFish">—</dd></div>
+            <div><dt>Deneme</dt><dd id="winDeaths">—</dd></div>
+            <div><dt>Rekor</dt><dd id="winBest">—</dd></div>
+          </dl>
+
+          <p class="sheet__hint" id="winHint"></p>
+
+          <div class="sheet__actions">
+            <button class="btn btn--primary" id="nextBtn">Sıradaki bölüm</button>
+            <button class="btn" id="againBtn">Tekrar oyna</button>
+            <button class="btn btn--ghost" id="winMenuBtn">Bölümler</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Assist offer -->
+      <section class="screen screen--sheet" data-name="assist" hidden>
+        <div class="sheet">
+          <p class="sheet__kicker">Zorlanıyor musun?</p>
+          <h2 class="sheet__title">Kolay moda geçelim mi?</h2>
+          <p class="sheet__meta">Buzlar daha geç kırılır, tuzaklar yavaşlar. İstediğin an ayarlardan kapatabilirsin.</p>
+          <div class="sheet__actions">
+            <button class="btn btn--primary" id="assistYes">Evet, kolaylaştır</button>
+            <button class="btn btn--ghost" id="assistNo">Hayır, devam</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Level intro card -->
+      <section class="screen screen--intro" data-name="intro" hidden>
+        <div class="intro" id="introCard">
+          <p class="intro__kicker" id="introKicker">Bölüm 1</p>
+          <h2 class="intro__title" id="introTitle">İlk Adımlar</h2>
+          <p class="intro__text" id="introText"></p>
+        </div>
+      </section>
+
+    </div>
+
+    <div class="rotate-hint" id="rotateHint" hidden>
+      <p>Telefonu yan çevirirsen oyun alanı büyür 🐧</p>
+    </div>
+  </div>
+</div>
+
+<noscript>
+  <div class="noscript">Bu oyunu oynamak için JavaScript'i açman gerekiyor.</div>
+</noscript>
+
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

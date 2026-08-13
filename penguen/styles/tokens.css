@@ -1,0 +1,116 @@
+/**
+ * Design tokens.
+ *
+ * Every colour, size, radius and duration in the UI resolves to something in
+ * this file. Nothing else in the codebase hard-codes a hex value.
+ */
+
+:root {
+  /* ---- Colour: arctic night ------------------------------------- */
+  --c-abyss:      #050d1c;
+  --c-deep:       #08132a;
+  --c-navy:       #0e1f3d;
+  --c-navy-soft:  #16294a;
+  --c-slate:      #22375c;
+
+  --c-ice-100:    #f4fbff;
+  --c-ice-200:    #dff0fb;
+  --c-ice-300:    #bcdff2;
+  --c-ice-400:    #8fc4e2;
+  --c-ice-500:    #5f9cc4;
+
+  --c-aqua:       #4fd7ff;
+  --c-mint:       #5ce1a6;
+  --c-amber:      #ffc45a;
+  --c-coral:      #ff6b81;
+  --c-violet:     #9b8cff;
+
+  /* ---- Semantic -------------------------------------------------- */
+  --bg:            var(--c-abyss);
+  --surface:       rgba(14, 31, 61, 0.78);
+  --surface-2:     rgba(22, 41, 74, 0.72);
+  --surface-solid: #0e1f3d;
+  --border:        rgba(143, 196, 226, 0.18);
+  --border-strong: rgba(143, 196, 226, 0.34);
+
+  --text:          var(--c-ice-100);
+  --text-muted:    rgba(220, 238, 250, 0.68);
+  --text-faint:    rgba(200, 226, 245, 0.44);
+
+  --accent:        var(--c-aqua);
+  --accent-ink:    #032535;
+  --success:       var(--c-mint);
+  --warn:          var(--c-amber);
+  --danger:        var(--c-coral);
+
+  /* ---- Typography ------------------------------------------------ */
+  --font-ui: 'Outfit', ui-sans-serif, system-ui, -apple-system, 'Segoe UI',
+             Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-num: 'Outfit', ui-monospace, 'SF Mono', 'Roboto Mono', monospace;
+
+  /* Fluid scale — 1.25 ratio, clamped so it never gets silly on a phone. */
+  --fs-2xs:  clamp(0.68rem, 0.66rem + 0.1vw, 0.74rem);
+  --fs-xs:   clamp(0.76rem, 0.73rem + 0.14vw, 0.84rem);
+  --fs-sm:   clamp(0.86rem, 0.82rem + 0.2vw, 0.95rem);
+  --fs-base: clamp(0.97rem, 0.92rem + 0.26vw, 1.08rem);
+  --fs-md:   clamp(1.1rem, 1.02rem + 0.38vw, 1.28rem);
+  --fs-lg:   clamp(1.32rem, 1.18rem + 0.62vw, 1.6rem);
+  --fs-xl:   clamp(1.6rem, 1.34rem + 1.1vw, 2.2rem);
+  --fs-2xl:  clamp(2.1rem, 1.6rem + 2.2vw, 3.4rem);
+  --fs-3xl:  clamp(3rem, 2rem + 4.4vw, 5.6rem);
+
+  --lh-tight: 1.08;
+  --lh-snug: 1.3;
+  --lh-body: 1.58;
+
+  --tracking-tight: -0.022em;
+  --tracking-wide: 0.08em;
+  --tracking-caps: 0.14em;
+
+  /* ---- Space ----------------------------------------------------- */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-5: 1.5rem;
+  --s-6: 2rem;
+  --s-7: 3rem;
+  --s-8: 4rem;
+
+  /* ---- Shape & depth --------------------------------------------- */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 18px;
+  --r-xl: 26px;
+  --r-full: 999px;
+
+  --shadow-sm: 0 2px 8px rgba(2, 8, 20, 0.35);
+  --shadow-md: 0 10px 30px rgba(2, 8, 20, 0.45);
+  --shadow-lg: 0 26px 70px rgba(2, 8, 20, 0.6);
+  --glow-accent: 0 0 0 1px rgba(79, 215, 255, 0.35), 0 12px 34px rgba(79, 215, 255, 0.22);
+
+  --blur: saturate(150%) blur(18px);
+
+  /* ---- Motion ----------------------------------------------------- */
+  --e-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --e-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --e-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --t-fast: 140ms;
+  --t-base: 240ms;
+  --t-slow: 460ms;
+
+  /* ---- Layout ------------------------------------------------------ */
+  --hud-h: 3.25rem;
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --t-fast: 1ms;
+    --t-base: 1ms;
+    --t-slow: 1ms;
+  }
+}
