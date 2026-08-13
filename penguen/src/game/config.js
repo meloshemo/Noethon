@@ -15,8 +15,14 @@
  */
 export const VIEW = { w: 960, h: 540 };
 
-/** Bounds the adaptive viewport so no device gets an unfair field of view. */
-export const VIEW_LIMITS = { minW: 720, maxW: 1440, minH: 440, maxH: 900, baseH: 540 };
+/**
+ * Bounds the adaptive viewport so no device gets an unfair field of view.
+ *
+ * minW is what a portrait phone falls back to. Lower is a narrower view of the
+ * level but a bigger picture, and in portrait the width is what limits the
+ * scale — at 720 the game only filled about two thirds of the screen.
+ */
+export const VIEW_LIMITS = { minW: 600, maxW: 1440, minH: 440, maxH: 900, baseH: 540 };
 
 /**
  * Physics.

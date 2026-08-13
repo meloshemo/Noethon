@@ -435,6 +435,32 @@ export class UI {
       }`;
   }
 
+  /**
+   * Last-resort error card.
+   *
+   * There is no console on a phone, and a game that dies mid-frame otherwise
+   * looks identical to a game that is simply slow: black canvas, frozen HUD.
+   * This puts the actual message on screen so it can be read and reported.
+   */
+  showFatal(err) {
+    if (document.getElementById('fatal')) return;
+    const box = document.createElement('div');
+    box.id = 'fatal';
+    box.className = 'fatal';
+    box.innerHTML = `
+      <h2>Oyun bir hataya takıldı</h2>
+      <p>Bunu olduğu gibi gönderirsen sebebini bulabilirim.</p>
+      <pre></pre>
+      <button class="btn btn--primary" type="button">Yeniden dene</button>`;
+    box.querySelector('pre').textContent =
+      `${err?.name ?? 'Error'}: ${err?.message ?? err}\n\n` +
+      `${(err?.stack ?? '').split('\n').slice(1, 5).join('\n')}\n\n` +
+      `${navigator.userAgent}\n` +
+      `${window.innerWidth}x${window.innerHeight} @${window.devicePixelRatio}`;
+    box.querySelector('button').addEventListener('click', () => location.reload());
+    document.body.append(box);
+  }
+
   offerAssist() {
     this.game.state = 'paused';
     this.input.releaseAll();

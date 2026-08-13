@@ -164,12 +164,31 @@ export class Game {
 
   _loop(ts) {
     requestAnimationFrame(this._boundLoop);
+    try {
+      this._frame(ts);
+    } catch (err) {
+      // A throw inside the frame used to repeat silently every frame: the HUD
+      // froze on its initial values and the canvas stayed black, with no way to
+      // see why on a phone. Report it once, visibly, and stop the loop.
+      this._boundLoop = () => {};
+      this.ui.showFatal?.(err);
+      throw err;
+    }
+  }
+
+  _frame(ts) {
     if (!this.lastTs) this.lastTs = ts;
     // Clamp so a background tab doesn't teleport the player on return.
     const frame = Math.min(0.25, (ts - this.lastTs) / 1000);
     this.lastTs = ts;
 
-    this.input.pollGamepad();
+    // Gamepad access is blocked outright in some embedded contexts, and a
+    // throw here would kill the frame before anything got drawn.
+    try {
+      this.input.pollGamepad();
+    } catch {
+      this.input.pollGamepad = () => {};
+    }
 
     if (this.state === 'playing' && this.world) {
       this.accumulator += frame;

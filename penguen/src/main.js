@@ -11,6 +11,22 @@ import { Game } from './game/game.js';
 import { UI } from './ui/ui.js';
 
 function boot() {
+  try {
+    start();
+  } catch (err) {
+    // Nothing is wired up yet at this point, so paint the error by hand.
+    const box = document.createElement('div');
+    box.className = 'fatal';
+    box.innerHTML = '<h2>Oyun başlatılamadı</h2><pre></pre>';
+    box.querySelector('pre').textContent =
+      `${err?.name}: ${err?.message}\n\n${(err?.stack ?? '').split('\n').slice(1, 5).join('\n')}` +
+      `\n\n${navigator.userAgent}\n${window.innerWidth}x${window.innerHeight} @${window.devicePixelRatio}`;
+    document.body.append(box);
+    throw err;
+  }
+}
+
+function start() {
   const canvas = document.getElementById('game');
   let save = Storage.load();
 
@@ -65,9 +81,14 @@ function boot() {
     { passive: false },
   );
 
-  // Surface load failures instead of leaving a black screen.
+  // Surface failures on screen. On a phone there is no console, so an
+  // uncaught error is indistinguishable from the game simply not starting.
   window.addEventListener('error', (e) => {
     console.error('[pengu]', e.error ?? e.message);
+    ui.showFatal?.(e.error ?? new Error(e.message));
+  });
+  window.addEventListener('unhandledrejection', (e) => {
+    ui.showFatal?.(e.reason instanceof Error ? e.reason : new Error(String(e.reason)));
   });
 }
 

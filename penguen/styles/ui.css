@@ -1486,3 +1486,48 @@ kbd {
 @media (prefers-reduced-motion: reduce) {
   .charge.is-fading { animation: none; }
 }
+
+/* ======================================================== Fatal error */
+
+.fatal {
+  position: fixed;
+  inset: 0;
+  z-index: 99;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--s-3);
+  padding: calc(var(--s-5) + var(--safe-t)) var(--s-5) calc(var(--s-5) + var(--safe-b));
+  background: var(--surface-solid);
+  color: var(--text);
+  overflow-y: auto;
+}
+
+.fatal h2 {
+  font-size: var(--fs-lg);
+}
+
+.fatal p {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.fatal pre {
+  margin: 0;
+  padding: var(--s-3);
+  font-family: ui-monospace, monospace;
+  font-size: var(--fs-2xs);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #ffd7de;
+  background: rgba(255, 107, 129, 0.1);
+  border: 1px solid rgba(255, 107, 129, 0.35);
+  border-radius: var(--r-md);
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.fatal .btn {
+  align-self: flex-start;
+}

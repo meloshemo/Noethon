@@ -29,10 +29,41 @@ const PALETTE = {
   snap: '#b9c8d8',
 };
 
+/**
+ * Hard ceiling on the canvas backing store.
+ *
+ * Browsers refuse to allocate a canvas past a maximum side length (4096 on the
+ * strictest mobile engines) and past a total area, and a refused allocation is
+ * silent: you get a canvas that never paints. The side limit is the one a tall
+ * phone actually hits. Both are set high enough that ordinary screens keep
+ * their full device pixel ratio — dropping it blurs the game, so it is only
+ * ever a last resort.
+ */
+const MAX_CANVAS_PIXELS = 8_000_000;
+const MAX_CANVAS_SIDE = 4096;
+
 export class Renderer {
   constructor(canvas) {
     this.canvas = canvas;
-    this.ctx = canvas.getContext('2d', { alpha: false });
+    // `alpha: false` is a speed win but is the first thing to fail when memory
+    // is tight, so fall back rather than ending up with a null context.
+    this.ctx =
+      canvas.getContext('2d', { alpha: false }) ??
+      canvas.getContext('2d') ??
+      null;
+    if (!this.ctx) throw new Error('2D canvas desteklenmiyor');
+
+    // A 2D context can be lost on mobile (backgrounding, memory pressure) and,
+    // unlike WebGL, nothing in the app notices unless we listen.
+    canvas.addEventListener('contextlost', (e) => {
+      e.preventDefault();
+      this.contextLost = true;
+    });
+    canvas.addEventListener('contextrestored', () => {
+      this.contextLost = false;
+      this.resize();
+    });
+
     this.dpr = 1;
     this.reducedMotion = false;
     this.snow = Array.from({ length: 90 }, () => ({
@@ -68,10 +99,21 @@ export class Renderer {
    */
   resize() {
     const rect = this.canvas.parentElement.getBoundingClientRect();
-    const cw = Math.max(1, rect.width);
-    const ch = Math.max(1, rect.height);
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // A parent that measures zero (or NaN, mid-layout) would poison VIEW and
+    // then every gradient built from it, so fall back to a sane box instead.
+    const cw = Number.isFinite(rect.width) && rect.width > 0 ? rect.width : 960;
+    const ch = Number.isFinite(rect.height) && rect.height > 0 ? rect.height : 540;
     const aspect = cw / ch;
+    if (!Number.isFinite(aspect) || aspect <= 0) return;
+
+    let dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // Trim the device pixel ratio until the buffer fits inside the ceiling.
+    while (dpr > 1 && (cw * dpr * (ch * dpr) > MAX_CANVAS_PIXELS
+      || cw * dpr > MAX_CANVAS_SIDE || ch * dpr > MAX_CANVAS_SIDE)) {
+      dpr -= 0.25;
+    }
+    dpr = Math.max(1, dpr);
+
     const L = VIEW_LIMITS;
 
     VIEW.w = Math.round(clamp(L.baseH * aspect, L.minW, L.maxW));
@@ -99,6 +141,7 @@ export class Renderer {
 
   /** @param {import('./world.js').World} world */
   draw(world, particles, time) {
+    if (this.contextLost) return;
     const ctx = this.ctx;
     const s = this.viewScale * this.dpr;
     // Clear the full backing store first — the letterbox strips that appear at

@@ -8,7 +8,9 @@
 
 import { Floe, Hazard, Fish, Checkpoint } from './entities.js';
 import { Player } from './player.js';
-import { VIEW, ASSIST, ICE, STORM, BOOST, REWARDS, scaleForLevel, upgradeEffect } from './config.js';
+import {
+  VIEW, VIEW_LIMITS, ASSIST, ICE, STORM, BOOST, REWARDS, scaleForLevel, upgradeEffect,
+} from './config.js';
 import { WATER_Y } from './levels.js';
 import { clamp, damp, rectsOverlap, rand } from '../core/util.js';
 
@@ -24,7 +26,10 @@ export class World {
     this.assist = deps.assist ?? false;
 
     this.worldW = def.worldW;
-    this.worldH = def.worldH ?? VIEW.h;
+    // The level's own height, independent of the screen. On a tall phone the
+    // viewport is much taller than this, and the difference is what gets
+    // centred rather than dumped below the ice.
+    this.worldH = def.worldH ?? VIEW_LIMITS.baseH;
     this.waterY = def.waterY ?? WATER_Y;
     this.fog = def.fog ?? 0;
 
@@ -91,9 +96,18 @@ export class World {
     return this.assist ? ASSIST.hazardSpeed : 1;
   }
 
+  /** Vertical camera bounds — negative on screens taller than the level. */
+  get _camYRange() {
+    const slack = VIEW.h - this.worldH;
+    return slack > 0
+      ? { min: -slack / 2, max: -slack / 2 } // taller than the level: centre it
+      : { min: 0, max: this.worldH - VIEW.h };
+  }
+
   _centerCamera() {
+    const y = this._camYRange;
     this.camera.x = clamp(this.player.centerX - VIEW.w * 0.42, 0, Math.max(0, this.worldW - VIEW.w));
-    this.camera.y = clamp(this.player.y - VIEW.h * 0.55, 0, Math.max(0, this.worldH - VIEW.h));
+    this.camera.y = clamp(this.player.y - VIEW.h * 0.55, y.min, y.max);
   }
 
   /** Progress along the level, 0..1 — drives the HUD bar. */
@@ -399,7 +413,8 @@ export class World {
     // Look ahead in the direction of travel so fast runs still show the path.
     const lead = clamp(this.player.vx * 0.35, -110, 110);
     const targetX = clamp(this.player.centerX + lead - VIEW.w * 0.42, 0, Math.max(0, this.worldW - VIEW.w));
-    const targetY = clamp(this.player.y - VIEW.h * 0.55, 0, Math.max(0, this.worldH - VIEW.h));
+    const yr = this._camYRange;
+    const targetY = clamp(this.player.y - VIEW.h * 0.55, yr.min, yr.max);
     this.camera.x = damp(this.camera.x, targetX, 7, dt);
     this.camera.y = damp(this.camera.y, targetY, 5, dt);
     this.camera.shake = damp(this.camera.shake, 0, 9, dt);
