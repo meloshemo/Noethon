@@ -46,12 +46,14 @@ export function generateLevel(id, opts = {}) {
   // with a perfect full-hold launch from the exact edge is not difficulty, it
   // is a tax on everyone. Late-game pressure comes from narrow floes, traps and
   // hazards instead.
-  const maxGap = lerp(reach.distance * 0.6, reach.distance * 0.74, d);
-  const minGap = lerp(reach.distance * 0.34, reach.distance * 0.5, d);
-  const maxRise = reach.height * 0.5;
-  const platCount = Math.round(lerp(9, 16, d));
-  const minW = lerp(160, 105, d);
-  const maxW = lerp(240, 150, d);
+  const maxGap = lerp(reach.distance * 0.66, reach.distance * 0.8, d);
+  const minGap = lerp(reach.distance * 0.42, reach.distance * 0.58, d);
+  const maxRise = reach.height * 0.55;
+  const platCount = Math.round(lerp(11, 18, d));
+  // Narrower floes are the cleanest way to raise difficulty without making a
+  // jump unfair: the reach stays inside the budget, the landing gets tighter.
+  const minW = lerp(140, 92, d);
+  const maxW = lerp(210, 128, d);
 
   const floes = [];
   const hazards = [];
@@ -151,7 +153,7 @@ export function generateLevel(id, opts = {}) {
 
     // Hazards: never on the first two floes, never stacked on a trap, and
     // never on a drifting floe — a seal does not ride the ice it stands on.
-    if (i > 1 && type !== 'trap' && type !== 'move' && rng() < lerp(0.12, 0.4, d)) {
+    if (i > 1 && type !== 'trap' && type !== 'move' && rng() < lerp(0.22, 0.55, d)) {
       hazards.push(makeHazard(rng, floe, d));
     }
 
@@ -162,7 +164,8 @@ export function generateLevel(id, opts = {}) {
     }
 
     // A checkpoint on a solid floe roughly every third of the way.
-    if (type === 'solid' && checkpoints.length < 2 && i > platCount * (checkpoints.length + 1) * 0.33) {
+    const cpCap = d > 0.5 ? 1 : 2;
+    if (type === 'solid' && checkpoints.length < cpCap && i > platCount * (checkpoints.length + 1) * 0.4) {
       checkpoints.push({ x: Math.round(floe.x + w / 2), y: floe.y });
     }
 
@@ -173,8 +176,8 @@ export function generateLevel(id, opts = {}) {
   // Dropped into gaps that are already jumpable, low and to the side, so it
   // reads as a helpful stepping stone and is never the actual route. The
   // validator enforces exactly that, so this only ever adds temptation.
-  if (d > 0.25) {
-    const baitCount = Math.round(lerp(0, 3, d));
+  if (d > 0.1) {
+    const baitCount = Math.round(lerp(1, 5, d));
     // Bait has to sit clearly below both neighbours (so it reads as a low
     // shortcut) and still clear of the sea. Gaps too near the water simply
     // don't get one.
@@ -212,8 +215,8 @@ export function generateLevel(id, opts = {}) {
   }
 
   // --- orcas ------------------------------------------------------------
-  if (d > 0.3) {
-    const orcaCount = Math.round(lerp(0, 2.4, d));
+  if (d > 0.15) {
+    const orcaCount = Math.round(lerp(1, 3.4, d));
     const solidFloes = floes.filter((f) => f.type !== 'snap');
     for (let n = 0; n < orcaCount; n++) {
       const i = 2 + Math.floor(rng() * Math.max(1, solidFloes.length - 4));
@@ -240,7 +243,7 @@ export function generateLevel(id, opts = {}) {
   // --- storms -----------------------------------------------------------
   // One at most, and only over a long enough stretch that there is somewhere
   // to stand and wait out a surge.
-  if (d > 0.35 && rng() < 0.45) {
+  if (d > 0.2 && rng() < 0.7) {
     const start = 2 + Math.floor(rng() * Math.max(1, floes.length - 6));
     const a = floes[start];
     const bIdx = Math.min(floes.length - 2, start + 3);
@@ -255,6 +258,24 @@ export function generateLevel(id, opts = {}) {
         power: -Math.round(lerp(280, 340, rng())),
         period: +lerp(3.2, 3.8, rng()).toFixed(2),
         phase: +rng().toFixed(2),
+      });
+    }
+  }
+
+  // --- rotten fish ------------------------------------------------------
+  // Parked at head height over floes the player has to cross, so avoiding one
+  // costs a jump. The opposite placement rule from the speed fish, on purpose.
+  const rotFish = [];
+  if (d > 0.15) {
+    const kinds = ['heavy', 'dizzy', 'blind'];
+    const count = Math.round(lerp(1, 3, d));
+    const hosts = floes.filter((f) => f.type !== 'snap' && f.w >= 110).slice(2, -1);
+    for (let n = 0; n < count && hosts.length; n++) {
+      const host = hosts.splice(Math.floor(rng() * hosts.length), 1)[0];
+      rotFish.push({
+        x: Math.round(host.x + host.w / 2 - 11),
+        y: Math.round(host.y - lerp(34, 52, rng())),
+        kind: kinds[Math.floor(rng() * kinds.length)],
       });
     }
   }
@@ -276,6 +297,7 @@ export function generateLevel(id, opts = {}) {
   return {
     id,
     speedFish,
+    rotFish,
     name: opts.name ?? NAMES[Math.abs(id - CRAFTED_LEVELS - 1) % NAMES.length],
     subtitle: opts.subtitle ?? `Sonsuz kaçış — bölüm ${id}`,
     intro: null,
@@ -297,21 +319,21 @@ export function generateLevel(id, opts = {}) {
 
 function pickType(rng, d, sinceSafe, lastRisky, prevWaitable, prevSlippery) {
   // Two risky floes in a row is the cap at low difficulty, three later.
-  if (sinceSafe >= (d > 0.5 ? 3 : 2)) return rng() < 0.25 ? 'slip' : 'solid';
+  if (sinceSafe >= (d > 0.4 ? 4 : 3)) return rng() < 0.3 ? 'slip' : 'solid';
   const r = rng();
   const weights = [
-    ['solid', lerp(0.42, 0.2, d)],
+    ['solid', lerp(0.3, 0.12, d)],
     ['crack', lerp(0.3, 0.3, d)],
     // Melting ice has to be timed, so it only ever follows a safe floe.
     ['melt', prevWaitable ? lerp(0.1, 0.16, d) : 0],
     ['move', lerp(0.1, 0.15, d)],
     ['slip', lerp(0.08, 0.08, d)],
-    ['fall', lerp(0.0, 0.06, d)],
+    ['fall', lerp(0.02, 0.1, d)],
     // Geysers arrive late and stay rare — one per level is a threat, three is
     // a slot machine.
-    ['burst', lerp(0.0, 0.1, d)],
+    ['burst', lerp(0.03, 0.15, d)],
     // Traps only appear once the player has met them, and never twice running.
-    ['trap', lastRisky === 'trap' || prevSlippery ? 0 : lerp(0.0, 0.09, d)],
+    ['trap', lastRisky === 'trap' || prevSlippery ? 0 : lerp(0.04, 0.14, d)],
   ];
   const total = weights.reduce((s, [, w]) => s + w, 0);
   let acc = 0;

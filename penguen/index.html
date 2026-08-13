@@ -51,6 +51,7 @@
           <span class="chip chip--stat chip--shield" id="hudShield" hidden title="Kalın tüy">
             <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3Z" fill="currentColor"/></svg>
           </span>
+          <span class="chip chip--ghost" id="hudGhost" hidden title="Rekor sahibine göre farkın"></span>
           <span class="chip chip--time" id="hudTime">00:00.00</span>
           <button class="icon-btn" id="pauseBtn" aria-label="Duraklat">
             <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.4" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.4" fill="currentColor"/></svg>
@@ -135,6 +136,7 @@
               Market
               <small class="btn__badge" id="shopBadge" hidden></small>
             </button>
+            <button class="btn" id="boardBtn">Sıralama</button>
             <button class="btn" id="howtoBtn">Nasıl oynanır</button>
             <button class="btn" id="settingsBtn">Ayarlar</button>
           </div>
@@ -205,7 +207,22 @@
               <li>Gayzer tıslamaya başladıysa bir buçuk adımın var — kaç.</li>
               <li>Alçakta duran cazip buzlara güvenme; bazıları tam inerken kaçar.</li>
               <li>Kırmızı-altın <strong>hız balığı</strong> seni birkaç saniyeliğine şimşeğe çevirir — ama yol üstünde değildir, sapman gerekir.</li>
+              <li>Her balık iyi balık değildir. Yeşilimsi olanlara iki kere bak.</li>
             </ul>
+          </article>
+
+          <article class="card">
+            <h3 class="card__title">Hayalet yarışı</h3>
+            <p class="card__note">
+              Bir bölümü bitirdiğinde koşun kaydedilir. Bir daha oynadığında en iyi süren
+              saydam bir penguen olarak yanında koşar; üstteki <strong>−0.42</strong> gibi
+              rakam ona göre önde mi geride mi olduğunu gösterir.
+            </p>
+            <p class="card__note">
+              Kodunu paylaşırsan arkadaşın senin hayaletinle yarışır, onun kodunu
+              <strong>Sıralama</strong> ekranına yapıştırırsan sen onunkiyle. Sıralamanın
+              birincisi buzun üstünde yanında belirir.
+            </p>
           </article>
         </div>
       </section>
@@ -297,6 +314,19 @@
 
           <div class="payout" id="winPayout"></div>
 
+          <div class="share" id="winShare" hidden>
+            <p class="share__rank" id="winRank"></p>
+            <label class="share__name" id="shareName" hidden>
+              <span class="field__label">Adın</span>
+              <input class="field__input" id="shareNameInput" type="text" maxlength="14"
+                     placeholder="Sen" autocomplete="off" spellcheck="false" />
+            </label>
+            <button class="btn btn--share" id="shareBtn" type="button">
+              Kodunu paylaş
+              <small class="btn__sub">arkadaşın hayaletinle yarışsın</small>
+            </button>
+          </div>
+
           <p class="sheet__hint" id="winHint"></p>
 
           <div class="sheet__actions">
@@ -305,6 +335,40 @@
             <button class="btn btn--ghost" id="winMenuBtn">Ana menü</button>
           </div>
         </div>
+      </section>
+
+      <!-- Leaderboard -->
+      <section class="screen screen--board" data-name="board" hidden>
+        <header class="screen__head">
+          <button class="btn btn--ghost btn--back" data-back>← Geri</button>
+          <h2 class="screen__title">Sıralama</h2>
+          <span class="screen__meta" id="boardMeta"></span>
+        </header>
+
+        <div class="boardtop">
+          <label class="field field--name">
+            <span class="field__label">Adın</span>
+            <input class="field__input" id="boardName" type="text" maxlength="14" placeholder="Sen"
+                   autocomplete="off" spellcheck="false" />
+          </label>
+          <div class="field field--code">
+            <span class="field__label">Rakip kodu</span>
+            <div class="field__row">
+              <input class="field__input" id="boardCode" type="text" placeholder="PG1.3.1842…"
+                     autocomplete="off" spellcheck="false" autocapitalize="off" />
+              <button class="btn btn--primary" id="boardAdd" type="button">Ekle</button>
+            </div>
+          </div>
+        </div>
+
+        <p class="board__msg" id="boardMsg" hidden role="status"></p>
+
+        <div class="board" id="boardList"></div>
+
+        <p class="screen__foot">
+          Süreler bu cihazda saklanır — kodunu gönder, gelen kodu ekle.
+          Sıralamanın birincisi bölümde hayalet olarak yanında koşar.
+        </p>
       </section>
 
       <!-- Assist offer -->

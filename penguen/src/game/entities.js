@@ -426,9 +426,16 @@ export class Hazard {
 /* Pickups & markers                                                   */
 /* ------------------------------------------------------------------ */
 
+/**
+ * kind:
+ *   normal — the three collectibles, worth a star and some coins
+ *   speed  — red and gold, a temporary sprint, always a detour
+ *   heavy / dizzy / blind — rotten, a temporary curse, always on the line
+ */
 export class Fish {
   constructor(def, kind = 'normal') {
     this.kind = kind;
+    this.rot = kind === 'heavy' || kind === 'dizzy' || kind === 'blind';
     this.x = def.x;
     this.y = def.y;
     this.baseX = def.x;
@@ -437,6 +444,9 @@ export class Fish {
     // so it should not also be a precision test.
     this.w = kind === 'speed' ? 30 : 22;
     this.h = kind === 'speed' ? 22 : 16;
+    // A rotten fish drifts on the spot, which is most of how you spot one
+    // moving at speed — that and the colour.
+    this.wobble = Math.random() * Math.PI * 2;
     this.taken = false;
     this.phase = Math.random() * Math.PI * 2;
     this.pop = 0;
@@ -447,7 +457,11 @@ export class Fish {
   }
 
   update(dt) {
-    this.phase += dt * 2.4;
+    this.phase += dt * (this.rot ? 1.5 : 2.4);
+    if (this.rot) {
+      this.wobble += dt * 3.1;
+      this.x = this.baseX + Math.sin(this.wobble) * 6;
+    }
     if (this.pop > 0) this.pop = Math.max(0, this.pop - dt * 3);
   }
 

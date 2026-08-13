@@ -12,6 +12,7 @@ import { getLevel } from '../game/game.js';
 import { LEVELS } from '../game/levels.js';
 import { Storage } from '../core/storage.js';
 import { ensureMissions } from '../game/missions.js';
+import { shareText, withName } from '../game/ghost.js';
 
 const ICE_LEGEND = [
   ['crack', 'Çatlak buz', 'Basınca çatlar, kısa süre sonra kırılır'],
@@ -88,8 +89,19 @@ export class UI {
       dailyState: $('dailyState'),
       dailyStreak: $('dailyStreak'),
       hudShield: $('hudShield'),
+      hudGhost: $('hudGhost'),
       chargeBar: $('chargeBar'),
       chargeFill: $('chargeFill'),
+      winShare: $('winShare'),
+      winRank: $('winRank'),
+      shareBtn: $('shareBtn'),
+      shareName: $('shareName'),
+      shareNameInput: $('shareNameInput'),
+      boardList: $('boardList'),
+      boardName: $('boardName'),
+      boardCode: $('boardCode'),
+      boardMsg: $('boardMsg'),
+      boardMeta: $('boardMeta'),
     };
 
     this._buildLegend();
@@ -236,6 +248,82 @@ export class UI {
     }
   }
 
+  /* ------------------------------------------------------- board */
+
+  /** Label for a board key: "Bölüm 7", "Sonsuz 3" or "Günün Bölümü". */
+  static boardLabel(key) {
+    if (key === 'daily') return 'Günün Bölümü';
+    const id = Number(key);
+    if (!Number.isFinite(id)) return String(key);
+    if (id > CRAFTED_LEVELS) return `Sonsuz ${id - CRAFTED_LEVELS}`;
+    return `Bölüm ${id}${LEVELS[id - 1] ? ` · ${LEVELS[id - 1].name}` : ''}`;
+  }
+
+  /**
+   * The leaderboard.
+   *
+   * Every level you have a time on, with everyone whose code you hold, fastest
+   * first. It is a real board — it just travels by share code instead of by
+   * server, which is the only way to have one with no backend at all.
+   */
+  buildBoard() {
+    this.el.boardName.value = this.save.name ?? '';
+    const keys = Storage.boardKeys(this.save);
+    const list = this.el.boardList;
+    list.innerHTML = '';
+
+    if (!keys.length) {
+      list.innerHTML =
+        '<p class="board__empty">Henüz kayıtlı süre yok. Bir bölümü bitir — süren buraya düşsün.</p>';
+      this.el.boardMeta.textContent = '';
+      return;
+    }
+
+    let rivals = 0;
+    for (const key of keys) {
+      const rows = Storage.board(this.save, key);
+      rivals += rows.filter((r) => !r.you).length;
+
+      const card = document.createElement('article');
+      card.className = 'board__level';
+      card.innerHTML = `
+        <header class="board__head">
+          <h3 class="board__title">${UI.boardLabel(key)}</h3>
+          <button class="btn btn--tiny" type="button" data-share="${key}">Paylaş</button>
+        </header>
+        <ol class="board__rows">
+          ${rows
+            .map(
+              (r, i) => `
+            <li class="board__row${r.you ? ' is-you' : ''}">
+              <span class="board__rank">${i + 1}</span>
+              <span class="board__who">${escapeHtml(r.name)}</span>
+              <span class="board__time">${formatTime(r.time)}</span>
+              ${
+                r.you
+                  ? '<span class="board__tag">sen</span>'
+                  : `<button class="board__drop" type="button" data-drop="${key}" data-name="${escapeHtml(r.name)}" aria-label="${escapeHtml(r.name)} kaydını sil">×</button>`
+              }
+            </li>`,
+            )
+            .join('')}
+        </ol>`;
+      list.append(card);
+    }
+
+    this.el.boardMeta.textContent = rivals
+      ? `${keys.length} bölüm · ${rivals} rakip`
+      : `${keys.length} bölüm`;
+  }
+
+  _boardMessage(text, ok) {
+    const el = this.el.boardMsg;
+    el.hidden = !text;
+    el.textContent = text ?? '';
+    el.classList.toggle('is-ok', Boolean(ok));
+    el.classList.toggle('is-bad', text && !ok);
+  }
+
   buildLevelGrid() {
     const grid = this.el.levelGrid;
     grid.innerHTML = '';
@@ -320,6 +408,10 @@ export class UI {
     this.el.hudShield.hidden = world.maxShields <= 0;
     this.el.hudShield.classList.toggle('is-spent', world.shields <= 0);
 
+    // The gap to the record holder. A bare timer says nothing; "+0.42" says
+    // you are losing this by less than half a second.
+    this._updateGhostChip(world);
+
     const pct = world.progress * 100;
     this.el.progressFill.style.width = `${pct}%`;
     this.el.progressPin.style.left = `${pct}%`;
@@ -329,6 +421,25 @@ export class UI {
     } else if (world.hintTimer <= 0 && this._toastShown) {
       this._hideToast();
     }
+  }
+
+  _updateGhostChip(world) {
+    const chip = this.el.hudGhost;
+    const lead = world.ghostLead;
+    if (!world.ghost?.visible || lead == null) {
+      chip.hidden = true;
+      return;
+    }
+    chip.hidden = false;
+    const ahead = lead > 0;
+    // Rounded to hundredths, and the sign is the whole message.
+    chip.textContent = `${ahead ? '−' : '+'}${Math.abs(lead).toFixed(2)}`;
+    chip.classList.toggle('is-ahead', ahead);
+    chip.classList.toggle('is-behind', !ahead);
+    chip.setAttribute(
+      'aria-label',
+      `${world.ghost.name} rekoruna göre ${Math.abs(lead).toFixed(2)} saniye ${ahead ? 'öndesin' : 'geridesin'}`,
+    );
   }
 
   _showToast(text) {
@@ -411,8 +522,138 @@ export class UI {
     this.el.nextBtn.hidden = Boolean(result.daily);
 
     this._renderPayout(result);
+    this._renderShare(result);
     this.showScreen('complete');
     this.refreshTitle();
+  }
+
+  /**
+   * Where this run landed, and the button that turns it into a rival for
+   * somebody else. Only shown once there is actually a code to hand over.
+   */
+  _renderShare(result) {
+    const has = Boolean(result.code);
+    this.el.winShare.hidden = !has;
+    if (!has) return;
+
+    const lines = [];
+    if (result.beatGhost === true) {
+      const gap = (result.ghostTime - result.time).toFixed(2);
+      lines.push(`<strong>${result.ghostName} geçildi</strong> — ${gap} sn farkla`);
+    } else if (result.beatGhost === false) {
+      const gap = (result.time - result.ghostTime).toFixed(2);
+      lines.push(`${result.ghostName} hâlâ önde — ${gap} sn`);
+    } else if (result.isPB) {
+      lines.push('<strong>İlk rekorun</strong> — artık kendinle yarışıyorsun');
+    }
+    if (result.rivals > 1 && result.rank) {
+      lines.push(`${result.rivals} kişilik sıralamada <strong>${result.rank}.</strong>`);
+    }
+    this.el.winRank.innerHTML = lines.join(' · ');
+    this.el.winRank.hidden = lines.length === 0;
+    // Only asked for once: a code with no name on it arrives as "Rakip".
+    this.el.shareName.hidden = Boolean(this.save.name);
+    this.el.shareNameInput.value = this.save.name ?? '';
+    this._shareResult = result;
+  }
+
+  /**
+   * Hand the run over. A phone gets the real share sheet — WhatsApp, Telegram,
+   * wherever the friend actually is — and everything else gets the clipboard,
+   * with a selectable field as the last resort so the code is never trapped.
+   */
+  async _share() {
+    const r = this._shareResult;
+    if (!r?.code) return;
+
+    const typed = this.el.shareNameInput.value.trim();
+    if (typed && typed !== this.save.name) {
+      this._renameRuns(typed);
+      this.el.shareName.hidden = true;
+    }
+
+    const text = shareText({
+      level: r.level ?? r.boardKey,
+      time: r.time,
+      deaths: r.deaths,
+      fish: r.fish,
+      code: withName(r.code, Storage.displayName(this.save)),
+      daily: r.daily,
+      name: Storage.displayName(this.save),
+    });
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'Pengu', text });
+        return;
+      }
+    } catch {
+      /* dismissed or unsupported — fall through to the clipboard */
+    }
+    const copied = await this._copy(text);
+    this._flashButton(this.el.shareBtn, copied ? 'Kopyalandı ✓' : 'Kopyalanamadı');
+    if (!copied) this._showCodeFallback(text);
+  }
+
+  /**
+   * Renaming yourself renames every code you have already saved — the name is
+   * a header field, so no run has to be replayed to carry it.
+   */
+  _renameRuns(name) {
+    const clean = Storage.setName(this.save, name);
+    for (const g of Object.values(this.save.ghosts ?? {})) {
+      if (g?.code) g.code = withName(g.code, clean);
+    }
+    this._persist();
+    return clean;
+  }
+
+  async _copy(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // execCommand is deprecated and still the only thing that works when the
+      // async clipboard is blocked by permissions or an insecure origin.
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.cssText = 'position:fixed;top:-1000px;opacity:0';
+        document.body.append(ta);
+        ta.select();
+        const ok = document.execCommand('copy');
+        ta.remove();
+        return ok;
+      } catch {
+        return false;
+      }
+    }
+  }
+
+  /** When nothing can copy for us, show the text so it can be selected by hand. */
+  _showCodeFallback(text) {
+    let box = document.getElementById('shareFallback');
+    if (!box) {
+      box = document.createElement('textarea');
+      box.id = 'shareFallback';
+      box.className = 'share__fallback';
+      box.setAttribute('readonly', '');
+      this.el.winShare.append(box);
+    }
+    box.value = text;
+    box.hidden = false;
+    box.select();
+  }
+
+  _flashButton(btn, label) {
+    const original = btn.dataset.label ?? btn.innerHTML;
+    btn.dataset.label = original;
+    btn.textContent = label;
+    clearTimeout(this._flashTimer);
+    this._flashTimer = setTimeout(() => {
+      btn.innerHTML = original;
+    }, 1600);
   }
 
   /** The coin breakdown, so the reward never feels like a black box. */
@@ -502,6 +743,14 @@ export class UI {
       this._syncSettings();
       this.showScreen('settings');
     });
+    $('boardBtn').addEventListener('click', () => {
+      this.audio.ui();
+      this._boardMessage(null);
+      this.buildBoard();
+      this.showScreen('board');
+    });
+
+    this._bindBoard();
 
     this.el.overlay.querySelectorAll('[data-back]').forEach((b) =>
       b.addEventListener('click', () => {
@@ -543,6 +792,71 @@ export class UI {
     this._checkOrientation = checkOrientation;
   }
 
+  _bindBoard() {
+    // Renaming restamps every stored code, so the board and anything shared
+    // afterwards agree on who you are.
+    this.el.boardName.addEventListener('change', () => {
+      this._renameRuns(this.el.boardName.value);
+      this.buildBoard();
+    });
+
+    const add = () => {
+      const raw = this.el.boardCode.value;
+      if (!raw.trim()) return;
+      const res = this.game.importRival(raw);
+      this._boardMessage(res.message, res.ok);
+      if (res.ok) {
+        this.el.boardCode.value = '';
+        this.audio.fish();
+        this.buildBoard();
+      } else {
+        this.audio.ui('back');
+      }
+    };
+    $('boardAdd').addEventListener('click', add);
+    this.el.boardCode.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        add();
+      }
+    });
+
+    // Share and delete are delegated: the board is rebuilt on every change.
+    this.el.boardList.addEventListener('click', async (e) => {
+      const shareKey = e.target.closest('[data-share]')?.dataset.share;
+      if (shareKey) {
+        const row = Storage.board(this.save, shareKey).find((r) => r.you);
+        if (!row) return this._boardMessage('Bu bölümde paylaşacak bir süren yok.', false);
+        const text = shareText({
+          level: shareKey,
+          time: row.time,
+          code: withName(row.code, Storage.displayName(this.save)),
+          daily: shareKey === 'daily',
+          name: Storage.displayName(this.save),
+        });
+        try {
+          if (navigator.share) {
+            await navigator.share({ title: 'Pengu', text });
+            return undefined;
+          }
+        } catch {
+          /* dismissed — fall through */
+        }
+        const ok = await this._copy(text);
+        this._boardMessage(ok ? 'Kod kopyalandı — arkadaşına gönder.' : 'Kopyalanamadı.', ok);
+        return undefined;
+      }
+
+      const drop = e.target.closest('[data-drop]');
+      if (drop) {
+        Storage.removeRival(this.save, drop.dataset.drop, drop.dataset.name);
+        this.audio.ui('back');
+        this.buildBoard();
+      }
+      return undefined;
+    });
+  }
+
   _syncSettings() {
     $('setSfx').checked = this.save.settings.sfx;
     $('setMusic').checked = this.save.settings.music;
@@ -582,6 +896,11 @@ export class UI {
       this.audio.ui();
       this.game.replay();
     });
+    this.el.shareBtn.addEventListener('click', () => {
+      this.audio.ui();
+      this._share();
+    });
+
     $('winMenuBtn').addEventListener('click', () => {
       this.audio.ui('back');
       this.game.quitToMenu();
@@ -623,6 +942,11 @@ export class UI {
     if (s < 1.5) return 'genç';
     return 'yetişkin';
   }
+}
+
+/** Names come from other people's share codes, so they never go in raw. */
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 }
 
 /** Convenience used by the level grid to look up generated level names. */

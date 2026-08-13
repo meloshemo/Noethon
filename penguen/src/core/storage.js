@@ -7,7 +7,16 @@
  */
 
 const KEY = 'pengu.save.v1';
-const VERSION = 2;
+const VERSION = 3;
+
+/**
+ * Ghost runs are the biggest thing in the save by far, so they are capped.
+ * Both numbers are per-save totals, oldest evicted first.
+ */
+const MAX_GHOSTS = 40;
+const MAX_RIVALS = 40;
+/** Rivals shown on one level's board. More than this is a wall, not a list. */
+const RIVALS_PER_LEVEL = 6;
 
 function defaults() {
   return {
@@ -24,6 +33,12 @@ function defaults() {
     daily: { date: null, done: false, bestTime: null, streak: 0, lastPlayed: null },
     /** Rotating missions, regenerated once a day. */
     missions: { date: null, list: [] },
+    /** The name this player's runs are shared under. */
+    name: '',
+    /** Your own best run per level, as a share code: { [key]: {code, time, at} } */
+    ghosts: {},
+    /** Imported runs: { [key]: [{name, time, code, at}] } — the board. */
+    rivals: {},
   };
 }
 
@@ -41,6 +56,9 @@ function migrate(parsed) {
     levels: parsed.levels ?? {},
     upgrades: parsed.upgrades ?? {},
     coins: Number.isFinite(parsed.coins) ? parsed.coins : 0,
+    name: typeof parsed.name === 'string' ? parsed.name : '',
+    ghosts: parsed.ghosts ?? {},
+    rivals: parsed.rivals ?? {},
   };
 
   // v1 had no economy. Rather than starting a returning player at zero, pay
@@ -73,6 +91,30 @@ function write(data) {
 /** Local calendar day, so "today" means the player's today. */
 export function todayKey(d = new Date()) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** Drop the oldest entries of a keyed map until it fits. */
+function prune(map, max) {
+  const keys = Object.keys(map);
+  if (keys.length <= max) return;
+  keys
+    .sort((a, b) => (map[a].at ?? 0) - (map[b].at ?? 0))
+    .slice(0, keys.length - max)
+    .forEach((k) => delete map[k]);
+}
+
+function pruneRivals(map) {
+  let total = Object.values(map).reduce((n, l) => n + l.length, 0);
+  if (total <= MAX_RIVALS) return;
+  // Oldest imports go first, wherever they sit.
+  const all = Object.entries(map).flatMap(([k, list]) => list.map((r) => ({ k, r })));
+  all.sort((a, b) => (a.r.at ?? 0) - (b.r.at ?? 0));
+  for (const { k, r } of all) {
+    if (total <= MAX_RIVALS) break;
+    map[k] = map[k].filter((x) => x !== r);
+    if (!map[k].length) delete map[k];
+    total--;
+  }
 }
 
 function daysBetween(a, b) {
@@ -160,6 +202,82 @@ export const Storage = {
     }
     write(data);
     return { first, streak: data.daily.streak };
+  },
+
+  /* ------------------------------------------------------- ghosts */
+
+  /** The name runs are shared under. Empty means "not asked yet". */
+  setName(data, name) {
+    data.name = String(name ?? '').trim().slice(0, 14);
+    write(data);
+    return data.name;
+  },
+
+  displayName(data) {
+    return data.name?.trim() || 'Sen';
+  },
+
+  /**
+   * Keep your own best run for a level. Only a faster run replaces the stored
+   * one — the ghost you race should always be the best you have ever done.
+   * Returns true when it was a new personal best.
+   */
+  recordGhost(data, key, { code, time }) {
+    const prev = data.ghosts[key];
+    if (prev && prev.time <= time) return false;
+    data.ghosts[key] = { code, time, at: Date.now() };
+    prune(data.ghosts, MAX_GHOSTS);
+    write(data);
+    return true;
+  },
+
+  /**
+   * Add somebody else's run to a level's board. One entry per name, best time
+   * kept, so re-pasting a friend's improved code updates their row instead of
+   * stacking a second one.
+   */
+  addRival(data, key, { code, time, name }) {
+    const who = (name ?? '').trim() || 'Rakip';
+    const list = data.rivals[key] ?? [];
+    const existing = list.find((r) => r.name === who);
+    if (existing && existing.time <= time) return false;
+    const next = list.filter((r) => r.name !== who);
+    next.push({ name: who, time, code, at: Date.now() });
+    next.sort((a, b) => a.time - b.time);
+    data.rivals[key] = next.slice(0, RIVALS_PER_LEVEL);
+    pruneRivals(data.rivals);
+    write(data);
+    return true;
+  },
+
+  removeRival(data, key, name) {
+    const list = data.rivals[key];
+    if (!list) return;
+    data.rivals[key] = list.filter((r) => r.name !== name);
+    if (!data.rivals[key].length) delete data.rivals[key];
+    write(data);
+  },
+
+  /**
+   * One level's board: your best plus every imported run, fastest first.
+   * This is the leaderboard — it just travels by share code rather than server.
+   */
+  board(data, key) {
+    const rows = (data.rivals[key] ?? []).map((r) => ({ ...r, you: false }));
+    const mine = data.ghosts[key];
+    if (mine) rows.push({ name: this.displayName(data), time: mine.time, code: mine.code, you: true });
+    rows.sort((a, b) => a.time - b.time);
+    return rows;
+  },
+
+  /** Every level that has anything on its board, in play order. */
+  boardKeys(data) {
+    const keys = new Set([...Object.keys(data.ghosts ?? {}), ...Object.keys(data.rivals ?? {})]);
+    return [...keys].sort((a, b) => {
+      if (a === 'daily') return 1;
+      if (b === 'daily') return -1;
+      return Number(a) - Number(b);
+    });
   },
 
   setMissions(data, list) {

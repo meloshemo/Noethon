@@ -14,6 +14,11 @@
  *         at once. This is where the game is meant to hurt.
  *   31+   procedurally generated (see generator.js).
  *
+ * Nothing here explains itself. No intro cards, no signs past the one that names
+ * the controls: the player finds out what ice does by standing on it. That is
+ * the whole reason the ambush mechanics exist, and a card that spoils them in
+ * advance throws the surprise away.
+ *
  * Coordinates: y grows downward. A floe's `y` is its top surface.
  */
 
@@ -29,7 +34,7 @@ export const LEVELS = [
     id: 1,
     name: 'İlk Adımlar',
     subtitle: 'Buzul kıyısı',
-    intro: 'Sağa doğru ilerle ve kaçış salına ulaş.',
+    intro: null,
     target: 26,
     worldW: 1240,
     spawn: { x: 110, y: GROUND },
@@ -43,7 +48,6 @@ export const LEVELS = [
     fish: [{ x: 335, y: 372 }, { x: 645, y: 372 }, { x: 940, y: 372 }],
     signs: [
       { x: 120, y: GROUND - 96, text: 'Yürü: ← →  •  Zıpla: BOŞLUK' },
-      { x: 700, y: GROUND - 96, text: 'Aferin! Salı hedefle.' },
     ],
   },
 
@@ -52,7 +56,7 @@ export const LEVELS = [
     id: 2,
     name: 'Açık Sular',
     subtitle: 'Buzlar seyreliyor',
-    intro: 'Aralar açılıyor. Zıplamadan önce hızlan.',
+    intro: null,
     target: 30,
     worldW: 1560,
     spawn: { x: 100, y: GROUND },
@@ -65,7 +69,6 @@ export const LEVELS = [
       F(1220, GROUND, 260),
     ],
     fish: [{ x: 320, y: 366 }, { x: 855, y: 350 }, { x: 1145, y: 366 }],
-    signs: [{ x: 110, y: GROUND - 96, text: 'Koşarken zıplarsan daha uzağa gidersin' }],
   },
 
   /* -------------------------------------------------------------- 3 */
@@ -73,7 +76,7 @@ export const LEVELS = [
     id: 3,
     name: 'Basamaklar',
     subtitle: 'Yukarı, aşağı',
-    intro: 'Zıplama tuşunu basılı tutarsan daha yükseğe çıkarsın.',
+    intro: null,
     target: 34,
     worldW: 1700,
     spawn: { x: 100, y: GROUND },
@@ -87,9 +90,6 @@ export const LEVELS = [
       F(1440, 300, 220),
     ],
     fish: [{ x: 300, y: 340 }, { x: 960, y: 236 }, { x: 1400, y: 292 }],
-    signs: [
-      { x: 110, y: GROUND - 96, text: 'Tuşu bırakırsan alçak, basılı tutarsan yüksek zıplarsın' },
-    ],
   },
 
   /* -------------------------------------------------------------- 4 */
@@ -97,7 +97,7 @@ export const LEVELS = [
     id: 4,
     name: 'Çatlayan Buz',
     subtitle: 'Yeni: çatlak buz',
-    intro: 'Mavi çizgili buzlar üstüne basınca çatlar. Oyalanma!',
+    intro: null,
     target: 32,
     worldW: 1760,
     spawn: { x: 100, y: GROUND },
@@ -111,9 +111,6 @@ export const LEVELS = [
       F(1500, GROUND, 230),
     ],
     fish: [{ x: 320, y: 366 }, { x: 900, y: 360 }, { x: 1440, y: 366 }],
-    signs: [
-      { x: 300, y: GROUND - 100, text: 'Çatlayan buzda durma, hemen zıpla' },
-    ],
   },
 
   /* -------------------------------------------------------------- 5 */
@@ -121,7 +118,7 @@ export const LEVELS = [
     id: 5,
     name: 'Kırılgan Yol',
     subtitle: 'Ritmi yakala',
-    intro: 'Çatlak buzlar sıklaşıyor. Her birinin ardında sağlam bir buz var.',
+    intro: null,
     target: 34,
     worldW: 1900,
     spawn: { x: 100, y: GROUND },
@@ -138,7 +135,6 @@ export const LEVELS = [
       F(1590, 396, 220),
     ],
     fish: [{ x: 285, y: 360 }, { x: 1025, y: 340 }, { x: 1295, y: 332 }],
-    signs: [{ x: 110, y: GROUND - 96, text: 'Durma — zıpla, bas, zıpla' }],
   },
 
   /* -------------------------------------------------------------- 6 */
@@ -146,7 +142,7 @@ export const LEVELS = [
     id: 6,
     name: 'Kaygan Zemin',
     subtitle: 'Yeni: cilalı buz',
-    intro: 'Parlak buzda kayarsın. Fren erken başlar.',
+    intro: null,
     target: 36,
     worldW: 1900,
     spawn: { x: 100, y: GROUND },
@@ -160,7 +156,7 @@ export const LEVELS = [
       F(1680, GROUND, 200),
     ],
     fish: [{ x: 700, y: 360 }, { x: 1000, y: 350 }, { x: 1400, y: 330 }],
-    signs: [{ x: 340, y: GROUND - 100, text: 'Kaygan! Erken yavaşla' }],
+    rotFish: [{ x: 880, y: 396, kind: 'heavy' }],
   },
 
   /* -------------------------------------------------------------- 7 */
@@ -168,7 +164,7 @@ export const LEVELS = [
     id: 7,
     name: 'Sürüklenen Buzlar',
     subtitle: 'Yeni: hareketli buz',
-    intro: 'Akıntıdaki buzlar seni de taşır. Zamanlamayı bekle.',
+    intro: null,
     target: 42,
     worldW: 2000,
     spawn: { x: 100, y: GROUND },
@@ -184,7 +180,6 @@ export const LEVELS = [
     ],
     fish: [{ x: 600, y: 350 }, { x: 1080, y: 330 }, { x: 1700, y: 340 }],
     speedFish: [{ x: 720, y: 318 }],
-    signs: [{ x: 110, y: GROUND - 96, text: 'Buz sana doğru gelirken zıpla' }],
   },
 
   /* -------------------------------------------------------------- 8 */
@@ -192,7 +187,7 @@ export const LEVELS = [
     id: 8,
     name: 'Eriyen Buz',
     subtitle: 'Yeni: eriyen buz',
-    intro: 'Bazı buzlar kendi kendine erir ve geri donar. Saymayı öğren.',
+    intro: null,
     target: 44,
     worldW: 2080,
     spawn: { x: 100, y: GROUND },
@@ -208,7 +203,6 @@ export const LEVELS = [
       F(1880, GROUND, 180),
     ],
     fish: [{ x: 600, y: 356 }, { x: 1150, y: 330 }, { x: 1660, y: 330 }],
-    signs: [{ x: 360, y: GROUND - 100, text: 'Erimeye başlayınca soluklaşır — bekle, geri gelir' }],
   },
 
   /* -------------------------------------------------------------- 9 */
@@ -216,7 +210,7 @@ export const LEVELS = [
     id: 9,
     name: 'Sarkıtlar',
     subtitle: 'Yeni: buz sarkıtı',
-    intro: 'Tavandaki sarkıtlar altından geçince düşer. Titrediğinde kaç.',
+    intro: null,
     target: 46,
     worldW: 2200,
     spawn: { x: 100, y: GROUND },
@@ -237,8 +231,8 @@ export const LEVELS = [
       { kind: 'icicle', x: 1880, y: 150, w: 24, h: 46 },
     ],
     fish: [{ x: 620, y: 350 }, { x: 1230, y: 340 }, { x: 1760, y: 330 }],
+    rotFish: [{ x: 1000, y: 396, kind: 'dizzy' }],
     speedFish: [{ x: 1030, y: 348 }],
-    signs: [{ x: 640, y: GROUND - 110, text: 'Yukarı bak!' }],
   },
 
   /* ------------------------------------------------------------- 10 */
@@ -246,7 +240,7 @@ export const LEVELS = [
     id: 10,
     name: 'Fok Devriyesi',
     subtitle: 'Yeni: fok',
-    intro: 'Foklar buzda gezinir. Üstünden atla, yanından değil.',
+    intro: null,
     target: 48,
     worldW: 2260,
     spawn: { x: 100, y: GROUND },
@@ -270,7 +264,6 @@ export const LEVELS = [
     ],
     fish: [{ x: 700, y: 348 }, { x: 1380, y: 330 }, { x: 1930, y: 340 }],
     speedFish: [{ x: 1200, y: 348 }],
-    signs: [{ x: 370, y: GROUND - 106, text: 'Fokun üstünden zıpla' }],
   },
 
   /* ------------------------------------------------------------- 11 */
@@ -278,7 +271,7 @@ export const LEVELS = [
     id: 11,
     name: 'Kutup Rüzgarı',
     subtitle: 'Yeni: rüzgar ve fırtına',
-    intro: 'Rüzgar seni havada iter. Fırtına kuşağında ise yürürken bile geri püskürtür — dinginliği bekle.',
+    intro: null,
     target: 50,
     worldW: 2300,
     spawn: { x: 100, y: GROUND },
@@ -302,11 +295,8 @@ export const LEVELS = [
       { kind: 'icicle', x: 1820, y: 130, w: 24, h: 46 },
     ],
     fish: [{ x: 580, y: 340 }, { x: 1100, y: 330 }, { x: 1930, y: 330 }],
+    rotFish: [{ x: 700, y: 370, kind: 'heavy' }],
     speedFish: [{ x: 700, y: 314 }],
-    signs: [
-      { x: 360, y: GROUND - 106, text: 'Rüzgara karşı yön ver' },
-      { x: 1240, y: 300, text: 'Fırtına: sert estiğinde bekle, dinince koş' },
-    ],
   },
 
   /* ------------------------------------------------------------- 12 */
@@ -314,7 +304,7 @@ export const LEVELS = [
     id: 12,
     name: 'Zemin Kaçtı',
     subtitle: 'Yeni: düşen buz',
-    intro: 'Bu buzlar kırılmaz — düşerler. Üstünde kalma.',
+    intro: null,
     target: 50,
     worldW: 2400,
     spawn: { x: 100, y: GROUND },
@@ -334,7 +324,6 @@ export const LEVELS = [
     ],
     hazards: [{ kind: 'seal', x: 1120, y: GROUND - 30, w: 44, h: 30, range: 50, speed: 86 }],
     fish: [{ x: 515, y: 360 }, { x: 1025, y: 336 }, { x: 1820, y: 336 }],
-    signs: [{ x: 370, y: GROUND - 106, text: 'Düşen buz: bas ve hemen devam et' }],
   },
 
   /* ------------------------------------------------------------- 13 */
@@ -342,7 +331,7 @@ export const LEVELS = [
     id: 13,
     name: 'Tuzak',
     subtitle: 'Yeni: sahte buz',
-    intro: 'Kızıl damarlı buzlar son anda kırılır. Üstünde durma, değ ve geç.',
+    intro: null,
     target: 52,
     worldW: 2420,
     spawn: { x: 100, y: GROUND },
@@ -366,7 +355,7 @@ export const LEVELS = [
       { kind: 'icicle', x: 1560, y: 140, w: 24, h: 46 },
     ],
     fish: [{ x: 500, y: 360 }, { x: 1085, y: 340 }, { x: 1885, y: 336 }],
-    signs: [{ x: 370, y: GROUND - 106, text: 'Damarlı buz = tuzak. Değ ve geç.' }],
+    rotFish: [{ x: 1240, y: 396, kind: 'blind' }],
   },
 
   /* ------------------------------------------------------------- 14 */
@@ -374,7 +363,7 @@ export const LEVELS = [
     id: 14,
     name: 'Çözülme',
     subtitle: 'Her şey bir arada',
-    intro: 'Erime hızlanıyor. Ritim ve sabır.',
+    intro: null,
     target: 58,
     worldW: 2860,
     spawn: { x: 100, y: GROUND },
@@ -407,7 +396,7 @@ export const LEVELS = [
     id: 15,
     name: 'Dar Geçit',
     subtitle: 'Küçük hedefler',
-    intro: 'Buzlar küçüldü, sen büyüdün. Nokta atışı.',
+    intro: null,
     target: 58,
     worldW: 2700,
     spawn: { x: 100, y: GROUND },
@@ -428,6 +417,7 @@ export const LEVELS = [
     ],
     hazards: [{ kind: 'icicle', x: 1030, y: 130, w: 24, h: 46 }],
     fish: [{ x: 480, y: 320 }, { x: 1150, y: 300 }, { x: 2100, y: 320 }],
+    rotFish: [{ x: 850, y: 370, kind: 'heavy' }, { x: 1520, y: 362, kind: 'dizzy' }],
     speedFish: [{ x: 1520, y: 314 }],
   },
 
@@ -436,7 +426,7 @@ export const LEVELS = [
     id: 16,
     name: 'Kırık Sürüsü',
     subtitle: 'Durma, akış içinde kal',
-    intro: 'Hiçbir buz seni beklemez.',
+    intro: null,
     target: 60,
     worldW: 2760,
     spawn: { x: 100, y: GROUND },
@@ -468,7 +458,7 @@ export const LEVELS = [
     id: 17,
     name: 'Sisli Kıyı',
     subtitle: 'Görüş kısıtlı',
-    intro: 'Sis bastı. İleriyi az göreceksin — dinle ve hisset.',
+    intro: null,
     target: 62,
     worldW: 2720,
     fog: 0.55,
@@ -495,6 +485,7 @@ export const LEVELS = [
       { kind: 'icicle', x: 2230, y: 130, w: 24, h: 46 },
     ],
     fish: [{ x: 510, y: 340 }, { x: 1180, y: 330 }, { x: 2140, y: 320 }],
+    rotFish: [{ x: 1560, y: 396, kind: 'blind' }],
   },
 
   /* ------------------------------------------------------------- 18 */
@@ -502,7 +493,7 @@ export const LEVELS = [
     id: 18,
     name: 'Son Buzul',
     subtitle: 'Antarktika seni bırakmak istemiyor',
-    intro: 'Her şey burada. Salı gör, nefes al, git.',
+    intro: null,
     target: 68,
     worldW: 3100,
     spawn: { x: 100, y: GROUND },
@@ -537,7 +528,7 @@ export const LEVELS = [
     id: 19,
     name: 'Gayzer Tarlası',
     subtitle: 'Yeni: gayzer buzu',
-    intro: 'Bazı buzların altında gayzer var. Basınca tıslar, yarım saniye sonra seni havaya fırlatır.',
+    intro: null,
     target: 46,
     worldW: 2560,
     spawn: { x: 100, y: GROUND },
@@ -554,11 +545,8 @@ export const LEVELS = [
       F(2170, GROUND, 220),
     ],
     fish: [{ x: 585, y: 360 }, { x: 1185, y: 336 }, { x: 1780, y: 336 }],
+    rotFish: [{ x: 1330, y: 396, kind: 'dizzy' }],
     speedFish: [{ x: 1340, y: 348 }],
-    signs: [
-      { x: 370, y: GROUND - 106, text: 'Tıslamayı duyunca hemen zıpla!' },
-      { x: 1570, y: 300, text: 'Bu gayzer kendi kendine patlıyor — say ve geç' },
-    ],
   },
 
   /* ------------------------------------------------------------- 20 */
@@ -566,7 +554,7 @@ export const LEVELS = [
     id: 20,
     name: 'Kaynayan Kıyı',
     subtitle: 'Sıcak su, çatlak buz',
-    intro: 'Gayzerlerin arasında çatlayan buzlar. Hiçbir yerde duramazsın.',
+    intro: null,
     target: 48,
     worldW: 2400,
     spawn: { x: 100, y: GROUND },
@@ -590,7 +578,7 @@ export const LEVELS = [
     id: 21,
     name: 'Katil Balina',
     subtitle: 'Yeni: orka',
-    intro: 'Sudaki yüzgeci gördüğünde bekle. Orka çıkıp inince geç.',
+    intro: null,
     target: 50,
     worldW: 2500,
     spawn: { x: 100, y: GROUND },
@@ -610,8 +598,8 @@ export const LEVELS = [
       { kind: 'orca', x: 1622, y: WATER, w: 56, h: 120, height: 245, period: 3.1, phase: 0.55 },
     ],
     fish: [{ x: 630, y: 350 }, { x: 1300, y: 330 }, { x: 1980, y: 336 }],
+    rotFish: [{ x: 1450, y: 396, kind: 'heavy' }],
     speedFish: [{ x: 1470, y: 348 }],
-    signs: [{ x: 400, y: GROUND - 106, text: 'Yüzgeç çıktıysa zıplama — bekle' }],
   },
 
   /* ------------------------------------------------------------- 22 */
@@ -619,7 +607,7 @@ export const LEVELS = [
     id: 22,
     name: 'Derin Sular',
     subtitle: 'Orka sürüsü',
-    intro: 'Üç orka, üç boşluk. Ritimleri farklı.',
+    intro: null,
     target: 52,
     worldW: 2620,
     spawn: { x: 100, y: GROUND },
@@ -648,7 +636,7 @@ export const LEVELS = [
     id: 23,
     name: 'Ayağının Altı',
     subtitle: 'Yeni: kaçan buz',
-    intro: 'Alçaktaki bazı buzlar sen inerken kayboluyor. Onlara güvenme — uzun zıpla.',
+    intro: null,
     target: 52,
     worldW: 2560,
     spawn: { x: 100, y: GROUND },
@@ -670,8 +658,8 @@ export const LEVELS = [
       F(2190, GROUND, 220),
     ],
     fish: [{ x: 585, y: 350 }, { x: 1180, y: 330 }, { x: 2120, y: 336 }],
+    rotFish: [{ x: 1330, y: 396, kind: 'blind' }, { x: 700, y: 396, kind: 'heavy' }],
     speedFish: [{ x: 1330, y: 348 }],
-    signs: [{ x: 360, y: GROUND - 106, text: 'Alçak buzlar tuzak — üstünden uç' }],
   },
 
   /* ------------------------------------------------------------- 24 */
@@ -679,7 +667,7 @@ export const LEVELS = [
     id: 24,
     name: 'Güven Sorunu',
     subtitle: 'Hiçbir şey göründüğü gibi değil',
-    intro: 'Sahte buz, kaçan buz ve gayzer aynı yolda.',
+    intro: null,
     target: 55,
     worldW: 2680,
     spawn: { x: 100, y: GROUND },
@@ -710,7 +698,7 @@ export const LEVELS = [
     id: 25,
     name: 'Fırtına',
     subtitle: 'Rüzgar, buhar, diş',
-    intro: 'Rüzgar seni gayzerin üstüne, orka da altına çağırıyor.',
+    intro: null,
     target: 58,
     worldW: 2740,
     spawn: { x: 100, y: GROUND },
@@ -734,6 +722,7 @@ export const LEVELS = [
       { kind: 'gust', x: 2010, y: 150, w: 120, h: 370, power: -320 },
     ],
     fish: [{ x: 570, y: 336 }, { x: 1160, y: 330 }, { x: 2290, y: 336 }],
+    rotFish: [{ x: 1600, y: 396, kind: 'dizzy' }],
     speedFish: [{ x: 1590, y: 318 }],
   },
 
@@ -742,7 +731,7 @@ export const LEVELS = [
     id: 26,
     name: 'Buz Koridoru',
     subtitle: 'Küçük hedefler, hızlı ayaklar',
-    intro: 'Buzlar küçüldü. Nokta atışı ve hız.',
+    intro: null,
     target: 55,
     worldW: 2720,
     spawn: { x: 100, y: GROUND },
@@ -770,7 +759,7 @@ export const LEVELS = [
     id: 27,
     name: 'Sıcak Su',
     subtitle: 'Buhar hattı',
-    intro: 'Üç gayzer arka arkaya. Sıralarını öğren.',
+    intro: null,
     target: 58,
     worldW: 2700,
     spawn: { x: 100, y: GROUND },
@@ -788,8 +777,8 @@ export const LEVELS = [
       F(2290, GROUND, 200),
     ],
     fish: [{ x: 620, y: 336 }, { x: 1370, y: 336 }, { x: 2200, y: 336 }],
+    rotFish: [{ x: 1520, y: 396, kind: 'heavy' }],
     speedFish: [{ x: 1540, y: 322 }],
-    signs: [{ x: 360, y: GROUND - 106, text: 'Üçü sırayla patlıyor — ortada durma' }],
   },
 
   /* ------------------------------------------------------------- 28 */
@@ -797,7 +786,7 @@ export const LEVELS = [
     id: 28,
     name: 'Sürü',
     subtitle: 'Herkes seni bekliyor',
-    intro: 'Fok buzda, orka suda, buz ayağının altında.',
+    intro: null,
     target: 60,
     worldW: 2800,
     spawn: { x: 100, y: GROUND },
@@ -829,7 +818,7 @@ export const LEVELS = [
     id: 29,
     name: 'Kopuş',
     subtitle: 'Kıta ikiye ayrılıyor',
-    intro: 'Duracak yer yok. Sadece ritim.',
+    intro: null,
     target: 62,
     worldW: 2900,
     spawn: { x: 100, y: GROUND },
@@ -855,6 +844,7 @@ export const LEVELS = [
       { kind: 'icicle', x: 2000, y: 120, w: 24, h: 46 },
     ],
     fish: [{ x: 530, y: 330 }, { x: 1300, y: 330 }, { x: 2310, y: 320 }],
+    rotFish: [{ x: 1470, y: 396, kind: 'blind' }],
     speedFish: [{ x: 1485, y: 322 }],
   },
 
@@ -863,7 +853,7 @@ export const LEVELS = [
     id: 30,
     name: 'Açık Deniz',
     subtitle: 'Son buzul, son şans',
-    intro: 'Antarktika seni son kez sınıyor. Kuzey şu tarafta.',
+    intro: null,
     target: 68,
     worldW: 3350,
     spawn: { x: 100, y: GROUND },
@@ -892,6 +882,7 @@ export const LEVELS = [
       { kind: 'gust', x: 2600, y: 150, w: 110, h: 370, power: -300 },
     ],
     fish: [{ x: 520, y: 320 }, { x: 1290, y: 320 }, { x: 2600, y: 310 }],
+    rotFish: [{ x: 1120, y: 396, kind: 'dizzy' }, { x: 2260, y: 362, kind: 'heavy' }],
     speedFish: [{ x: 2280, y: 314 }],
   },
 ];

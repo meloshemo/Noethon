@@ -11,6 +11,7 @@ import { generateLevel, generateDailyLevel } from './generator.js';
 import { CRAFTED_LEVELS, ASSIST_AFTER_DEATHS, REWARDS, scaleForLevel } from './config.js';
 import { Storage, todayKey } from '../core/storage.js';
 import { ensureMissions, progressMission } from './missions.js';
+import { encodeRun, decodeRun } from './ghost.js';
 
 /** Fixed physics step — decoupled from the display refresh rate. */
 const STEP = 1 / 120;
@@ -85,6 +86,24 @@ export class Game {
     this._begin(def);
   }
 
+  /** The level's key on the board — the daily has one board for everybody. */
+  get boardKey() {
+    return this.dailyRun ? 'daily' : String(this.levelId);
+  }
+
+  /**
+   * The run to race. Whoever holds the record for this level takes the ice
+   * beside you — you if nobody has sent you a faster code, them if they have.
+   */
+  _ghostFor(key) {
+    const rows = Storage.board(this.save, key);
+    const best = rows[0];
+    if (!best?.code) return null;
+    const run = decodeRun(best.code);
+    if (!run) return null;
+    return { ...run, name: best.you ? Storage.displayName(this.save) : best.name };
+  }
+
   _begin(def) {
     this.particles.clear();
     this.world = new World(def, {
@@ -92,6 +111,7 @@ export class Game {
       audio: this.audio,
       assist: this.save.settings.assist,
       upgrades: this.save.upgrades,
+      ghost: this._ghostFor(this.boardKey),
     });
     this.runDeaths = 0;
     this.assistOffered = false;
@@ -244,6 +264,7 @@ export class Game {
       ? this._finishDaily(w, stars, deaths)
       : this._finishLevel(w, stars, deaths);
 
+    this._bankRun(w, result);
     this._runMissions(w, result);
     Storage.save(this.save);
     this.ui.onLevelComplete(result);
@@ -348,6 +369,50 @@ export class Game {
       streak,
       firstToday: first,
     };
+  }
+
+  /**
+   * File the finished attempt on the board and hand the result the numbers the
+   * win screen needs: the share code, whether it was a personal best, and where
+   * the time lands among everyone whose code you hold.
+   */
+  _bankRun(w, result) {
+    const key = this.boardKey;
+    const samples = w.recorder.samples;
+    result.boardKey = key;
+
+    if (samples.length > 1) {
+      const code = encodeRun({ samples, time: w.elapsed, level: key, name: this.save.name });
+      result.isPB = Storage.recordGhost(this.save, key, { code, time: w.elapsed });
+      result.code = Storage.board(this.save, key).find((r) => r.you)?.code ?? code;
+    }
+
+    const board = Storage.board(this.save, key);
+    result.board = board;
+    result.rank = board.findIndex((r) => r.you) + 1 || null;
+    result.rivals = board.length;
+
+    if (w.ghost?.visible) {
+      result.ghostName = w.ghost.name;
+      result.ghostTime = w.ghost.time;
+      result.beatGhost = w.elapsed < w.ghost.time;
+    }
+  }
+
+  /** Take a friend's code onto the board. Returns a message for the UI. */
+  importRival(code) {
+    const run = decodeRun(code);
+    if (!run) return { ok: false, message: 'Bu kod okunamadı. Tamamını kopyaladığından emin ol.' };
+    const key = run.level;
+    const name = run.name ?? 'Rakip';
+    if (name === Storage.displayName(this.save)) {
+      return { ok: false, message: 'Bu senin kendi kodun — rakip olarak eklenemez.' };
+    }
+    const added = Storage.addRival(this.save, key, { code, time: run.time, name });
+    const where = key === 'daily' ? 'Günün Bölümü' : `Bölüm ${key}`;
+    return added
+      ? { ok: true, key, message: `${name} ${where} sıralamasına eklendi.` }
+      : { ok: false, key, message: `${name} için daha hızlı bir süre zaten kayıtlı.` };
   }
 
   /** Feed the run into today's missions and pay out anything completed. */

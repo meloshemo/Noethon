@@ -6,7 +6,7 @@
  * exactly what the early levels need.
  */
 
-import { PHYS, PENGUIN, BOOST } from './config.js';
+import { PHYS, PENGUIN, BOOST, ROT } from './config.js';
 import { clamp, damp, rectsOverlap } from '../core/util.js';
 
 export class Player {
@@ -16,6 +16,8 @@ export class Player {
     this.boost = { jump: 0, speed: 0, grip: 0, wind: 0 };
     /** Speed-fish charge: seconds remaining. */
     this.charge = 0;
+    /** Rotten-fish curses: { heavy, dizzy, blind } → seconds remaining. */
+    this.curse = { heavy: 0, dizzy: 0, blind: 0 };
     /** Afterimages, so the boost reads as speed rather than as a colour. */
     this.trail = [];
     this.reset(0, 0);
@@ -63,7 +65,21 @@ export class Player {
     this.jumpedThisFrame = false;
     this.launched = 0;
     this.charge = 0;
+    this.curse = { heavy: 0, dizzy: 0, blind: 0 };
     this.trail.length = 0;
+  }
+
+  /** Ate something rotten. Re-eating refreshes rather than stacks. */
+  afflict(kind) {
+    const spec = ROT[kind];
+    if (!spec) return;
+    this.curse[kind] = Math.max(this.curse[kind], spec.duration);
+    this.squashX = 1.25;
+    this.squashY = 0.78;
+  }
+
+  get cursed() {
+    return this.curse.heavy > 0 || this.curse.dizzy > 0 || this.curse.blind > 0;
   }
 
   /** Swallowed a speed fish. Refreshes rather than stacks. */
@@ -87,12 +103,14 @@ export class Player {
 
   get jumpVelocity() {
     const base = PHYS.jumpVelocity * (1 - PENGUIN.jumpPenaltyPerScale * (this.scale - 1));
-    return base * (1 + this.boost.jump + (this.charged ? BOOST.jump : 0));
+    const rot = this.curse.heavy > 0 ? ROT.heavy.jump : 0;
+    return base * (1 + this.boost.jump + (this.charged ? BOOST.jump : 0) + rot);
   }
 
   get moveSpeed() {
     const base = PHYS.moveSpeed * (1 - PENGUIN.speedPenaltyPerScale * (this.scale - 1));
-    return base * (1 + this.boost.speed + (this.charged ? BOOST.speed : 0));
+    const rot = this.curse.heavy > 0 ? ROT.heavy.speed : 0;
+    return base * (1 + this.boost.speed + (this.charged ? BOOST.speed : 0) + rot);
   }
 
   /**
@@ -116,6 +134,12 @@ export class Player {
 
     this.launched = Math.max(0, this.launched - dt);
     this.charge = Math.max(0, this.charge - dt);
+    for (const k of ['heavy', 'dizzy', 'blind']) {
+      this.curse[k] = Math.max(0, this.curse[k] - dt);
+    }
+    // Dizzy swaps the controls. Done here rather than at the input layer so it
+    // applies to touch, keyboard and gamepad without any of them knowing.
+    if (this.curse.dizzy > 0) intent = { ...intent, axis: -intent.axis };
 
     if (this.charge > 0) {
       // Sampled positions, oldest first — the renderer fades them out behind.

@@ -8,8 +8,9 @@
 
 import { Floe, Hazard, Fish, Checkpoint } from './entities.js';
 import { Player } from './player.js';
+import { GhostRecorder, Ghost } from './ghost.js';
 import {
-  VIEW, VIEW_LIMITS, ASSIST, ICE, STORM, BOOST, REWARDS, scaleForLevel, upgradeEffect,
+  VIEW, VIEW_LIMITS, ASSIST, ICE, STORM, BOOST, ROT, REWARDS, scaleForLevel, upgradeEffect,
 } from './config.js';
 import { WATER_Y } from './levels.js';
 import { clamp, damp, rectsOverlap, rand } from '../core/util.js';
@@ -38,12 +39,21 @@ export class World {
     this.fish = (def.fish ?? []).map((d) => new Fish(d, 'normal'));
     /** Speed fish are scored separately, so the 3-fish star stays a 3-fish star. */
     this.boosts = (def.speedFish ?? []).map((d) => new Fish(d, 'speed'));
+    /** Rotten fish: bait, never collectibles. */
+    this.rotten = (def.rotFish ?? []).map((d) => new Fish(d, d.kind ?? 'heavy'));
     this.checkpoints = (def.checkpoints ?? []).map((d) => new Checkpoint(d));
     this.signs = def.signs ?? [];
     this.goal = { x: def.goal.x, y: def.goal.y, w: 54, h: 64, pulse: 0 };
 
     this.player = new Player();
     this.player.setScale(def.scale ?? scaleForLevel(def.id));
+
+    // The run being recorded, and the run being raced. The ghost is the record
+    // holder for this level — yours or a friend's, whichever is faster.
+    this.recorder = new GhostRecorder();
+    this.ghost = deps.ghost ? new Ghost(deps.ghost) : null;
+    /** Seconds ahead of the ghost (positive) or behind it (negative). */
+    this.ghostLead = null;
 
     // Shop upgrades. Levels are validated against base stats, so these only
     // ever make the penguin better — they never unlock anything.
@@ -122,7 +132,17 @@ export class World {
 
   update(dt, intent) {
     this.time += dt;
-    if (this.status === 'playing') this.elapsed += dt;
+    // Recording and the ghost both run on the same clock as the timer, so a
+    // sample's index is its time on the clock — including the seconds lost to
+    // deaths, which is exactly what the timer charges you for.
+    if (this.status === 'playing') {
+      this.elapsed += dt;
+      this.recorder.sample(dt, this.player);
+      if (this.ghost) {
+        this.ghost.update(dt);
+        this.ghostLead = this.ghost.leadAt(this.player.x);
+      }
+    }
     if (this.hintTimer > 0) this.hintTimer = Math.max(0, this.hintTimer - dt);
 
     const fx = {
@@ -137,6 +157,7 @@ export class World {
     for (const f of this.floes) f.update(dt, this.time, fx);
     for (const f of this.fish) f.update(dt);
     for (const f of this.boosts) f.update(dt);
+    for (const f of this.rotten) f.update(dt);
     for (const c of this.checkpoints) c.update(dt);
     for (const h of this.hazards) h.update(dt, this.time, this.player, this.hazardSpeed);
     this.goal.pulse = (this.goal.pulse + dt * 2) % (Math.PI * 2);
@@ -255,6 +276,8 @@ export class World {
     if (this.magnetRange > 0) {
       const px = this.player.centerX;
       const py = this.player.y + this.player.h / 2;
+      // Deliberately excludes rotten fish: a magnet that pulls curses into you
+      // would make a purchase actively harmful.
       for (const f of [...this.fish, ...this.boosts]) {
         if (f.taken) continue;
         const dx = px - (f.x + f.w / 2);
@@ -274,6 +297,17 @@ export class World {
       this.fishTaken++;
       this.audio.fish();
       this.particles.sparkle(f.x + f.w / 2, f.y + f.h / 2);
+    }
+
+    for (const f of this.rotten) {
+      if (f.taken || !rectsOverlap(this.player.box, f.box)) continue;
+      f.taken = true;
+      f.pop = 1;
+      this.player.afflict(f.kind);
+      this.audio.rot();
+      this.particles.sparkle(f.x + f.w / 2, f.y + f.h / 2, '#7fbf4d');
+      this.shake(3);
+      this.showHint(ROT[f.kind]?.label ?? 'Fena bir şey yedin', 1.6);
     }
 
     for (const f of this.boosts) {
@@ -400,6 +434,7 @@ export class World {
     // Speed fish come back on a retry; the normal three stay taken so a death
     // never costs you collectibles you already earned this run.
     for (const f of this.boosts) f.reset();
+    for (const f of this.rotten) f.reset();
     this.boostsTaken = 0;
     this.particles.puff(this.respawn.x, this.respawn.y, 10);
     this._centerCamera();
@@ -418,6 +453,11 @@ export class World {
     this.camera.x = damp(this.camera.x, targetX, 7, dt);
     this.camera.y = damp(this.camera.y, targetY, 5, dt);
     this.camera.shake = damp(this.camera.shake, 0, 9, dt);
+  }
+
+  /** The attempt as recorded, ready to be encoded into a share code. */
+  get run() {
+    return { samples: this.recorder.samples, time: this.elapsed };
   }
 
   /** Coins the speed fish are worth this run. */

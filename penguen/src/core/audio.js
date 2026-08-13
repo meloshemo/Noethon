@@ -130,6 +130,13 @@ export class Audio {
     this._noise({ dur: 0.28, gain: 0.16, filter: 3600, q: 1.4, delay: 0.02 });
   }
 
+  /** Swallowing something rotten — a wet, descending gulp. */
+  rot() {
+    this._tone({ freq: 420, slide: -300, dur: 0.3, type: 'sawtooth', gain: 0.12 });
+    this._noise({ dur: 0.34, gain: 0.16, filter: 380, q: 0.6 });
+    this._tone({ freq: 180, slide: -110, dur: 0.4, type: 'square', gain: 0.05, delay: 0.08 });
+  }
+
   /** A storm surge arriving. */
   windSurge() {
     this._noise({ dur: 1.1, gain: 0.13, filter: 620, q: 0.4 });

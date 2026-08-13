@@ -1531,3 +1531,279 @@ kbd {
 .fatal .btn {
   align-self: flex-start;
 }
+
+/* ========================================================== Ghost race */
+
+/* The gap to the record holder. Green when you are up, coral when you are
+   not — the sign is meant to be readable in peripheral vision. */
+.chip--ghost {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  min-width: 4.4em;
+  justify-content: center;
+  transition: color var(--t-fast) var(--e-out), border-color var(--t-fast) var(--e-out);
+}
+
+.chip--ghost.is-ahead {
+  color: var(--c-mint);
+  border-color: rgba(92, 225, 166, 0.4);
+  background: rgba(92, 225, 166, 0.12);
+}
+
+.chip--ghost.is-behind {
+  color: var(--c-coral);
+  border-color: rgba(255, 107, 129, 0.4);
+  background: rgba(255, 107, 129, 0.12);
+}
+
+/* ---- Share block on the win sheet ---- */
+
+.share {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--s-2);
+}
+
+.share__rank {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.share__rank strong {
+  color: var(--c-ice-100);
+  font-weight: 700;
+}
+
+.share__name {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.share__name .field__label {
+  flex: none;
+}
+
+.share__fallback {
+  width: 100%;
+  min-height: 5.5rem;
+  padding: var(--s-2);
+  font-family: ui-monospace, monospace;
+  font-size: var(--fs-2xs);
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  resize: vertical;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.btn--share {
+  border-color: rgba(155, 140, 255, 0.4);
+  background: linear-gradient(135deg, rgba(155, 140, 255, 0.2), rgba(79, 215, 255, 0.14));
+}
+
+/* ========================================================== Leaderboard */
+
+.boardtop {
+  display: grid;
+  grid-template-columns: minmax(7rem, 1fr) minmax(12rem, 2.2fr);
+  gap: var(--s-3);
+  width: 100%;
+}
+
+@container (max-width: 560px) {
+  .boardtop {
+    grid-template-columns: 1fr;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  min-width: 0;
+}
+
+.field__label {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.field__row {
+  display: flex;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.field__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.6em 0.8em;
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  transition: border-color var(--t-fast) var(--e-out), box-shadow var(--t-fast) var(--e-out);
+}
+
+.field__input::placeholder {
+  color: var(--text-faint);
+}
+
+.field__input:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(79, 215, 255, 0.2);
+}
+
+.board__msg {
+  width: 100%;
+  font-size: var(--fs-xs);
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-sm);
+}
+
+.board__msg.is-ok {
+  color: var(--c-mint);
+  background: rgba(92, 225, 166, 0.1);
+  border: 1px solid rgba(92, 225, 166, 0.28);
+}
+
+.board__msg.is-bad {
+  color: var(--c-coral);
+  background: rgba(255, 107, 129, 0.1);
+  border: 1px solid rgba(255, 107, 129, 0.28);
+}
+
+.board {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: var(--s-3);
+}
+
+.board__empty {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  text-align: center;
+  padding: var(--s-5) 0;
+}
+
+.board__level {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+
+.board__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+
+.board__title {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--c-ice-300);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn--tiny {
+  flex: none;
+  padding: 0.3em 0.7em;
+  font-size: var(--fs-2xs);
+  min-height: 0;
+}
+
+.board__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.board__row {
+  display: grid;
+  grid-template-columns: 1.4rem 1fr auto auto;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 0.32em 0;
+  font-size: var(--fs-sm);
+  border-top: 1px solid rgba(143, 196, 226, 0.09);
+}
+
+.board__row:first-child {
+  border-top: 0;
+}
+
+.board__row.is-you {
+  color: var(--c-aqua);
+  font-weight: 600;
+}
+
+.board__rank {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-faint);
+  font-size: var(--fs-xs);
+  text-align: right;
+}
+
+.board__row:first-child .board__rank {
+  color: var(--c-amber);
+  font-weight: 700;
+}
+
+.board__who {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.board__time {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.board__tag {
+  font-size: var(--fs-2xs);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+  color: var(--text-faint);
+}
+
+.board__drop {
+  width: 1.4rem;
+  height: 1.4rem;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-full);
+  color: var(--text-faint);
+  font-size: var(--fs-sm);
+  line-height: 1;
+  transition: color var(--t-fast) var(--e-out), background var(--t-fast) var(--e-out);
+}
+
+.board__drop:hover,
+.board__drop:focus-visible {
+  color: var(--c-coral);
+  background: rgba(255, 107, 129, 0.14);
+}

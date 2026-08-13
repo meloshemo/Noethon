@@ -129,6 +129,26 @@ export const BOOST = {
   reward: 10,
 };
 
+/**
+ * Rotten fish.
+ *
+ * The counterweight to the speed fish, and the reason "grab everything" stops
+ * being a free strategy. These sit *on* the running line rather than off it, so
+ * avoiding one costs a jump or a swerve — the player has to decide, at speed,
+ * whether that costs less than the debuff.
+ *
+ * Each is survivable on its own. None is survivable if you were already in
+ * trouble, which is the point.
+ */
+export const ROT = {
+  /** Lead in the belly: heavier, shorter jump. */
+  heavy: { duration: 5, jump: -0.22, speed: -0.18, label: 'Ağırlaştın!' },
+  /** Left is right. Short, because it is the nastiest. */
+  dizzy: { duration: 3.2, label: 'Kontroller ters!' },
+  /** Frost on the eyes: the view closes in. */
+  blind: { duration: 4, label: 'Göremiyorsun!' },
+};
+
 /** Assist mode is offered after this many deaths on the same level. */
 export const ASSIST_AFTER_DEATHS = 4;
 

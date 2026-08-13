@@ -208,6 +208,23 @@ function check(def, { tutorial = false } = {}) {
     if (onLine) warn(`hız balığı ana hattın üstünde duruyor (${f.x}, ${f.y})`);
   }
 
+  // --- rotten fish ----------------------------------------------------
+  // The inverse rule to the speed fish: these are meant to be in the way. But
+  // "in the way" must mean "dodgeable" — over a floe, at a height a jump can
+  // clear, never floating in a gap where avoiding it is impossible.
+  for (const f of def.rotFish ?? []) {
+    const host = floes.find((p) => f.x > p.x - 16 && f.x < p.x + p.w + 16);
+    if (!host) {
+      fail(`çürük balık boşlukta duruyor, kaçınılamaz (${f.x}, ${f.y})`);
+      continue;
+    }
+    const above = host.y - f.y;
+    if (above < 22) fail(`çürük balık buza gömülü (${f.x}, ${f.y})`);
+    if (above > reach.height * 0.7) {
+      warn(`çürük balık çok yüksek, kimse çarpmaz (${f.x}, ${f.y})`);
+    }
+  }
+
   // Landing on a floe must always be above the water line.
   const penguinW = PENGUIN.w * scale;
   for (const f of floes) {

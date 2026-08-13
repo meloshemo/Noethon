@@ -36,6 +36,7 @@ const MODULES = [
   'src/game/generator.js',
   'src/game/entities.js',
   'src/game/player.js',
+  'src/game/ghost.js',
   'src/game/world.js',
   'src/game/render.js',
   'src/game/missions.js',

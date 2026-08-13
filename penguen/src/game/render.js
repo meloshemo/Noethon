@@ -154,6 +154,17 @@ export class Renderer {
     ctx.setTransform(s, 0, 0, s, this.offsetX * this.dpr, this.offsetY * this.dpr);
     ctx.imageSmoothingEnabled = true;
 
+    // Dizzy sways the picture. Small — enough to unsettle aim, not enough to
+    // make the geometry unreadable.
+    const dizzy = world.player?.curse?.dizzy ?? 0;
+    if (dizzy > 0 && !this.reducedMotion) {
+      const t = Math.min(1, dizzy / 0.5);
+      ctx.translate(VIEW.w / 2, VIEW.h / 2);
+      ctx.rotate(Math.sin(time * 2.6) * 0.035 * t);
+      ctx.scale(1 + 0.012 * Math.sin(time * 3.7) * t, 1);
+      ctx.translate(-VIEW.w / 2, -VIEW.h / 2);
+    }
+
     const shake = this.reducedMotion ? 0 : world.camera.shake;
     const camX = world.camera.x + (shake ? (Math.random() - 0.5) * shake : 0);
     const camY = world.camera.y + (shake ? (Math.random() - 0.5) * shake : 0);
@@ -171,12 +182,14 @@ export class Renderer {
     this._fish(ctx, world, time);
     this._goal(ctx, world, time);
     this._hazards(ctx, world, time);
+    this._ghost(ctx, world, time);
     if (world.status !== 'dying') this._penguin(ctx, world, time);
     particles.draw(ctx);
     ctx.restore();
 
     this._weather(ctx, time);
     if (world.fog) this._fog(ctx, world.fog, time);
+    this._curses(ctx, world, time);
     this._post(ctx, world);
 
     ctx.restore();
@@ -530,6 +543,10 @@ export class Renderer {
       if (f.taken) continue;
       this._speedFish(ctx, f, time);
     }
+    for (const f of world.rotten ?? []) {
+      if (f.taken) continue;
+      this._rotFish(ctx, f, time);
+    }
     for (const f of world.fish) {
       if (f.taken) continue;
       const bob = Math.sin(f.phase) * 4;
@@ -670,6 +687,64 @@ export class Renderer {
       ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r);
       ctx.lineTo(Math.cos(a) * (r + 6), Math.sin(a) * (r + 6));
       ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  /**
+   * Rotten fish. Sickly green, sunken-eyed, with flies and a faint haze — it
+   * has to be readable as "do not eat" at a glance once you have been burned
+   * once, without being so loud that the first one is not a surprise.
+   */
+  _rotFish(ctx, f, time) {
+    const tint = { heavy: '#7a5cff', dizzy: '#7fbf4d', blind: '#8a8f9a' }[f.kind] ?? '#7fbf4d';
+    const cx = f.x + f.w / 2;
+    const cy = f.y + f.h / 2 + Math.sin(f.phase) * 3;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(Math.sin(f.phase * 0.6) * 0.5 + 0.25); // listing, not swimming
+
+    // Sickly haze
+    const haze = ctx.createRadialGradient(0, 0, 2, 0, 0, 26);
+    haze.addColorStop(0, `${tint}44`);
+    haze.addColorStop(1, `${tint}00`);
+    ctx.fillStyle = haze;
+    ctx.fillRect(-30, -30, 60, 60);
+
+    // Body
+    ctx.fillStyle = tint;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 11, 7, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(9, 0);
+    ctx.lineTo(17, -6);
+    ctx.lineTo(17, 6);
+    ctx.closePath();
+    ctx.fill();
+
+    // Belly-up patch and a dead, crossed eye
+    ctx.fillStyle = 'rgba(20,26,20,0.45)';
+    ctx.beginPath();
+    ctx.ellipse(1, 2, 7, 3, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#1b2118';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(-7, -3);
+    ctx.lineTo(-3, 1);
+    ctx.moveTo(-3, -3);
+    ctx.lineTo(-7, 1);
+    ctx.stroke();
+
+    // Flies
+    ctx.fillStyle = 'rgba(30,36,28,0.8)';
+    for (let i = 0; i < 3; i++) {
+      const a = time * 3.5 + i * 2.1;
+      ctx.beginPath();
+      ctx.arc(Math.cos(a) * 15, Math.sin(a * 1.4) * 11 - 12, 1.4, 0, Math.PI * 2);
+      ctx.fill();
     }
     ctx.restore();
   }
@@ -921,6 +996,80 @@ export class Renderer {
     }
   }
 
+  /**
+   * The record holder, running the level beside you.
+   *
+   * Deliberately not a second penguin: a translucent silhouette with a name
+   * over it reads instantly as "not you", and never gets mistaken for
+   * something you can land on or have to dodge.
+   */
+  _ghost(ctx, world, time) {
+    const g = world.ghost;
+    if (!g?.visible) return;
+    const p = world.player;
+    const w = p.w;
+    const h = p.h;
+    const cx = g.x + w / 2;
+    const by = g.y + h;
+    // Fades out once it has finished — it has left, you are still running.
+    const alpha = g.finished ? 0.18 : 0.42;
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+
+    const bob = g.onGround ? Math.sin(time * 9 + g.x * 0.05) * 1.2 : 0;
+    ctx.translate(0, bob);
+
+    ctx.fillStyle = g.cursed ? 'rgba(150,255,170,0.9)' : 'rgba(150,225,255,0.9)';
+
+    // Feet
+    for (const sgn of [-1, 1]) {
+      ctx.beginPath();
+      ctx.ellipse(cx + sgn * w * 0.24, by - 1, w * 0.16, h * 0.06, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Body
+    const bodyH = h * 0.82;
+    ctx.beginPath();
+    ctx.ellipse(cx, by - bodyH * 0.5, w * 0.46, bodyH * 0.52, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Head
+    const headY = by - bodyH - h * 0.06;
+    ctx.beginPath();
+    ctx.ellipse(cx + g.facing * w * 0.04, headY, w * 0.34, h * 0.24, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Beak, so which way it is running is never in doubt
+    ctx.beginPath();
+    ctx.moveTo(cx + g.facing * w * 0.3, headY + h * 0.01);
+    ctx.lineTo(cx + g.facing * w * 0.52, headY + h * 0.05);
+    ctx.lineTo(cx + g.facing * w * 0.3, headY + h * 0.09);
+    ctx.closePath();
+    ctx.fill();
+
+    // Sprinting ghosts get the same crimson tell the player does.
+    if (g.charged) {
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.fillStyle = 'rgba(255,90,90,0.5)';
+      ctx.beginPath();
+      ctx.ellipse(cx, by - bodyH * 0.5, w * 0.6, bodyH * 0.62, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+    }
+
+    // Name tag. It fades out when the two are neck and neck, where the label
+    // would sit on top of the player's own head and read as clutter — at that
+    // range you can see the ghost anyway.
+    const close = Math.max(0, 1 - Math.abs(g.x - p.x) / (w * 1.6));
+    ctx.globalAlpha = (alpha + 0.3) * (1 - close * 0.85);
+    ctx.fillStyle = '#dff3ff';
+    ctx.font = `600 ${Math.round(h * 0.24)}px Outfit, system-ui, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(g.name, cx, headY - h * 0.46);
+    ctx.textAlign = 'left';
+
+    ctx.restore();
+  }
+
   /* ---------------------------------------------------------------- */
 
   _penguin(ctx, world, time) {
@@ -954,6 +1103,10 @@ export class Renderer {
       // animal from across the screen.
       const k = clamp(p.charge / 0.6, 0, 1);
       body = `rgb(${Math.round(lerp(38, 176, k))}, ${Math.round(lerp(46, 28, k))}, ${Math.round(lerp(62, 40, k))})`;
+    } else if (p.curse.heavy > 0) {
+      body = '#4a3a72'; // leaden purple
+    } else if (p.curse.dizzy > 0) {
+      body = '#3f5a34'; // green around the gills
     }
 
     ctx.save();
@@ -1113,6 +1266,48 @@ export class Renderer {
       ctx.fill();
     }
     ctx.globalAlpha = 1;
+  }
+
+  /** Screen-level effects of a rotten fish. */
+  _curses(ctx, world, time) {
+    const p = world.player;
+    if (!p?.cursed) return;
+
+    // Blind: frost creeps in from the edges. Deliberately a vignette rather
+    // than a blackout — you can still see where your feet are, just not what
+    // is coming.
+    if (p.curse.blind > 0) {
+      const t = Math.min(1, p.curse.blind / 0.6);
+      const g = ctx.createRadialGradient(
+        VIEW.w / 2, VIEW.h / 2, VIEW.h * 0.1,
+        VIEW.w / 2, VIEW.h / 2, VIEW.h * (0.62 - 0.18 * t),
+      );
+      g.addColorStop(0, 'rgba(214,232,246,0)');
+      g.addColorStop(0.65, `rgba(206,226,242,${0.35 * t})`);
+      g.addColorStop(1, `rgba(198,220,238,${0.94 * t})`);
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, VIEW.w, VIEW.h);
+    }
+
+    // Dizzy: the whole picture sways, and the edge glows green.
+    if (p.curse.dizzy > 0) {
+      const t = Math.min(1, p.curse.dizzy / 0.5);
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      const g = ctx.createLinearGradient(0, 0, 0, VIEW.h);
+      g.addColorStop(0, `rgba(120,190,80,${0.16 * t})`);
+      g.addColorStop(0.5, 'rgba(120,190,80,0)');
+      g.addColorStop(1, `rgba(120,190,80,${0.16 * t})`);
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, VIEW.w, VIEW.h);
+      ctx.restore();
+    }
+
+    if (p.curse.heavy > 0) {
+      const t = Math.min(1, p.curse.heavy / 0.6);
+      ctx.fillStyle = `rgba(74,58,114,${0.12 * t})`;
+      ctx.fillRect(0, 0, VIEW.w, VIEW.h);
+    }
   }
 
   _fog(ctx, amount, time) {
