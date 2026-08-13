@@ -35,6 +35,23 @@ export class World {
     this.fog = def.fog ?? 0;
 
     this.floes = (def.floes ?? []).map((d, i) => new Floe(d, i));
+    /**
+     * The continent: cliff faces, tunnel roofs, pillars. Solid to the physics
+     * and permanent, so they are plain objects rather than Floes — nothing
+     * about them ever changes, and the route checks must not see them as
+     * places to land.
+     */
+    this.terrain = (def.terrain ?? []).map((d) => ({
+      ...d,
+      h: d.h ?? 20,
+      type: 'rock',
+      solid: true,
+      dx: 0,
+      dy: 0,
+    }));
+    /** What the player actually collides with. Built once; holds references. */
+    this.solids = [...this.floes, ...this.terrain];
+    this.zones = def.zones ?? [];
     this.hazards = (def.hazards ?? []).map((d) => new Hazard(d));
     this.fish = (def.fish ?? []).map((d) => new Fish(d, 'normal'));
     /** Speed fish are scored separately, so the 3-fish star stays a 3-fish star. */
@@ -201,7 +218,7 @@ export class World {
       }
     }
 
-    this.player.update(dt, { ...intent, push }, this.floes, this.tuning, {
+    this.player.update(dt, { ...intent, push }, this.solids, this.tuning, {
       onJump: () => {
         this.audio.jump();
         this.particles.puff(this.player.centerX, this.player.y + this.player.h, 6, 0);

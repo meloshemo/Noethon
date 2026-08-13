@@ -1,895 +1,587 @@
 /**
  * Handcrafted levels.
  *
- * Design rules for the ramp (the single most important thing in this game):
- *   1–3   pure movement. Wide floes, tiny gaps, zero hazards, no way to lose
- *         except walking into the sea on purpose. The player learns the verbs.
- *   4–8   one new mechanic per level, always introduced on a safe floe with a
- *         solid landing right after it, and always announced by a world sign.
- *   9–13  the mechanics start combining, checkpoints appear.
- *   14–18 real pressure: traps, chains, tighter windows.
- *   19–22 the ambush mechanics arrive: geysers that throw you, orcas that
- *         breach out of the gaps. Each still gets its own teaching level.
- *   23–30 nothing can be trusted — snapping ice, chained geysers, everything
- *         at once. This is where the game is meant to hurt.
+ * These are written as *plans*, not as coordinates. A plan says "a shelf, then
+ * a climb, then a tunnel with cracking ice in it"; the composer in terrain.js
+ * turns that into geometry using the penguin's real reach at that level's
+ * growth scale. Nobody types a pixel gap, so nobody can type an impossible one.
+ *
+ * The ramp, which is the single most important thing in this game:
+ *   1–3   pure movement. Wide ice, small gaps, nothing that can kill you but
+ *         the sea, and it takes real effort to find it. The player learns the
+ *         verbs and nothing else.
+ *   4–8   one new kind of ice per level, always with solid ground right after.
+ *   9–13  the continent arrives: slopes, the first crevasse, the first tunnel.
+ *         Mechanics start combining, checkpoints appear.
+ *   14–18 real pressure. Traps, storms, seals, bait that poisons you.
+ *   19–22 the ambushes: geysers that throw you off the map, orcas out of the
+ *         water, a summit with a long way down.
+ *   23–30 nothing can be trusted. Tunnels full of trap ice, chained geysers,
+ *         cliffs taken at speed. This is where the game is meant to hurt.
  *   31+   procedurally generated (see generator.js).
  *
- * Nothing here explains itself. No intro cards, no signs past the one that names
- * the controls: the player finds out what ice does by standing on it. That is
- * the whole reason the ambush mechanics exist, and a card that spoils them in
- * advance throws the surprise away.
- *
- * Coordinates: y grows downward. A floe's `y` is its top surface.
+ * Nothing here explains itself. No intro cards, no signs past the one that
+ * names the controls: the player finds out what ice does by standing on it.
+ * That is the whole reason the ambush mechanics exist, and a card that spoils
+ * them in advance throws the surprise away.
  */
 
-/** Floe shorthand: F(x, y, w, type, extra). */
-const F = (x, y, w, type = 'solid', extra = {}) => ({ x, y, w, type, ...extra });
+import { Course, WATER, SEA_LEVEL } from './terrain.js';
+import { scaleForLevel } from './config.js';
 
-const GROUND = 430;
-const WATER = 508;
+export const WATER_Y = WATER;
+export const GROUND_Y = SEA_LEVEL;
 
-export const LEVELS = [
-  /* -------------------------------------------------------------- 1 */
+/**
+ * @typedef {{name:string, subtitle:string, target:number, build:(c:Course)=>void}} Plan
+ * @type {Plan[]}
+ */
+const PLANS = [
+  /* ---------------------------------------------------- 1–3 · verbs */
   {
-    id: 1,
     name: 'İlk Adımlar',
     subtitle: 'Buzul kıyısı',
-    intro: null,
-    target: 26,
-    worldW: 1240,
-    spawn: { x: 110, y: GROUND },
-    goal: { x: 1090, y: GROUND },
-    floes: [
-      F(30, GROUND, 280),
-      F(370, GROUND, 250),
-      F(680, GROUND, 240),
-      F(980, GROUND, 230),
-    ],
-    fish: [{ x: 335, y: 372 }, { x: 645, y: 372 }, { x: 940, y: 372 }],
-    signs: [
-      { x: 120, y: GROUND - 96, text: 'Yürü: ← →  •  Zıpla: BOŞLUK' },
-    ],
+    target: 30,
+    signs: [{ dx: 90, dy: -96, text: 'Yürü: ← →  •  Zıpla: BOŞLUK' }],
+    build: (c) => {
+      c.shelf({ n: 4, gap: 0.26, w: 250 });
+      c.landing({ w: 250 });
+      c.scatterFish(3, 58);
+    },
   },
-
-  /* -------------------------------------------------------------- 2 */
   {
-    id: 2,
     name: 'Açık Sular',
     subtitle: 'Buzlar seyreliyor',
-    intro: null,
-    target: 30,
-    worldW: 1560,
-    spawn: { x: 100, y: GROUND },
-    goal: { x: 1420, y: GROUND },
-    floes: [
-      F(30, GROUND, 240),
-      F(370, GROUND, 190),
-      F(660, GROUND, 180),
-      F(940, GROUND, 180),
-      F(1220, GROUND, 260),
-    ],
-    fish: [{ x: 320, y: 366 }, { x: 855, y: 350 }, { x: 1145, y: 366 }],
+    target: 34,
+    build: (c) => {
+      c.shelf({ n: 3, gap: 0.4, w: 200, wave: 16 });
+      c.slope({ n: 2, rise: 0.3, gap: 0.34, w: 190 });
+      c.slope({ n: 2, rise: -0.3, gap: 0.32, w: 190 });
+      c.landing({ w: 230 });
+      c.scatterFish(3, 60);
+    },
   },
-
-  /* -------------------------------------------------------------- 3 */
   {
-    id: 3,
     name: 'Basamaklar',
     subtitle: 'Yukarı, aşağı',
-    intro: null,
-    target: 34,
-    worldW: 1700,
-    spawn: { x: 100, y: GROUND },
-    goal: { x: 1560, y: 300 },
-    floes: [
-      F(30, GROUND, 230),
-      F(340, 396, 180),
-      F(620, 348, 180),
-      F(900, 300, 180),
-      F(1180, 348, 170),
-      F(1440, 300, 220),
-    ],
-    fish: [{ x: 300, y: 340 }, { x: 960, y: 236 }, { x: 1400, y: 292 }],
+    target: 40,
+    build: (c) => {
+      c.shelf({ n: 2, gap: 0.3, w: 210 });
+      c.slope({ n: 3, rise: 0.4, gap: 0.36, w: 150 });
+      c.shelf({ n: 2, gap: 0.34, w: 170 });
+      c.slope({ n: 3, rise: -0.4, gap: 0.34, w: 160 });
+      c.landing({ w: 230 });
+      c.scatterFish(3, 60);
+    },
   },
 
-  /* -------------------------------------------------------------- 4 */
+  /* ------------------------------------------------ 4–8 · the ice */
   {
-    id: 4,
-    name: 'Çatlayan Buz',
-    subtitle: 'Yeni: çatlak buz',
-    intro: null,
-    target: 32,
-    worldW: 1760,
-    spawn: { x: 100, y: GROUND },
-    goal: { x: 1600, y: GROUND },
-    floes: [
-      F(30, GROUND, 250),
-      F(360, GROUND, 200, 'crack', { delay: 1.6 }),
-      F(650, GROUND, 240),
-      F(960, GROUND, 180, 'crack', { delay: 1.4 }),
-      F(1230, GROUND, 200),
-      F(1500, GROUND, 230),
-    ],
-    fish: [{ x: 320, y: 366 }, { x: 900, y: 360 }, { x: 1440, y: 366 }],
-  },
-
-  /* -------------------------------------------------------------- 5 */
-  {
-    id: 5,
-    name: 'Kırılgan Yol',
-    subtitle: 'Ritmi yakala',
-    intro: null,
-    target: 34,
-    worldW: 1900,
-    spawn: { x: 100, y: GROUND },
-    goal: { x: 1700, y: 396 },
-    // Deliberately crack → solid → crack: at this stage the player still gets a
-    // safe floe to land on after every risk.
-    floes: [
-      F(30, GROUND, 220),
-      F(340, GROUND, 150, 'crack'),
-      F(580, GROUND, 170),
-      F(840, 404, 150, 'crack'),
-      F(1080, 404, 180),
-      F(1350, 396, 150, 'crack'),
-      F(1590, 396, 220),
-    ],
-    fish: [{ x: 285, y: 360 }, { x: 1025, y: 340 }, { x: 1295, y: 332 }],
-  },
-
-  /* -------------------------------------------------------------- 6 */
-  {
-    id: 6,
-    name: 'Kaygan Zemin',
-    subtitle: 'Yeni: cilalı buz',
-    intro: null,
-    target: 36,
-    worldW: 1900,
-    spawn: { x: 100, y: GROUND },
-    goal: { x: 1740, y: GROUND },
-    floes: [
-      F(30, GROUND, 220),
-      F(330, GROUND, 300, 'slip'),
-      F(760, GROUND, 180),
-      F(1040, GROUND, 320, 'slip'),
-      F(1460, 396, 170, 'crack'),
-      F(1680, GROUND, 200),
-    ],
-    fish: [{ x: 700, y: 360 }, { x: 1000, y: 350 }, { x: 1400, y: 330 }],
-    rotFish: [{ x: 880, y: 396, kind: 'heavy' }],
-  },
-
-  /* -------------------------------------------------------------- 7 */
-  {
-    id: 7,
-    name: 'Sürüklenen Buzlar',
-    subtitle: 'Yeni: hareketli buz',
-    intro: null,
+    name: 'Çatlak',
+    subtitle: 'Ayağının altında',
     target: 42,
-    worldW: 2000,
-    spawn: { x: 100, y: GROUND },
-    goal: { x: 1840, y: GROUND },
-    floes: [
-      F(30, GROUND, 230),
-      F(360, GROUND, 150, 'move', { ax: 0, ay: 60, period: 3.4 }),
-      F(640, GROUND, 160),
-      F(880, 400, 150, 'move', { ax: 110, ay: 0, period: 4, phase: 0.25 }),
-      F(1240, GROUND, 160),
-      F(1490, 392, 150, 'move', { ax: 0, ay: 58, period: 3, phase: 0.5 }),
-      F(1760, GROUND, 210),
-    ],
-    fish: [{ x: 600, y: 350 }, { x: 1080, y: 330 }, { x: 1700, y: 340 }],
-    speedFish: [{ x: 720, y: 318 }],
+    build: (c) => {
+      c.shelf({ n: 2, gap: 0.32, w: 200 });
+      c.slope({ n: 2, rise: 0.34, gap: 0.36, w: 180 });
+      c.shelf({ n: 4, gap: 0.42, w: 165, types: ['crack', 'solid'] });
+      c.slope({ n: 3, rise: -0.3, gap: 0.36, w: 170, types: ['solid', 'crack'] });
+      c.landing();
+      c.scatterFish(3, 62);
+    },
   },
-
-  /* -------------------------------------------------------------- 8 */
   {
-    id: 8,
-    name: 'Eriyen Buz',
-    subtitle: 'Yeni: eriyen buz',
-    intro: null,
+    name: 'Cilalı Buz',
+    subtitle: 'Fren yok',
     target: 44,
-    worldW: 2080,
-    spawn: { x: 100, y: GROUND },
-    goal: { x: 1920, y: GROUND },
-    floes: [
-      F(30, GROUND, 230),
-      F(350, GROUND, 170, 'melt', { meltPeriod: 3.6, meltPhase: 0 }),
-      F(630, GROUND, 180),
-      F(910, 404, 170, 'melt', { meltPeriod: 3.6, meltPhase: 0.5 }),
-      F(1190, GROUND, 160),
-      F(1440, 396, 160, 'melt', { meltPeriod: 3.2, meltPhase: 0.25 }),
-      F(1690, GROUND, 160),
-      F(1880, GROUND, 180),
-    ],
-    fish: [{ x: 600, y: 356 }, { x: 1150, y: 330 }, { x: 1660, y: 330 }],
+    build: (c) => {
+      c.shelf({ n: 2, gap: 0.32, w: 195 });
+      c.slope({ n: 3, rise: 0.34, gap: 0.36, w: 175, type: 'slip' });
+      c.shelf({ n: 3, gap: 0.4, w: 200, types: ['slip', 'solid'] });
+      c.slope({ n: 3, rise: -0.3, gap: 0.34, w: 190, type: 'slip' });
+      c.landing();
+      c.scatterFish(3, 62);
+    },
+  },
+  {
+    name: 'Eriyen Zemin',
+    subtitle: 'Bekle, sonra geç',
+    target: 48,
+    build: (c) => {
+      c.shelf({ n: 2, gap: 0.32, w: 200 });
+      c.slope({ n: 2, rise: 0.4, gap: 0.36, w: 175 });
+      for (let i = 0; i < 3; i++) {
+        c.put(c.gapOf(0.44), 165, c.y, 'melt', { meltPhase: i * 0.33, meltPeriod: 3.4 });
+        c.put(c.gapOf(0.36), 175, c.y - (i === 1 ? c.riseOf(0.36) : 0));
+      }
+      c.slope({ n: 2, rise: -0.34, gap: 0.34, w: 180 });
+      c.landing();
+      c.scatterFish(3, 62);
+    },
+  },
+  {
+    name: 'Akıntı',
+    subtitle: 'Buz da yolculuk eder',
+    target: 50,
+    build: (c) => {
+      c.shelf({ n: 2, gap: 0.3, w: 200 });
+      for (let i = 0; i < 3; i++) {
+        c.put(c.gapOf(0.36), 155, c.y, 'move', { ax: 74, period: 3.6, phase: i * 1.1 });
+        c.put(c.gapOf(0.34), 175, c.y - c.riseOf(0.3));
+      }
+      c.slope({ n: 3, rise: -0.32, gap: 0.34, w: 180 });
+      c.landing();
+      c.scatterFish(3, 62);
+    },
+  },
+  {
+    name: 'Düşen Buz',
+    subtitle: 'Bastığın an kaçar',
+    target: 50,
+    build: (c) => {
+      c.shelf({ n: 2, gap: 0.3, w: 200 });
+      c.shelf({ n: 3, gap: 0.42, w: 150, types: ['fall', 'solid'] });
+      c.slope({ n: 3, rise: 0.4, gap: 0.38, w: 155 });
+      c.shelf({ n: 3, gap: 0.42, w: 150, types: ['fall', 'solid'] });
+      c.slope({ n: 2, rise: -0.34, gap: 0.34, w: 170 });
+      c.landing();
+      c.scatterFish(3, 62);
+    },
   },
 
-  /* -------------------------------------------------------------- 9 */
+  /* ------------------------------------------ 9–13 · the continent */
   {
-    id: 9,
+    name: 'Yamaç',
+    subtitle: 'Kıta yükseliyor',
+    target: 55,
+    build: (c) => {
+      c.shelf({ n: 2, gap: 0.3, w: 190 });
+      c.slope({ n: 5, rise: 0.5, gap: 0.4, w: 130 });
+      c.shelf({ n: 2, gap: 0.36, w: 170, types: ['crack', 'solid'] });
+      c.cliff({ drop: 300, ledges: 4 });
+      c.landing();
+      c.scatterFish(3, 62);
+      c.checkpoint(c.at(0.5));
+    },
+  },
+  {
+    name: 'Yarık',
+    subtitle: 'Altında dip yok',
+    target: 58,
+    build: (c) => {
+      c.shelf({ n: 2, gap: 0.32, w: 195 });
+      c.slope({ n: 3, rise: 0.42, gap: 0.36, w: 165 });
+      c.crevasse({ pillars: 2, gap: 0.6, depth: 240 });
+      c.shelf({ n: 2, gap: 0.36, w: 170 });
+      c.crevasse({ pillars: 3, gap: 0.62, depth: 280 });
+      c.slope({ n: 2, rise: -0.36, gap: 0.34, w: 175 });
+      c.landing();
+      c.scatterFish(3, 64);
+      c.checkpoint(c.at(0.45));
+    },
+  },
+  {
+    name: 'Buz Tüneli',
+    subtitle: 'Tavan alçak',
+    target: 60,
+    build: (c) => {
+      c.shelf({ n: 2, gap: 0.3, w: 190 });
+      c.slope({ n: 2, rise: -0.3, gap: 0.34, w: 175 });
+      c.tunnel({ n: 5, headroom: 116, gap: 0.46, w: 150 });
+      c.slope({ n: 2, rise: 0.36, gap: 0.36, w: 165 });
+      c.landing();
+      c.scatterFish(3, 62);
+      c.checkpoint(c.at(0.35));
+    },
+  },
+  {
     name: 'Sarkıtlar',
-    subtitle: 'Yeni: buz sarkıtı',
-    intro: null,
-    target: 46,
-    worldW: 2200,
-    spawn: { x: 100, y: GROUND },
-    goal: { x: 2040, y: GROUND },
-    checkpoints: [{ x: 1120, y: GROUND }],
-    floes: [
-      F(30, GROUND, 240),
-      F(370, GROUND, 200, 'crack'),
-      F(660, GROUND, 180),
-      F(930, GROUND, 240),
-      F(1270, GROUND, 190, 'crack'),
-      F(1550, 396, 170),
-      F(1810, GROUND, 400),
-    ],
-    hazards: [
-      { kind: 'icicle', x: 700, y: 150, w: 24, h: 46 },
-      { kind: 'icicle', x: 990, y: 150, w: 24, h: 46 },
-      { kind: 'icicle', x: 1880, y: 150, w: 24, h: 46 },
-    ],
-    fish: [{ x: 620, y: 350 }, { x: 1230, y: 340 }, { x: 1760, y: 330 }],
-    rotFish: [{ x: 1000, y: 396, kind: 'dizzy' }],
-    speedFish: [{ x: 1030, y: 348 }],
-  },
-
-  /* ------------------------------------------------------------- 10 */
-  {
-    id: 10,
-    name: 'Fok Devriyesi',
-    subtitle: 'Yeni: fok',
-    intro: null,
-    target: 48,
-    worldW: 2260,
-    spawn: { x: 100, y: GROUND },
-    goal: { x: 2100, y: GROUND },
-    checkpoints: [{ x: 1300, y: GROUND }],
-    floes: [
-      F(30, GROUND, 240),
-      F(360, GROUND, 320),
-      F(760, GROUND, 200, 'crack'),
-      F(1040, GROUND, 320),
-      F(1440, 396, 180, 'slip'),
-      F(1700, GROUND, 200, 'crack'),
-      F(1980, GROUND, 250),
-    ],
-    // Introduction level: both seals patrol the far half of their floe, so the
-    // player always lands somewhere safe and can watch the pattern first.
-    hazards: [
-      { kind: 'seal', x: 500, y: GROUND - 30, w: 44, h: 30, range: 60, speed: 52 },
-      { kind: 'seal', x: 1160, y: GROUND - 30, w: 44, h: 30, range: 50, speed: 60 },
-      { kind: 'icicle', x: 1760, y: 150, w: 24, h: 46 },
-    ],
-    fish: [{ x: 700, y: 348 }, { x: 1380, y: 330 }, { x: 1930, y: 340 }],
-    speedFish: [{ x: 1200, y: 348 }],
-  },
-
-  /* ------------------------------------------------------------- 11 */
-  {
-    id: 11,
-    name: 'Kutup Rüzgarı',
-    subtitle: 'Yeni: rüzgar ve fırtına',
-    intro: null,
-    target: 50,
-    worldW: 2300,
-    spawn: { x: 100, y: GROUND },
-    goal: { x: 2140, y: 396 },
-    checkpoints: [{ x: 1200, y: GROUND }],
-    floes: [
-      F(30, GROUND, 230),
-      F(350, GROUND, 170, 'crack'),
-      F(640, 404, 170),
-      F(910, GROUND, 160, 'melt', { meltPeriod: 3.4 }),
-      F(1160, GROUND, 220),
-      F(1480, 396, 170, 'crack'),
-      F(1760, 396, 160),
-      F(2020, 396, 240),
-    ],
-    hazards: [
-      { kind: 'gust', x: 520, y: 180, w: 130, h: 330, power: -300 },
-      // The storm sits over a long run of solid ice on purpose: the first one
-      // you meet should be about reading the wind, not about a hard jump.
-      { kind: 'storm', x: 1140, y: 120, w: 520, h: 400, power: -300, phase: 0.15 },
-      { kind: 'icicle', x: 1820, y: 130, w: 24, h: 46 },
-    ],
-    fish: [{ x: 580, y: 340 }, { x: 1100, y: 330 }, { x: 1930, y: 330 }],
-    rotFish: [{ x: 700, y: 370, kind: 'heavy' }],
-    speedFish: [{ x: 700, y: 314 }],
-  },
-
-  /* ------------------------------------------------------------- 12 */
-  {
-    id: 12,
-    name: 'Zemin Kaçtı',
-    subtitle: 'Yeni: düşen buz',
-    intro: null,
-    target: 50,
-    worldW: 2400,
-    spawn: { x: 100, y: GROUND },
-    goal: { x: 2170, y: GROUND },
-    checkpoints: [{ x: 1250, y: GROUND }],
-    // Falling floes are narrow on purpose: you land and leave, you never walk.
-    floes: [
-      F(30, GROUND, 230),
-      F(370, GROUND, 100, 'fall'),
-      F(560, GROUND, 190),
-      F(880, 404, 100, 'fall'),
-      F(1070, GROUND, 220),
-      F(1420, GROUND, 100, 'fall'),
-      F(1610, 396, 150, 'crack'),
-      F(1880, GROUND, 100, 'fall'),
-      F(2070, GROUND, 200),
-    ],
-    hazards: [{ kind: 'seal', x: 1120, y: GROUND - 30, w: 44, h: 30, range: 50, speed: 86 }],
-    fish: [{ x: 515, y: 360 }, { x: 1025, y: 336 }, { x: 1820, y: 336 }],
-  },
-
-  /* ------------------------------------------------------------- 13 */
-  {
-    id: 13,
-    name: 'Tuzak',
-    subtitle: 'Yeni: sahte buz',
-    intro: null,
-    target: 52,
-    worldW: 2420,
-    spawn: { x: 100, y: GROUND },
-    goal: { x: 2240, y: GROUND },
-    checkpoints: [{ x: 1240, y: GROUND }],
-    // Traps are deliberately narrow stepping stones — landing on one and
-    // jumping straight back off is always enough to clear the next gap.
-    floes: [
-      F(30, GROUND, 230),
-      F(380, GROUND, 70, 'trap'),
-      F(550, GROUND, 200),
-      F(860, 404, 170, 'crack'),
-      F(1140, GROUND, 220),
-      F(1480, GROUND, 70, 'trap'),
-      F(1650, 396, 180, 'slip'),
-      F(1960, GROUND, 70, 'trap'),
-      F(2130, GROUND, 210),
-    ],
-    hazards: [
-      { kind: 'icicle', x: 690, y: 140, w: 24, h: 46 },
-      { kind: 'icicle', x: 1560, y: 140, w: 24, h: 46 },
-    ],
-    fish: [{ x: 500, y: 360 }, { x: 1085, y: 340 }, { x: 1885, y: 336 }],
-    rotFish: [{ x: 1240, y: 396, kind: 'blind' }],
-  },
-
-  /* ------------------------------------------------------------- 14 */
-  {
-    id: 14,
-    name: 'Çözülme',
-    subtitle: 'Her şey bir arada',
-    intro: null,
-    target: 58,
-    worldW: 2860,
-    spawn: { x: 100, y: GROUND },
-    goal: { x: 2650, y: 396 },
-    checkpoints: [{ x: 1660, y: GROUND }],
-    // Rule that holds from here on: never put a melting floe straight after a
-    // cracking one. You would have to stand on breaking ice to wait out a melt
-    // cycle, which is a coin flip rather than a skill.
-    floes: [
-      F(30, GROUND, 220),
-      F(350, GROUND, 160, 'crack'),
-      F(620, 404, 190),
-      F(920, 404, 160, 'melt', { meltPeriod: 3, meltPhase: 0.1 }),
-      F(1190, 396, 150, 'move', { ax: 0, ay: 60, period: 3.6 }),
-      F(1480, GROUND, 220),
-      F(1810, 404, 160, 'melt', { meltPeriod: 2.8, meltPhase: 0.45 }),
-      F(2100, GROUND, 70, 'trap'),
-      F(2270, 396, 160, 'crack'),
-      F(2540, 396, 220),
-    ],
-    hazards: [
-      { kind: 'gust', x: 1350, y: 160, w: 130, h: 360, power: 320 },
-      { kind: 'seal', x: 1540, y: GROUND - 30, w: 44, h: 30, range: 40, speed: 92 },
-    ],
-    fish: [{ x: 560, y: 340 }, { x: 1135, y: 336 }, { x: 2200, y: 330 }],
-  },
-
-  /* ------------------------------------------------------------- 15 */
-  {
-    id: 15,
-    name: 'Dar Geçit',
-    subtitle: 'Küçük hedefler',
-    intro: null,
-    target: 58,
-    worldW: 2700,
-    spawn: { x: 100, y: GROUND },
-    goal: { x: 2470, y: 404 },
-    checkpoints: [{ x: 1520, y: 396 }],
-    floes: [
-      F(30, GROUND, 200),
-      F(330, 404, 110, 'crack'),
-      F(550, 372, 110, 'crack'),
-      F(770, 404, 110),
-      F(990, 356, 110, 'crack'),
-      F(1210, 404, 120),
-      F(1430, 396, 190),
-      F(1730, 372, 110, 'slip'),
-      F(1950, 404, 110, 'crack'),
-      F(2190, 372, 70, 'trap'),
-      F(2360, 404, 220),
-    ],
-    hazards: [{ kind: 'icicle', x: 1030, y: 130, w: 24, h: 46 }],
-    fish: [{ x: 480, y: 320 }, { x: 1150, y: 300 }, { x: 2100, y: 320 }],
-    rotFish: [{ x: 850, y: 370, kind: 'heavy' }, { x: 1520, y: 362, kind: 'dizzy' }],
-    speedFish: [{ x: 1520, y: 314 }],
-  },
-
-  /* ------------------------------------------------------------- 16 */
-  {
-    id: 16,
-    name: 'Kırık Sürüsü',
-    subtitle: 'Durma, akış içinde kal',
-    intro: null,
-    target: 60,
-    worldW: 2760,
-    spawn: { x: 100, y: GROUND },
-    goal: { x: 2540, y: 396 },
-    checkpoints: [{ x: 1540, y: GROUND }],
-    floes: [
-      F(30, GROUND, 200),
-      F(330, GROUND, 130, 'crack', { delay: 0.7 }),
-      F(560, 404, 130, 'crack', { delay: 0.7 }),
-      F(790, 380, 130, 'crack', { delay: 0.7 }),
-      F(1040, 404, 70, 'trap'),
-      F(1210, GROUND, 130, 'crack', { delay: 0.7 }),
-      F(1440, GROUND, 200),
-      F(1740, 396, 130, 'melt', { meltPeriod: 2.6 }),
-      F(1970, 372, 130, 'crack', { delay: 0.7 }),
-      F(2200, 396, 130, 'move', { ax: 0, ay: 60, period: 2.6 }),
-      F(2430, 396, 220),
-    ],
-    hazards: [
-      { kind: 'gust', x: 1660, y: 160, w: 130, h: 360, power: -340 },
-      { kind: 'icicle', x: 2020, y: 130, w: 24, h: 46 },
-    ],
-    fish: [{ x: 490, y: 330 }, { x: 1160, y: 330 }, { x: 2150, y: 320 }],
-    speedFish: [{ x: 1540, y: 348 }],
-  },
-
-  /* ------------------------------------------------------------- 17 */
-  {
-    id: 17,
-    name: 'Sisli Kıyı',
-    subtitle: 'Görüş kısıtlı',
-    intro: null,
+    subtitle: 'Yukarıdan düşen',
     target: 62,
-    worldW: 2720,
-    fog: 0.55,
-    spawn: { x: 100, y: GROUND },
-    goal: { x: 2490, y: GROUND },
-    checkpoints: [{ x: 1510, y: GROUND }],
-    floes: [
-      F(30, GROUND, 210),
-      F(340, 404, 140, 'crack'),
-      F(600, GROUND, 70, 'trap'),
-      F(770, 380, 140),
-      F(1010, 404, 140, 'melt', { meltPeriod: 3 }),
-      F(1250, GROUND, 130, 'crack'),
-      F(1480, GROUND, 190),
-      // Vertical drift, not horizontal: in fog a floe that slides away from
-      // under your landing spot is unreadable, one that bobs is a rhythm.
-      F(1770, 396, 140, 'move', { ax: 0, ay: 60, period: 3.2 }),
-      F(2020, 380, 70, 'trap'),
-      F(2190, 404, 130, 'crack'),
-      F(2420, GROUND, 200),
-    ],
-    hazards: [
-      { kind: 'icicle', x: 820, y: 130, w: 24, h: 46 },
-      { kind: 'icicle', x: 2230, y: 130, w: 24, h: 46 },
-    ],
-    fish: [{ x: 510, y: 340 }, { x: 1180, y: 330 }, { x: 2140, y: 320 }],
-    rotFish: [{ x: 1560, y: 396, kind: 'blind' }],
+    build: (c) => {
+      c.shelf({ n: 2, gap: 0.3, w: 190 });
+      c.slope({ n: 2, rise: 0.4, gap: 0.36, w: 170 });
+      c.tunnel({ n: 6, headroom: 122, gap: 0.46, w: 150, icicles: 3 });
+      c.slope({ n: 3, rise: -0.36, gap: 0.34, w: 175, type: 'crack' });
+      c.landing();
+      c.scatterFish(3, 62);
+      c.checkpoint(c.at(0.3));
+    },
+  },
+  {
+    name: 'Foklar',
+    subtitle: 'Yolun üstünde',
+    target: 62,
+    build: (c) => {
+      c.shelf({ n: 3, gap: 0.34, w: 205 });
+      c.seal(c.at(0.35), { speed: 66 });
+      c.slope({ n: 3, rise: 0.42, gap: 0.38, w: 160 });
+      c.seal(undefined, { speed: 76 });
+      c.shelf({ n: 2, gap: 0.38, w: 180 });
+      c.cliff({ drop: 260, ledges: 3 });
+      c.landing();
+      c.scatterFish(3, 62);
+      c.checkpoint(c.at(0.5));
+    },
   },
 
-  /* ------------------------------------------------------------- 18 */
+  /* ------------------------------------------- 14–18 · the pressure */
   {
-    id: 18,
-    name: 'Son Buzul',
-    subtitle: 'Antarktika seni bırakmak istemiyor',
-    intro: null,
+    name: 'Sahte Zemin',
+    subtitle: 'Göründüğü gibi değil',
+    target: 62,
+    build: (c) => {
+      c.shelf({ n: 2, gap: 0.3, w: 185 });
+      c.slope({ n: 3, rise: 0.42, gap: 0.36, w: 165 });
+      c.put(c.gapOf(0.42), 72, c.y, 'trap');
+      c.put(c.gapOf(0.34), 175, c.y);
+      c.slope({ n: 3, rise: 0.34, gap: 0.4, w: 155 });
+      c.put(c.gapOf(0.42), 72, c.y, 'trap');
+      c.put(c.gapOf(0.34), 180, c.y);
+      c.cliff({ drop: 340, ledges: 4 });
+      c.landing();
+      c.scatterFish(3, 62);
+      c.temptation(0.55, 'heavy');
+      c.checkpoint(c.at(0.5));
+    },
+  },
+  {
+    name: 'Fırtına Kıyısı',
+    subtitle: 'Rüzgâr geri itiyor',
+    target: 66,
+    build: (c) => {
+      c.shelf({ n: 3, gap: 0.32, w: 195 });
+      const from = c.x;
+      c.shelf({ n: 4, gap: 0.36, w: 180 });
+      c.storm(from, { period: 3.8 });
+      c.slope({ n: 3, rise: 0.4, gap: 0.36, w: 160 });
+      c.landing();
+      c.scatterFish(3, 62);
+      c.sprint(0.55);
+      c.checkpoint(c.at(0.45));
+    },
+  },
+  {
+    name: 'Çürük Yem',
+    subtitle: 'Her balık iyi balık değil',
+    target: 64,
+    build: (c) => {
+      c.shelf({ n: 2, gap: 0.34, w: 190 });
+      c.slope({ n: 3, rise: 0.44, gap: 0.36, w: 160 });
+      c.tunnel({ n: 4, headroom: 118, gap: 0.44, w: 155 });
+      c.cliff({ drop: 260, ledges: 3 });
+      c.shelf({ n: 2, gap: 0.4, w: 170, types: ['crack', 'solid'] });
+      c.landing();
+      c.scatterFish(3, 62);
+      c.temptation(0.4, 'dizzy');
+      c.temptation(0.72, 'heavy');
+      c.checkpoint(c.at(0.45));
+    },
+  },
+  {
+    name: 'Uçurum Yolu',
+    subtitle: 'Aşağısı çok aşağı',
     target: 68,
-    worldW: 3100,
-    spawn: { x: 100, y: GROUND },
-    goal: { x: 2780, y: 372 },
-    checkpoints: [{ x: 1180, y: GROUND }, { x: 2050, y: 396 }],
-    floes: [
-      F(30, GROUND, 200),
-      F(330, 404, 130, 'crack', { delay: 0.7 }),
-      F(560, 372, 140),
-      F(800, 404, 130, 'melt', { meltPeriod: 2.8, meltPhase: 0.2 }),
-      F(1030, GROUND, 240),
-      F(1320, 396, 130, 'move', { ax: 0, ay: 70, period: 2.8 }),
-      F(1550, 372, 120, 'crack', { delay: 0.7 }),
-      F(1770, 404, 120, 'slip'),
-      F(1990, 396, 180),
-      F(2290, 372, 70, 'trap'),
-      F(2460, 396, 120, 'crack', { delay: 0.7 }),
-      F(2680, 372, 240),
-    ],
-    hazards: [
-      { kind: 'gust', x: 950, y: 150, w: 120, h: 370, power: 360 },
-      { kind: 'seal', x: 1100, y: GROUND - 30, w: 44, h: 30, range: 50, speed: 100 },
-      { kind: 'icicle', x: 1600, y: 120, w: 24, h: 46 },
-      { kind: 'icicle', x: 2300, y: 120, w: 24, h: 46 },
-      { kind: 'gust', x: 2380, y: 150, w: 110, h: 370, power: -300 },
-    ],
-    fish: [{ x: 500, y: 320 }, { x: 1265, y: 320 }, { x: 2400, y: 310 }],
+    build: (c) => {
+      c.shelf({ n: 2, gap: 0.3, w: 185 });
+      c.summit({ height: 230, steps: 3, w: 200 });
+      c.shelf({ n: 2, gap: 0.4, w: 150, types: ['crack', 'solid'] });
+      c.cliff({ drop: 340, ledges: 4, gap: 0.32 });
+      c.crevasse({ pillars: 2, gap: 0.6, depth: 220 });
+      c.landing();
+      c.scatterFish(3, 62);
+      c.sprint(0.3);
+      c.checkpoint(c.at(0.55));
+    },
+  },
+  {
+    name: 'Kaçan Buz',
+    subtitle: 'Tam inerken',
+    target: 66,
+    build: (c) => {
+      c.shelf({ n: 3, gap: 0.34, w: 185 });
+      for (let i = 0; i < 3; i++) {
+        // The snap floe hangs low and inviting beside the real route, which is
+        // the only reason anybody ever lands on one.
+        const bait = { x: c.x + c.gapOf(0.3), y: c.y + 46, w: 96, type: 'snap' };
+        c.floes.push(bait);
+        c.put(c.gapOf(0.46), 175, c.y);
+      }
+      c.slope({ n: 3, rise: 0.4, gap: 0.36, w: 165 });
+      c.tunnel({ n: 3, headroom: 120, gap: 0.44, w: 155 });
+      c.cliff({ drop: 280, ledges: 3 });
+      c.landing();
+      c.scatterFish(3, 62);
+      c.checkpoint(c.at(0.5));
+    },
   },
 
-  /* ------------------------------------------------------------- 19 */
+  /* ------------------------------------------ 19–22 · the ambushes */
   {
-    id: 19,
-    name: 'Gayzer Tarlası',
-    subtitle: 'Yeni: gayzer buzu',
-    intro: null,
-    target: 46,
-    worldW: 2560,
-    spawn: { x: 100, y: GROUND },
-    goal: { x: 2280, y: GROUND },
-    checkpoints: [{ x: 1340, y: GROUND }],
-    floes: [
-      F(30, GROUND, 220),
-      F(370, GROUND, 150, 'burst'),
-      F(650, GROUND, 190),
-      F(970, 404, 150, 'burst'),
-      F(1250, GROUND, 180),
-      F(1560, 404, 150, 'burst', { burstPeriod: 3.2, burstPhase: 0.3 }),
-      F(1840, GROUND, 200),
-      F(2170, GROUND, 220),
-    ],
-    fish: [{ x: 585, y: 360 }, { x: 1185, y: 336 }, { x: 1780, y: 336 }],
-    rotFish: [{ x: 1330, y: 396, kind: 'dizzy' }],
-    speedFish: [{ x: 1340, y: 348 }],
+    name: 'Gayzer',
+    subtitle: 'Buz tıslamaya başlarsa',
+    target: 70,
+    build: (c) => {
+      c.shelf({ n: 3, gap: 0.32, w: 190 });
+      for (let i = 0; i < 3; i++) {
+        c.put(c.gapOf(0.38), 200, c.y, 'burst');
+        c.put(c.gapOf(0.36), 185, c.y - c.riseOf(0.38));
+      }
+      c.cliff({ drop: 320, ledges: 4 });
+      c.landing();
+      c.scatterFish(3, 62);
+      c.checkpoint(c.at(0.45));
+    },
   },
-
-  /* ------------------------------------------------------------- 20 */
   {
-    id: 20,
-    name: 'Kaynayan Kıyı',
-    subtitle: 'Sıcak su, çatlak buz',
-    intro: null,
-    target: 48,
-    worldW: 2400,
-    spawn: { x: 100, y: GROUND },
-    goal: { x: 2130, y: GROUND },
-    checkpoints: [{ x: 1000, y: GROUND }],
-    floes: [
-      F(30, GROUND, 220),
-      F(350, 404, 150, 'crack'),
-      F(640, GROUND, 150, 'burst'),
-      F(910, GROUND, 190),
-      F(1210, 404, 150, 'burst', { burstPeriod: 2.8 }),
-      F(1470, GROUND, 160, 'crack'),
-      F(1740, 404, 150, 'burst'),
-      F(2020, GROUND, 210),
-    ],
-    fish: [{ x: 550, y: 340 }, { x: 1120, y: 336 }, { x: 1930, y: 336 }],
-  },
-
-  /* ------------------------------------------------------------- 21 */
-  {
-    id: 21,
     name: 'Katil Balina',
-    subtitle: 'Yeni: orka',
-    intro: null,
-    target: 50,
-    worldW: 2500,
-    spawn: { x: 100, y: GROUND },
-    goal: { x: 2150, y: GROUND },
-    checkpoints: [{ x: 1450, y: GROUND }],
-    floes: [
-      F(30, GROUND, 230),
-      F(390, GROUND, 180),
-      F(720, GROUND, 180),
-      F(1050, 404, 170, 'crack'),
-      F(1370, GROUND, 200),
-      F(1720, 404, 170),
-      F(2040, GROUND, 220),
-    ],
-    hazards: [
-      { kind: 'orca', x: 612, y: WATER, w: 56, h: 120, height: 235, period: 3.4, phase: 0.1 },
-      { kind: 'orca', x: 1622, y: WATER, w: 56, h: 120, height: 245, period: 3.1, phase: 0.55 },
-    ],
-    fish: [{ x: 630, y: 350 }, { x: 1300, y: 330 }, { x: 1980, y: 336 }],
-    rotFish: [{ x: 1450, y: 396, kind: 'heavy' }],
-    speedFish: [{ x: 1470, y: 348 }],
+    subtitle: 'Boşluklara dikkat',
+    target: 72,
+    build: (c) => {
+      c.shelf({ n: 3, gap: 0.34, w: 185 });
+      for (let i = 0; i < 3; i++) {
+        const before = c.x;
+        c.put(c.gapOf(0.56), 170, c.y);
+        c.hazard({
+          kind: 'orca',
+          x: before + 24,
+          y: WATER - 30,
+          w: 76,
+          h: 60,
+          period: 3.2 + i * 0.3,
+          height: 250,
+        });
+        if (i < 2) c.slope({ n: 2, rise: 0.42, gap: 0.36, w: 165 });
+      }
+      c.cliff({ drop: 340, ledges: 4 });
+      c.landing();
+      c.scatterFish(3, 62);
+      c.checkpoint(c.at(0.5));
+    },
+  },
+  {
+    name: 'Zirve',
+    subtitle: 'Kıtanın tepesi',
+    target: 78,
+    build: (c) => {
+      c.shelf({ n: 2, gap: 0.3, w: 185 });
+      c.summit({ height: 250, steps: 4, w: 190 });
+      c.shelf({ n: 2, gap: 0.38, w: 160, types: ['crack', 'solid'] });
+      c.summit({ height: 180, steps: 3, w: 180 });
+      c.cliff({ drop: 420, ledges: 5, gap: 0.3 });
+      c.landing();
+      c.scatterFish(3, 64);
+      c.sprint(0.65);
+      c.checkpoint(c.at(0.55));
+    },
+  },
+  {
+    name: 'Derin Tünel',
+    subtitle: 'Işık yok',
+    target: 76,
+    build: (c) => {
+      c.shelf({ n: 2, gap: 0.3, w: 180 });
+      c.slope({ n: 2, rise: -0.34, gap: 0.34, w: 170 });
+      c.tunnel({ n: 8, headroom: 112, gap: 0.44, w: 145, icicles: 4, types: ['solid', 'crack'] });
+      c.slope({ n: 3, rise: 0.4, gap: 0.36, w: 160 });
+      c.landing();
+      c.scatterFish(3, 60);
+      c.temptation(0.5, 'blind');
+      c.checkpoint(c.at(0.35));
+    },
   },
 
-  /* ------------------------------------------------------------- 22 */
+  /* -------------------------------------------- 23–30 · the hurting */
   {
-    id: 22,
-    name: 'Derin Sular',
-    subtitle: 'Orka sürüsü',
-    intro: null,
-    target: 52,
-    worldW: 2620,
-    spawn: { x: 100, y: GROUND },
-    goal: { x: 2280, y: GROUND },
-    checkpoints: [{ x: 1300, y: GROUND }],
-    floes: [
-      F(30, GROUND, 220),
-      F(370, 404, 160, 'crack'),
-      F(680, GROUND, 180),
-      F(1000, GROUND, 170, 'melt', { meltPeriod: 3.2 }),
-      F(1230, GROUND, 190),
-      F(1560, 404, 160, 'crack'),
-      F(1860, GROUND, 180),
-      F(2170, GROUND, 220),
-    ],
-    hazards: [
-      { kind: 'orca', x: 572, y: WATER, w: 56, h: 120, height: 240, period: 3.2, phase: 0 },
-      { kind: 'orca', x: 1462, y: WATER, w: 56, h: 120, height: 250, period: 2.9, phase: 0.4 },
-      { kind: 'orca', x: 2062, y: WATER, w: 56, h: 120, height: 235, period: 3.5, phase: 0.7 },
-    ],
-    fish: [{ x: 600, y: 340 }, { x: 1180, y: 336 }, { x: 2050, y: 330 }],
+    name: 'Tuzak Tüneli',
+    subtitle: 'Alçak ve kötü niyetli',
+    target: 78,
+    build: (c) => {
+      c.shelf({ n: 2, gap: 0.32, w: 180 });
+      c.slope({ n: 3, rise: 0.44, gap: 0.36, w: 155 });
+      c.tunnel({ n: 6, headroom: 114, gap: 0.42, w: 150, icicles: 3, types: ['solid', 'crack', 'solid'] });
+      c.put(c.gapOf(0.4), 72, c.y, 'trap');
+      c.put(c.gapOf(0.34), 170, c.y);
+      c.cliff({ drop: 280, ledges: 3 });
+      c.landing();
+      c.scatterFish(3, 60);
+      c.temptation(0.6, 'dizzy');
+      c.checkpoint(c.at(0.45));
+    },
   },
-
-  /* ------------------------------------------------------------- 23 */
   {
-    id: 23,
-    name: 'Ayağının Altı',
-    subtitle: 'Yeni: kaçan buz',
-    intro: null,
-    target: 52,
-    worldW: 2560,
-    spawn: { x: 100, y: GROUND },
-    goal: { x: 2300, y: GROUND },
-    checkpoints: [{ x: 1330, y: GROUND }],
-    // Every 'snap' floe sits below the line and inside a gap that is jumpable
-    // without it. It is bait, never the only road.
-    floes: [
-      F(30, GROUND, 220),
-      F(350, GROUND, 170),
-      F(575, 470, 70, 'snap'),
-      F(650, GROUND, 180),
-      F(960, 404, 160, 'crack'),
-      F(1150, 470, 70, 'snap'),
-      F(1250, GROUND, 190),
-      F(1570, 404, 160, 'crack'),
-      F(1780, 470, 70, 'snap'),
-      F(1860, GROUND, 200),
-      F(2190, GROUND, 220),
-    ],
-    fish: [{ x: 585, y: 350 }, { x: 1180, y: 330 }, { x: 2120, y: 336 }],
-    rotFish: [{ x: 1330, y: 396, kind: 'blind' }, { x: 700, y: 396, kind: 'heavy' }],
-    speedFish: [{ x: 1330, y: 348 }],
+    name: 'Gayzer Zinciri',
+    subtitle: 'Biri diğerini tetikler',
+    target: 80,
+    build: (c) => {
+      c.shelf({ n: 2, gap: 0.32, w: 180 });
+      for (let i = 0; i < 4; i++) {
+        c.put(c.gapOf(0.36), 200, c.y, 'burst', { burstPeriod: 3.4 + i * 0.4, burstPhase: i * 0.6 });
+        c.put(c.gapOf(0.34), 165, c.y - c.riseOf(0.34));
+      }
+      c.slope({ n: 2, rise: -0.4, gap: 0.34, w: 175 });
+      c.crevasse({ pillars: 2, gap: 0.6, depth: 260 });
+      c.landing();
+      c.scatterFish(3, 60);
+      c.sprint(0.4);
+      c.checkpoint(c.at(0.5));
+    },
   },
-
-  /* ------------------------------------------------------------- 24 */
   {
-    id: 24,
-    name: 'Güven Sorunu',
-    subtitle: 'Hiçbir şey göründüğü gibi değil',
-    intro: null,
-    target: 55,
-    worldW: 2680,
-    spawn: { x: 100, y: GROUND },
-    goal: { x: 2400, y: GROUND },
-    checkpoints: [{ x: 1360, y: GROUND }],
-    floes: [
-      F(30, GROUND, 220),
-      F(360, 404, 150, 'burst'),
-      F(640, GROUND, 180),
-      F(880, 470, 70, 'snap'),
-      F(960, GROUND, 170),
-      F(1280, GROUND, 80, 'trap'),
-      F(1460, GROUND, 190),
-      F(1780, 404, 160, 'crack'),
-      F(2010, 470, 70, 'snap'),
-      F(2090, GROUND, 190),
-      F(2320, GROUND, 200),
-    ],
-    hazards: [
-      { kind: 'orca', x: 1172, y: WATER, w: 56, h: 120, height: 240, period: 3.2, phase: 0.2 },
-      { kind: 'icicle', x: 1520, y: 130, w: 24, h: 46 },
-    ],
-    fish: [{ x: 580, y: 340 }, { x: 1370, y: 336 }, { x: 2250, y: 336 }],
+    name: 'Rüzgârlı Yamaç',
+    subtitle: 'Yokuş yukarı, rüzgâra karşı',
+    target: 82,
+    build: (c) => {
+      c.shelf({ n: 2, gap: 0.3, w: 180 });
+      const from = c.x;
+      c.slope({ n: 5, rise: 0.46, gap: 0.36, w: 145 });
+      c.storm(from, { period: 3.6 });
+      c.shelf({ n: 2, gap: 0.38, w: 160, types: ['crack', 'solid'] });
+      c.cliff({ drop: 360, ledges: 4 });
+      c.landing();
+      c.scatterFish(3, 60);
+      c.temptation(0.55, 'heavy');
+      c.checkpoint(c.at(0.5));
+    },
   },
-
-  /* ------------------------------------------------------------- 25 */
   {
-    id: 25,
-    name: 'Fırtına',
-    subtitle: 'Rüzgar, buhar, diş',
-    intro: null,
-    target: 58,
-    worldW: 2740,
-    spawn: { x: 100, y: GROUND },
-    goal: { x: 2460, y: GROUND },
-    checkpoints: [{ x: 1400, y: GROUND }],
-    floes: [
-      F(30, GROUND, 220),
-      F(350, GROUND, 160, 'crack'),
-      F(660, 404, 150, 'burst'),
-      F(940, GROUND, 190),
-      F(1260, 404, 160, 'slip'),
-      F(1520, GROUND, 190),
-      F(1850, 404, 150, 'burst', { burstPeriod: 3, burstPhase: 0.45 }),
-      F(2120, GROUND, 170),
-      F(2380, GROUND, 200),
-    ],
-    hazards: [
-      { kind: 'gust', x: 830, y: 150, w: 120, h: 370, power: 340 },
-      { kind: 'storm', x: 1180, y: 110, w: 620, h: 410, power: -330, phase: 0.4, period: 3.2 },
-      { kind: 'orca', x: 1732, y: WATER, w: 56, h: 120, height: 245, period: 3, phase: 0.3 },
-      { kind: 'gust', x: 2010, y: 150, w: 120, h: 370, power: -320 },
-    ],
-    fish: [{ x: 570, y: 336 }, { x: 1160, y: 330 }, { x: 2290, y: 336 }],
-    rotFish: [{ x: 1600, y: 396, kind: 'dizzy' }],
-    speedFish: [{ x: 1590, y: 318 }],
+    name: 'Yeraltı Nehri',
+    subtitle: 'Tünelin altında su',
+    target: 84,
+    build: (c) => {
+      c.shelf({ n: 2, gap: 0.3, w: 175 });
+      c.slope({ n: 3, rise: -0.36, gap: 0.34, w: 165 });
+      c.tunnel({ n: 7, headroom: 110, gap: 0.44, w: 140, icicles: 4, types: ['solid', 'melt'] });
+      c.crevasse({ pillars: 2, gap: 0.58, depth: 200 });
+      c.slope({ n: 3, rise: 0.42, gap: 0.36, w: 155 });
+      c.landing();
+      c.scatterFish(3, 58);
+      c.temptation(0.45, 'blind');
+      c.checkpoint(c.at(0.4));
+    },
   },
-
-  /* ------------------------------------------------------------- 26 */
   {
-    id: 26,
-    name: 'Buz Koridoru',
-    subtitle: 'Küçük hedefler, hızlı ayaklar',
-    intro: null,
-    target: 55,
-    worldW: 2720,
-    spawn: { x: 100, y: GROUND },
-    goal: { x: 2440, y: 404 },
-    checkpoints: [{ x: 1420, y: 404 }],
-    floes: [
-      F(30, GROUND, 200),
-      F(340, 404, 110, 'crack'),
-      F(570, 372, 110, 'crack'),
-      F(800, 404, 110),
-      F(1030, 356, 110, 'crack'),
-      F(1260, 404, 120),
-      F(1490, 404, 190),
-      F(1810, 372, 110, 'slip'),
-      F(2030, 404, 110, 'crack'),
-      F(2250, 372, 80, 'trap'),
-      F(2420, 404, 200),
-    ],
-    hazards: [{ kind: 'icicle', x: 1070, y: 130, w: 24, h: 46 }],
-    fish: [{ x: 490, y: 320 }, { x: 1180, y: 300 }, { x: 2170, y: 320 }],
+    name: 'Kırılgan Zirve',
+    subtitle: 'Yukarısı da güvenli değil',
+    target: 86,
+    build: (c) => {
+      c.shelf({ n: 2, gap: 0.3, w: 175 });
+      c.summit({ height: 240, steps: 4, w: 175 });
+      c.shelf({ n: 3, gap: 0.4, w: 150, types: ['crack', 'trap', 'solid'] });
+      c.put(c.gapOf(0.36), 200, c.y, 'burst');
+      c.cliff({ drop: 400, ledges: 5, gap: 0.3 });
+      c.landing();
+      c.scatterFish(3, 58);
+      c.sprint(0.35);
+      c.checkpoint(c.at(0.55));
+    },
   },
-
-  /* ------------------------------------------------------------- 27 */
   {
-    id: 27,
-    name: 'Sıcak Su',
-    subtitle: 'Buhar hattı',
-    intro: null,
-    target: 58,
-    worldW: 2700,
-    spawn: { x: 100, y: GROUND },
-    goal: { x: 2420, y: GROUND },
-    checkpoints: [{ x: 1390, y: GROUND }],
-    floes: [
-      F(30, GROUND, 220),
-      F(350, GROUND, 190),
-      F(670, 404, 150, 'burst', { burstPeriod: 2.6, burstPhase: 0 }),
-      F(930, 404, 150, 'burst', { burstPeriod: 2.6, burstPhase: 0.33 }),
-      F(1190, 404, 150, 'burst', { burstPeriod: 2.6, burstPhase: 0.66 }),
-      F(1440, GROUND, 200),
-      F(1760, GROUND, 170, 'melt', { meltPeriod: 3 }),
-      F(2020, GROUND, 160, 'crack'),
-      F(2290, GROUND, 200),
-    ],
-    fish: [{ x: 620, y: 336 }, { x: 1370, y: 336 }, { x: 2200, y: 336 }],
-    rotFish: [{ x: 1520, y: 396, kind: 'heavy' }],
-    speedFish: [{ x: 1540, y: 322 }],
+    name: 'Buzul Labirenti',
+    subtitle: 'İn, çık, in',
+    target: 90,
+    build: (c) => {
+      c.shelf({ n: 2, gap: 0.3, w: 175 });
+      c.tunnel({ n: 4, headroom: 112, gap: 0.42, w: 145, icicles: 2 });
+      c.slope({ n: 3, rise: 0.44, gap: 0.36, w: 145 });
+      c.crevasse({ pillars: 3, gap: 0.6, depth: 240 });
+      c.tunnel({ n: 4, headroom: 110, gap: 0.42, w: 140, types: ['solid', 'crack'] });
+      c.cliff({ drop: 300, ledges: 4 });
+      c.landing();
+      c.scatterFish(3, 58);
+      c.temptation(0.35, 'dizzy');
+      c.temptation(0.7, 'heavy');
+      c.checkpoint(c.at(0.35));
+      c.checkpoint(c.at(0.7));
+    },
   },
-
-  /* ------------------------------------------------------------- 28 */
   {
-    id: 28,
-    name: 'Sürü',
-    subtitle: 'Herkes seni bekliyor',
-    intro: null,
-    target: 60,
-    worldW: 2800,
-    spawn: { x: 100, y: GROUND },
-    goal: { x: 2490, y: GROUND },
-    checkpoints: [{ x: 1260, y: GROUND }, { x: 2130, y: GROUND }],
-    floes: [
-      F(30, GROUND, 220),
-      F(350, 404, 160, 'crack'),
-      F(560, 470, 70, 'snap'),
-      F(670, GROUND, 240),
-      F(1060, GROUND, 240),
-      F(1420, 404, 160, 'crack'),
-      F(1690, GROUND, 170, 'slip'),
-      F(1900, 470, 70, 'snap'),
-      F(2010, GROUND, 240),
-      F(2380, GROUND, 220),
-    ],
-    hazards: [
-      { kind: 'seal', x: 1120, y: GROUND - 30, w: 44, h: 30, range: 40, speed: 96 },
-      { kind: 'orca', x: 1332, y: WATER, w: 56, h: 120, height: 250, period: 3, phase: 0.15 },
-      { kind: 'icicle', x: 1480, y: 130, w: 24, h: 46 },
-    ],
-    fish: [{ x: 600, y: 340 }, { x: 1360, y: 330 }, { x: 2320, y: 336 }],
-    speedFish: [{ x: 1260, y: 348 }],
+    name: 'Avcılar',
+    subtitle: 'Sudan ve buzdan',
+    target: 92,
+    build: (c) => {
+      c.shelf({ n: 3, gap: 0.34, w: 175 });
+      for (let i = 0; i < 3; i++) {
+        const before = c.x;
+        c.put(c.gapOf(0.54), 165, c.y);
+        c.hazard({ kind: 'orca', x: before + 22, y: WATER - 30, w: 76, h: 60, period: 2.9 + i * 0.2, height: 260 });
+        const f = c.floes[c.floes.length - 1];
+        c.seal(f, { speed: 84 });
+      }
+      c.summit({ height: 200, steps: 3, w: 170 });
+      c.cliff({ drop: 340, ledges: 4 });
+      c.landing();
+      c.scatterFish(3, 58);
+      c.checkpoint(c.at(0.5));
+    },
   },
-
-  /* ------------------------------------------------------------- 29 */
   {
-    id: 29,
-    name: 'Kopuş',
-    subtitle: 'Kıta ikiye ayrılıyor',
-    intro: null,
-    target: 62,
-    worldW: 2900,
-    spawn: { x: 100, y: GROUND },
-    goal: { x: 2620, y: 404 },
-    checkpoints: [{ x: 1480, y: GROUND }],
-    floes: [
-      F(30, GROUND, 200),
-      F(330, GROUND, 130, 'crack', { delay: 0.75 }),
-      F(590, 404, 130, 'crack', { delay: 0.75 }),
-      F(850, 404, 150, 'burst'),
-      F(1140, GROUND, 130, 'crack', { delay: 0.75 }),
-      F(1390, GROUND, 190),
-      F(1710, 404, 130, 'move', { ax: 0, ay: 58, period: 2.6 }),
-      F(1950, 372, 80, 'trap'),
-      F(2130, 404, 130, 'crack', { delay: 0.75 }),
-      F(2380, 404, 140, 'slip'),
-      F(2600, 404, 200),
-    ],
-    hazards: [
-      { kind: 'gust', x: 1030, y: 150, w: 120, h: 370, power: -330 },
-      { kind: 'orca', x: 1272, y: WATER, w: 56, h: 120, height: 245, period: 3.1, phase: 0.5 },
-      { kind: 'storm', x: 1390, y: 110, w: 560, h: 410, power: -320, phase: 0.2, period: 3.4 },
-      { kind: 'icicle', x: 2000, y: 120, w: 24, h: 46 },
-    ],
-    fish: [{ x: 530, y: 330 }, { x: 1300, y: 330 }, { x: 2310, y: 320 }],
-    rotFish: [{ x: 1470, y: 396, kind: 'blind' }],
-    speedFish: [{ x: 1485, y: 322 }],
+    name: 'Son Fırtına',
+    subtitle: 'Her şey aynı anda',
+    target: 96,
+    build: (c) => {
+      c.shelf({ n: 2, gap: 0.3, w: 170 });
+      const from = c.x;
+      c.slope({ n: 3, rise: 0.42, gap: 0.36, w: 145 });
+      c.put(c.gapOf(0.36), 200, c.y, 'burst');
+      c.shelf({ n: 2, gap: 0.4, w: 150, types: ['crack', 'solid'] });
+      c.storm(from, { period: 3.4 });
+      c.tunnel({ n: 5, headroom: 110, gap: 0.42, w: 140, icicles: 3, types: ['solid', 'crack'] });
+      c.crevasse({ pillars: 3, gap: 0.58, depth: 260 });
+      c.cliff({ drop: 320, ledges: 4 });
+      c.landing();
+      c.scatterFish(3, 58);
+      c.temptation(0.4, 'heavy');
+      c.sprint(0.62);
+      c.checkpoint(c.at(0.35));
+      c.checkpoint(c.at(0.72));
+    },
   },
-
-  /* ------------------------------------------------------------- 30 */
   {
-    id: 30,
-    name: 'Açık Deniz',
-    subtitle: 'Son buzul, son şans',
-    intro: null,
-    target: 68,
-    worldW: 3350,
-    spawn: { x: 100, y: GROUND },
-    goal: { x: 3000, y: 372 },
-    checkpoints: [{ x: 1120, y: GROUND }, { x: 2260, y: 396 }],
-    floes: [
-      F(30, GROUND, 200),
-      F(330, 404, 140, 'crack', { delay: 0.75 }),
-      F(600, 372, 140, 'slip'),
-      F(870, 404, 150, 'burst'),
-      F(1050, GROUND, 240),
-      F(1390, 396, 130, 'move', { ax: 0, ay: 62, period: 2.8 }),
-      F(1590, 470, 70, 'snap'),
-      F(1670, 372, 130, 'crack', { delay: 0.75 }),
-      F(1950, 404, 130, 'slip'),
-      F(2190, 396, 180),
-      F(2490, 372, 80, 'trap'),
-      F(2670, 396, 130, 'crack', { delay: 0.75 }),
-      F(2890, 372, 220),
-    ],
-    hazards: [
-      { kind: 'gust', x: 1330, y: 150, w: 110, h: 370, power: 340 },
-      { kind: 'seal', x: 1130, y: GROUND - 30, w: 44, h: 30, range: 40, speed: 100 },
-      { kind: 'orca', x: 1812, y: WATER, w: 56, h: 120, height: 250, period: 3, phase: 0.25 },
-      { kind: 'icicle', x: 2520, y: 120, w: 24, h: 46 },
-      { kind: 'gust', x: 2600, y: 150, w: 110, h: 370, power: -300 },
-    ],
-    fish: [{ x: 520, y: 320 }, { x: 1290, y: 320 }, { x: 2600, y: 310 }],
-    rotFish: [{ x: 1120, y: 396, kind: 'dizzy' }, { x: 2260, y: 362, kind: 'heavy' }],
-    speedFish: [{ x: 2280, y: 314 }],
+    name: 'Kuzeye Açılan Yol',
+    subtitle: 'Salı görüyorsun',
+    target: 100,
+    build: (c) => {
+      c.shelf({ n: 2, gap: 0.3, w: 170 });
+      c.summit({ height: 260, steps: 4, w: 165 });
+      c.tunnel({ n: 5, headroom: 108, gap: 0.42, w: 138, icicles: 3, types: ['solid', 'trap', 'solid'] });
+      c.cliff({ drop: 420, ledges: 5, gap: 0.3 });
+      for (let i = 0; i < 3; i++) {
+        const before = c.x;
+        c.put(c.gapOf(0.52), 155, c.y, i === 1 ? 'burst' : 'solid');
+        c.hazard({ kind: 'orca', x: before + 20, y: WATER - 30, w: 76, h: 60, period: 2.8 + i * 0.2, height: 265 });
+      }
+      c.crevasse({ pillars: 3, gap: 0.6, depth: 280 });
+      c.landing({ w: 260 });
+      c.scatterFish(3, 58);
+      c.temptation(0.45, 'dizzy');
+      c.sprint(0.7);
+      c.checkpoint(c.at(0.4));
+      c.checkpoint(c.at(0.75));
+    },
   },
 ];
 
-export const WATER_Y = WATER;
-export const GROUND_Y = GROUND;
+/** Compose every plan once, at module load. */
+export const LEVELS = PLANS.map((plan, i) => {
+  const id = i + 1;
+  const course = new Course({ scale: scaleForLevel(id) });
+  plan.build(course);
+  const def = course.build({
+    id,
+    name: plan.name,
+    subtitle: plan.subtitle,
+    intro: null,
+    target: plan.target,
+  });
+  // Signs are placed relative to the spawn, which the composer decides.
+  def.signs = (plan.signs ?? []).map((s) => ({
+    x: def.spawn.x + (s.dx ?? 0),
+    y: def.spawn.y + (s.dy ?? -96),
+    text: s.text,
+  }));
+  return def;
+});
 
 export function getCraftedLevel(id) {
-  return LEVELS.find((l) => l.id === id) ?? null;
+  return LEVELS[id - 1] ?? null;
 }

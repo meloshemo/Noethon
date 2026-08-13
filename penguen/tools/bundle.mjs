@@ -32,6 +32,7 @@ const MODULES = [
   'src/core/input.js',
   'src/core/audio.js',
   'src/game/config.js',
+  'src/game/terrain.js',
   'src/game/levels.js',
   'src/game/generator.js',
   'src/game/entities.js',

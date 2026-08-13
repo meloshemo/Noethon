@@ -65,6 +65,28 @@ export const PENGUIN = {
 /** Water line offset from the bottom of a level's world height. */
 export const WATER_MARGIN = 70;
 
+/**
+ * How far the penguin can jump, from the physics rather than from playtesting.
+ *
+ * This is the number every level in the game is measured against — the
+ * composer places floes with it, the generator sizes its gaps with it and the
+ * validator fails the build when a level asks for more than it. One definition,
+ * so those three can never drift apart.
+ *
+ * `maxHeight` caps the apex, which is what a ceiling does: under a low roof the
+ * penguin cannot take the full arc, so it cannot jump as far either. Passing it
+ * is how a tunnel gets measured honestly.
+ */
+export function reachFor(scale, maxHeight = Infinity) {
+  const v = Math.abs(PHYS.jumpVelocity) * (1 - PENGUIN.jumpPenaltyPerScale * (scale - 1));
+  const speed = PHYS.moveSpeed * (1 - PENGUIN.speedPenaltyPerScale * (scale - 1));
+  const full = (v * v) / (2 * PHYS.gravityUp);
+  const height = Math.max(0, Math.min(full, maxHeight));
+  const tUp = Math.sqrt((2 * height) / PHYS.gravityUp);
+  const tDown = Math.sqrt((2 * height) / PHYS.gravityDown);
+  return { distance: speed * (tUp + tDown), height, full };
+}
+
 /** Timings for the different ice behaviours (seconds). */
 export const ICE = {
   /** "crack": time between first touch and collapse. */
@@ -160,7 +182,12 @@ export const ASSIST = {
 };
 
 /** Handcrafted levels end here; beyond this the generator takes over. */
-export const CRAFTED_LEVELS = 30;
+/**
+ * How many handcrafted levels there are. levels.js must contain exactly this
+ * many plans — the validator fails the build if the two ever disagree, which
+ * is the only way a number in one file and a list in another stay honest.
+ */
+export const CRAFTED_LEVELS = 31;
 
 /** Growth curve: how big the penguin is on a given level. */
 export function scaleForLevel(level) {

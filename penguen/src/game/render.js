@@ -169,12 +169,14 @@ export class Renderer {
     const camX = world.camera.x + (shake ? (Math.random() - 0.5) * shake : 0);
     const camY = world.camera.y + (shake ? (Math.random() - 0.5) * shake : 0);
 
-    this._sky(ctx, camX, time);
-    this._parallax(ctx, camX, camY, time);
+    this._sky(ctx, world, camX, camY, time);
+    this._parallax(ctx, world, camX, camY, time);
     this._water(ctx, world, camX, camY, time);
 
     ctx.save();
     ctx.translate(-camX, -camY);
+    this._terrain(ctx, world, time);
+    this._zonesBack(ctx, world, time);
     this._signs(ctx, world);
     this._floes(ctx, world, time);
     this._geysers(ctx, world, time);
@@ -185,6 +187,8 @@ export class Renderer {
     this._ghost(ctx, world, time);
     if (world.status !== 'dying') this._penguin(ctx, world, time);
     particles.draw(ctx);
+    // Drawn last so a tunnel darkens the penguin inside it too.
+    this._zones(ctx, world, camX, time);
     ctx.restore();
 
     this._weather(ctx, time);
@@ -197,8 +201,13 @@ export class Renderer {
 
   /* ---------------------------------------------------------------- */
 
-  _sky(ctx, camX, time) {
-    const g = ctx.createLinearGradient(0, 0, 0, VIEW.h);
+  _sky(ctx, world, camX, camY, time) {
+    // The gradient belongs to the world, not to the screen: climbing a cliff
+    // should take you into the darker air near the top of the weather, and a
+    // sky pinned to the viewport looks identical at every altitude.
+    const top = -camY;
+    const bottom = world.waterY - camY;
+    const g = ctx.createLinearGradient(0, top, 0, bottom);
     g.addColorStop(0, PALETTE.skyTop);
     g.addColorStop(0.45, PALETTE.skyMid);
     g.addColorStop(0.82, PALETTE.skyLow);
@@ -206,25 +215,26 @@ export class Renderer {
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, VIEW.w, VIEW.h);
 
-    // Stars
+    // Stars, drifting slowly against the camera in both axes.
     for (const st of this.stars) {
       const x = (st.x - camX * 0.08) % (VIEW.w * 1.4);
       const alpha = 0.35 + 0.4 * Math.sin(time * 1.4 + st.tw);
       ctx.globalAlpha = clamp(alpha, 0, 1) * 0.9;
       ctx.fillStyle = '#dff2ff';
       ctx.beginPath();
-      ctx.arc(x < 0 ? x + VIEW.w * 1.4 : x, st.y, st.r, 0, Math.PI * 2);
+      ctx.arc(x < 0 ? x + VIEW.w * 1.4 : x, st.y - camY * 0.1, st.r, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.globalAlpha = 1;
 
-    this._aurora(ctx, camX, time);
+    this._aurora(ctx, camX, camY, time);
   }
 
-  _aurora(ctx, camX, time) {
+  _aurora(ctx, camX, camY, time) {
     const t = this.reducedMotion ? 0 : time;
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
+    const lift = camY * 0.35;
     const bands = [
       { hue: 160, y: 90, amp: 26, alpha: 0.16, speed: 0.22 },
       { hue: 190, y: 130, amp: 34, alpha: 0.13, speed: 0.16 },
@@ -240,12 +250,12 @@ export class Renderer {
       ctx.moveTo(0, VIEW.h);
       for (let x = 0; x <= VIEW.w; x += 24) {
         const wx = x + camX * 0.05;
-        const y = b.y + Math.sin(wx * 0.006 + t * b.speed) * b.amp + Math.sin(wx * 0.013 + t * b.speed * 1.7) * b.amp * 0.5;
+        const y = b.y - lift + Math.sin(wx * 0.006 + t * b.speed) * b.amp + Math.sin(wx * 0.013 + t * b.speed * 1.7) * b.amp * 0.5;
         x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
       }
       for (let x = VIEW.w; x >= 0; x -= 24) {
         const wx = x + camX * 0.05;
-        const y = b.y + 120 + Math.sin(wx * 0.006 + t * b.speed) * b.amp;
+        const y = b.y + 120 - lift + Math.sin(wx * 0.006 + t * b.speed) * b.amp;
         ctx.lineTo(x, y);
       }
       ctx.closePath();
@@ -254,26 +264,36 @@ export class Renderer {
     ctx.restore();
   }
 
-  _parallax(ctx, camX, camY, time) {
+  _parallax(ctx, world, camX, camY, time) {
     // Aerial perspective: distant ridges are hazy and light, near ones are
     // darker. That keeps the white floes reading clearly against the backdrop.
+    //
+    // The ridges stand *on the sea*, so they are anchored to the water line
+    // rather than to the screen. On a tall level the camera climbs hundreds of
+    // pixels, and a backdrop pinned to the viewport would ride up with it and
+    // end as mountains floating in mid-air.
+    const base = world.waterY - camY;
     const layers = [
-      { depth: 0.14, y: 372, color: 'rgba(146,186,216,0.30)', step: 210, amp: 64 },
-      { depth: 0.3, y: 400, color: 'rgba(96,142,184,0.42)', step: 168, amp: 48 },
-      { depth: 0.5, y: 428, color: 'rgba(52,94,140,0.58)', step: 130, amp: 34 },
+      // Tall on purpose. The camera now climbs several hundred pixels above the
+      // sea, and ranges that only bumped along the horizon left the top of a
+      // summit looking out at nothing at all.
+      { depth: 0.14, drop: -40, color: 'rgba(146,186,216,0.30)', step: 340, amp: 330 },
+      { depth: 0.3, drop: -18, color: 'rgba(96,142,184,0.42)', step: 260, amp: 180 },
+      { depth: 0.5, drop: -2, color: 'rgba(52,94,140,0.58)', step: 210, amp: 62 },
     ];
     for (const l of layers) {
       const off = -camX * l.depth;
+      const y = base + l.drop;
       ctx.fillStyle = l.color;
       ctx.beginPath();
       ctx.moveTo(-40, VIEW.h);
       const start = Math.floor(-off / l.step) - 2;
       for (let i = start; i < start + Math.ceil(VIEW.w / l.step) + 4; i++) {
         const px = i * l.step + off;
-        const peak = l.y - Math.abs(Math.sin(i * 2.7)) * l.amp - camY * l.depth * 0.4;
-        ctx.lineTo(px, l.y - camY * l.depth * 0.4);
+        const peak = y - Math.abs(Math.sin(i * 2.7)) * l.amp;
+        ctx.lineTo(px, y);
         ctx.lineTo(px + l.step * 0.5, peak);
-        ctx.lineTo(px + l.step, l.y - camY * l.depth * 0.4);
+        ctx.lineTo(px + l.step, y);
       }
       ctx.lineTo(VIEW.w + 40, VIEW.h);
       ctx.closePath();
@@ -312,6 +332,161 @@ export class Renderer {
       ctx.stroke();
     }
     ctx.restore();
+  }
+
+  /**
+   * The continent. Cliff faces, tunnel roofs and pillars — the solid ice the
+   * route is cut through.
+   *
+   * Drawn colder and darker than the floes on purpose: the player has to be
+   * able to tell at a glance what is a platform that might give way and what
+   * is a thousand years of ice that never will.
+   */
+  _terrain(ctx, world, time) {
+    if (!world.terrain?.length) return;
+    const view = this._viewBounds(world);
+
+    for (const raw of world.terrain) {
+      if (raw.x + raw.w < view.left || raw.x > view.right) continue;
+      // Ice stops at the waterline. Painting rock over the sea makes a cliff
+      // look like it is standing in a hole cut through the water.
+      const b =
+        raw.y + raw.h > world.waterY ? { ...raw, h: Math.max(6, world.waterY - raw.y) } : raw;
+
+      const g = ctx.createLinearGradient(0, b.y, 0, b.y + b.h);
+      if (b.kind === 'roof') {
+        // A roof is seen from underneath, so it is lit from above and its cut
+        // face is the darkest thing on screen.
+        g.addColorStop(0, '#2b4a70');
+        g.addColorStop(0.35, '#1b3253');
+        g.addColorStop(1, '#0d1c33');
+      } else {
+        g.addColorStop(0, '#3a608c');
+        g.addColorStop(0.22, '#24406a');
+        g.addColorStop(1, '#101f3a');
+      }
+      ctx.fillStyle = g;
+      ctx.fillRect(b.x, b.y, b.w, b.h);
+
+      // Strata: horizontal compression lines, the tell that this is old ice.
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(b.x, b.y, b.w, b.h);
+      ctx.clip();
+      ctx.strokeStyle = 'rgba(160,205,236,0.09)';
+      ctx.lineWidth = 1;
+      const seed = ((b.x * 31 + b.y * 17) % 40) + 22;
+      for (let y = b.y + seed * 0.5; y < b.y + b.h; y += seed) {
+        ctx.beginPath();
+        ctx.moveTo(b.x, y);
+        ctx.lineTo(b.x + b.w, y + Math.sin(b.x * 0.01 + y * 0.02) * 3);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // A lit lip along whichever edge faces the open air.
+      const lip = b.kind === 'roof' ? b.y + b.h : b.y;
+      ctx.fillStyle = b.kind === 'roof' ? 'rgba(120,180,225,0.25)' : 'rgba(224,244,255,0.75)';
+      ctx.fillRect(b.x, lip - (b.kind === 'roof' ? 0 : 3), b.w, 3);
+
+      // Icicles under a roof, purely so a ceiling reads as a ceiling.
+      if (b.kind === 'roof' && !this.reducedMotion) {
+        ctx.fillStyle = 'rgba(190,228,250,0.5)';
+        for (let i = 0; i < b.w; i += 34) {
+          const h = 6 + (((b.x + i) * 7919) % 13);
+          const x = b.x + i + 8;
+          ctx.beginPath();
+          ctx.moveTo(x - 3, b.y + b.h);
+          ctx.lineTo(x + 3, b.y + b.h);
+          ctx.lineTo(x, b.y + b.h + h);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+    }
+  }
+
+  /**
+   * The back wall of a tunnel.
+   *
+   * Drawn before anything in the tunnel, and opaque: you are inside a mass of
+   * ice, so what is behind you is more ice — not the mountains twenty
+   * kilometres away, which is what a translucent wash left showing through.
+   */
+  _zonesBack(ctx, world, time) {
+    if (!world.zones?.length) return;
+    const view = this._viewBounds(world);
+
+    for (const z of world.zones) {
+      if (z.kind !== 'tunnel') continue;
+      if (z.x + z.w < view.left || z.x > view.right) continue;
+      const h = z.bottom - z.top;
+
+      const g = ctx.createLinearGradient(0, z.top, 0, z.bottom);
+      g.addColorStop(0, '#0c1b31');
+      g.addColorStop(0.55, '#123055');
+      g.addColorStop(1, '#0a1729');
+      ctx.fillStyle = g;
+      ctx.fillRect(z.x, z.top, z.w, h);
+
+      // Meltwater streaks down the back wall, which is most of what tells you
+      // it is a surface at all rather than a hole.
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(z.x, z.top, z.w, h);
+      ctx.clip();
+      ctx.strokeStyle = 'rgba(150,205,240,0.10)';
+      ctx.lineWidth = 2;
+      for (let x = z.x + 24; x < z.x + z.w; x += 58) {
+        const wob = Math.sin(x * 0.05) * 10;
+        ctx.beginPath();
+        ctx.moveTo(x, z.top);
+        ctx.lineTo(x + wob, z.bottom);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+
+  /**
+   * Atmosphere per zone: inside a tunnel the light goes, in a crevasse the
+   * depth below you goes blue-black. Drawn over everything, including the
+   * penguin, because that is what being inside something means.
+   */
+  _zones(ctx, world, camX, time) {
+    if (!world.zones?.length) return;
+    const view = this._viewBounds(world);
+
+    for (const z of world.zones) {
+      if (z.x + z.w < view.left || z.x > view.right) continue;
+      const h = z.bottom - z.top;
+
+      if (z.kind === 'tunnel') {
+        ctx.save();
+        // Dark at the middle, open at both mouths, so entering and leaving are
+        // gradual rather than a hard edge.
+        const g = ctx.createLinearGradient(z.x, 0, z.x + z.w, 0);
+        g.addColorStop(0, 'rgba(4,10,22,0)');
+        g.addColorStop(0.22, 'rgba(4,10,22,0.62)');
+        g.addColorStop(0.78, 'rgba(4,10,22,0.62)');
+        g.addColorStop(1, 'rgba(4,10,22,0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(z.x, z.top, z.w, h);
+        ctx.restore();
+      } else if (z.kind === 'crevasse') {
+        const g = ctx.createLinearGradient(0, z.top, 0, z.bottom);
+        g.addColorStop(0, 'rgba(6,16,34,0)');
+        g.addColorStop(1, 'rgba(6,16,34,0.75)');
+        ctx.fillStyle = g;
+        ctx.fillRect(z.x, z.top, z.w, h);
+      }
+    }
+  }
+
+  /** World-space bounds of what is currently on screen, plus a margin. */
+  _viewBounds(world) {
+    const left = world.camera.x - 80;
+    return { left, right: left + VIEW.w + 160 };
   }
 
   /* ---------------------------------------------------------------- */

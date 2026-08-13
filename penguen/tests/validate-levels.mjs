@@ -9,7 +9,7 @@
  * large sample of generated ones, and fails loudly on anything impossible.
  */
 
-import { PHYS, PENGUIN, ICE, STORM, scaleForLevel, CRAFTED_LEVELS } from '../src/game/config.js';
+import { PHYS, PENGUIN, ICE, STORM, scaleForLevel, reachFor, CRAFTED_LEVELS } from '../src/game/config.js';
 import { LEVELS, WATER_Y } from '../src/game/levels.js';
 import { generateLevel } from '../src/game/generator.js';
 
@@ -17,15 +17,6 @@ import { generateLevel } from '../src/game/generator.js';
 const BUDGET = { distance: 0.86, rise: 0.8 };
 /** Early levels must be much gentler than that. */
 const TUTORIAL_BUDGET = { distance: 0.55, rise: 0.5 };
-
-function reachFor(scale) {
-  const v = Math.abs(PHYS.jumpVelocity) * (1 - PENGUIN.jumpPenaltyPerScale * (scale - 1));
-  const speed = PHYS.moveSpeed * (1 - PENGUIN.speedPenaltyPerScale * (scale - 1));
-  const tUp = v / PHYS.gravityUp;
-  const height = (v * v) / (2 * PHYS.gravityUp);
-  const tDown = Math.sqrt((2 * height) / PHYS.gravityDown);
-  return { distance: speed * (tUp + tDown), height };
-}
 
 /**
  * How far into a floe the player realistically lands, as a fraction of its
@@ -282,7 +273,83 @@ function check(def, { tutorial = false } = {}) {
     }
   }
 
+  checkTerrain(def, { floes, reach, scale, fail, warn });
   return undefined;
+}
+
+/**
+ * The continent.
+ *
+ * Cliff faces and tunnel roofs are solid, which means they can wall a level
+ * shut as easily as they can shape it. Three things have to hold:
+ *
+ *   1. No block may sit inside a floe, or inside the space the penguin
+ *      occupies while standing on one. A floe you cannot stand on is worse
+ *      than no floe at all.
+ *   2. Every jump between consecutive floes must fit under whatever hangs over
+ *      the corridor between them. A roof caps the apex, and a capped apex is a
+ *      shorter jump — so the gap is re-checked against the reach *under that
+ *      ceiling*, not against the open-air reach.
+ *   3. Nothing may block the corridor outright.
+ */
+function checkTerrain(def, { floes, reach, scale, fail, warn }) {
+  const blocks = def.terrain ?? [];
+  if (!blocks.length) return;
+  const pw = PENGUIN.w * scale;
+  const ph = PENGUIN.h * scale;
+
+  // 1 — standing room over every floe.
+  for (const f of floes) {
+    for (const b of blocks) {
+      const overlapsX = b.x < f.x + f.w && b.x + b.w > f.x;
+      if (!overlapsX) continue;
+      const bottom = b.y + b.h;
+      if (bottom > f.y && b.y < f.y + 24) {
+        fail(`kaya buzun içinde (buz x=${f.x}, kaya x=${b.x})`);
+      } else if (bottom <= f.y && f.y - bottom < ph + 6) {
+        fail(`buzun üstünde durulacak yer yok: ${Math.round(f.y - bottom)}px, penguen ${Math.round(ph)}px`);
+      }
+    }
+  }
+
+  // 2 & 3 — headroom over every jump.
+  for (let i = 0; i < floes.length - 1; i++) {
+    const a = floes[i];
+    const b = floes[i + 1];
+    const gap = b.x - (a.x + a.w);
+    if (gap <= 0) continue;
+    const surface = Math.min(a.y, b.y);
+    const corridor = { x: a.x + a.w - pw, w: gap + pw * 2 };
+
+    let roof = -Infinity;
+    for (const t of blocks) {
+      const overlapsX = t.x < corridor.x + corridor.w && t.x + t.w > corridor.x;
+      if (!overlapsX) continue;
+      const bottom = t.y + t.h;
+      // Only things actually above the route can be a ceiling.
+      if (bottom <= surface) roof = Math.max(roof, bottom);
+      else if (t.y < surface) fail(`kaya geçişi tıkıyor (${i}→${i + 1}, kaya x=${t.x})`);
+    }
+    if (roof === -Infinity) continue;
+
+    const headroom = surface - roof;
+    if (headroom < ph + 10) {
+      fail(`${i}→${i + 1} arası tavan çok alçak: ${Math.round(headroom)}px`);
+      continue;
+    }
+    const apex = headroom - ph;
+    const under = reachFor(scale, apex);
+    if (gap > under.distance * 0.86) {
+      fail(
+        `${i}→${i + 1} tavan altında geçilemez: boşluk ${Math.round(gap)}px, ` +
+          `tavan altı erişim ${Math.round(under.distance * 0.86)}px (apex ${Math.round(apex)}px)`,
+      );
+    }
+    const rise = a.y - b.y;
+    if (rise > apex * 0.8) {
+      fail(`${i}→${i + 1} tavan altında tırmanılamaz: ${Math.round(rise)}px, apex ${Math.round(apex)}px`);
+    }
+  }
 }
 
 /* --------------------------------------------------------------- run */
@@ -313,6 +380,33 @@ if ((LEVELS[0].hazards ?? []).length || (LEVELS[1].hazards ?? []).length || (LEV
 const introducedEarly = LEVELS.slice(0, 3).flatMap((l) => l.floes.map((f) => f.type));
 if (introducedEarly.some((t) => t !== 'solid')) {
   problems.push('İlk üç bölümde sadece sağlam buz olmalı');
+}
+
+// The list and the constant must agree, or the endless mode starts in the
+// middle of the campaign or skips the end of it.
+if (LEVELS.length !== CRAFTED_LEVELS) {
+  problems.push(`CRAFTED_LEVELS ${CRAFTED_LEVELS}, ama ${LEVELS.length} bölüm var`);
+}
+
+// Monotony is a defect, not a taste. Antarctica is not a corridor at one
+// height, and a course that never leaves its starting line is the thing this
+// game was rightly criticised for. Level 1 is exempt: it teaches walking.
+for (const def of LEVELS.slice(1)) {
+  const ys = def.floes.map((f) => f.y);
+  const range = Math.max(...ys) - Math.min(...ys);
+  const need = def.id < 9 ? 70 : 150;
+  if (range < need) {
+    problems.push(`L${def.id} (${def.name}): dikey çeşitlilik yok — ${range}px, en az ${need}px olmalı`);
+  }
+}
+
+// Length, for the same reason: a course that is over in four seconds cannot
+// hold anybody's attention, however good the four seconds are.
+for (const def of LEVELS) {
+  const need = def.id <= 3 ? 1500 : 2400;
+  if (def.worldW < need) {
+    problems.push(`L${def.id} (${def.name}): parkur çok kısa — ${def.worldW}px, en az ${need}px`);
+  }
 }
 
 console.log(`Elle tasarlanan bölüm: ${LEVELS.length}`);

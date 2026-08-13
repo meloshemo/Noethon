@@ -67,12 +67,14 @@ src/
     storage.js             localStorage, sürümlü ve bozulmaya dayanıklı
     particles.js           havuzlanmış parçacık sistemi (çöp üretmez)
   game/
-    config.js              tüm oyun hissi sabitleri
+    config.js              tüm oyun hissi sabitleri + zıplama erişimi (reachFor)
+    terrain.js             parkur bestecisi: raf, yamaç, uçurum, yarık, tünel
     entities.js            buz kütleleri, tehlikeler, balıklar, kontrol noktaları
     player.js              penguen fiziği ve çarpışma çözümü
+    ghost.js               koşu kaydı, hayalet oynatma, paylaşım kodu
     world.js               simülasyon, kamera, kazanma/kaybetme
-    levels.js              30 elle tasarlanmış bölüm
-    generator.js           31+ ve günün bölümü için tohumlanmış üretici
+    levels.js              31 elle yazılmış bölüm planı
+    generator.js           32+ ve günün bölümü için tohumlanmış üretici
     render.js              canvas çizimi (görsel varlık yok, hepsi prosedürel)
     missions.js            günlük görevler (tarihe göre tohumlanmış)
     game.js                oyun döngüsü, ödüller, durum makinesi
@@ -80,7 +82,42 @@ src/
     ui.js                  DOM'a dokunan tek yer
 tests/
   validate-levels.mjs      bölüm geçilebilirlik doğrulayıcısı
+  ghost.mjs                paylaşım kodu çözücüsü testleri
 ```
+
+### Parkurlar piksel değil, cümle
+
+Bölümler koordinat listesi olarak yazılmıyor. Bir bölüm planı "iki raf, sonra
+bir yamaç, sonra içinde çatlak buz olan bir tünel, sonra uçurumdan iniş" der;
+`terrain.js` bunu o bölümün büyüme ölçeğindeki **gerçek zıplama erişiminden**
+geometriye çevirir.
+
+```js
+c.shelf({ n: 2, gap: 0.32, w: 190 });   // boşluk = erişimin %32'si
+c.slope({ n: 3, rise: 0.44 });          // yükseliş = zıplama yüksekliğinin %44'ü
+c.tunnel({ n: 6, headroom: 114, icicles: 3 });
+c.cliff({ drop: 280, ledges: 3 });
+```
+
+Kimse piksel cinsinden boşluk yazmadığı için kimse imkânsız bir boşluk yazamıyor.
+Aynı sözlüğü üretici de kullanıyor: sonsuz mod artık rastgele dikdörtgen dizmiyor,
+elle yazılan bölümlerle aynı segmentlerden cümle kuruyor.
+
+Besteci ayrıca fizikten türeyen sınırları kendisi uyguluyor: tuzak buzun genişliği
+fitilinden, gayzerin genişliği uyarı süresinden, fırtınanın gücü yürüme ivmesinden
+hesaplanıyor. Bir plan "160 piksellik gayzer" isteyemez, çünkü fitil onu taşımaz.
+
+### Kıta: buz kütleleri ve rota ayrı
+
+İki tür katı var. **Buzlar** rotadır — inilen her şey. **Arazi** (`terrain`)
+kıtadır: uçurum yüzleri, tünel tavanları, sütunlar. Fizik ikisini de katı görür
+(çarpışma zaten yandan itiyor ve tavana kafa vurduruyor), ama doğrulayıcının
+yürüdüğü yol yalnızca buzlardan geçer. Böylece bir tünel tavanı gerçekten tavan
+oluyor, bölüm yolunu ise bulandırmıyor.
+
+Tavan alçaldığında zıplama da kısalıyor: `reachFor(scale, maxHeight)` tepe
+noktası sınırlı bir zıplayışın ne kadar uzağa gittiğini veriyor, ve tüneldeki her
+boşluk o sayıya göre ölçülüyor.
 
 ### Neden bu yapı
 
@@ -239,6 +276,24 @@ temel değerlerle kontrol ediyor; market rahatlık ve hız satıyor, erişim de�
   dönerdi.
 
 ---
+
+## Hayalet yarışı ve sıralama
+
+Sunucusuz bir oyunda gerçek bir küresel liderlik tablosu olamaz — o bir arka uç
+ister. Ama *yarışmak* istemez.
+
+Her deneme kaydediliyor: penguenin konumu saniyede 20 kez örnekleniyor. Bir
+bölümü bitirdiğinde en iyi koşun saklanıyor ve bir dahaki oynayışında yanında
+saydam bir penguen olarak koşuyor. HUD'daki `−0.42` / `+1.08` o an bulunduğun
+noktada rekordan ne kadar önde ya da geride olduğunu gösteriyor.
+
+Koşular taşınabiliyor. Bir koşu kısa bir koda dönüşüyor — her örnek bir öncekinden
+farkı kadar, çoğu fark tek bayta sığıyor, başlıkta bölüm, süre ve koşan kişinin adı
+var. 30 saniyelik bir koşu ~370 karakter: mesajla gönderilecek kadar kısa. Gelen
+kodu **Sıralama** ekranına yapıştırınca o kişi tabloya giriyor ve hayaleti buzun
+üstünde beliriyor.
+
+Sıralama gerçek bir sıralama; sadece sunucu yerine paylaşım koduyla dolaşıyor.
 
 ## Kontroller
 

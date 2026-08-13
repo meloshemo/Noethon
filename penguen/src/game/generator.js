@@ -4,30 +4,71 @@
  * The generator is seeded by level number, so level 42 always looks the same
  * for everyone — it plays like an authored level, not like a lottery.
  *
- * Solvability is guaranteed by construction: every gap and every height change
- * is derived from the penguin's actual jump reach at that level's growth scale,
- * never from a raw random number.
+ * It writes in exactly the same vocabulary the handcrafted levels do: it picks
+ * segments — a shelf, a climb, a crevasse, a tunnel, a cliff — and lets the
+ * composer place the geometry from the penguin's real reach at that level's
+ * growth scale. That is what makes solvability structural rather than something
+ * checked afterwards, and it is also why an endless level has the same kind of
+ * variety a written one has: it is choosing sentences, not pixels.
  */
 
 import { makeRng, clamp, lerp } from '../core/util.js';
-import { PHYS, PENGUIN, ICE, scaleForLevel, CRAFTED_LEVELS } from './config.js';
-import { GROUND_Y, WATER_Y } from './levels.js';
-
-/** Analytical jump reach for a given growth scale. */
-function jumpReach(scale) {
-  const v = Math.abs(PHYS.jumpVelocity) * (1 - PENGUIN.jumpPenaltyPerScale * (scale - 1));
-  const speed = PHYS.moveSpeed * (1 - PENGUIN.speedPenaltyPerScale * (scale - 1));
-  const tUp = v / PHYS.gravityUp;
-  const height = (v * v) / (2 * PHYS.gravityUp);
-  const tDown = Math.sqrt((2 * height) / PHYS.gravityDown);
-  return { distance: speed * (tUp + tDown), height };
-}
+import { scaleForLevel, CRAFTED_LEVELS } from './config.js';
+import { Course } from './terrain.js';
 
 const NAMES = [
   'Kırılma Hattı', 'Beyaz Gürültü', 'Soğuk Akıntı', 'Kutup Kuşağı', 'Donmuş Sessizlik',
-  'Uzun Gece', 'Buz Denizi', 'Ayrılan Kıta', 'Son Işık', 'Rüzgar Koridoru',
+  'Uzun Gece', 'Buz Denizi', 'Ayrılan Kıta', 'Son Işık', 'Rüzgâr Koridoru',
   'Derin Mavi', 'Çatlak Sesi', 'Kayan Raf', 'Buzul Kapısı', 'Yeni Kıyı',
+  'Kırık Sırt', 'Karanlık Geçit', 'Yüksek Yamaç', 'Dipsiz Yarık', 'Buz Kapanı',
 ];
+
+/** Weighted pick. A weight of zero removes an option entirely. */
+function weighted(rng, table) {
+  const total = table.reduce((n, [, w]) => n + w, 0);
+  let r = rng() * total;
+  for (const [value, w] of table) {
+    if (w <= 0) continue;
+    r -= w;
+    if (r <= 0) return value;
+  }
+  return table[0][0];
+}
+
+/**
+ * The ice mix for one shelf.
+ *
+ * Solid ice never leaves the table, and two givers-way never come back to back:
+ * a level made entirely of things that vanish is not difficult, it is a slot
+ * machine, and the player cannot learn anything from losing to it.
+ */
+function iceTypes(rng, d, n) {
+  const table = [
+    ['solid', lerp(1, 0.45, d)],
+    ['crack', lerp(0.18, 0.4, d)],
+    ['slip', lerp(0.12, 0.22, d)],
+    ['melt', lerp(0.05, 0.14, d)],
+    ['fall', lerp(0.03, 0.18, d)],
+    ['trap', lerp(0.02, 0.22, d)],
+  ];
+  const risky = (x) => x === 'crack' || x === 'trap' || x === 'fall' || x === 'melt';
+  // Timing ice needs somewhere to wait out its cycle, and you cannot hold a
+  // position on polished ice — so melting ice may only follow ice you can
+  // stand still on.
+  const waitable = (x) => x === 'solid' || x === undefined;
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    let t = weighted(rng, table);
+    const prev = out[out.length - 1];
+    if (risky(prev) && risky(t)) t = 'solid';
+    if (t === 'melt' && !waitable(prev)) t = 'solid';
+    out.push(t);
+  }
+  // The first floe of a shelf is reached from whatever came before, which the
+  // shelf itself cannot see.
+  if (out[0] === 'melt') out[0] = 'solid';
+  return out;
+}
 
 /**
  * @param {number} id level number, also the seed
@@ -37,267 +78,116 @@ const NAMES = [
 export function generateLevel(id, opts = {}) {
   const rng = makeRng(opts.seed ?? id * 7919 + 13);
   const scale = opts.scale ?? scaleForLevel(id);
-  const reach = jumpReach(scale);
-
-  // Difficulty ramps over 20 generated levels, then plateaus.
+  /** Ramps over 20 generated levels, then plateaus. */
   const d = opts.difficulty ?? clamp((id - CRAFTED_LEVELS) / 20, 0, 1);
 
-  // Capped well short of the theoretical maximum jump: a gap that only clears
-  // with a perfect full-hold launch from the exact edge is not difficulty, it
-  // is a tax on everyone. Late-game pressure comes from narrow floes, traps and
-  // hazards instead.
-  const maxGap = lerp(reach.distance * 0.66, reach.distance * 0.8, d);
-  const minGap = lerp(reach.distance * 0.42, reach.distance * 0.58, d);
-  const maxRise = reach.height * 0.55;
-  const platCount = Math.round(lerp(11, 18, d));
-  // Narrower floes are the cleanest way to raise difficulty without making a
-  // jump unfair: the reach stays inside the budget, the landing gets tighter.
-  const minW = lerp(140, 92, d);
-  const maxW = lerp(210, 128, d);
+  const c = new Course({ scale });
 
-  const floes = [];
-  const hazards = [];
-  const fish = [];
-  const checkpoints = [];
+  // Always open on safe, level ice. Whatever the seed does afterwards, the
+  // first seconds are somewhere to stand and read the course ahead.
+  c.shelf({ n: 2, gap: 0.3, w: 200 });
 
-  // Always start on a big, safe floe.
-  let x = 30;
-  let y = GROUND_Y;
-  floes.push({ x, y, w: 210, type: 'solid' });
-  x += 210;
+  const segments = Math.round(lerp(5, 9, d));
+  let storms = 0;
+  let tunnels = 0;
 
-  let sinceSafe = 0;
-  let lastRisky = null;
+  for (let i = 0; i < segments; i++) {
+    const kind = weighted(rng, [
+      ['shelf', 1],
+      ['climb', 0.8],
+      ['descend', 0.5],
+      ['cliff', lerp(0.25, 0.6, d)],
+      ['crevasse', lerp(0.2, 0.55, d)],
+      ['tunnel', tunnels < 2 ? lerp(0.25, 0.6, d) : 0],
+      ['summit', lerp(0.15, 0.35, d)],
+      ['geysers', lerp(0.05, 0.5, d)],
+      ['orca', lerp(0.05, 0.45, d)],
+    ]);
 
-  const speed = PHYS.moveSpeed * (1 - PENGUIN.speedPenaltyPerScale * (scale - 1));
-  /**
-   * Widest a floe with the given fuse can be before it becomes a death trap.
-   * LANDING is how far in the player realistically touches down; they have to
-   * be able to cross the rest before the ice goes.
-   */
-  const LANDING = 0.75;
-  const walkable = (fuse) => (fuse * speed) / LANDING;
-
-  for (let i = 0; i < platCount; i++) {
-    let gap = lerp(minGap, maxGap, rng());
-    // A short-fuse floe behind us means we took off from where we landed, so
-    // the gap has to be shorter by the part of the floe we never got to use.
-    const prev = floes[floes.length - 1];
-    const prevFuse = prev.type === 'trap' ? ICE.trapDelay : prev.type === 'fall' ? 0.35 : null;
-    if (prevFuse != null) gap = Math.min(gap, reach.distance * 0.8 - prev.w * LANDING);
-
-    let w = Math.round(lerp(minW, maxW, rng()));
-    x += gap;
-
-    // Height change stays inside the jump arc, with a bias back toward ground.
-    const drift = (rng() - 0.5) * 2 * maxRise;
-    const pullBack = (GROUND_Y - y) * 0.35;
-    y = clamp(Math.round(y + drift * 0.6 + pullBack), GROUND_Y - 150, GROUND_Y + 14);
-
-    // A floe you can stand on indefinitely — needed before anything that has
-    // to be timed, so the player has somewhere to wait for the right moment.
-    const prevWaitable = prev.type === 'solid' || prev.type === 'move';
-    const type = pickType(rng, d, sinceSafe, lastRisky, prevWaitable, prev.type === 'slip');
-    // Traps and falling floes are stepping stones, never walkways.
-    if (type === 'trap') w = Math.min(w, Math.floor(walkable(ICE.trapDelay)));
-    else if (type === 'fall') w = Math.min(w, Math.floor(walkable(0.35)));
-    // A geyser must be crossable end to end inside its warning, with margin.
-    else if (type === 'burst') w = Math.min(w, Math.floor(ICE.burstWarn * speed * 0.82));
-
-    // Landing on a narrow short-fuse floe needs precision, so never ask for a
-    // maximum-distance jump to reach one.
-    if (type === 'trap' || type === 'fall') {
-      const comfortable = reach.distance * 0.6;
-      if (gap > comfortable) x -= gap - comfortable;
-    }
-
-    const floe = { x: Math.round(x), y, w, type };
-
-    if (type === 'move') {
-      // A sideways-drifting floe changes the size of the gap, so it needs a
-      // safe floe behind it to time the jump from; a bobbing one never does.
-      const vertical = !prevWaitable || rng() < 0.5;
-      floe.ax = vertical ? 0 : Math.round(lerp(70, 120, rng()));
-      floe.ay = vertical ? Math.round(lerp(45, 80, rng())) : 0;
-      floe.period = +lerp(2.6, 4.2, rng()).toFixed(2);
-      floe.phase = +rng().toFixed(2);
-      // A bobbing floe is at its highest at baseY - ay; keep even that within
-      // the jump arc, so arriving at the wrong moment is never fatal. Re-clamp
-      // afterwards — pushing it down must not sink it toward the water.
-      if (floe.ay) {
-        floe.y = Math.round(
-          clamp(Math.max(floe.y, prev.y - maxRise + floe.ay), GROUND_Y - 150, GROUND_Y + 10),
-        );
+    switch (kind) {
+      case 'shelf': {
+        const n = 2 + Math.floor(rng() * 3);
+        const from = c.x;
+        c.shelf({
+          n,
+          gap: lerp(0.36, 0.5, d) + rng() * 0.05,
+          w: lerp(200, 145, d),
+          types: iceTypes(rng, d, n),
+        });
+        // A storm needs a stretch of coast with shelter on it, which is exactly
+        // what a shelf is — so it is the only segment one gets hung on.
+        if (storms < 1 && d > 0.25 && rng() < 0.45) {
+          c.storm(from, { period: 3.4 + rng() * 0.8 });
+          storms++;
+        }
+        break;
       }
-    } else if (type === 'melt') {
-      floe.meltPeriod = +lerp(2.6, 3.8, rng()).toFixed(2);
-      floe.meltPhase = +rng().toFixed(2);
-    } else if (type === 'burst') {
-      // Half of them run on their own clock, which needs a safe floe to time
-      // the approach from; the rest only fire when stepped on.
-      if (prevWaitable && w >= 150 && rng() < 0.5) {
-        floe.burstPeriod = +lerp(2.6, 3.6, rng()).toFixed(2);
-        floe.burstPhase = +rng().toFixed(2);
-      }
-    } else if (type === 'crack') {
-      // Long enough to walk the width of the widest floe the generator makes:
-      // pressure should come from the layout, not from an uncrossable fuse.
-      floe.delay = +lerp(1.2, 0.7, d).toFixed(2);
+      case 'climb':
+        c.slope({
+          n: 3 + Math.floor(rng() * 2),
+          rise: lerp(0.36, 0.5, d),
+          gap: lerp(0.34, 0.44, d),
+          w: lerp(175, 140, d),
+        });
+        break;
+      case 'descend':
+        c.slope({ n: 2 + Math.floor(rng() * 2), rise: -0.34, gap: 0.34, w: lerp(185, 150, d) });
+        break;
+      case 'cliff':
+        c.cliff({ drop: lerp(240, 400, d), ledges: 3 + Math.floor(rng() * 2), gap: 0.3 });
+        break;
+      case 'crevasse':
+        c.crevasse({
+          pillars: 2 + Math.floor(rng() * 2),
+          gap: lerp(0.5, 0.6, d),
+          depth: 220 + Math.floor(rng() * 80),
+        });
+        break;
+      case 'tunnel':
+        c.tunnel({
+          n: 4 + Math.floor(rng() * 3),
+          headroom: lerp(126, 110, d),
+          gap: lerp(0.4, 0.46, d),
+          w: lerp(160, 140, d),
+          icicles: d > 0.35 ? 2 + Math.floor(rng() * 2) : 0,
+          types: d > 0.4 ? ['solid', 'crack'] : null,
+        });
+        tunnels++;
+        break;
+      case 'summit':
+        c.summit({ height: lerp(180, 260, d), steps: 3, w: lerp(200, 165, d) });
+        break;
+      case 'geysers':
+        c.geysers({ n: 2 + Math.floor(rng() * 2), rise: rng() < 0.5 ? 0.34 : 0, timed: d > 0.5 });
+        break;
+      case 'orca':
+        c.orcaGap({ gap: lerp(0.5, 0.58, d), period: 3.4 - d * 0.6 });
+        break;
+      default:
+        break;
     }
 
-    floes.push(floe);
-
-    const risky = type !== 'solid' && type !== 'slip';
-    sinceSafe = risky ? sinceSafe + 1 : 0;
-    lastRisky = risky ? type : null;
-
-    // Hazards: never on the first two floes, never stacked on a trap, and
-    // never on a drifting floe — a seal does not ride the ice it stands on.
-    if (i > 1 && type !== 'trap' && type !== 'move' && rng() < lerp(0.22, 0.55, d)) {
-      hazards.push(makeHazard(rng, floe, d));
-    }
-
-    // Three fish per level, spread evenly across the run.
-    const wantFish = Math.floor((i / platCount) * 3);
-    if (fish.length === wantFish && wantFish < 3 && rng() < 0.55) {
-      fish.push({ x: Math.round(floe.x - gap / 2), y: floe.y - Math.round(lerp(60, 110, rng())) });
-    }
-
-    // A checkpoint on a solid floe roughly every third of the way.
-    const cpCap = d > 0.5 ? 1 : 2;
-    if (type === 'solid' && checkpoints.length < cpCap && i > platCount * (checkpoints.length + 1) * 0.4) {
-      checkpoints.push({ x: Math.round(floe.x + w / 2), y: floe.y });
-    }
-
-    x += w;
+    // Seals patrol solid ice, so one goes on whatever was just laid down.
+    if (d > 0.2 && rng() < lerp(0.12, 0.4, d)) c.seal(undefined, { speed: 62 + d * 30 });
   }
 
-  // --- snapping bait ---------------------------------------------------
-  // Dropped into gaps that are already jumpable, low and to the side, so it
-  // reads as a helpful stepping stone and is never the actual route. The
-  // validator enforces exactly that, so this only ever adds temptation.
-  if (d > 0.1) {
-    const baitCount = Math.round(lerp(1, 5, d));
-    // Bait has to sit clearly below both neighbours (so it reads as a low
-    // shortcut) and still clear of the sea. Gaps too near the water simply
-    // don't get one.
-    const BAIT_DROP = 42;
-    const BAIT_FLOOR = WATER_Y - 30;
-    const candidates = [];
-    for (let i = 1; i < floes.length - 1; i++) {
-      const a = floes[i];
-      const b = floes[i + 1];
-      const gap = b.x - (a.x + a.w);
-      const y = Math.max(a.y, b.y) + BAIT_DROP;
-      if (gap >= 110 && y <= BAIT_FLOOR) candidates.push({ a, b, gap, y });
-    }
-    for (let n = 0; n < baitCount && candidates.length; n++) {
-      const pick = candidates.splice(Math.floor(rng() * candidates.length), 1)[0];
-      const w = 70;
-      const mid = pick.a.x + pick.a.w + (pick.gap - w) / 2;
-      floes.push({ x: Math.round(mid), y: pick.y, w, type: 'snap' });
-    }
-    floes.sort((p, q) => p.x - q.x);
+  c.landing({ w: 220 });
+
+  // Pickups last, once the shape of the course is known.
+  c.scatterFish(3, 62);
+  if (rng() < lerp(0.4, 0.85, d)) c.sprint(0.3 + rng() * 0.4);
+  const kinds = ['heavy', 'dizzy', 'blind'];
+  const baits = Math.round(lerp(0, 2.6, d));
+  for (let i = 0; i < baits; i++) {
+    c.temptation(0.25 + (i + rng() * 0.5) * 0.26, kinds[Math.floor(rng() * kinds.length)]);
   }
+  // Checkpoints thin out as levels get harder: the point of a hard level is
+  // that losing it costs something.
+  const cps = d > 0.55 ? 1 : 2;
+  for (let i = 0; i < cps; i++) c.checkpoint(c.at((i + 1) / (cps + 1)));
 
-  // Finish on a wide, safe floe so the last jump is never a coin flip.
-  const tail = floes[floes.length - 1];
-  const tailFuse = tail.type === 'trap' ? ICE.trapDelay : tail.type === 'fall' ? 0.35 : null;
-  let finalGap = lerp(minGap, maxGap * 0.8, 0.4);
-  if (tailFuse != null) finalGap = Math.min(finalGap, reach.distance * 0.8 - tail.w * LANDING);
-  x += finalGap;
-  y = clamp(y, GROUND_Y - 120, GROUND_Y);
-  floes.push({ x: Math.round(x), y, w: 240, type: 'solid' });
-
-  while (fish.length < 3) {
-    const f = floes[Math.max(2, Math.floor(rng() * floes.length))];
-    fish.push({ x: f.x + f.w / 2, y: f.y - 80 });
-  }
-
-  // --- orcas ------------------------------------------------------------
-  if (d > 0.15) {
-    const orcaCount = Math.round(lerp(1, 3.4, d));
-    const solidFloes = floes.filter((f) => f.type !== 'snap');
-    for (let n = 0; n < orcaCount; n++) {
-      const i = 2 + Math.floor(rng() * Math.max(1, solidFloes.length - 4));
-      const a = solidFloes[i];
-      const b = solidFloes[i + 1];
-      if (!a || !b) continue;
-      const gap = b.x - (a.x + a.w);
-      if (gap < 90) continue;
-      const cx = a.x + a.w + gap / 2;
-      if (hazards.some((h) => Math.abs((h.x ?? 0) - cx) < 200)) continue;
-      hazards.push({
-        kind: 'orca',
-        x: Math.round(cx - 28),
-        y: WATER_Y,
-        w: 56,
-        h: 120,
-        height: Math.round(lerp(225, 255, rng())),
-        period: +lerp(2.7, 3.6, rng()).toFixed(2),
-        phase: +rng().toFixed(2),
-      });
-    }
-  }
-
-  // --- storms -----------------------------------------------------------
-  // One at most, and only over a long enough stretch that there is somewhere
-  // to stand and wait out a surge.
-  if (d > 0.2 && rng() < 0.7) {
-    const start = 2 + Math.floor(rng() * Math.max(1, floes.length - 6));
-    const a = floes[start];
-    const bIdx = Math.min(floes.length - 2, start + 3);
-    const b = floes[bIdx];
-    if (a && b && b.x + b.w - a.x > 380) {
-      hazards.push({
-        kind: 'storm',
-        x: Math.round(a.x - 40),
-        y: 110,
-        w: Math.round(b.x + b.w - a.x + 80),
-        h: 410,
-        power: -Math.round(lerp(280, 340, rng())),
-        period: +lerp(3.2, 3.8, rng()).toFixed(2),
-        phase: +rng().toFixed(2),
-      });
-    }
-  }
-
-  // --- rotten fish ------------------------------------------------------
-  // Parked at head height over floes the player has to cross, so avoiding one
-  // costs a jump. The opposite placement rule from the speed fish, on purpose.
-  const rotFish = [];
-  if (d > 0.15) {
-    const kinds = ['heavy', 'dizzy', 'blind'];
-    const count = Math.round(lerp(1, 3, d));
-    const hosts = floes.filter((f) => f.type !== 'snap' && f.w >= 110).slice(2, -1);
-    for (let n = 0; n < count && hosts.length; n++) {
-      const host = hosts.splice(Math.floor(rng() * hosts.length), 1)[0];
-      rotFish.push({
-        x: Math.round(host.x + host.w / 2 - 11),
-        y: Math.round(host.y - lerp(34, 52, rng())),
-        kind: kinds[Math.floor(rng() * kinds.length)],
-      });
-    }
-  }
-
-  // --- the speed fish ---------------------------------------------------
-  // Always a detour: parked high over a floe, never on the running line.
-  const speedFish = [];
-  if (floes.length > 5) {
-    const pool = floes.filter((f) => f.type !== 'snap' && f.w >= 120).slice(2, -1);
-    if (pool.length) {
-      const host = pool[Math.floor(rng() * pool.length)];
-      speedFish.push({
-        x: Math.round(host.x + host.w / 2 - 15),
-        y: Math.round(host.y - lerp(78, 100, rng())),
-      });
-    }
-  }
-
-  return {
+  const def = c.build({
     id,
-    speedFish,
-    rotFish,
     name: opts.name ?? NAMES[Math.abs(id - CRAFTED_LEVELS - 1) % NAMES.length],
     subtitle: opts.subtitle ?? `Sonsuz kaçış — bölüm ${id}`,
     intro: null,
@@ -305,90 +195,16 @@ export function generateLevel(id, opts = {}) {
     daily: opts.daily ?? false,
     /** Explicit growth size — the daily has no place on the campaign curve. */
     scale,
-    target: Math.round(lerp(45, 75, d)),
-    worldW: Math.round(x + 300),
+    target: Math.round(lerp(55, 95, d)),
     fog: d > 0.55 && id % 4 === 0 ? 0.45 : 0,
-    spawn: { x: 110, y: GROUND_Y },
-    goal: { x: Math.round(x + 120), y },
-    floes,
-    hazards,
-    fish,
-    checkpoints,
-  };
+  });
+  def.signs = [];
+  return def;
 }
-
-function pickType(rng, d, sinceSafe, lastRisky, prevWaitable, prevSlippery) {
-  // Two risky floes in a row is the cap at low difficulty, three later.
-  if (sinceSafe >= (d > 0.4 ? 4 : 3)) return rng() < 0.3 ? 'slip' : 'solid';
-  const r = rng();
-  const weights = [
-    ['solid', lerp(0.3, 0.12, d)],
-    ['crack', lerp(0.3, 0.3, d)],
-    // Melting ice has to be timed, so it only ever follows a safe floe.
-    ['melt', prevWaitable ? lerp(0.1, 0.16, d) : 0],
-    ['move', lerp(0.1, 0.15, d)],
-    ['slip', lerp(0.08, 0.08, d)],
-    ['fall', lerp(0.02, 0.1, d)],
-    // Geysers arrive late and stay rare — one per level is a threat, three is
-    // a slot machine.
-    ['burst', lerp(0.03, 0.15, d)],
-    // Traps only appear once the player has met them, and never twice running.
-    ['trap', lastRisky === 'trap' || prevSlippery ? 0 : lerp(0.04, 0.14, d)],
-  ];
-  const total = weights.reduce((s, [, w]) => s + w, 0);
-  let acc = 0;
-  for (const [type, w] of weights) {
-    acc += w / total;
-    if (r <= acc) return type;
-  }
-  return 'solid';
-}
-
-function makeHazard(rng, floe, d) {
-  const roll = rng();
-  // A seal blocks the floe it stands on, so it may only stand on ice that
-  // isn't already counting down — dodging a patrol on breaking ice is not a
-  // skill check, it's a stopwatch. Icicles and gusts act over the gap, so they
-  // are fair anywhere.
-  const standable = floe.type === 'solid' || floe.type === 'slip';
-  if (roll < 0.42 || !standable) {
-    return { kind: 'icicle', x: Math.round(floe.x + floe.w / 2), y: 130, w: 24, h: 46 };
-  }
-  if (roll < 0.74 && floe.w > 200) {
-    // Patrol the left side only: the right-hand strip has to stay free so the
-    // player can line up and launch the next jump without being swept.
-    const left = floe.x + 30;
-    const right = floe.x + floe.w - 80 - 44;
-    if (right - left >= 60) {
-      return {
-        kind: 'seal',
-        x: Math.round((left + right) / 2),
-        y: floe.y - 30,
-        w: 44,
-        h: 30,
-        range: Math.round((right - left) / 2),
-        speed: Math.round(lerp(60, 105, d)),
-      };
-    }
-  }
-  return {
-    kind: 'gust',
-    x: Math.round(floe.x - 90),
-    y: 150,
-    w: 120,
-    h: 360,
-    power: Math.round(lerp(260, 360, rng())) * (rng() < 0.5 ? -1 : 1),
-  };
-}
-
 
 /**
- * The daily challenge.
- *
- * Same generator, seeded by the calendar date, so every player gets exactly
- * the same level on the same day — which is what makes comparing times mean
- * anything. Difficulty sits at a fixed mid-high point rather than following
- * the campaign curve, so day one and day two are the same kind of test.
+ * The daily challenge: one level a day, the same for everybody, seeded from the
+ * date rather than from a level number.
  */
 export function generateDailyLevel(dateKey) {
   const seed = [...dateKey].reduce((n, c) => (n * 33 + c.charCodeAt(0)) >>> 0, 5381);
