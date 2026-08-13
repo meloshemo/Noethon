@@ -24,6 +24,19 @@ python3 -m http.server 8000
 Yayına almak için klasörü olduğu gibi herhangi bir statik hostinge koymak yeterli
 (GitHub Pages, Netlify, Vercel, Cloudflare Pages).
 
+### Tek dosyalık sürüm
+
+```bash
+node tools/bundle.mjs dist/pengu.html
+```
+
+Bütün modülleri, stilleri ve işaretlemeyi tek bir HTML dosyasına düzleştirir —
+sunucu gerektirmez, `file://` üzerinden bile açılır, tek belge kabul eden yerlere
+yüklenebilir. Gerçek bir paketleyici değil, sırayla birleştirici: modülleri
+bağımlılık sırasına göre ekler ve import/export sözdizimini temizler. Bu yüzden
+çakışan bir üst düzey isim ya da temizlenemeyen bir import görürse sessizce
+geçmez, hata verip durur.
+
 ## Testler
 
 ```bash
