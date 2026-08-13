@@ -32,6 +32,12 @@ export class World {
     // centred rather than dumped below the ice.
     this.worldH = def.worldH ?? VIEW_LIMITS.baseH;
     this.waterY = def.waterY ?? WATER_Y;
+
+    // The band the camera is allowed to show: from the highest thing in the
+    // level down to the sea, with enough sky above the top to jump into.
+    const tops = [...(def.floes ?? []), ...(def.terrain ?? [])].map((f) => f.y);
+    this.contentTop = Math.max(0, Math.min(...tops, this.waterY) - 170);
+    this.contentBottom = Math.min(this.worldH, this.waterY + 60);
     this.fog = def.fog ?? 0;
 
     this.floes = (def.floes ?? []).map((d, i) => new Floe(d, i));
@@ -124,11 +130,25 @@ export class World {
   }
 
   /** Vertical camera bounds — negative on screens taller than the level. */
+  /**
+   * How far the camera may travel vertically.
+   *
+   * Clamped to the band that actually has something in it, not to the world
+   * box. A world is 900 tall because a summit needs the room, but a level that
+   * never leaves sea level fills only its bottom third — and on a tall phone,
+   * where the view is nearly as tall as the world, clamping to the box put the
+   * penguin at the bottom of the screen under six hundred pixels of empty sky.
+   */
   get _camYRange() {
-    const slack = VIEW.h - this.worldH;
-    return slack > 0
-      ? { min: -slack / 2, max: -slack / 2 } // taller than the level: centre it
-      : { min: 0, max: this.worldH - VIEW.h };
+    const top = this.contentTop;
+    const bottom = this.contentBottom;
+    const slack = VIEW.h - (bottom - top);
+    if (slack > 0) {
+      // The view is taller than everything there is to see: centre it.
+      const at = top - slack / 2;
+      return { min: at, max: at };
+    }
+    return { min: top, max: bottom - VIEW.h };
   }
 
   _centerCamera() {
