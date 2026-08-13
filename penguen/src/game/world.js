@@ -8,7 +8,7 @@
 
 import { Floe, Hazard, Fish, Checkpoint } from './entities.js';
 import { Player } from './player.js';
-import { VIEW, ASSIST, scaleForLevel } from './config.js';
+import { VIEW, ASSIST, ICE, scaleForLevel, upgradeEffect } from './config.js';
 import { WATER_Y } from './levels.js';
 import { clamp, damp, rectsOverlap, rand } from '../core/util.js';
 
@@ -36,7 +36,22 @@ export class World {
     this.goal = { x: def.goal.x, y: def.goal.y, w: 54, h: 64, pulse: 0 };
 
     this.player = new Player();
-    this.player.setScale(scaleForLevel(def.id));
+    this.player.setScale(def.scale ?? scaleForLevel(def.id));
+
+    // Shop upgrades. Levels are validated against base stats, so these only
+    // ever make the penguin better — they never unlock anything.
+    const owned = deps.upgrades ?? {};
+    this.player.boost = {
+      jump: upgradeEffect(owned, 'boots'),
+      speed: upgradeEffect(owned, 'speed'),
+      grip: upgradeEffect(owned, 'crampons'),
+      wind: upgradeEffect(owned, 'vest'),
+    };
+    this.magnetRange = upgradeEffect(owned, 'magnet');
+    /** "Kalın Tüy" — one free save per attempt at the level. */
+    this.shields = upgradeEffect(owned, 'down') ? 1 : 0;
+    this.maxShields = this.shields;
+    this.shieldFlash = 0;
 
     this.spawn = { ...def.spawn };
     this.respawn = { ...def.spawn };
@@ -52,6 +67,10 @@ export class World {
     this.flash = 0;
     this.hint = null;
     this.hintTimer = 0;
+    /** Counters the mission system reads after a run. */
+    this.burstDodges = 0;
+    this.orcaPasses = 0;
+    this._orcaSeen = new Set();
 
     this.player.reset(this.spawn.x, this.spawn.y);
     this._centerCamera();
@@ -96,6 +115,7 @@ export class World {
         this.shake(4);
       },
     };
+    if (this.shieldFlash > 0) this.shieldFlash = Math.max(0, this.shieldFlash - dt);
 
     for (const f of this.floes) f.update(dt, this.time, fx);
     for (const f of this.fish) f.update(dt);
@@ -121,7 +141,21 @@ export class World {
     let push = 0;
     for (const h of this.hazards) {
       if (h.kind !== 'gust') continue;
-      if (rectsOverlap(this.player.box, h.box)) push += (h.strength ?? h.power ?? 0) * (this.player.onGround ? 0.35 : 1);
+      if (!rectsOverlap(this.player.box, h.box)) continue;
+      const raw = (h.strength ?? h.power ?? 0) * (this.player.onGround ? 0.35 : 1);
+      push += raw * (1 - this.player.boost.wind);
+    }
+
+    // "snap" ice decides to vanish while the player is still in the air, so it
+    // has to be checked before the move, not after the landing.
+    for (const f of this.floes) {
+      if (!f.isSnap) continue;
+      if (f.trySnap(this.player, this.assist)) {
+        this.particles.burstIce(f.x + f.w / 2, f.y, 20, f.w / 2);
+        this.audio.shatter();
+        this.shake(6);
+        this.showHint('Buz kaçtı!', 1.2);
+      }
     }
 
     this.player.update(dt, { ...intent, push }, this.floes, this.tuning, {
@@ -138,11 +172,14 @@ export class World {
       onStand: (floe) => this._touchFloe(floe),
     });
 
+    this._checkBursts();
+
     // Keep the player inside the level horizontally.
     this.player.x = clamp(this.player.x, 0, this.worldW - this.player.w);
 
     this._checkPickups();
     this._checkHazards();
+    this._checkOrcaPasses();
     this._checkGoal();
 
     if (this.player.y > this.waterY - this.player.h * 0.35) this.die('water');
@@ -152,14 +189,62 @@ export class World {
   }
 
   _touchFloe(floe) {
-    if (!floe.breakable || floe.state !== 'idle') return;
+    if (!floe.breakable && !floe.isBurst) return;
+    if (floe.state !== 'idle') return;
     floe.touch(this.assistMult, () => {
-      this.audio.crack();
+      if (floe.isBurst) this.audio.hiss();
+      else this.audio.crack();
       this.particles.puff(floe.x + floe.w / 2, floe.y, 4);
     });
   }
 
+  /**
+   * Geysers. Standing on one when it fires throws the penguin clear off the
+   * ice — usually into the sea, which is the point. The half-second of hiss
+   * and bulge beforehand is the whole fairness budget: react or fly.
+   */
+  _checkBursts() {
+    for (const f of this.floes) {
+      if (!f.isBurst || f.state !== 'erupting' || f._launched) continue;
+      const column = { x: f.x, y: f.y - 190, w: f.w, h: 210 };
+      if (!rectsOverlap(this.player.box, column)) {
+        // Armed it, then got clear before it blew. That is the skill.
+        if (f.touched) this.burstDodges++;
+      } else {
+        const dir = this.player.centerX < f.x + f.w / 2 ? -1 : 1;
+        this.player.launch(
+          this.player.vx * 0.4 + dir * ICE.burstSide,
+          ICE.burstUp * (this.assist ? 0.72 : 1),
+        );
+        this.audio.burst();
+        this.particles.splash(this.player.centerX, f.y);
+        this.shake(9);
+        this.showHint('Gayzer!', 1.1);
+      }
+      f._launched = true;
+    }
+    for (const f of this.floes) {
+      if (f.isBurst && f.state !== 'erupting') f._launched = false;
+    }
+  }
+
   _checkPickups() {
+    // Magnet: fish drift toward the penguin instead of needing a precise line.
+    if (this.magnetRange > 0) {
+      const px = this.player.centerX;
+      const py = this.player.y + this.player.h / 2;
+      for (const f of this.fish) {
+        if (f.taken) continue;
+        const dx = px - (f.x + f.w / 2);
+        const dy = py - (f.y + f.h / 2);
+        const dist = Math.hypot(dx, dy);
+        if (dist > this.magnetRange || dist < 1) continue;
+        const pull = (1 - dist / this.magnetRange) * 520 * 0.016;
+        f.x += (dx / dist) * pull;
+        f.y += (dy / dist) * pull;
+      }
+    }
+
     for (const f of this.fish) {
       if (f.taken || !rectsOverlap(this.player.box, f.box)) continue;
       f.taken = true;
@@ -176,6 +261,17 @@ export class World {
       this.audio.checkpoint();
       this.particles.sparkle(c.x + c.w / 2, c.y - 20, '#7fe7ff');
       this.showHint('Kontrol noktası', 1.4);
+    }
+  }
+
+  /** Counted once per orca, the first time the penguin gets past it. */
+  _checkOrcaPasses() {
+    for (const h of this.hazards) {
+      if (h.kind !== 'orca' || this._orcaSeen.has(h)) continue;
+      if (this.player.centerX > h.x + h.w + 20 && this.player.onGround) {
+        this._orcaSeen.add(h);
+        this.orcaPasses++;
+      }
     }
   }
 
@@ -218,6 +314,21 @@ export class World {
 
   die(cause = 'water') {
     if (this.status !== 'playing') return;
+
+    // "Kalın Tüy": one save per attempt. It puts the penguin back on the last
+    // safe ground rather than at the checkpoint, so it rescues a run without
+    // erasing the mistake.
+    if (this.shields > 0) {
+      this.shields--;
+      this.shieldFlash = 1;
+      this.player.reset(this.respawn.x, this.respawn.y);
+      this.particles.sparkle(this.player.centerX, this.player.y, '#9b8cff');
+      this.audio.checkpoint();
+      this.shake(4);
+      this.showHint('Kalın tüy seni kurtardı', 1.6);
+      return;
+    }
+
     this.status = 'dying';
     this.deathTimer = 0.72;
     this.deaths++;
@@ -245,6 +356,7 @@ export class World {
 
   _respawn() {
     this.status = 'playing';
+    this.shields = this.maxShields;
     this.player.alive = true;
     this.player.reset(this.respawn.x, this.respawn.y);
     // Floes reset so a broken path never soft-locks the player after a death.

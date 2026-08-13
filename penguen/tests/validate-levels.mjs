@@ -40,6 +40,8 @@ function fuseOf(floe) {
   if (floe.type === 'trap') return floe.delay ?? ICE.trapDelay;
   if (floe.type === 'fall') return floe.delay ?? 0.35;
   if (floe.type === 'crack') return floe.delay ?? ICE.crackDelay;
+  // A geyser gives you its warning time to get clear.
+  if (floe.type === 'burst') return ICE.burstWarn;
   return null;
 }
 
@@ -54,7 +56,10 @@ function check(def, { tutorial = false } = {}) {
   const fail = (msg) => problems.push(`L${id} (${def.name}): ${msg}`);
   const warn = (msg) => warnings.push(`L${id} (${def.name}): ${msg}`);
 
-  const floes = [...def.floes].sort((a, b) => a.x - b.x);
+  const all = [...def.floes].sort((a, b) => a.x - b.x);
+  // 'snap' ice is bait beside the route, never part of it, so the path checks
+  // below walk the level as if it were not there.
+  const floes = all.filter((f) => f.type !== 'snap');
 
   if (!floes.length) return fail('hiç buz yok');
   if (def.spawn.x < floes[0].x || def.spawn.x > floes[0].x + floes[0].w) {
@@ -120,14 +125,53 @@ function check(def, { tutorial = false } = {}) {
     }
   }
 
+  // --- 'snap' bait ---------------------------------------------------
+  // The whole point of snapping ice is that it vanishes as you commit to it.
+  // That is only fair if the level never needs it: the gap it sits in must be
+  // clearable without it, and it must sit low enough to read as a shortcut
+  // rather than as the road.
+  for (const f of all) {
+    if (f.type !== 'snap') continue;
+    const before = floes.filter((o) => o.x + o.w <= f.x + f.w).pop();
+    const after = floes.find((o) => o.x >= f.x);
+    if (!before || !after) {
+      fail(`kaçan buz (x=${f.x}) yolun ucunda — atlanamaz`);
+      continue;
+    }
+    const skipGap = after.x - (before.x + before.w);
+    if (skipGap > reach.distance * budget.distance) {
+      fail(
+        `kaçan buz olmadan ${Math.round(skipGap)}px geçilemiyor, erişim ${Math.round(reach.distance * budget.distance)}px — bu buz zorunlu`,
+      );
+    }
+    if (f.y < before.y + 20 || f.y < after.y + 20) {
+      fail(`kaçan buz (x=${f.x}) komşularıyla aynı hizada — yem gibi durmuyor`);
+    }
+    if (f.y + 24 >= WATER_Y) fail(`kaçan buz suya çok yakın (y=${f.y})`);
+  }
+
+  // --- orcas ----------------------------------------------------------
+  // An orca has to breach in open water, and it has to spend most of its cycle
+  // below the surface, or the gap it guards is simply shut.
+  for (const h of def.hazards ?? []) {
+    if (h.kind !== 'orca') continue;
+    const cx = h.x + h.w / 2;
+    const onFloe = floes.find((f) => cx > f.x - 20 && cx < f.x + f.w + 20);
+    if (onFloe) fail(`orka buzun altında değil boşlukta olmalı (x=${h.x})`);
+    if ((h.period ?? 3.4) < 2.4) fail(`orka çok sık çıkıyor (period=${h.period})`);
+  }
+
   // Landing on a floe must always be above the water line.
   const penguinW = PENGUIN.w * scale;
   for (const f of floes) {
     if (f.y >= WATER_Y - 8) fail(`buz suyun içinde (y=${f.y})`);
+    if (f.type === 'burst' && f.burstPeriod && f.w < penguinW * 2.4) {
+      warn(`zamanlı gayzer dar: ${f.w}px — kaçacak yer az`);
+    }
     // Every floe has to be wide enough to actually stand on, with margin.
     if (f.w < penguinW + 20) fail(`buz penguenden dar: ${f.w}px, penguen ${Math.round(penguinW)}px`);
-    // Short-fuse floes are meant to be tight stepping stones; the rest are not.
-    else if (f.type !== 'trap' && f.type !== 'fall' && f.w < penguinW * 1.6) {
+    // Short-fuse floes and bait are meant to be tight; the rest are not.
+    else if (!['trap', 'fall', 'snap'].includes(f.type) && f.w < penguinW * 1.6) {
       warn(`çok dar buz: ${f.w}px, penguen ${Math.round(penguinW)}px`);
     }
   }

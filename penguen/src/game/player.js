@@ -12,6 +12,8 @@ import { clamp, damp, rectsOverlap } from '../core/util.js';
 export class Player {
   constructor() {
     this.scale = 1;
+    /** Shop upgrades, resolved to plain multipliers by the world. */
+    this.boost = { jump: 0, speed: 0, grip: 0, wind: 0 };
     this.reset(0, 0);
   }
 
@@ -19,6 +21,19 @@ export class Player {
     this.scale = scale;
     this.w = PENGUIN.w * scale;
     this.h = PENGUIN.h * scale;
+  }
+
+  /** Thrown by a geyser — briefly ignores ground contact so it reads clean. */
+  launch(vx, vy) {
+    this.vx = vx;
+    this.vy = vy;
+    this.onGround = false;
+    this.groundFloe = null;
+    this.coyote = 0;
+    this.buffer = 0;
+    this.squashX = 0.7;
+    this.squashY = 1.4;
+    this.launched = 0.35;
   }
 
   reset(x, y) {
@@ -42,6 +57,7 @@ export class Player {
     this.wasOnGround = false;
     this.landedThisFrame = false;
     this.jumpedThisFrame = false;
+    this.launched = 0;
   }
 
   get box() {
@@ -53,11 +69,13 @@ export class Player {
   }
 
   get jumpVelocity() {
-    return PHYS.jumpVelocity * (1 - PENGUIN.jumpPenaltyPerScale * (this.scale - 1));
+    const base = PHYS.jumpVelocity * (1 - PENGUIN.jumpPenaltyPerScale * (this.scale - 1));
+    return base * (1 + this.boost.jump);
   }
 
   get moveSpeed() {
-    return PHYS.moveSpeed * (1 - PENGUIN.speedPenaltyPerScale * (this.scale - 1));
+    const base = PHYS.moveSpeed * (1 - PENGUIN.speedPenaltyPerScale * (this.scale - 1));
+    return base * (1 + this.boost.speed);
   }
 
   /**
@@ -72,14 +90,22 @@ export class Player {
     this.wasOnGround = this.onGround;
 
     const slippery = this.groundFloe?.slippery;
+    // Crampons pull the slip factor back toward normal ground friction.
+    const slipFactor = PHYS.slipFriction + (1 - PHYS.slipFriction) * this.boost.grip;
     const accel = this.onGround ? PHYS.groundAccel : PHYS.airAccel;
     const friction = this.onGround
-      ? PHYS.groundFriction * (slippery ? PHYS.slipFriction : 1)
+      ? PHYS.groundFriction * (slippery ? slipFactor : 1)
       : PHYS.airFriction;
 
+    this.launched = Math.max(0, this.launched - dt);
+
     const target = intent.axis * this.moveSpeed;
-    if (intent.axis !== 0) {
-      const rate = slippery && this.onGround ? accel * 0.35 : accel;
+    if (this.launched > 0) {
+      // Tumbling: steering is heavily damped, but not gone — the player can
+      // still fight for a landing, which is what keeps this fair.
+      this.vx += intent.axis * PHYS.airAccel * 0.25 * dt;
+    } else if (intent.axis !== 0) {
+      const rate = slippery && this.onGround ? accel * (0.35 + 0.65 * this.boost.grip) : accel;
       this.vx += Math.sign(target - this.vx) * rate * dt;
       // Don't overshoot the target speed in a single step.
       if (Math.sign(target - this.vx) !== Math.sign(target) && Math.abs(this.vx) > Math.abs(target)) {
@@ -112,8 +138,12 @@ export class Player {
       events?.onJump?.();
     }
 
-    // Releasing the button early cuts the jump short.
-    if (!intent.jumpHeld && this.vy < 0) this.vy *= 1 - (1 - PHYS.jumpCut) * Math.min(1, dt * 30);
+    // Releasing the button early cuts the jump short — but only a jump. A
+    // geyser throw is not the player's to cut, and letting the same code path
+    // damp it turned the eruption into a hop.
+    if (!intent.jumpHeld && this.vy < 0 && this.launched <= 0) {
+      this.vy *= 1 - (1 - PHYS.jumpCut) * Math.min(1, dt * 30);
+    }
 
     const g = this.vy < 0 ? PHYS.gravityUp : PHYS.gravityDown;
     this.vy = Math.min(PHYS.maxFall, this.vy + g * dt);

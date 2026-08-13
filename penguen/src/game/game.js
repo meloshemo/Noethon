@@ -7,9 +7,10 @@ import { World } from './world.js';
 import { Renderer } from './render.js';
 import { Particles } from '../core/particles.js';
 import { getCraftedLevel, LEVELS } from './levels.js';
-import { generateLevel } from './generator.js';
-import { CRAFTED_LEVELS, ASSIST_AFTER_DEATHS, scaleForLevel } from './config.js';
-import { Storage } from '../core/storage.js';
+import { generateLevel, generateDailyLevel } from './generator.js';
+import { CRAFTED_LEVELS, ASSIST_AFTER_DEATHS, REWARDS, scaleForLevel } from './config.js';
+import { Storage, todayKey } from '../core/storage.js';
+import { ensureMissions, progressMission } from './missions.js';
 
 /** Fixed physics step — decoupled from the display refresh rate. */
 const STEP = 1 / 120;
@@ -41,6 +42,8 @@ export class Game {
     this.runDeaths = 0;
     this.assistOffered = false;
     this.jumpPressed = false;
+    /** Set while the daily challenge is being played. */
+    this.dailyRun = false;
 
     this.input.on('jump', () => {
       this.jumpPressed = true;
@@ -65,15 +68,30 @@ export class Game {
 
   /* ------------------------------------------------------------ flow */
 
+  /** The daily challenge — same level for everybody, once a day. */
+  startDaily() {
+    const def = generateDailyLevel(todayKey());
+    Storage.touchDaily(this.save);
+    this.dailyRun = true;
+    this.levelId = CRAFTED_LEVELS + 1; // only used for HUD growth sizing
+    this._begin(def);
+  }
+
   startLevel(id) {
+    this.dailyRun = false;
     this.levelId = id;
     const def = getLevel(id);
     if (!def) return;
+    this._begin(def);
+  }
+
+  _begin(def) {
     this.particles.clear();
     this.world = new World(def, {
       particles: this.particles,
       audio: this.audio,
       assist: this.save.settings.assist,
+      upgrades: this.save.upgrades,
     });
     this.runDeaths = 0;
     this.assistOffered = false;
@@ -81,14 +99,20 @@ export class Game {
     this.accumulator = 0;
     this.input.releaseAll();
     this.jumpPressed = false;
-    this.ui.onLevelStart(def, scaleForLevel(id));
+    this.ui.onLevelStart(def, scaleForLevel(def.id));
   }
 
   restart() {
     if (!this.world) return;
     const deaths = this.world.deaths + this.runDeaths;
-    this.startLevel(this.levelId);
+    this.replay();
     this.runDeaths = deaths;
+  }
+
+  /** Restart whatever is currently loaded — campaign level or daily. */
+  replay() {
+    if (this.dailyRun) this.startDaily();
+    else this.startLevel(this.levelId);
   }
 
   nextLevel() {
@@ -194,29 +218,128 @@ export class Game {
   _onWin() {
     const w = this.world;
     const stars = w.rate();
-    const prevBest = this.save.levels[this.levelId]?.bestTime;
-    const result = {
+    const deaths = w.deaths + this.runDeaths;
+    this.state = 'complete';
+
+    const result = this.dailyRun
+      ? this._finishDaily(w, stars, deaths)
+      : this._finishLevel(w, stars, deaths);
+
+    this._runMissions(w, result);
+    Storage.save(this.save);
+    this.ui.onLevelComplete(result);
+    this.ui.refreshTitle();
+  }
+
+  /**
+   * Campaign payout. Only *new* progress pays: replaying a level for fun is
+   * fine, farming the first level for coins is not.
+   */
+  _finishLevel(w, stars, deaths) {
+    const prev = this.save.levels[this.levelId];
+    const prevBest = prev?.bestTime;
+    const prevStars = prev?.stars ?? 0;
+
+    let coins = w.fishTaken * REWARDS.perFish;
+    const breakdown = [{ label: 'Balık', value: coins }];
+
+    if (!prev) {
+      coins += REWARDS.firstClear;
+      breakdown.push({ label: 'İlk geçiş', value: REWARDS.firstClear });
+    }
+    const newStars = Math.max(0, stars - prevStars);
+    if (newStars > 0) {
+      const v = newStars * REWARDS.perStar;
+      coins += v;
+      breakdown.push({ label: `${newStars} yeni yıldız`, value: v });
+    }
+    if (deaths === 0) {
+      coins += REWARDS.flawless;
+      breakdown.push({ label: 'Ölümsüz', value: REWARDS.flawless });
+    }
+
+    Storage.recordLevel(this.save, this.levelId, {
+      stars,
+      time: w.elapsed,
+      deaths,
+      fish: w.fishTaken,
+    });
+    Storage.addCoins(this.save, coins);
+
+    return {
       level: this.levelId,
       stars,
       time: w.elapsed,
-      deaths: w.deaths + this.runDeaths,
+      deaths,
       fish: w.fishTaken,
       totalFish: w.fish.length,
       target: w.def.target,
       name: w.def.name,
       isLast: this.levelId >= CRAFTED_LEVELS && !w.def.generated,
       prevBest,
+      coins,
+      breakdown,
+      daily: false,
     };
-    this.state = 'complete';
-    // Record before the UI reads the save, so the grid and title are current.
-    this.ui.onLevelComplete(result);
-    Storage.recordLevel(this.save, this.levelId, {
+  }
+
+  /** Daily payout: a flat prize plus a streak bonus that grows for a week. */
+  _finishDaily(w, stars, deaths) {
+    const prevBest = this.save.daily.bestTime;
+    const { first, streak } = Storage.completeDaily(this.save, w.elapsed);
+
+    let coins = w.fishTaken * REWARDS.perFish;
+    const breakdown = [{ label: 'Balık', value: coins }];
+    if (first) {
+      coins += REWARDS.daily;
+      breakdown.push({ label: 'Günün bölümü', value: REWARDS.daily });
+      const bonus = Math.min(REWARDS.streakCap, streak * REWARDS.streakStep);
+      if (bonus > 0) {
+        coins += bonus;
+        breakdown.push({ label: `${streak} günlük seri`, value: bonus });
+      }
+    }
+    Storage.addCoins(this.save, coins);
+    this.save.stats.totalFish += w.fishTaken;
+
+    return {
+      level: null,
       stars,
       time: w.elapsed,
-      deaths: result.deaths,
+      deaths,
       fish: w.fishTaken,
-    });
-    this.ui.refreshTitle();
+      totalFish: w.fish.length,
+      target: w.def.target,
+      name: 'Günün Bölümü',
+      prevBest,
+      coins,
+      breakdown,
+      daily: true,
+      streak,
+      firstToday: first,
+    };
+  }
+
+  /** Feed the run into today's missions and pay out anything completed. */
+  _runMissions(w, result) {
+    ensureMissions(this.save, Storage);
+    const done = [
+      ...progressMission(this.save, 'clear', 1),
+      ...progressMission(this.save, 'fish', w.fishTaken),
+      ...progressMission(this.save, 'star', result.stars),
+      ...(result.deaths === 0 ? progressMission(this.save, 'flawless', 1) : []),
+      ...(result.stars === 3 ? progressMission(this.save, 'threeStars', 1) : []),
+      ...(result.daily ? progressMission(this.save, 'daily', 1) : []),
+      ...(w.burstDodges > 0 ? progressMission(this.save, 'burstDodge', w.burstDodges) : []),
+      ...(w.orcaPasses > 0 ? progressMission(this.save, 'orcaPass', w.orcaPasses) : []),
+    ];
+    if (done.length) {
+      const total = done.reduce((n, m) => n + m.reward, 0);
+      Storage.addCoins(this.save, total);
+      result.coins += total;
+      result.breakdown.push({ label: `${done.length} görev`, value: total });
+      result.missionsDone = done.map((m) => m.text);
+    }
   }
 
   /** Turn assist mode on mid-level without losing the attempt. */

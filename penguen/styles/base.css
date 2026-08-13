@@ -105,6 +105,12 @@ ul {
   display: grid;
   place-items: center;
   isolation: isolate;
+  /* The overlays live inside the stage, not the window — on a desktop the
+     stage is a 16:9 box that can be much shorter than the viewport. Sizing
+     their layout off the stage is the only way the density rules match what
+     the player actually sees. */
+  container-type: size;
+  container-name: stage;
 }
 
 #game {

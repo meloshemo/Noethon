@@ -11,7 +11,7 @@
 
 import { makeRng, clamp, lerp } from '../core/util.js';
 import { PHYS, PENGUIN, ICE, scaleForLevel, CRAFTED_LEVELS } from './config.js';
-import { GROUND_Y } from './levels.js';
+import { GROUND_Y, WATER_Y } from './levels.js';
 
 /** Analytical jump reach for a given growth scale. */
 function jumpReach(scale) {
@@ -29,13 +29,18 @@ const NAMES = [
   'Derin Mavi', 'Çatlak Sesi', 'Kayan Raf', 'Buzul Kapısı', 'Yeni Kıyı',
 ];
 
-export function generateLevel(id) {
-  const rng = makeRng(id * 7919 + 13);
-  const scale = scaleForLevel(id);
+/**
+ * @param {number} id level number, also the seed
+ * @param {{seed?:number, difficulty?:number, scale?:number, name?:string,
+ *          subtitle?:string, daily?:boolean}} [opts]
+ */
+export function generateLevel(id, opts = {}) {
+  const rng = makeRng(opts.seed ?? id * 7919 + 13);
+  const scale = opts.scale ?? scaleForLevel(id);
   const reach = jumpReach(scale);
 
   // Difficulty ramps over 20 generated levels, then plateaus.
-  const d = clamp((id - CRAFTED_LEVELS) / 20, 0, 1);
+  const d = opts.difficulty ?? clamp((id - CRAFTED_LEVELS) / 20, 0, 1);
 
   // Capped well short of the theoretical maximum jump: a gap that only clears
   // with a perfect full-hold launch from the exact edge is not difficulty, it
@@ -123,6 +128,13 @@ export function generateLevel(id) {
     } else if (type === 'melt') {
       floe.meltPeriod = +lerp(2.6, 3.8, rng()).toFixed(2);
       floe.meltPhase = +rng().toFixed(2);
+    } else if (type === 'burst') {
+      // Half of them run on their own clock, which needs a safe floe to time
+      // the approach from; the rest only fire when stepped on.
+      if (prevWaitable && w >= 150 && rng() < 0.5) {
+        floe.burstPeriod = +lerp(2.6, 3.6, rng()).toFixed(2);
+        floe.burstPhase = +rng().toFixed(2);
+      }
     } else if (type === 'crack') {
       // Long enough to walk the width of the widest floe the generator makes:
       // pressure should come from the layout, not from an uncrossable fuse.
@@ -155,6 +167,34 @@ export function generateLevel(id) {
     x += w;
   }
 
+  // --- snapping bait ---------------------------------------------------
+  // Dropped into gaps that are already jumpable, low and to the side, so it
+  // reads as a helpful stepping stone and is never the actual route. The
+  // validator enforces exactly that, so this only ever adds temptation.
+  if (d > 0.25) {
+    const baitCount = Math.round(lerp(0, 3, d));
+    // Bait has to sit clearly below both neighbours (so it reads as a low
+    // shortcut) and still clear of the sea. Gaps too near the water simply
+    // don't get one.
+    const BAIT_DROP = 42;
+    const BAIT_FLOOR = WATER_Y - 30;
+    const candidates = [];
+    for (let i = 1; i < floes.length - 1; i++) {
+      const a = floes[i];
+      const b = floes[i + 1];
+      const gap = b.x - (a.x + a.w);
+      const y = Math.max(a.y, b.y) + BAIT_DROP;
+      if (gap >= 110 && y <= BAIT_FLOOR) candidates.push({ a, b, gap, y });
+    }
+    for (let n = 0; n < baitCount && candidates.length; n++) {
+      const pick = candidates.splice(Math.floor(rng() * candidates.length), 1)[0];
+      const w = 70;
+      const mid = pick.a.x + pick.a.w + (pick.gap - w) / 2;
+      floes.push({ x: Math.round(mid), y: pick.y, w, type: 'snap' });
+    }
+    floes.sort((p, q) => p.x - q.x);
+  }
+
   // Finish on a wide, safe floe so the last jump is never a coin flip.
   const tail = floes[floes.length - 1];
   const tailFuse = tail.type === 'trap' ? ICE.trapDelay : tail.type === 'fall' ? 0.35 : null;
@@ -169,12 +209,41 @@ export function generateLevel(id) {
     fish.push({ x: f.x + f.w / 2, y: f.y - 80 });
   }
 
+  // --- orcas ------------------------------------------------------------
+  if (d > 0.3) {
+    const orcaCount = Math.round(lerp(0, 2.4, d));
+    const solidFloes = floes.filter((f) => f.type !== 'snap');
+    for (let n = 0; n < orcaCount; n++) {
+      const i = 2 + Math.floor(rng() * Math.max(1, solidFloes.length - 4));
+      const a = solidFloes[i];
+      const b = solidFloes[i + 1];
+      if (!a || !b) continue;
+      const gap = b.x - (a.x + a.w);
+      if (gap < 90) continue;
+      const cx = a.x + a.w + gap / 2;
+      if (hazards.some((h) => Math.abs((h.x ?? 0) - cx) < 200)) continue;
+      hazards.push({
+        kind: 'orca',
+        x: Math.round(cx - 28),
+        y: WATER_Y,
+        w: 56,
+        h: 120,
+        height: Math.round(lerp(225, 255, rng())),
+        period: +lerp(2.7, 3.6, rng()).toFixed(2),
+        phase: +rng().toFixed(2),
+      });
+    }
+  }
+
   return {
     id,
-    name: NAMES[(id - CRAFTED_LEVELS - 1) % NAMES.length],
-    subtitle: `Sonsuz kaçış — bölüm ${id}`,
+    name: opts.name ?? NAMES[Math.abs(id - CRAFTED_LEVELS - 1) % NAMES.length],
+    subtitle: opts.subtitle ?? `Sonsuz kaçış — bölüm ${id}`,
     intro: null,
     generated: true,
+    daily: opts.daily ?? false,
+    /** Explicit growth size — the daily has no place on the campaign curve. */
+    scale,
     target: Math.round(lerp(45, 75, d)),
     worldW: Math.round(x + 300),
     fog: d > 0.55 && id % 4 === 0 ? 0.45 : 0,
@@ -199,6 +268,9 @@ function pickType(rng, d, sinceSafe, lastRisky, prevWaitable, prevSlippery) {
     ['move', lerp(0.1, 0.15, d)],
     ['slip', lerp(0.08, 0.08, d)],
     ['fall', lerp(0.0, 0.06, d)],
+    // Geysers arrive late and stay rare — one per level is a threat, three is
+    // a slot machine.
+    ['burst', lerp(0.0, 0.1, d)],
     // Traps only appear once the player has met them, and never twice running.
     ['trap', lastRisky === 'trap' || prevSlippery ? 0 : lerp(0.0, 0.09, d)],
   ];
@@ -246,4 +318,28 @@ function makeHazard(rng, floe, d) {
     h: 360,
     power: Math.round(lerp(260, 360, rng())) * (rng() < 0.5 ? -1 : 1),
   };
+}
+
+
+/**
+ * The daily challenge.
+ *
+ * Same generator, seeded by the calendar date, so every player gets exactly
+ * the same level on the same day — which is what makes comparing times mean
+ * anything. Difficulty sits at a fixed mid-high point rather than following
+ * the campaign curve, so day one and day two are the same kind of test.
+ */
+export function generateDailyLevel(dateKey) {
+  const seed = [...dateKey].reduce((n, c) => (n * 33 + c.charCodeAt(0)) >>> 0, 5381);
+  // The date also nudges the difficulty a little, so days aren't identical in
+  // feel — but only within a narrow band.
+  const wobble = ((seed % 100) / 100) * 0.25;
+  return generateLevel(-1, {
+    seed,
+    difficulty: 0.55 + wobble,
+    scale: scaleForLevel(CRAFTED_LEVELS),
+    name: 'Günün Bölümü',
+    subtitle: dateKey,
+    daily: true,
+  });
 }

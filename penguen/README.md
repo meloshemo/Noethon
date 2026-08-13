@@ -1,8 +1,12 @@
 # Pengu — Antarktika'dan Kaçış
 
 Yeni doğmuş bir penguen, eriyen buzlar arasında Antarktika'dan kaçmaya çalışıyor.
-Buzlar üstüne basınca çatlıyor, bazıları eriyip yok oluyor, bazıları tuzak.
-Bölüm ilerledikçe penguen büyüyor: daha ağır zıplıyor, daha geniş yer istiyor.
+Buzlar üstüne basınca çatlıyor, bazıları eriyip yok oluyor, bazıları tuzak, bazıları
+altındaki gayzerle seni havaya fırlatıyor. Bölüm ilerledikçe penguen büyüyor:
+daha ağır zıplıyor, daha geniş yer istiyor.
+
+30 elle tasarlanmış bölüm, sonsuz mod, günün bölümü, günlük görevler ve balıkla
+alışveriş yapılan bir market var.
 
 Bağımlılık yok, derleme adımı yok, backend yok. Sadece HTML + CSS + JavaScript.
 
@@ -27,8 +31,8 @@ node tests/validate-levels.mjs
 ```
 
 Bu, oynamadan — analitik olarak — her bölümdeki her sıçramanın penguenin o
-bölümdeki gerçek erişim mesafesi içinde olduğunu doğrular. 18 elle tasarlanmış
-bölümü ve üretilen bölümlerden 80'lik bir örneklemi kapsar.
+bölümdeki gerçek erişim mesafesi içinde olduğunu doğrular. 30 elle tasarlanmış
+bölümü ve üretilen bölümlerden 80'lik bir örneklemi kapsar (1800'den fazla buz).
 
 ---
 
@@ -54,10 +58,11 @@ src/
     entities.js            buz kütleleri, tehlikeler, balıklar, kontrol noktaları
     player.js              penguen fiziği ve çarpışma çözümü
     world.js               simülasyon, kamera, kazanma/kaybetme
-    levels.js              18 elle tasarlanmış bölüm
-    generator.js           19+ için tohumlanmış üretici
+    levels.js              30 elle tasarlanmış bölüm
+    generator.js           31+ ve günün bölümü için tohumlanmış üretici
     render.js              canvas çizimi (görsel varlık yok, hepsi prosedürel)
-    game.js                oyun döngüsü ve durum makinesi
+    missions.js            günlük görevler (tarihe göre tohumlanmış)
+    game.js                oyun döngüsü, ödüller, durum makinesi
   ui/
     ui.js                  DOM'a dokunan tek yer
 tests/
@@ -87,11 +92,13 @@ Oyunun en çok emek verilen kısmı bu. Kural:
 | 4–8   | Bölüm başına **tek** yeni mekanik. Her yeni şey güvenli bir buzdan tanıtılır ve hemen ardından sağlam bir buz gelir. |
 | 9–13  | Mekanikler birleşmeye başlar, kontrol noktaları girer. |
 | 14–18 | Gerçek baskı: tuzaklar, zincirler, dar pencereler. |
-| 19+   | Üretilen sonsuz mod; zorluk 20 bölümde artıp sabitlenir. |
+| 19–22 | Pusu mekanikleri: gayzer ve orka. Her biri yine kendi öğretici bölümünü alır. |
+| 23–30 | Hiçbir şeye güvenilmez. Kaçan buz, zincirleme gayzer, hepsi bir arada. |
+| 31+   | Üretilen sonsuz mod; zorluk 20 bölümde artıp sabitlenir. |
 
 Ayrıca oyuncunun tarafında olan şeyler:
 
-- **Coyote time (0.14 s)** — kenardan düştükten sonra hâlâ zıplayabilirsin.
+- **Coyote time (0.13 s)** — kenardan düştükten sonra hâlâ zıplayabilirsin.
 - **Zıplama tamponu (0.15 s)** — yere değmeden basılan tuş unutulmaz.
 - **Değişken yükseklik** — tuşu bırakınca alçak, basılı tutunca yüksek zıplar.
 - **Kolay mod** — aynı bölümde 4 kez ölünce kendiliğinden teklif edilir; buzlar
@@ -116,7 +123,7 @@ Zorluk elle ayarlanınca kolayca haksız hale gelir, o yüzden kurallar
 - Hiçbir buz penguenden dar olamaz, hiçbiri suyun içinde olamaz, sal her zaman
   son buzun üstünde olmalı.
 
-Bu doğrulayıcı geliştirme sırasında altı gerçek adaletsizlik yakaladı — geçilmesi
+Bu doğrulayıcı geliştirme sırasında dokuz gerçek adaletsizlik yakaladı — geçilmesi
 matematiksel olarak imkânsız üç sıçrama dahil.
 
 ---
@@ -132,13 +139,76 @@ matematiksel olarak imkânsız üç sıçrama dahil.
 | Cilalı | Üstünde parlama çizgileri | Kaygan, fren mesafesi uzun |
 | Sürüklenen | Ok işaretleri | Bir yol boyunca gider gelir, üstündekini taşır |
 | Düşen | Kesik çizgi | Basınca aşağı kaçar |
+| Gayzer | Kabarcıklar, basınç halkası | Basınca tıslar; yarım saniye sonra seni havaya fırlatır |
+| Kaçan | İnce bir çatlak çizgisi | Alçak ve cazip; tam inerken kaybolur |
 
 ## Tehlikeler
 
 - **Buz sarkıtı** — altından geçince titrer, sonra düşer.
 - **Fok** — buzda devriye gezer. Yanından değil, **üstünden** atla; üstüne
   basarsan seni yukarı fırlatır.
+- **Orka** — boşluktan sıçrar. Önce yüzgeci suyu yarar, sonra kendisi çıkar.
+  Suyun altındayken zararsız, havadayken ölümcül.
 - **Rüzgar** — öldürmez ama havada seni iter.
+
+---
+
+## Pusu mekanikleri
+
+Oyunun "sinir bozucu ama adil" olması gereken kısmı. İkisinin de tek bir kuralı
+var: **oyuncu bir kez öğrendikten sonra bir daha aynı şekilde ölmemeli.**
+
+**Gayzer buzu.** Üstüne bastığın an buz tıslamaya, kabarcıklar büyümeye ve buz
+titremeye başlar. Yarım saniye sonra su sütunu patlar ve pengueni havaya
+fırlatır — genellikle denize. Yarım saniye, o hızda bir buçuk buz boyu demek:
+tepki verirsen kurtulursun, oyalanırsan uçarsın. Bazı gayzerler ise sen
+basmadan, kendi saatlerine göre patlar; onların ritmini saymak gerekir.
+
+**Kaçan buz.** Alçakta duran, tam ihtiyacın olan yerde beliren küçük bir buz.
+Üstüne inmeye başladığın anda — ayağın değmeden hemen önce — kayboluyor.
+Adaleti şuradan geliyor: **hiçbir zaman zorunlu değil.** Doğrulayıcı, her kaçan
+buzun bulunduğu boşluğun o buz olmadan da geçilebildiğini kontrol ediyor. Yani
+o buz bir yol değil, bir yem. Ayrıca denemede yalnızca bir kez kaçar; geri
+donduktan sonra o denemede gerçek bir platformdur.
+
+---
+
+## Ekonomi ve market
+
+Balıklar hem yıldız hem para. Kazanma yolları bilinçli olarak çeşitlendirildi;
+tek kaynak olsaydı market kısa sürede anlamını yitirirdi:
+
+| Kaynak | Kazanç |
+|--------|--------|
+| Toplanan balık | her biri 3 |
+| Bir bölümü ilk kez bitirmek | 12 |
+| Yeni kazanılan her yıldız | 8 |
+| Hiç ölmeden bitirmek | 15 |
+| Günün bölümü | 40 + seri başına 5 (en fazla 50) |
+| Günlük görevler | 25–50 |
+
+Bölümü tekrar oynamak yalnızca *yeni* ilerleme için ödeme yapar — ilk bölümü
+sonsuza kadar tekrarlayarak para basmak mümkün değil.
+
+Markette altı yükseltme var: Kar Botu (zıplama), Hızlı Ayak (hız), Krampon
+(kayma), Kalın Tüy (denemede bir can), Balık Mıknatısı (balık çekimi) ve Rüzgar
+Yeleği. **Hiçbiri bir bölümü açmaz.** Doğrulayıcı bütün bölümleri yükseltmesiz
+temel değerlerle kontrol ediyor; market rahatlık ve hız satıyor, erişim değil.
+
+> Not: bunlar oyun içi balıkla yapılan alımlar. Gerçek parayla satın alma bir
+> ödeme sağlayıcısı ve sunucu tarafı doğrulama gerektirir — statik bir sitede
+> güvenli biçimde yapılamaz, ayrı bir backend ister.
+
+---
+
+## Geri gelme sebepleri
+
+- **Günün bölümü** — tarihe göre tohumlanır, yani o gün herkes aynı bölümü
+  oynar. Süre karşılaştırmak ancak böyle anlam taşır.
+- **Seri** — arka arkaya gün oynadıkça büyür, bir gün atlayınca sıfırlanır.
+- **Günlük görevler** — havuzdan tarihe göre çekilen üç görev. Aynı olayı
+  izleyen iki görev seçilmez, yoksa gün tek görevin üç kat ödediği bir güne
+  dönerdi.
 
 ---
 

@@ -7,9 +7,11 @@
  */
 
 import { formatTime } from '../core/util.js';
-import { CRAFTED_LEVELS, scaleForLevel } from '../game/config.js';
+import { CRAFTED_LEVELS, UPGRADES, scaleForLevel } from '../game/config.js';
 import { getLevel } from '../game/game.js';
 import { LEVELS } from '../game/levels.js';
+import { Storage } from '../core/storage.js';
+import { ensureMissions } from '../game/missions.js';
 
 const ICE_LEGEND = [
   ['crack', 'Çatlak buz', 'Basınca çatlar, kısa süre sonra kırılır'],
@@ -18,7 +20,19 @@ const ICE_LEGEND = [
   ['slip', 'Cilalı buz', 'Kaygan: fren mesafesi uzun'],
   ['move', 'Sürüklenen buz', 'Akıntıyla gider gelir, seni de taşır'],
   ['fall', 'Düşen buz', 'Bastığın an aşağı doğru kaçar'],
+  ['burst', 'Gayzer buzu', 'Basınca tıslar, yarım saniye sonra seni fırlatır'],
+  ['snap', 'Kaçan buz', 'Alçak ve cazip — tam inerken kayboluyor'],
 ];
+
+/** Tiny inline glyphs for the shop cards. */
+const SHOP_ICONS = {
+  boot: '<path d="M6 3h4v9h4c3 0 5 2 5 5v3H6V3Z" fill="currentColor"/>',
+  bolt: '<path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" fill="currentColor"/>',
+  spike: '<path d="M4 20h16l-3-6H7l-3 6ZM8 12l1-8 3 5 3-5 1 8H8Z" fill="currentColor"/>',
+  shield: '<path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3Z" fill="currentColor"/>',
+  magnet: '<path d="M6 3a6 6 0 0 1 12 0v5h-4V3a2 2 0 0 0-4 0v5H6V3Zm0 8h4v6a2 2 0 0 0 4 0v-6h4v6a6 6 0 0 1-12 0v-6Z" fill="currentColor"/>',
+  wind: '<path d="M3 8h11a3 3 0 1 0-3-3H9a5 5 0 1 1 5 5H3V8Zm0 5h14a3 3 0 1 1-3 3h2a1 1 0 1 0 1-1H3v-2Z" fill="currentColor"/>',
+};
 
 const $ = (id) => document.getElementById(id);
 
@@ -66,6 +80,14 @@ export class UI {
       winBest: $('winBest'),
       winHint: $('winHint'),
       nextBtn: $('nextBtn'),
+      walletTitleValue: $('walletTitleValue'),
+      walletShop: $('walletShop'),
+      shopGrid: $('shopGrid'),
+      shopBadge: $('shopBadge'),
+      missionsList: $('missionsList'),
+      dailyState: $('dailyState'),
+      dailyStreak: $('dailyStreak'),
+      hudShield: $('hudShield'),
     };
 
     this._buildLegend();
@@ -119,6 +141,97 @@ export class UI {
     this.el.titleStats.textContent = done
       ? `${done} bölüm tamamlandı · ${stars} yıldız · ${this.save.stats.totalFish} balık`
       : 'Kontroller: ← → yürü, Boşluk zıpla';
+
+    this.refreshWallet();
+    this.refreshDaily();
+    this.refreshMissions();
+  }
+
+  refreshWallet() {
+    const c = this.save.coins ?? 0;
+    this.el.walletTitleValue.textContent = c;
+    this.el.walletShop.textContent = c;
+
+    // Badge the shop when something is actually affordable — a permanent dot
+    // is noise, a dot that means "you can buy something now" is information.
+    const affordable = UPGRADES.filter((u) => {
+      const owned = this.save.upgrades[u.id] ?? 0;
+      return owned < u.levels.length && c >= u.levels[owned].cost;
+    }).length;
+    this.el.shopBadge.hidden = affordable === 0;
+    this.el.shopBadge.textContent = affordable || '';
+  }
+
+  refreshDaily() {
+    const d = Storage.touchDaily(this.save);
+    this.el.dailyState.textContent = d.done
+      ? `Bugün bitti · ${formatTime(d.bestTime)} — daha hızlı dene`
+      : 'Herkes için aynı — süreni karşılaştır';
+    this.el.dailyStreak.hidden = !d.streak;
+    this.el.dailyStreak.textContent = d.streak ? `${d.streak} gün` : '';
+    document.getElementById('dailyBtn').classList.toggle('daily--done', d.done);
+  }
+
+  refreshMissions() {
+    const list = ensureMissions(this.save, Storage);
+    this.el.missionsList.innerHTML = list
+      .map((m) => {
+        const pct = Math.round((m.progress / m.goal) * 100);
+        return `
+          <li class="mission${m.done ? ' mission--done' : ''}">
+            <span class="mission__check" aria-hidden="true">${m.done ? '✓' : ''}</span>
+            <span class="mission__body">
+              <span class="mission__text">${m.text}</span>
+              <span class="mission__bar"><i style="width:${pct}%"></i></span>
+            </span>
+            <span class="mission__reward">+${m.reward}</span>
+          </li>`;
+      })
+      .join('');
+  }
+
+  buildShop() {
+    const coins = this.save.coins ?? 0;
+    this.el.shopGrid.innerHTML = '';
+
+    for (const spec of UPGRADES) {
+      const owned = this.save.upgrades[spec.id] ?? 0;
+      const maxed = owned >= spec.levels.length;
+      const next = maxed ? null : spec.levels[owned];
+      const affordable = next && coins >= next.cost;
+
+      const card = document.createElement('div');
+      card.className = `item${maxed ? ' item--maxed' : ''}`;
+      card.innerHTML = `
+        <span class="item__icon" aria-hidden="true"><svg viewBox="0 0 24 24">${SHOP_ICONS[spec.icon] ?? ''}</svg></span>
+        <span class="item__head">
+          <strong class="item__name">${spec.name}</strong>
+          <span class="item__pips">${spec.levels
+            .map((_, i) => `<i class="${i < owned ? 'on' : ''}"></i>`)
+            .join('')}</span>
+        </span>
+        <span class="item__blurb">${spec.blurb}</span>
+        <span class="item__effect">${
+          maxed ? spec.levels[spec.levels.length - 1].label : next.label
+        }</span>`;
+
+      const btn = document.createElement('button');
+      btn.className = `btn item__buy${affordable ? ' btn--primary' : ''}`;
+      btn.type = 'button';
+      btn.disabled = maxed || !affordable;
+      btn.innerHTML = maxed
+        ? 'Tamamlandı'
+        : `<span>Al</span><small class="btn__sub">${next.cost} balık</small>`;
+      btn.addEventListener('click', () => {
+        if (!Storage.buyUpgrade(this.save, spec)) return;
+        this.audio.fish();
+        this.buildShop();
+        this.refreshWallet();
+      });
+
+      card.append(btn);
+      this.el.shopGrid.append(card);
+    }
   }
 
   buildLevelGrid() {
@@ -194,6 +307,9 @@ export class UI {
     this.el.hudDeaths.textContent = String(world.deaths + runDeaths);
     this.el.hudTime.textContent = formatTime(world.elapsed);
 
+    this.el.hudShield.hidden = world.maxShields <= 0;
+    this.el.hudShield.classList.toggle('is-spent', world.shields <= 0);
+
     const pct = world.progress * 100;
     this.el.progressFill.style.width = `${pct}%`;
     this.el.progressPin.style.left = `${pct}%`;
@@ -248,8 +364,15 @@ export class UI {
     this.lastResult = result;
     const prevBest = result.prevBest;
 
-    this.el.winKicker.textContent =
-      result.stars === 3 ? 'Kusursuz!' : result.deaths === 0 ? 'Tek seferde!' : 'Bölüm tamam';
+    this.el.winKicker.textContent = result.daily
+      ? result.firstToday
+        ? `Günün bölümü · ${result.streak} günlük seri`
+        : 'Günün bölümü — daha hızlı'
+      : result.stars === 3
+        ? 'Kusursuz!'
+        : result.deaths === 0
+          ? 'Tek seferde!'
+          : 'Bölüm tamam';
     this.el.winTitle.textContent = result.name;
     this.el.winTime.textContent = formatTime(result.time);
     this.el.winFish.textContent = `${result.fish}/${result.totalFish}`;
@@ -274,9 +397,32 @@ export class UI {
 
     this.el.nextBtn.textContent =
       result.level === CRAFTED_LEVELS ? 'Sonsuz moda geç' : 'Sıradaki bölüm';
+    // There is no "next" daily — tomorrow's is tomorrow's.
+    this.el.nextBtn.hidden = Boolean(result.daily);
 
+    this._renderPayout(result);
     this.showScreen('complete');
     this.refreshTitle();
+  }
+
+  /** The coin breakdown, so the reward never feels like a black box. */
+  _renderPayout(result) {
+    const box = $('winPayout');
+    if (!box) return;
+    const rows = (result.breakdown ?? []).filter((b) => b.value > 0);
+    box.innerHTML = `
+      <div class="payout__total">
+        <svg viewBox="0 0 24 16" aria-hidden="true"><path d="M14 8c0 3-3.6 5.5-7 5.5S1 11 1 8s2.6-5.5 6-5.5S14 5 14 8Z" fill="currentColor"/><path d="M14.5 8 22 3v10l-7.5-5Z" fill="currentColor"/></svg>
+        <strong>+${result.coins ?? 0}</strong>
+      </div>
+      <ul class="payout__rows">
+        ${rows.map((r) => `<li><span>${r.label}</span><span>+${r.value}</span></li>`).join('')}
+      </ul>
+      ${
+        result.missionsDone?.length
+          ? `<p class="payout__missions">Görev tamam: ${result.missionsDone.join(' · ')}</p>`
+          : ''
+      }`;
   }
 
   offerAssist() {
@@ -308,6 +454,12 @@ export class UI {
     $('howtoBtn').addEventListener('click', () => {
       this.audio.ui();
       this.showScreen('howto');
+    });
+    $('shopBtn').addEventListener('click', () => {
+      this.audio.ui();
+      this.buildShop();
+      this.refreshWallet();
+      this.showScreen('shop');
     });
     $('settingsBtn').addEventListener('click', () => {
       this.audio.ui();
@@ -368,11 +520,16 @@ export class UI {
       this.game.startLevel(this.save.unlocked);
     });
 
+    $('dailyBtn').addEventListener('click', () => {
+      this.audio.ui();
+      this.game.startDaily();
+    });
+
     $('pauseBtn').addEventListener('click', () => this.game.togglePause());
     $('resumeBtn').addEventListener('click', () => this.game.resume());
     $('retryBtn').addEventListener('click', () => {
       this.audio.ui();
-      this.game.startLevel(this.game.levelId);
+      this.game.replay();
     });
     $('menuBtn').addEventListener('click', () => {
       this.audio.ui('back');
@@ -387,13 +544,12 @@ export class UI {
     });
     $('againBtn').addEventListener('click', () => {
       this.audio.ui();
-      this.game.startLevel(this.game.levelId);
+      this.game.replay();
     });
     $('winMenuBtn').addEventListener('click', () => {
       this.audio.ui('back');
-      this.game.state = 'menu';
-      this.buildLevelGrid();
-      this.showScreen('levels');
+      this.game.quitToMenu();
+      this.refreshTitle();
     });
 
     $('assistYes').addEventListener('click', () => {

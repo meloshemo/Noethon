@@ -48,6 +48,9 @@
             <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7Z" fill="currentColor"/></svg>
             <span id="hudDeaths">0</span>
           </span>
+          <span class="chip chip--stat chip--shield" id="hudShield" hidden title="Kalın tüy">
+            <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3Z" fill="currentColor"/></svg>
+          </span>
           <span class="chip chip--time" id="hudTime">00:00.00</span>
           <button class="icon-btn" id="pauseBtn" aria-label="Duraklat">
             <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.4" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.4" fill="currentColor"/></svg>
@@ -85,6 +88,10 @@
 
       <!-- Title -->
       <section class="screen screen--title" data-name="title">
+        <div class="wallet" id="walletTitle">
+          <svg viewBox="0 0 24 16" aria-hidden="true"><path d="M14 8c0 3-3.6 5.5-7 5.5S1 11 1 8s2.6-5.5 6-5.5S14 5 14 8Z" fill="currentColor"/><path d="M14.5 8 22 3v10l-7.5-5Z" fill="currentColor"/></svg>
+          <span id="walletTitleValue">0</span>
+        </div>
         <div class="brand">
           <div class="brand__mark" aria-hidden="true">
             <svg viewBox="0 0 64 64"><ellipse cx="32" cy="40" rx="17" ry="19" fill="#26364a"/><ellipse cx="32" cy="42" rx="11" ry="14" fill="#f6fbff"/><ellipse cx="32" cy="20" rx="13" ry="11" fill="#26364a"/><ellipse cx="26" cy="19" rx="3.4" ry="3.8" fill="#fff"/><ellipse cx="37" cy="19" rx="3.4" ry="3.8" fill="#fff"/><circle cx="26.8" cy="19.4" r="1.7" fill="#0e1723"/><circle cx="37.4" cy="19.4" r="1.7" fill="#0e1723"/><path d="M32 23.5 39 26l-7 2.5Z" fill="#ff9c3f"/><ellipse cx="25" cy="58" rx="5" ry="2.4" fill="#ff9c3f"/><ellipse cx="39" cy="58" rx="5" ry="2.4" fill="#ff9c3f"/></svg>
@@ -103,11 +110,32 @@
             <span id="playLabel">Oyna</span>
             <small id="playSub" class="btn__sub">Bölüm 1</small>
           </button>
+
+          <button class="daily" id="dailyBtn">
+            <span class="daily__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 2 9.6 8.4 3 9.2l4.9 4.5L6.5 21 12 17.4 17.5 21l-1.4-7.3L21 9.2l-6.6-.8L12 2Z" fill="currentColor"/></svg>
+            </span>
+            <span class="daily__text">
+              <strong>Günün Bölümü</strong>
+              <small id="dailyState">Herkes için aynı — süreni karşılaştır</small>
+            </span>
+            <span class="daily__streak" id="dailyStreak" hidden></span>
+          </button>
+
           <div class="actions__row">
             <button class="btn" id="levelsBtn">Bölümler</button>
+            <button class="btn" id="shopBtn">
+              Market
+              <small class="btn__badge" id="shopBadge" hidden></small>
+            </button>
             <button class="btn" id="howtoBtn">Nasıl oynanır</button>
             <button class="btn" id="settingsBtn">Ayarlar</button>
           </div>
+        </div>
+
+        <div class="missions" id="missionsCard">
+          <h3 class="missions__title">Günün görevleri</h3>
+          <ul class="missions__list" id="missionsList"></ul>
         </div>
 
         <p class="screen__foot" id="titleStats"></p>
@@ -144,6 +172,16 @@
           </article>
 
           <article class="card">
+            <h3 class="card__title">Tehlikeler</h3>
+            <ul class="tips">
+              <li><strong>Buz sarkıtı</strong> — altından geçince titrer, sonra düşer.</li>
+              <li><strong>Fok</strong> — yanından değil üstünden atla; üstüne basarsan seni fırlatır.</li>
+              <li><strong>Orka</strong> — boşluktan sıçrar. Yüzgeci gördüysen bekle.</li>
+              <li><strong>Rüzgar</strong> — öldürmez ama havada seni savurur.</li>
+            </ul>
+          </article>
+
+          <article class="card">
             <h3 class="card__title">Buz türleri</h3>
             <ul class="legend" id="iceLegend"></ul>
           </article>
@@ -155,9 +193,33 @@
               <li>Kenardan düşsen bile kısa bir an zıplayabilirsin — acele etme.</li>
               <li>Her bölümde 3 balık var. Hepsini toplarsan ikinci yıldız senindir.</li>
               <li>Bölüm ilerledikçe penguen büyür: daha ağır zıplar, daha geniş yer ister.</li>
+              <li>Balıklar aynı zamanda paradır. Markette bot, krampon ve kalın tüy var.</li>
+              <li>Gayzer tıslamaya başladıysa bir buçuk adımın var — kaç.</li>
+              <li>Alçakta duran cazip buzlara güvenme; bazıları tam inerken kaçar.</li>
             </ul>
           </article>
         </div>
+      </section>
+
+      <!-- Shop -->
+      <section class="screen screen--shop" data-name="shop" hidden>
+        <header class="screen__head">
+          <button class="btn btn--ghost btn--back" data-back>← Geri</button>
+          <h2 class="screen__title">Market</h2>
+          <span class="wallet wallet--inline">
+            <svg viewBox="0 0 24 16" aria-hidden="true"><path d="M14 8c0 3-3.6 5.5-7 5.5S1 11 1 8s2.6-5.5 6-5.5S14 5 14 8Z" fill="currentColor"/><path d="M14.5 8 22 3v10l-7.5-5Z" fill="currentColor"/></svg>
+            <span id="walletShop">0</span>
+          </span>
+        </header>
+        <p class="screen__lede screen__lede--tight">
+          Balıklarını harca. Hiçbir bölüm satın almayı gerektirmiyor — bunlar
+          seni hızlandırır, kolaylaştırmaz.
+        </p>
+        <div class="shop" id="shopGrid"></div>
+        <p class="screen__foot">
+          Balık kazanma yolları: bölüm bitirmek, yeni yıldız, ölmeden geçmek,
+          günün bölümü ve günlük görevler.
+        </p>
       </section>
 
       <!-- Settings -->
@@ -224,12 +286,14 @@
             <div><dt>Rekor</dt><dd id="winBest">—</dd></div>
           </dl>
 
+          <div class="payout" id="winPayout"></div>
+
           <p class="sheet__hint" id="winHint"></p>
 
           <div class="sheet__actions">
             <button class="btn btn--primary" id="nextBtn">Sıradaki bölüm</button>
             <button class="btn" id="againBtn">Tekrar oyna</button>
-            <button class="btn btn--ghost" id="winMenuBtn">Bölümler</button>
+            <button class="btn btn--ghost" id="winMenuBtn">Ana menü</button>
           </div>
         </div>
       </section>

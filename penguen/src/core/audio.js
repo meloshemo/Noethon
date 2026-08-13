@@ -100,6 +100,19 @@ export class Audio {
     }
   }
 
+  /** Rising hiss — the geyser telling you to move. */
+  hiss() {
+    this._noise({ dur: 0.5, gain: 0.14, filter: 2400, q: 0.6 });
+    this._tone({ freq: 180, slide: 520, dur: 0.5, type: 'sine', gain: 0.05 });
+  }
+
+  /** The eruption itself. */
+  burst() {
+    this._noise({ dur: 0.7, gain: 0.34, filter: 900, q: 0.4 });
+    this._tone({ freq: 120, slide: 380, dur: 0.4, type: 'sawtooth', gain: 0.1 });
+    this._tone({ freq: 700, slide: -420, dur: 0.5, type: 'triangle', gain: 0.07, delay: 0.05 });
+  }
+
   splash() {
     this._noise({ dur: 0.5, gain: 0.32, filter: 520, q: 0.5 });
     this._tone({ freq: 220, slide: -140, dur: 0.35, type: 'sine', gain: 0.12 });

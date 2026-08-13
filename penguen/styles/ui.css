@@ -451,6 +451,11 @@
   padding-inline: 1em;
 }
 
+/* The shop badge is absolutely positioned against its button. */
+#shopBtn {
+  overflow: visible;
+}
+
 /* ======================================================== Level select */
 
 .levels {
@@ -977,4 +982,451 @@ kbd {
   .brand__mark { display: none; }
   .screen__lede { display: none; }
   .screen { gap: var(--s-3); }
+}
+
+/* ============================================================== Wallet */
+
+.wallet {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.32em 0.85em;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-amber);
+  background: rgba(255, 196, 90, 0.12);
+  border: 1px solid rgba(255, 196, 90, 0.34);
+  border-radius: var(--r-full);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+}
+
+.wallet svg {
+  width: 1.25em;
+  height: 1.25em;
+  flex: none;
+}
+
+.wallet--inline {
+  margin-left: auto;
+}
+
+.chip--shield {
+  color: var(--c-violet);
+  border-color: rgba(155, 140, 255, 0.4);
+  background: rgba(155, 140, 255, 0.14);
+}
+
+.chip--shield.is-spent {
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+
+/* ======================================================= Daily challenge */
+
+.daily {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: min(100%, 24rem);
+  padding: 0.8em 1.1em;
+  text-align: left;
+  color: var(--text);
+  background: linear-gradient(130deg, rgba(155, 140, 255, 0.18), rgba(79, 215, 255, 0.12));
+  border: 1px solid rgba(155, 140, 255, 0.4);
+  border-radius: var(--r-lg);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  transition: transform var(--t-fast) var(--e-out), border-color var(--t-fast);
+}
+
+.daily:hover {
+  transform: translateY(-2px);
+  border-color: rgba(155, 140, 255, 0.7);
+}
+
+.daily:active {
+  transform: translateY(0) scale(0.99);
+}
+
+.daily__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: var(--r-full);
+  background: rgba(155, 140, 255, 0.22);
+  color: var(--c-violet);
+}
+
+.daily__icon svg {
+  width: 1.3rem;
+  height: 1.3rem;
+}
+
+.daily__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.daily__text strong {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.daily__text small {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
+.daily__streak {
+  margin-left: auto;
+  flex: none;
+  padding: 0.2em 0.6em;
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: #1c1030;
+  background: linear-gradient(120deg, #ffd76a, var(--c-amber));
+  border-radius: var(--r-full);
+}
+
+.daily--done {
+  border-color: rgba(92, 225, 166, 0.45);
+  background: linear-gradient(130deg, rgba(92, 225, 166, 0.16), rgba(79, 215, 255, 0.1));
+}
+
+.daily--done .daily__icon {
+  background: rgba(92, 225, 166, 0.22);
+  color: var(--c-mint);
+}
+
+/* ============================================================ Missions */
+
+.missions {
+  width: min(100%, 24rem);
+  padding: var(--s-4);
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+}
+
+.missions__title {
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+  color: var(--c-ice-400);
+  margin-bottom: var(--s-2);
+}
+
+.mission {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 0.35rem 0;
+}
+
+.mission__check {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--accent-ink);
+  background: rgba(143, 196, 226, 0.14);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+}
+
+.mission--done .mission__check {
+  background: var(--success);
+  border-color: transparent;
+}
+
+.mission__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.mission__text {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
+.mission--done .mission__text {
+  color: var(--text-faint);
+  text-decoration: line-through;
+}
+
+.mission__bar {
+  display: block;
+  height: 3px;
+  border-radius: var(--r-full);
+  background: rgba(143, 196, 226, 0.16);
+  overflow: hidden;
+}
+
+.mission__bar i {
+  display: block;
+  height: 100%;
+  border-radius: var(--r-full);
+  background: linear-gradient(90deg, var(--c-aqua), var(--c-mint));
+  transition: width var(--t-base) var(--e-out);
+}
+
+.mission__reward {
+  flex: none;
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  color: var(--c-amber);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ================================================================ Shop */
+
+.screen__lede--tight {
+  font-size: var(--fs-sm);
+  max-width: 40rem;
+}
+
+.shop {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: var(--s-3);
+  text-align: left;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    'icon head'
+    'icon blurb'
+    'effect effect'
+    'buy buy';
+  align-items: center;
+  gap: 0.35rem var(--s-3);
+  padding: var(--s-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+}
+
+.item__icon {
+  grid-area: icon;
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: var(--r-md);
+  background: rgba(79, 215, 255, 0.14);
+  color: var(--c-aqua);
+  align-self: start;
+}
+
+.item__icon svg {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+.item__head {
+  grid-area: head;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+
+.item__name {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.item__pips {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.item__pips i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(143, 196, 226, 0.25);
+}
+
+.item__pips i.on {
+  background: var(--c-mint);
+}
+
+.item__blurb {
+  grid-area: blurb;
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+  line-height: var(--lh-snug);
+}
+
+.item__effect {
+  grid-area: effect;
+  margin-top: var(--s-2);
+  padding: 0.25em 0.7em;
+  justify-self: start;
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  color: var(--c-ice-200);
+  background: rgba(143, 196, 226, 0.12);
+  border-radius: var(--r-full);
+}
+
+.item__buy {
+  grid-area: buy;
+  margin-top: var(--s-3);
+  width: 100%;
+}
+
+.item--maxed {
+  border-color: rgba(92, 225, 166, 0.35);
+}
+
+.item--maxed .item__icon {
+  background: rgba(92, 225, 166, 0.16);
+  color: var(--c-mint);
+}
+
+.btn__badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 1.15rem;
+  padding: 0 0.3em;
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  line-height: 1.15rem;
+  color: #1c1030;
+  background: var(--c-amber);
+  border-radius: var(--r-full);
+}
+
+/* ============================================================= Payout */
+
+.payout {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-3);
+  background: rgba(255, 196, 90, 0.08);
+  border: 1px solid rgba(255, 196, 90, 0.28);
+  border-radius: var(--r-md);
+}
+
+.payout__total {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4em;
+  font-size: var(--fs-lg);
+  color: var(--c-amber);
+}
+
+.payout__total svg {
+  width: 1.1em;
+  height: 1.1em;
+}
+
+.payout__rows li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-3);
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  padding: 1px 0;
+}
+
+.payout__missions {
+  font-size: var(--fs-2xs);
+  color: var(--c-mint);
+  text-align: center;
+}
+
+@media (max-width: 560px) {
+  .shop {
+    grid-template-columns: 1fr;
+  }
+}
+
+.legend__swatch[data-type='burst'] {
+  background: linear-gradient(180deg, #f2fbff, #cfeaf8);
+}
+
+.legend__swatch[data-type='burst']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 25% 65%, var(--c-aqua) 0 2px, transparent 3px),
+    radial-gradient(circle at 50% 65%, var(--c-aqua) 0 2px, transparent 3px),
+    radial-gradient(circle at 75% 65%, var(--c-aqua) 0 2px, transparent 3px);
+}
+
+.legend__swatch[data-type='snap'] {
+  background: linear-gradient(180deg, #eef5fa, #c4d4e2);
+}
+
+.legend__swatch[data-type='snap']::after {
+  content: '';
+  position: absolute;
+  inset: 35% 12% auto;
+  height: 1px;
+  background: rgba(90, 120, 150, 0.7);
+}
+
+/* ---- Title screen density -------------------------------------------
+   The title now carries a wallet, a daily card and three missions on top of
+   the brand. Rather than let it overflow on a laptop, it tightens as vertical
+   space runs out — the brand shrinks first, then the blurb goes. */
+
+.screen--title {
+  gap: var(--s-4);
+}
+
+.wallet {
+  align-self: center;
+}
+
+@container stage (max-height: 900px) {
+  .screen--title { gap: var(--s-3); }
+  .brand__mark { width: clamp(3.2rem, 8vw, 4.2rem); }
+  .brand__title { font-size: clamp(2.2rem, 1.5rem + 3vw, 3.6rem); }
+  .missions { padding: var(--s-3); }
+  .mission { padding: 0.22rem 0; }
+  .overlay { align-items: start; }
+}
+
+@container stage (max-height: 780px) {
+  .screen--title .screen__lede { display: none; }
+  .screen--title { gap: var(--s-2); }
+}
+
+@container stage (max-height: 640px) {
+  .brand__mark { display: none; }
+  .brand__tagline { font-size: var(--fs-2xs); }
+  .missions__title { margin-bottom: var(--s-1); }
+  .daily { padding: 0.55em 0.9em; }
+  .btn--xl { min-height: 3rem; padding: 0.6em 2.2em; }
+}
+
+@container stage (max-height: 520px) {
+  .missions { display: none; }
 }

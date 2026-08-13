@@ -25,6 +25,8 @@ const PALETTE = {
   crack: '#4aa3d8',
   trap: '#c9556b',
   melt: '#8fd8ef',
+  burst: '#63e0ff',
+  snap: '#b9c8d8',
 };
 
 export class Renderer {
@@ -121,6 +123,7 @@ export class Renderer {
     ctx.translate(-camX, -camY);
     this._signs(ctx, world);
     this._floes(ctx, world, time);
+    this._geysers(ctx, world, time);
     this._checkpoints(ctx, world, time);
     this._fish(ctx, world, time);
     this._goal(ctx, world, time);
@@ -410,6 +413,42 @@ export class Renderer {
       ctx.restore();
     }
 
+    if (f.type === 'burst') {
+      // A ring of bubbling holes; the ice bulges and glows as pressure builds.
+      const heat = f.state === 'arming' || f.state === 'erupting' ? Math.max(f.plume, 0.15) : 0.15;
+      ctx.fillStyle = `rgba(99,224,255,${0.25 + heat * 0.6})`;
+      for (let i = 0; i < 4; i++) {
+        const bx = x + w * (0.2 + i * 0.2);
+        const r = 2.5 + Math.sin(time * 7 + i * 1.7) * 1.2 + heat * 3;
+        ctx.beginPath();
+        ctx.arc(bx, y + 10, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      if (heat > 0.2) {
+        ctx.strokeStyle = `rgba(99,224,255,${heat})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(cx, y + 8, 14 + heat * 16, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+
+    if (f.type === 'snap') {
+      // The tell: a single hairline seam. Present but easy to miss the first
+      // time, obvious once you know to look for it.
+      ctx.strokeStyle = 'rgba(140,164,190,0.55)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x + w * 0.12, y + 4);
+      ctx.lineTo(x + w * 0.88, y + 6);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(140,164,190,0.3)';
+      ctx.beginPath();
+      ctx.moveTo(x + w * 0.5, y + 5);
+      ctx.lineTo(x + w * 0.46, y + 16);
+      ctx.stroke();
+    }
+
     if (f.type === 'fall') {
       ctx.strokeStyle = 'rgba(120,150,180,0.7)';
       ctx.lineWidth = 1.5;
@@ -470,6 +509,43 @@ export class Renderer {
       ctx.beginPath();
       ctx.arc(-5, -1.5, 1.6, 0, Math.PI * 2);
       ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  /** Water columns for erupting geysers — drawn over the ice, under the bird. */
+  _geysers(ctx, world, time) {
+    for (const f of world.floes) {
+      if (!f.isBurst || f.plume <= 0.02) continue;
+      const cx = f.x + f.w / 2;
+      const erupting = f.state === 'erupting';
+      const h = erupting ? 40 + f.plume * 210 : 12 + f.plume * 26;
+      const wRaw = f.w * (erupting ? 0.62 : 0.34);
+
+      ctx.save();
+      const g = ctx.createLinearGradient(0, f.y - h, 0, f.y + 10);
+      g.addColorStop(0, 'rgba(190,240,255,0)');
+      g.addColorStop(0.35, `rgba(150,230,255,${0.55 * f.plume})`);
+      g.addColorStop(1, `rgba(255,255,255,${0.8 * f.plume})`);
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.moveTo(cx - wRaw / 2, f.y + 8);
+      ctx.quadraticCurveTo(cx - wRaw * 0.34, f.y - h * 0.6, cx - wRaw * 0.1, f.y - h);
+      ctx.lineTo(cx + wRaw * 0.1, f.y - h);
+      ctx.quadraticCurveTo(cx + wRaw * 0.34, f.y - h * 0.6, cx + wRaw / 2, f.y + 8);
+      ctx.closePath();
+      ctx.fill();
+
+      // Spray specks so the column reads as water, not a beam of light.
+      ctx.fillStyle = `rgba(235,250,255,${0.7 * f.plume})`;
+      for (let i = 0; i < 7; i++) {
+        const t = ((time * 2.4 + i * 0.31) % 1);
+        const sy = f.y - t * h;
+        const sx = cx + Math.sin(i * 3.1 + time * 5) * wRaw * 0.45 * t;
+        ctx.beginPath();
+        ctx.arc(sx, sy, 1.6 + (1 - t) * 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
       ctx.restore();
     }
   }
@@ -599,6 +675,61 @@ export class Renderer {
         ctx.ellipse(0, -6, 14, 5, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
+      } else if (h.kind === 'orca') {
+        // Warning fin cutting the surface, then the breach itself.
+        const ocx = h.x + h.w / 2;
+        if (h.rise <= 0.12) {
+          const wob = Math.sin(time * 5) * 3;
+          const fy = h.baseY + h.h * 0.5;
+          ctx.save();
+          ctx.fillStyle = 'rgba(22,34,52,0.85)';
+          ctx.beginPath();
+          ctx.moveTo(ocx - 12 + wob, fy);
+          ctx.lineTo(ocx + wob, fy - 22);
+          ctx.lineTo(ocx + 12 + wob, fy);
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(190,232,255,0.4)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.ellipse(ocx + wob, fy + 2, 34, 6, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        } else {
+          ctx.save();
+          ctx.translate(ocx, h.y + h.h / 2);
+          ctx.rotate(-0.35 + (1 - h.rise) * 0.7);
+          // Body
+          ctx.fillStyle = '#16202e';
+          ctx.beginPath();
+          ctx.ellipse(0, 0, 30, 62, 0, 0, Math.PI * 2);
+          ctx.fill();
+          // Belly
+          ctx.fillStyle = '#eef6ff';
+          ctx.beginPath();
+          ctx.ellipse(4, 22, 16, 34, 0, 0, Math.PI * 2);
+          ctx.fill();
+          // Eye patch
+          ctx.beginPath();
+          ctx.ellipse(-11, -30, 8, 5, -0.4, 0, Math.PI * 2);
+          ctx.fill();
+          // Dorsal fin
+          ctx.fillStyle = '#16202e';
+          ctx.beginPath();
+          ctx.moveTo(-24, -6);
+          ctx.lineTo(-46, -30);
+          ctx.lineTo(-22, -34);
+          ctx.closePath();
+          ctx.fill();
+          // Jaw line
+          ctx.strokeStyle = 'rgba(240,250,255,0.5)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(-6, -52);
+          ctx.quadraticCurveTo(14, -44, 18, -28);
+          ctx.stroke();
+          ctx.restore();
+        }
       } else if (h.kind === 'gust') {
         ctx.save();
         ctx.globalAlpha = 0.22;
