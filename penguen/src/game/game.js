@@ -442,6 +442,8 @@ export class Game {
     }
     result.boosts = w.boostsTaken;
     result.rotten = w.rottenTaken;
+    result.skuasDodged = w.skuasDodged;
+    result.skuaGrabs = w.skuaGrabs;
   }
 
   /**
@@ -508,6 +510,17 @@ export class Game {
       ...(result.daily ? progressMission(this.save, 'daily', 1) : []),
       ...(w.burstDodges > 0 ? progressMission(this.save, 'burstDodge', w.burstDodges) : []),
       ...(w.orcaPasses > 0 ? progressMission(this.save, 'orcaPass', w.orcaPasses) : []),
+      ...(w.skuasDodged > 0 ? progressMission(this.save, 'skuaDodge', w.skuasDodged) : []),
+      ...(w.glideTime > 0 ? progressMission(this.save, 'glide', w.glideTime) : []),
+      ...(w.rocketFires > 0 ? progressMission(this.save, 'rocket', w.rocketFires) : []),
+      ...(w.boostsTaken > 0 ? progressMission(this.save, 'boost', w.boostsTaken) : []),
+      ...(w.rottenTaken === 0 ? progressMission(this.save, 'cleanRun', 1) : []),
+      ...(w.player.charge > 0 ? progressMission(this.save, 'sprintFinish', 1) : []),
+      // "Without stopping" allows a moment's hesitation, not a rest.
+      ...(w.stillTime < 1.2 ? progressMission(this.save, 'noStop', 1) : []),
+      ...(result.deaths === 0 && (w.zones ?? []).some((z) => z.kind === 'tunnel')
+        ? progressMission(this.save, 'tunnelClean', 1)
+        : []),
     ];
     if (done.length) {
       const total = done.reduce((n, m) => n + m.reward, 0);

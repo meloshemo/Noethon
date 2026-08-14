@@ -280,6 +280,46 @@ temel değerlerle kontrol ediyor; market rahatlık ve hız satıyor, erişim de�
 
 ---
 
+## Aktif ekipman
+
+Marketin geri kalanı sayıları büyütüyor. Bu ikisi penguenin *ne yapabildiğini*
+değiştiriyor — hem de aynı zıplama tuşuyla:
+
+- **Planör Kanat** — havada zıplamayı **basılı tut**: kanatlar açılır, düşüş
+  yavaşlar, biraz da ileri süzülürsün.
+- **Sırt Motoru** — havada zıplamaya **bas**: motor bir kez yukarı ateşler.
+- **Kuş Radarı** — kuş dalışa geçmeden önce sana daha uzun uyarı verir.
+
+Basmak ile basılı tutmak arasındaki fark, ikisinin de tek tuşa sığmasının
+sebebi: dokunmatikte üçüncü bir düğme yok ve olmamalı.
+
+İkisi de yalnızca **yere değince** doluyor. Yani bunlar uçmak değil: zaten
+verdiğin bir zıplama kararını havada tartışma hakkı. HUD'daki çubuk kararın
+kendisi — bu boşluk için mi harcayacaksın, sonraki için mi sakla?
+
+Bütün bölümler **hiçbir ekipmanı olmayan** bir penguene göre doğrulanıyor, yani
+ekipman bir parkuru asla açamaz, sadece kolaylaştırır.
+
+## Pusu: kutup kuşu
+
+Bir skua, gerçekten yavru penguen kapan iri bir kutup martısı. Bölümün parçası
+değil — **yönetmen olayı**: bölümün seçmediği bir anda geliyor. Ezberlediğin bir
+parkurun dokuzuncu turda hâlâ seni korkutabilmesinin tek yolu bu.
+
+Buzun üstünde bir gölge beliriyor ve **yaklaştıkça daha hızlı atıyor**. Bu
+kasıtlı. Uyarısız anlık ölüm yazı-turadır ve insanlar oyunu bırakır; *başka bir
+şeyle uğraşırken fark etmen gereken* bir uyarı ise "bir daha deneyeyim"
+dedirtir. Pencere gerçekten dar.
+
+Adaleti koruyan kurallar:
+- vuruş noktası gölge çıktığı an kilitleniyor — kaçmak işe yarıyor;
+- doğuştan/checkpoint'ten sonra `grace` süresi boyunca asla gelmiyor;
+- iki dalış arasında bekleme süresi var;
+- kapılırsan bölümü değil, kontrol noktasını kaybediyorsun;
+- kolay modda sıklığı yarıya iniyor, uyarı uzuyor — kapatılmıyor.
+
+12. bölümden önce hiç görünmüyor: oyuncu önce oyunu öğrenmeli.
+
 ## Koleksiyon
 
 Penguen her karede sıfırdan çiziliyor, yani bir "skin" görsel dosyası değil —

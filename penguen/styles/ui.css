@@ -2084,3 +2084,76 @@ kbd {
 .skin__btn {
   width: 100%;
 }
+
+/* ============================================================ Gear HUD */
+
+.gear {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  align-self: flex-end;
+  pointer-events: none;
+}
+
+.gear__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.28em 0.6em;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-full);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  color: var(--c-ice-200);
+  transition: color var(--t-fast) var(--e-out), border-color var(--t-fast) var(--e-out);
+}
+
+.gear__item svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex: none;
+}
+
+.gear__item.is-active {
+  color: var(--c-aqua);
+  border-color: rgba(79, 215, 255, 0.5);
+}
+
+.gear__item.is-empty {
+  color: var(--text-faint);
+  opacity: 0.6;
+}
+
+.gear__track {
+  width: 3.4rem;
+  height: 4px;
+  border-radius: var(--r-full);
+  background: rgba(143, 196, 226, 0.16);
+  overflow: hidden;
+}
+
+.gear__track i {
+  display: block;
+  height: 100%;
+  background: currentColor;
+  border-radius: var(--r-full);
+  transition: width 90ms linear;
+}
+
+.gear__pips {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.gear__pips i {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-full);
+  background: rgba(143, 196, 226, 0.25);
+}
+
+.gear__pips i.on {
+  background: var(--c-amber);
+  box-shadow: 0 0 6px rgba(255, 196, 90, 0.6);
+}

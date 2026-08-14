@@ -10,7 +10,7 @@ import { Floe, Hazard, Fish, Checkpoint } from './entities.js';
 import { Player } from './player.js';
 import { GhostRecorder, Ghost } from './ghost.js';
 import {
-  VIEW, VIEW_LIMITS, ASSIST, ICE, STORM, BOOST, ROT, REWARDS, scaleForLevel, upgradeEffect,
+  VIEW, VIEW_LIMITS, ASSIST, ICE, STORM, BOOST, ROT, REWARDS, AMBUSH, scaleForLevel, upgradeEffect,
 } from './config.js';
 import { WATER_Y } from './levels.js';
 import { clamp, damp, rectsOverlap, rand } from '../core/util.js';
@@ -89,6 +89,13 @@ export class World {
       grip: upgradeEffect(owned, 'crampons'),
       wind: upgradeEffect(owned, 'vest'),
     };
+    this.player.gear = {
+      wings: owned.wings ?? 0,
+      rocket: (owned.rocket ?? 0) > 0 ? owned.rocket : 0,
+    };
+    this.player.reset(def.spawn.x, def.spawn.y);
+    /** Extra warning the bird radar buys, in seconds. */
+    this.radar = upgradeEffect(owned, 'radar');
     this.magnetRange = upgradeEffect(owned, 'magnet');
     /** "Kalın Tüy" — one free save per attempt at the level. */
     this.shields = upgradeEffect(owned, 'down') ? 1 : 0;
@@ -112,6 +119,22 @@ export class World {
     /** Counters the mission system reads after a run. */
     this.burstDodges = 0;
     this.orcaPasses = 0;
+    /**
+     * The skua. Not part of the level — a director event, so a course you have
+     * memorised can still ambush you on the ninth run. null when there is no
+     * bird in the sky.
+     */
+    this.skua = null;
+    this.skuaCooldown = AMBUSH.grace;
+    this.skuasDodged = 0;
+    this.skuaGrabs = 0;
+    /** Gear use, for the missions that ask how you played rather than what you survived. */
+    this.glideTime = 0;
+    this.rocketFires = 0;
+    /** Seconds spent standing still — "finish without stopping" reads this. */
+    this.stillTime = 0;
+    /** Set by the game: ambushes only start once the player knows the game. */
+    this.ambushes = (def.id ?? 1) >= AMBUSH.fromLevel || Boolean(def.daily) || Boolean(def.generated);
     this.boostsTaken = 0;
     /** Rotten fish swallowed this run — one of the daily objectives reads it. */
     this.rottenTaken = 0;
@@ -199,6 +222,7 @@ export class World {
     for (const f of this.fish) f.update(dt);
     for (const f of this.boosts) f.update(dt);
     for (const f of this.rotten) f.update(dt);
+    this._updateSkua(dt);
     for (const c of this.checkpoints) c.update(dt);
     for (const h of this.hazards) h.update(dt, this.time, this.player, this.hazardSpeed);
     this.goal.pulse = (this.goal.pulse + dt * 2) % (Math.PI * 2);
@@ -255,6 +279,7 @@ export class World {
       },
       onStand: (floe) => this._touchFloe(floe),
     });
+    this._trackGear(dt);
 
     this._checkBursts();
 
@@ -477,6 +502,8 @@ export class World {
     // never costs you collectibles you already earned this run.
     for (const f of this.boosts) f.reset();
     for (const f of this.rotten) f.reset();
+    this.skua = null;
+    this.skuaCooldown = AMBUSH.grace;
     this.boostsTaken = 0;
     this.rottenTaken = 0;
     this.particles.puff(this.respawn.x, this.respawn.y, 10);
@@ -496,6 +523,134 @@ export class World {
     this.camera.x = damp(this.camera.x, targetX, 7, dt);
     this.camera.y = damp(this.camera.y, targetY, 5, dt);
     this.camera.shake = damp(this.camera.shake, 0, 9, dt);
+  }
+
+  /**
+   * Gear accounting.
+   *
+   * Must run *after* the player has stepped: `rocketFired` is set inside
+   * `player.update`, so reading it at the top of the frame counts every burst
+   * one frame late and drops the last one of a run entirely.
+   */
+  _trackGear(dt) {
+    if (this.status !== 'playing') return;
+    if (this.player.gliding) this.glideTime += dt;
+    if (this.player.rocketFired) {
+      this.rocketFires++;
+      this.audio.rocket?.();
+    }
+    // Standing still on the ground. Airborne does not count: you cannot
+    // exactly loiter mid-jump.
+    if (this.player.onGround && Math.abs(this.player.vx) < 24) this.stillTime += dt;
+  }
+
+  /**
+   * The skua.
+   *
+   * A big polar gull that takes chicks. It is a director event rather than a
+   * placed hazard: it arrives at a moment the level did not choose, which is
+   * the only way a course you have memorised can still frighten you.
+   *
+   * What keeps it from being cheap:
+   *   — the strike point is locked when the shadow appears, so moving works;
+   *   — the shadow is drawn on the ice under that point, not on the bird, so
+   *     it is readable while you are busy doing something else;
+   *   — never within `grace` of a spawn, and never twice inside the cooldown;
+   *   — a grab costs you the checkpoint, not the level.
+   */
+  _updateSkua(dt) {
+    if (!this.ambushes || this.status !== 'playing') return;
+
+    if (!this.skua) {
+      this.skuaCooldown -= dt;
+      if (this.skuaCooldown > 0) return;
+      // Assist mode halves the frequency rather than switching it off: the
+      // point of easy mode is fewer surprises, not a different game.
+      const rate = AMBUSH.rate * (this.assist ? 0.5 : 1);
+      if (Math.random() > rate * dt) return;
+      this._launchSkua();
+      return;
+    }
+
+    const s = this.skua;
+    s.t += dt;
+
+    if (s.state === 'warn') {
+      // Fly in along a straight line to the strike point.
+      const k = clamp(s.t / s.warn, 0, 1);
+      s.x = s.fromX + (s.targetX - s.fromX) * k;
+      s.y = s.fromY + (s.targetY - s.fromY) * k * k;
+      if (s.t >= s.warn) {
+        s.state = 'strike';
+        s.t = 0;
+      }
+      return;
+    }
+
+    if (s.state === 'strike') {
+      // Through the strike point and out the other side.
+      const k = clamp(s.t / AMBUSH.dive, 0, 1);
+      s.x = s.targetX + s.dir * 240 * k;
+      s.y = s.targetY - 120 * k * k + 40 * k;
+
+      const box = { x: s.x - 26, y: s.y - 18, w: 52, h: 36 };
+      if (!s.hit && this.player.alive && rectsOverlap(this.player.box, box)) {
+        s.hit = true;
+        s.state = 'carry';
+        s.t = 0;
+        this.skuaGrabs++;
+        this.audio.screech?.();
+        this.shake(7);
+        this.player.alive = false;
+      } else if (s.t >= AMBUSH.dive) {
+        this.skuasDodged++;
+        this.skua = null;
+        this.skuaCooldown = AMBUSH.cooldown;
+      }
+      return;
+    }
+
+    if (s.state === 'carry') {
+      // Carried off, then dropped — the death lands after the indignity.
+      s.x += s.dir * 210 * dt;
+      s.y -= 190 * dt;
+      this.player.x = s.x - this.player.w / 2;
+      this.player.y = s.y + 12;
+      this.player.vx = 0;
+      this.player.vy = 0;
+      if (s.t >= AMBUSH.carry) {
+        this.skua = null;
+        this.skuaCooldown = AMBUSH.cooldown;
+        this.die('skua');
+      }
+    }
+  }
+
+  _launchSkua() {
+    const p = this.player;
+    // Aim where the penguin is going, not where it is: a bird that dives at
+    // your current position is dodged by simply continuing to walk.
+    const warn = Math.max(0.34, AMBUSH.warn + (this.radar ?? 0)) * (this.assist ? 1.35 : 1);
+    const lead = clamp(p.vx * warn * 0.8, -180, 180);
+    const targetX = clamp(p.centerX + lead, this.spawn.x, this.worldW - 40);
+    const targetY = p.y + p.h * 0.4;
+    const dir = p.vx >= 0 ? 1 : -1;
+
+    this.skua = {
+      state: 'warn',
+      t: 0,
+      warn,
+      dir,
+      targetX,
+      targetY,
+      // Comes in high and behind, so it crosses the screen into the strike.
+      fromX: targetX - dir * (VIEW.w * 0.62),
+      fromY: Math.max(this.contentTop - 40, targetY - 340),
+      x: 0,
+      y: 0,
+      hit: false,
+    };
+    this.audio.screech?.();
   }
 
   /** The attempt as recorded, ready to be encoded into a share code. */

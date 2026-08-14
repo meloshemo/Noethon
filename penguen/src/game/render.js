@@ -8,7 +8,7 @@
  * hazards → penguin → particles → weather → post effects.
  */
 
-import { VIEW, VIEW_LIMITS } from './config.js';
+import { VIEW, VIEW_LIMITS, AMBUSH } from './config.js';
 import { getSkin } from './skins.js';
 import { clamp, lerp, makeRng } from '../core/util.js';
 
@@ -185,8 +185,10 @@ export class Renderer {
     this._fish(ctx, world, time);
     this._goal(ctx, world, time);
     this._hazards(ctx, world, time);
+    this._skuaShadow(ctx, world, time);
     this._ghost(ctx, world, time);
     if (world.status !== 'dying') this._penguin(ctx, world, time);
+    this._skua(ctx, world, time);
     particles.draw(ctx);
     // Drawn last so a tunnel darkens the penguin inside it too.
     this._zones(ctx, world, camX, time);
@@ -1173,6 +1175,118 @@ export class Renderer {
   }
 
   /**
+   * The mark on the ice where the bird is going to be.
+   *
+   * Drawn under everything the player is standing on rather than on the bird
+   * itself, and it *pulses faster as the strike approaches*. That is the whole
+   * fairness contract for the ambush: the warning has to be readable out of the
+   * corner of an eye by someone who is busy landing a jump.
+   */
+  _skuaShadow(ctx, world, time) {
+    const s = world.skua;
+    if (!s || s.state !== 'warn') return;
+    const k = Math.min(1, s.t / s.warn);
+    const r = 34 * (1 - k * 0.55);
+    const beat = 0.35 + 0.65 * Math.abs(Math.sin(time * (7 + k * 26)));
+
+    ctx.save();
+    ctx.globalAlpha = (0.28 + 0.5 * k) * beat;
+    ctx.fillStyle = '#04101f';
+    ctx.beginPath();
+    ctx.ellipse(s.targetX, s.targetY + 22, r, r * 0.34, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 0.5 + 0.4 * k;
+    ctx.strokeStyle = '#ff6b81';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.ellipse(s.targetX, s.targetY + 22, r + 7, (r + 7) * 0.34, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+
+  /**
+   * The skua itself: a big dark gull, wings back, coming down fast.
+   */
+  _skua(ctx, world, time) {
+    const s = world.skua;
+    if (!s) return;
+    const diving = s.state !== 'warn';
+    const flap = diving ? 0.9 : Math.sin(time * 14) * 0.55;
+    // Big. A skua that reads as a sparrow is not frightening.
+    const w = 58;
+
+    ctx.save();
+    ctx.translate(s.x, s.y);
+    ctx.scale(s.dir, 1);
+    // Tilt into the dive.
+    ctx.rotate(diving ? 0.5 : 0.16 * Math.sin(time * 6));
+
+    // Wings — swept back hard on the strike.
+    ctx.fillStyle = '#2b3444';
+    for (const sgn of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(0, -2);
+      ctx.quadraticCurveTo(-w * 0.5, sgn * (w * 0.5 + flap * 12), -w * 1.05, sgn * (w * 0.28 + flap * 16));
+      ctx.quadraticCurveTo(-w * 0.4, sgn * (w * 0.16), 0, 6);
+      ctx.closePath();
+      ctx.fill();
+    }
+    // Body and head
+    ctx.fillStyle = '#3a4557';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, w * 0.42, w * 0.2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#f0f5fb';
+    ctx.beginPath();
+    ctx.ellipse(w * 0.26, -1, w * 0.16, w * 0.13, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Hooked beak, which is the part that reads as a predator.
+    ctx.fillStyle = '#ffb43f';
+    ctx.beginPath();
+    ctx.moveTo(w * 0.38, -3);
+    ctx.lineTo(w * 0.66, 1);
+    ctx.lineTo(w * 0.38, 4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#101722';
+    ctx.beginPath();
+    ctx.arc(w * 0.3, -3, 2.2, 0, Math.PI * 2);
+    ctx.fill();
+    // Talons, out on the strike.
+    if (diving) {
+      ctx.strokeStyle = '#ffb43f';
+      ctx.lineWidth = 2.4;
+      ctx.lineCap = 'round';
+      for (const dy of [-3, 3]) {
+        ctx.beginPath();
+        ctx.moveTo(w * 0.1, w * 0.16);
+        ctx.lineTo(w * 0.22 + dy, w * 0.34);
+        ctx.stroke();
+      }
+      ctx.lineCap = 'butt';
+    }
+    ctx.restore();
+
+    // Speed streaks behind it on the way in, so a dive reads as fast.
+    if (!this.reducedMotion && diving) {
+      ctx.save();
+      ctx.globalAlpha = 0.35;
+      ctx.strokeStyle = '#cfe6ff';
+      ctx.lineWidth = 2;
+      for (let i = 0; i < 3; i++) {
+        const off = i * 14;
+        ctx.beginPath();
+        ctx.moveTo(s.x - s.dir * (30 + off), s.y - 16 + i * 12);
+        ctx.lineTo(s.x - s.dir * (72 + off), s.y - 26 + i * 12);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+
+  /**
    * The record holder, running the level beside you.
    *
    * Deliberately not a second penguin: a translucent silhouette with a name
@@ -1344,8 +1458,55 @@ export class Renderer {
     ctx.ellipse(cx + p.facing * p.w * 0.05, by - bodyH * 0.44, p.w * 0.29, bodyH * 0.4, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Flipper — flaps in the air
+    // The back motor, under the bird and behind the body.
+    if (p.burn > 0) {
+      const k = p.burn / 0.22;
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      const fy = by - p.h * 0.05;
+      const flame = ctx.createLinearGradient(cx, fy, cx, fy + p.h * 0.75 * k);
+      flame.addColorStop(0, `rgba(255,236,170,${0.95 * k})`);
+      flame.addColorStop(0.45, `rgba(255,150,60,${0.6 * k})`);
+      flame.addColorStop(1, 'rgba(255,80,30,0)');
+      ctx.fillStyle = flame;
+      ctx.beginPath();
+      ctx.moveTo(cx - p.w * 0.2, fy);
+      ctx.lineTo(cx + p.w * 0.2, fy);
+      ctx.lineTo(cx, fy + p.h * 0.8 * k);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Flipper — flaps in the air, or locks out flat into a wing while gliding.
     const flap = p.onGround ? step * 0.25 : Math.sin(time * 16) * 0.7;
+    if (p.gliding) {
+      // Both wings out, level, with a faint membrane between wing and body —
+      // the silhouette has to say "gliding" from across the screen.
+      const span = p.w * 1.15;
+      const wy = by - bodyH * 0.68;
+      ctx.save();
+      ctx.fillStyle = body;
+      for (const sgn of [-1, 1]) {
+        ctx.beginPath();
+        ctx.moveTo(cx + sgn * p.w * 0.28, wy);
+        ctx.quadraticCurveTo(cx + sgn * span * 0.8, wy - p.h * 0.16, cx + sgn * span, wy + p.h * 0.06);
+        ctx.quadraticCurveTo(cx + sgn * span * 0.7, wy + p.h * 0.14, cx + sgn * p.w * 0.28, wy + p.h * 0.1);
+        ctx.closePath();
+        ctx.fill();
+      }
+      // Air spilling off the tips, so the glide reads as slow rather than stuck.
+      ctx.strokeStyle = 'rgba(200,235,255,0.5)';
+      ctx.lineWidth = 1.5;
+      for (const sgn of [-1, 1]) {
+        const tx = cx + sgn * span;
+        ctx.beginPath();
+        ctx.moveTo(tx, wy + p.h * 0.04);
+        ctx.lineTo(tx + sgn * (8 + Math.sin(time * 18) * 4), wy + p.h * 0.16);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
     ctx.save();
     ctx.translate(cx - p.facing * p.w * 0.38, by - bodyH * 0.62);
     ctx.rotate(p.facing * (0.25 + flap));

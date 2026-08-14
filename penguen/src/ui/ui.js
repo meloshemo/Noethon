@@ -37,6 +37,9 @@ const SHOP_ICONS = {
   shield: '<path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3Z" fill="currentColor"/>',
   magnet: '<path d="M6 3a6 6 0 0 1 12 0v5h-4V3a2 2 0 0 0-4 0v5H6V3Zm0 8h4v6a2 2 0 0 0 4 0v-6h4v6a6 6 0 0 1-12 0v-6Z" fill="currentColor"/>',
   wind: '<path d="M3 8h11a3 3 0 1 0-3-3H9a5 5 0 1 1 5 5H3V8Zm0 5h14a3 3 0 1 1-3 3h2a1 1 0 1 0 1-1H3v-2Z" fill="currentColor"/>',
+  wings: '<path d="M12 8c-3-4-8-5-11-4 1 4 4 7 8 8l3-4Zm0 0c3-4 8-5 11-4-1 4-4 7-8 8l-3-4Z" fill="currentColor"/>',
+  rocket: '<path d="M12 2c3 2.5 5 6.5 5 11l-3 3h-4l-3-3c0-4.5 2-8.5 5-11Zm-2 17h4l-2 4-2-4Zm2-11a1.6 1.6 0 1 1 0 3.2A1.6 1.6 0 0 1 12 8Z" fill="currentColor"/>',
+  radar: '<path d="M12 3a9 9 0 1 0 9 9h-2a7 7 0 1 1-7-7V3Zm0 4a5 5 0 1 0 5 5h-2a3 3 0 1 1-3-3V7Z" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/>',
 };
 
 const $ = (id) => document.getElementById(id);
@@ -96,6 +99,11 @@ export class UI {
       hudGhost: $('hudGhost'),
       chargeBar: $('chargeBar'),
       chargeFill: $('chargeFill'),
+      gearBar: $('gearBar'),
+      gearWings: $('gearWings'),
+      gearWingsFill: $('gearWingsFill'),
+      gearRocket: $('gearRocket'),
+      gearRocketPips: $('gearRocketPips'),
       winShare: $('winShare'),
       winRank: $('winRank'),
       shareBtn: $('shareBtn'),
@@ -556,6 +564,7 @@ export class UI {
     // The gap to the record holder. A bare timer says nothing; "+0.42" says
     // you are losing this by less than half a second.
     this._updateGhostChip(world);
+    this._updateGear(world);
 
     const pct = world.progress * 100;
     this.el.progressFill.style.width = `${pct}%`;
@@ -565,6 +574,37 @@ export class UI {
       this._showToast(world.hint);
     } else if (world.hintTimer <= 0 && this._toastShown) {
       this._hideToast();
+    }
+  }
+
+  /**
+   * Wing stamina and motor charges.
+   *
+   * Both only refill on the ground, so the meter is the whole decision: spend
+   * the glide now to make this gap, or save it for the one after.
+   */
+  _updateGear(world) {
+    const p = world.player;
+    const wings = p.glideMax > 0;
+    const rocket = p.rocketMax > 0;
+    this.el.gearBar.hidden = !(wings || rocket);
+    if (this.el.gearBar.hidden) return;
+
+    this.el.gearWings.hidden = !wings;
+    if (wings) {
+      const pct = Math.max(0, Math.min(1, p.glideLeft / p.glideMax));
+      this.el.gearWingsFill.style.width = `${pct * 100}%`;
+      this.el.gearWings.classList.toggle('is-empty', pct <= 0.01);
+      this.el.gearWings.classList.toggle('is-active', p.gliding);
+    }
+
+    this.el.gearRocket.hidden = !rocket;
+    if (rocket && this._rocketPips !== `${p.rocketLeft}/${p.rocketMax}`) {
+      this._rocketPips = `${p.rocketLeft}/${p.rocketMax}`;
+      this.el.gearRocketPips.innerHTML = Array.from(
+        { length: p.rocketMax },
+        (_, i) => `<i class="${i < p.rocketLeft ? 'on' : ''}"></i>`,
+      ).join('');
     }
   }
 

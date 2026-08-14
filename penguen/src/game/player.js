@@ -6,7 +6,7 @@
  * exactly what the early levels need.
  */
 
-import { PHYS, PENGUIN, BOOST, ROT } from './config.js';
+import { PHYS, PENGUIN, BOOST, ROT, GEAR } from './config.js';
 import { clamp, damp, rectsOverlap } from '../core/util.js';
 
 export class Player {
@@ -14,6 +14,11 @@ export class Player {
     this.scale = 1;
     /** Shop upgrades, resolved to plain multipliers by the world. */
     this.boost = { jump: 0, speed: 0, grip: 0, wind: 0 };
+    /**
+     * Active gear, in levels owned. 0 means the penguin does not have it and
+     * none of the code below does anything at all.
+     */
+    this.gear = { wings: 0, rocket: 0 };
     /** Speed-fish charge: seconds remaining. */
     this.charge = 0;
     /** Rotten-fish curses: { heavy, dizzy, blind } → seconds remaining. */
@@ -67,6 +72,21 @@ export class Player {
     this.charge = 0;
     this.curse = { heavy: 0, dizzy: 0, blind: 0 };
     this.trail.length = 0;
+    this.gliding = false;
+    this.glideLeft = this.glideMax;
+    this.rocketLeft = this.rocketMax;
+    this.burn = 0;
+    this.rocketCool = 0;
+    /** Set for one frame when the motor fires, so the world can make a noise. */
+    this.rocketFired = false;
+  }
+
+  get glideMax() {
+    return this.gear.wings ? GEAR.wings.stamina * (this.gear.wings === 1 ? 1 : this.gear.wings === 2 ? 1.7 : 2.6) : 0;
+  }
+
+  get rocketMax() {
+    return this.gear.rocket ?? 0;
   }
 
   /** Ate something rotten. Re-eating refreshes rather than stacks. */
@@ -191,6 +211,54 @@ export class Player {
       events?.onJump?.();
     }
 
+    // --- Gear ---------------------------------------------------------
+    // Both meters refill only on the ground: gear turns a jump you already
+    // committed to into one you can still argue with, never into flight.
+    this.rocketFired = false;
+    this.rocketCool = Math.max(0, this.rocketCool - dt);
+    this.burn = Math.max(0, this.burn - dt);
+    if (this.onGround) {
+      this.glideLeft = this.glideMax;
+      this.rocketLeft = this.rocketMax;
+    }
+
+    // The motor: a tap in mid-air, once the jump itself is spent. Checked
+    // before the glide so a tap is a burst and a hold is a glide, which is the
+    // whole reason both fit on one button.
+    if (
+      this.rocketMax > 0 &&
+      intent.jumpPressed &&
+      !this.onGround &&
+      !this.jumpedThisFrame &&
+      this.rocketLeft > 0 &&
+      this.rocketCool <= 0
+    ) {
+      this.vy = Math.min(this.vy, GEAR.rocket.power);
+      this.rocketLeft--;
+      this.rocketCool = GEAR.rocket.cooldown;
+      this.burn = GEAR.rocket.burn;
+      this.rocketFired = true;
+      this.squashX = 0.74;
+      this.squashY = 1.34;
+      this.buffer = 0;
+      events?.onRocket?.();
+    }
+
+    // Wings: held, on the way down, while there is stamina left.
+    this.gliding =
+      this.glideMax > 0 &&
+      intent.jumpHeld &&
+      !this.onGround &&
+      this.vy > 60 &&
+      this.burn <= 0 &&
+      this.glideLeft > 0;
+    if (this.gliding) {
+      this.glideLeft = Math.max(0, this.glideLeft - dt);
+      // Spread wings also carry you forward a little, which is what makes a
+      // glide a decision about distance rather than just a slower fall.
+      this.vx += Math.sign(this.facing) * GEAR.wings.lift * dt * (intent.axis === 0 ? 1 : 0.4);
+    }
+
     // Releasing the button early cuts the jump short — but only a jump. A
     // geyser throw is not the player's to cut, and letting the same code path
     // damp it turned the eruption into a hop.
@@ -200,6 +268,7 @@ export class Player {
 
     const g = this.vy < 0 ? PHYS.gravityUp : PHYS.gravityDown;
     this.vy = Math.min(PHYS.maxFall, this.vy + g * dt);
+    if (this.gliding) this.vy = Math.min(this.vy, PHYS.maxFall * GEAR.wings.fallFactor);
 
     // --- Move & resolve, one axis at a time ---------------------------
     const ridden = this.groundFloe;

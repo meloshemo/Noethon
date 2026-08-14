@@ -171,6 +171,71 @@ export const ROT = {
   blind: { duration: 4, label: 'Göremiyorsun!' },
 };
 
+/**
+ * Active gear.
+ *
+ * The rest of the shop makes numbers bigger. These change what the penguin can
+ * *do*, on the same jump button:
+ *
+ *   hold in mid-air   → wings out, the fall slows to a glide
+ *   tap in mid-air    → the back motor fires once, straight up
+ *
+ * Both run on a meter that only refills on the ground, so neither turns the
+ * game into flying: they turn a jump you already committed to into a jump you
+ * can still argue with. Every level is validated against a penguin with none of
+ * this, so gear can only ever make a course easier — never unlock one.
+ */
+export const GEAR = {
+  wings: {
+    /** Seconds of glide per landing, at level 1. */
+    stamina: 1.1,
+    /** Downward speed while gliding, as a fraction of terminal velocity. */
+    fallFactor: 0.22,
+    /** Forward drift the spread wings give you. */
+    lift: 46,
+  },
+  rocket: {
+    /** Bursts per landing, at level 1. */
+    charges: 1,
+    /** Upward velocity a burst sets. */
+    power: -560,
+    /** Seconds of thrust visual + a floor on vertical speed. */
+    burn: 0.22,
+    /** Minimum time between two bursts, so a double tap is not a rocket ride. */
+    cooldown: 0.28,
+  },
+};
+
+/**
+ * Ambushes.
+ *
+ * A skua is a big polar gull that will genuinely take a chick. It is not part
+ * of the level: it comes out of nothing, at a moment the level did not choose,
+ * which is the whole point — a course you have memorised should still be able
+ * to surprise you on the ninth run.
+ *
+ * It gets a shadow on the ice before it strikes, and that is deliberate. A
+ * zero-warning instant kill is a coin flip and people quit; a warning you have
+ * to *notice while doing something else* is the thing that makes people say one
+ * more go. The window is short enough to be genuinely nasty.
+ */
+export const AMBUSH = {
+  /** Seconds of shadow before the dive lands. */
+  warn: 0.72,
+  /** How long the dive itself takes, from off-screen to the strike point. */
+  dive: 0.42,
+  /** Never twice inside this window. */
+  cooldown: 6.5,
+  /** Grace after a spawn or respawn — never ambushed while getting your bearings. */
+  grace: 2.4,
+  /** Chance per second of an attack, once everything else allows it. */
+  rate: 0.18,
+  /** The earliest level an ambush can happen at all. */
+  fromLevel: 12,
+  /** How long the bird carries the chick before dropping it. */
+  carry: 0.9,
+};
+
 /** Assist mode is offered after this many deaths on the same level. */
 export const ASSIST_AFTER_DEATHS = 4;
 
@@ -294,6 +359,37 @@ export const UPGRADES = [
     blurb: 'Kutup rüzgarı seni daha az savurur.',
     icon: 'wind',
     levels: [{ cost: 180, effect: 0.55, label: 'Rüzgar %55 az' }],
+  },
+  {
+    id: 'wings',
+    name: 'Planör Kanat',
+    blurb: 'Havada zıplamayı basılı tut — kanatlar açılır, düşüş yavaşlar.',
+    icon: 'wings',
+    levels: [
+      { cost: 320, effect: 1, label: '1.1 sn süzülme' },
+      { cost: 620, effect: 1.7, label: '1.9 sn süzülme' },
+      { cost: 1100, effect: 2.6, label: '2.9 sn süzülme' },
+    ],
+  },
+  {
+    id: 'rocket',
+    name: 'Sırt Motoru',
+    blurb: 'Havadayken zıplamaya bas — motor bir kez ateşler.',
+    icon: 'rocket',
+    levels: [
+      { cost: 420, effect: 1, label: 'Havada 1 ateşleme' },
+      { cost: 780, effect: 2, label: 'Havada 2 ateşleme' },
+    ],
+  },
+  {
+    id: 'radar',
+    name: 'Kuş Radarı',
+    blurb: 'Kuş dalışa geçmeden önce daha uzun uyarı verir.',
+    icon: 'radar',
+    levels: [
+      { cost: 200, effect: 0.35, label: '+0.35 sn uyarı' },
+      { cost: 460, effect: 0.7, label: '+0.7 sn uyarı' },
+    ],
   },
 ];
 

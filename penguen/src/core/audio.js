@@ -137,6 +137,25 @@ export class Audio {
     this._tone({ freq: 180, slide: -110, dur: 0.4, type: 'square', gain: 0.05, delay: 0.08 });
   }
 
+  /**
+   * The skua.
+   *
+   * Two rising cries a beat apart, harsh and thin — the sound has to cut
+   * through whatever else is happening, because it is often the only warning
+   * a player who is watching their feet will get.
+   */
+  screech() {
+    this._tone({ freq: 900, slide: 520, dur: 0.14, type: 'sawtooth', gain: 0.11 });
+    this._tone({ freq: 1150, slide: 700, dur: 0.12, type: 'square', gain: 0.07, delay: 0.13 });
+    this._noise({ dur: 0.2, gain: 0.07, filter: 2600, q: 2.4, delay: 0.02 });
+  }
+
+  /** The back motor firing. */
+  rocket() {
+    this._noise({ dur: 0.34, gain: 0.14, filter: 900, q: 0.8 });
+    this._tone({ freq: 180, slide: 420, dur: 0.3, type: 'sawtooth', gain: 0.07 });
+  }
+
   /** A storm surge arriving. */
   windSurge() {
     this._noise({ dur: 1.1, gain: 0.13, filter: 620, q: 0.4 });
