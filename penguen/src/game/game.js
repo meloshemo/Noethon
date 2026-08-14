@@ -107,6 +107,57 @@ export class Game {
     return { ...run, name: best.you ? Storage.displayName(this.save) : best.name };
   }
 
+  /**
+   * Write the current attempt to disk.
+   *
+   * Called where a position actually means something — a checkpoint reached, a
+   * death, a pause, the tab going away — rather than on a timer. What is stored
+   * is the *respawn* point, not the exact pixel: restoring somebody to the
+   * middle of a jump they were losing would be a worse gift than the checkpoint.
+   */
+  saveSession() {
+    const w = this.world;
+    if (!w || this.state === 'menu' || w.status === 'won') return;
+    Storage.saveSession(this.save, {
+      level: this.levelId,
+      daily: this.dailyRun,
+      x: Math.round(w.respawn.x),
+      y: Math.round(w.respawn.y),
+      elapsed: +w.elapsed.toFixed(2),
+      deaths: w.deaths + this.runDeaths,
+      fish: w.fishTaken,
+    });
+  }
+
+  /** Is there an interrupted attempt to offer? */
+  get pendingSession() {
+    return Storage.takeSession(this.save);
+  }
+
+  /**
+   * Pick an interrupted run back up.
+   *
+   * The clock, the deaths and the fish all come back with it: resuming must not
+   * be a way to launder a bad run into a clean one, or the leaderboard means
+   * nothing.
+   */
+  resumeSession() {
+    const s = this.pendingSession;
+    if (!s) return false;
+    if (s.daily) this.startDaily();
+    else this.startLevel(s.level);
+    const w = this.world;
+    if (!w) return false;
+    w.respawn = { x: s.x, y: s.y };
+    w.player.reset(s.x, s.y);
+    w.elapsed = s.elapsed ?? 0;
+    w.deaths = s.deaths ?? 0;
+    w.fishTaken = 0;
+    w._centerCamera();
+    w.showHint('Kaldığın yerden', 1.8);
+    return true;
+  }
+
   _begin(def) {
     this.particles.clear();
     this.world = new World(def, {
@@ -124,6 +175,7 @@ export class Game {
     this.accumulator = 0;
     this.input.releaseAll();
     this.jumpPressed = false;
+    this.world.onCheckpoint = () => this.saveSession();
     this.ui.onLevelStart(def, scaleForLevel(def.id));
   }
 
@@ -146,6 +198,7 @@ export class Game {
 
   togglePause() {
     if (this.state === 'playing') {
+      this.saveSession();
       this.state = 'paused';
       this.input.releaseAll();
       this.ui.showScreen('pause');
@@ -164,6 +217,7 @@ export class Game {
   }
 
   quitToMenu() {
+    this.saveSession();
     this.input.releaseAll();
     this.showMenuScene();
     this.ui.showScreen('title');
@@ -247,7 +301,10 @@ export class Game {
     });
     this.jumpPressed = false;
 
-    if (w.deaths > prevDeaths) this._onDeath();
+    if (w.deaths > prevDeaths) {
+      this._onDeath();
+      this.saveSession();
+    }
     if (w.status === 'won' && w.winTimer > 0.85) this._onWin();
   }
 
@@ -269,6 +326,8 @@ export class Game {
       ? this._finishDaily(w, stars, deaths)
       : this._finishLevel(w, stars, deaths);
 
+    // The attempt is over: nothing left to resume.
+    Storage.clearSession(this.save);
     this._bankRun(w, result);
     this._runMissions(w, result);
     this._recordFeats(w, result);

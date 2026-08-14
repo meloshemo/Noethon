@@ -27,7 +27,42 @@ export const RARITY = {
   rare: { name: 'Nadir', color: '#4fd7ff', order: 1 },
   epic: { name: 'Efsanevi', color: '#9b8cff', order: 2 },
   mythic: { name: 'Mitik', color: '#ffd23f', order: 3 },
+  diamond: { name: 'Elmas', color: '#7ce8ff', order: 4 },
 };
+
+/**
+ * Diamond penguins carry a perk.
+ *
+ * This is the one place the collection stops being purely cosmetic, so the
+ * rules around it are tight:
+ *
+ *   — every perk is a *modifier on an existing stat*, never a new verb. No
+ *     penguin can do something the game does not already let you do.
+ *   — the numbers are small, roughly one shop tier. A diamond penguin is worth
+ *     wearing, never worth needing.
+ *   — every level is still validated against a penguin with nothing at all, so
+ *     no perk can ever unlock a course. Same contract the shop has always had.
+ *
+ * Wearing one costs you the choice of wearing anything else, which is the
+ * balance: the perk and the look are the same slot.
+ */
+export const PERKS = {
+  jump: { label: 'zıplama', fmt: (v) => `+%${Math.round(v * 100)} zıplama` },
+  speed: { label: 'hız', fmt: (v) => `+%${Math.round(v * 100)} hız` },
+  glide: { label: 'süzülme', fmt: (v) => `+${v.toFixed(1)} sn süzülme` },
+  grip: { label: 'tutuş', fmt: (v) => `kaymayı %${Math.round(v * 100)} azaltır` },
+  magnet: { label: 'mıknatıs', fmt: (v) => `${v}px balık çekimi` },
+  radar: { label: 'radar', fmt: (v) => `+${v.toFixed(2)} sn kuş uyarısı` },
+};
+
+/** Human-readable perk list for a card. */
+export function perkText(skin) {
+  if (!skin.perk) return null;
+  return Object.entries(skin.perk)
+    .map(([k, v]) => PERKS[k]?.fmt(v) ?? '')
+    .filter(Boolean)
+    .join(' · ');
+}
 
 /** Where an unlock's progress is read from. Kept here so the UI can show it. */
 export const FEATS = {
@@ -837,6 +872,128 @@ export const SKINS = [
     },
     aura: 'rgba(107,77,255,0.3)',
     unlock: { kind: 'feat', feat: 'wardrobe', goal: 15 },
+  },
+
+  /* ------------------------------------------- diamond: with a perk */
+  {
+    id: 'diamond',
+    rarity: 'diamond',
+    name: 'Elmas Penguen',
+    blurb: 'Buzun kendisinden yontulmuş. Daha yükseğe zıplar.',
+    tint: '#5fd3f5',
+    belly: '#eafcff',
+    beak: '#ffffff',
+    foot: '#bfeeff',
+    eye: '#0b2a3a',
+    perk: { jump: 0.08, grip: 0.3 },
+    paint: (ctx, g) => {
+      // Faceted body: a few bright planes over the silhouette, so it reads as
+      // cut stone rather than as a blue penguin.
+      ctx.save();
+      ctx.globalAlpha = 0.5;
+      ctx.fillStyle = '#ffffff';
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(g.cx - g.w * 0.3 + i * g.w * 0.22, g.by - g.bodyH * 0.9);
+        ctx.lineTo(g.cx - g.w * 0.14 + i * g.w * 0.22, g.by - g.bodyH * 0.2);
+        ctx.lineTo(g.cx - g.w * 0.34 + i * g.w * 0.22, g.by - g.bodyH * 0.35);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.restore();
+      crystals(ctx, g);
+    },
+    aura: 'rgba(124,232,255,0.34)',
+    unlock: { kind: 'coins', cost: 6500 },
+  },
+  {
+    id: 'jet',
+    rarity: 'diamond',
+    name: 'Jet Penguen',
+    blurb: 'Sırtındaki türbin hiç susmaz. Daha hızlı koşar.',
+    tint: '#26304a',
+    belly: '#dfe9ff',
+    beak: '#ff7a2f',
+    foot: '#ff7a2f',
+    eye: '#ffd23f',
+    perk: { speed: 0.1, radar: 0.2 },
+    behind: true,
+    paint: (ctx, g, layer) => {
+      if (layer === 'behind') {
+        jetpack(ctx, g);
+        return;
+      }
+      visor(ctx, g, '#101a2e', 'rgba(255,160,60,0.9)');
+    },
+    aura: 'rgba(255,140,60,0.24)',
+    unlock: { kind: 'coins', cost: 7200 },
+  },
+  {
+    id: 'albatross',
+    rarity: 'diamond',
+    name: 'Albatros Penguen',
+    blurb: 'Yanlış kuşun kanatlarını ödünç almış. Daha uzun süzülür.',
+    tint: '#e8eef7',
+    belly: '#ffffff',
+    beak: '#ffb43f',
+    foot: '#ffb43f',
+    eye: '#22304a',
+    perk: { glide: 0.7 },
+    behind: true,
+    paint: (ctx, g, layer) => {
+      if (layer !== 'behind') return;
+      // Long folded wings, always visible, tipped in slate.
+      ctx.save();
+      for (const sgn of [-1, 1]) {
+        ctx.fillStyle = '#f4f8ff';
+        ctx.beginPath();
+        ctx.moveTo(g.cx + sgn * g.w * 0.2, g.by - g.bodyH * 0.78);
+        ctx.quadraticCurveTo(
+          g.cx + sgn * g.w * 1.15,
+          g.by - g.bodyH * (0.62 + 0.05 * Math.sin(g.time * 3 + sgn)),
+          g.cx + sgn * g.w * 1.32,
+          g.by - g.bodyH * 0.12,
+        );
+        ctx.quadraticCurveTo(g.cx + sgn * g.w * 0.7, g.by - g.bodyH * 0.42, g.cx + sgn * g.w * 0.2, g.by - g.bodyH * 0.5);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#4a5a72';
+        ctx.beginPath();
+        ctx.ellipse(g.cx + sgn * g.w * 1.24, g.by - g.bodyH * 0.2, g.w * 0.12, g.h * 0.05, sgn * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    },
+    aura: 'rgba(220,240,255,0.22)',
+    unlock: { kind: 'coins', cost: 8000 },
+  },
+  {
+    id: 'emperor',
+    rarity: 'diamond',
+    name: 'İmparator Penguen',
+    blurb: 'Türün en büyüğü. Balıklar ona gelir.',
+    tint: '#232c3d',
+    belly: '#fff6dc',
+    beak: '#ffcf3f',
+    foot: '#ffcf3f',
+    perk: { magnet: 120, jump: 0.05 },
+    paint: (ctx, g) => {
+      // The orange ear patches a real emperor wears.
+      ctx.save();
+      const grad = ctx.createLinearGradient(0, g.headY - g.h * 0.1, 0, g.headY + g.h * 0.2);
+      grad.addColorStop(0, '#ffd23f');
+      grad.addColorStop(1, 'rgba(255,160,60,0)');
+      ctx.fillStyle = grad;
+      for (const sgn of [-1, 1]) {
+        ctx.beginPath();
+        ctx.ellipse(g.cx + sgn * g.w * 0.3, g.headY + g.h * 0.05, g.w * 0.11, g.h * 0.12, sgn * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+      crown(ctx, g);
+    },
+    aura: 'rgba(255,208,90,0.26)',
+    unlock: { kind: 'coins', cost: 9000 },
   },
 ];
 

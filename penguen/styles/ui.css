@@ -2402,3 +2402,27 @@ kbd {
   font-size: var(--fs-2xs);
   color: var(--text-faint);
 }
+
+/* ---- diamond tier: the only cards that carry a perk ---- */
+
+.skin--diamond {
+  border-color: rgba(124, 232, 255, 0.5);
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(124, 232, 255, 0.14), transparent 70%),
+    var(--surface);
+}
+
+.skin--diamond:not(.skin--locked) {
+  box-shadow: 0 0 0 1px rgba(124, 232, 255, 0.24), 0 10px 34px rgba(124, 232, 255, 0.18);
+}
+
+.skin__perk {
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  color: var(--c-aqua);
+  padding: 0.18em 0.5em;
+  border-radius: var(--r-full);
+  background: rgba(79, 215, 255, 0.12);
+  border: 1px solid rgba(79, 215, 255, 0.3);
+  align-self: center;
+}

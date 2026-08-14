@@ -19,6 +19,12 @@ export class Player {
      * none of the code below does anything at all.
      */
     this.gear = { wings: 0, rocket: 0 };
+    /**
+     * Glide seconds a diamond penguin adds. Kept separate from the wings so a
+     * penguin that lengthens the glide is useless without them — the perk
+     * improves a thing you own, it does not hand you the thing.
+     */
+    this.glideBonus = 0;
     /** Speed-fish charge: seconds remaining. */
     this.charge = 0;
     /** Rotten-fish curses: { heavy, dizzy, blind } → seconds remaining. */
@@ -95,7 +101,9 @@ export class Player {
   }
 
   get glideMax() {
-    return this.gear.wings ? GEAR.wings.stamina * (this.gear.wings === 1 ? 1 : this.gear.wings === 2 ? 1.7 : 2.6) : 0;
+    if (!this.gear.wings) return 0;
+    const tier = this.gear.wings === 1 ? 1 : this.gear.wings === 2 ? 1.7 : 2.6;
+    return GEAR.wings.stamina * tier + (this.glideBonus ?? 0);
   }
 
   get rocketMax() {

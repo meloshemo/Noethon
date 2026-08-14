@@ -7,7 +7,7 @@
  */
 
 const KEY = 'pengu.save.v1';
-const VERSION = 6;
+const VERSION = 7;
 
 /**
  * Ghost runs are the biggest thing in the save by far, so they are capped.
@@ -63,6 +63,15 @@ function defaults() {
     /** { [trailId]: true } and the one in use. */
     trails: {},
     trail: 'none',
+    /**
+     * A run that was interrupted.
+     *
+     * Phones do not get closed at tidy moments: a bus arrives, a call comes in,
+     * the tab is swapped and the page is thrown out of memory. Coming back to
+     * "Bölüm 1" after that is the difference between a game somebody keeps and
+     * one they delete, so the current attempt is kept on disk and offered back.
+     */
+    session: null,
     /** The endless sink: how many blocks of the monument have been funded. */
     monument: 0,
     /** Weekly league: { week, points, bestTier, lastWeekPoints }. */
@@ -101,6 +110,7 @@ function migrate(parsed) {
     trail: parsed.trail ?? 'none',
     league: { ...base.league, ...(parsed.league ?? {}) },
     monument: Number.isFinite(parsed.monument) ? parsed.monument : 0,
+    session: parsed.session ?? null,
   };
 
   // v3 had no record of the best streak ever reached, only the live one. The
@@ -296,6 +306,40 @@ export const Storage = {
     else data.skin = id;
     write(data);
     return id;
+  },
+
+  /* ------------------------------------------------------ session */
+
+  /**
+   * Remember where an attempt got to.
+   *
+   * Written at checkpoints, deaths and pauses rather than every frame: those
+   * are the moments a position is meaningful, and localStorage is not free.
+   * A session older than a day is thrown away — coming back a week later to a
+   * half-finished level you have forgotten is worse than starting it.
+   */
+  saveSession(data, run) {
+    data.session = { ...run, at: Date.now() };
+    write(data);
+    return data.session;
+  },
+
+  /** The interrupted run, if there is a fresh one. */
+  takeSession(data) {
+    const s = data.session;
+    if (!s) return null;
+    if (Date.now() - (s.at ?? 0) > 36 * 3600 * 1000) {
+      data.session = null;
+      write(data);
+      return null;
+    }
+    return s;
+  },
+
+  clearSession(data) {
+    if (!data.session) return;
+    data.session = null;
+    write(data);
   },
 
   /**

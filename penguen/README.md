@@ -24,13 +24,15 @@ Toplam yük tek dosyada ~385 KB ve çevrimdışı çalışıyor.
 | **4 tehlike** | sarkıt · fok · fırtına kuşağı · orka |
 | **2 pusu** | Bölümün planlamadığı anda dalan kutup kuşu · bayrağa 100 px kala kopan buzul |
 | **3 çürük balık etkisi** | ağırlaşma · ters kontrol · körlük |
-| **20 penguen + 10 iz** | 4 nadirlik seviyesi, 200 kombin |
+| **24 penguen + 10 iz** | 5 nadirlik seviyesi, 240 kombin |
+| **4 elmas penguen** | Tek yetenek taşıyan tek tür: zıplama · hız · süzülme · mıknatıs |
 | **9 market eşyası** | 3'ü penguenin *ne yapabildiğini* değiştiriyor |
 | **21 günlük görev** | üç ağırlıkta, her gün birer tane |
 | **Haftalık lig** | Bronz → Gümüş (500) → Altın (2.000) → Elmas (5.000) |
 | **Günün Pengu'su** | Herkese aynı bölüm, gün boyu biriken 4 hedef |
 | **Günün Teklifi** | 24 saatlik indirimli kozmetik, geri sayımlı |
 | **Hayalet yarışı** | Rekorun yanında koşuyor; kodunu paylaşınca arkadaşın da |
+| **Kaldığın yerden** | Sekmeyi kapatsan da son kontrol noktasından devam ediyorsun |
 
 ---
 
@@ -49,13 +51,22 @@ olayı**: ezberlediğin parkurun dokuzuncu turda hâlâ seni korkutabilmesinin t
 yolu. Buzun üstünde bir gölge beliriyor ve yaklaştıkça daha hızlı atıyor.
 → [ayrıntı](#pusu-kutup-kuşu)
 
-### 🐧 Gardırop — 20 penguen, 10 iz
+### 🐧 Gardırop — 24 penguen, 10 iz
 Ninja, Kral, Astronot, Altın, Korsan, Ateş, Siber, Yılbaşı, Frak, Kâşif, Dalgıç,
 Aşçı, Rock, Uzaylı, Hayalet, Şövalye, Kutup Işığı, Buz Kraliçesi, Gölge.
 Çoğu satın alınmıyor, **kazanılıyor**. Seçtiğin penguen buzun üstünde gerçekten
 o penguen — aksesuarlar canlı çiziliyor, jet havada ateşliyor, bant koşarken
 savruluyor.
 → [ayrıntı](#koleksiyon)
+
+### 💎 Elmas penguenler — yeteneği olan tek tür
+Elmas *daha yükseğe zıplıyor ve buzda daha az kayıyor*, Jet *daha hızlı koşup
+kuşu daha erken görüyor*, Albatros *daha uzun süzülüyor*, İmparator *balıkları
+kendine çekiyor*. Etkiler küçük — kabaca bir market kademesi. Ve bir tanesi
+kasten kendi başına işe yaramıyor: Albatros'un süzülme yeteneği, **Planör Kanat
+yoksa sıfır**. Yetenek sahip olduğun bir şeyi iyileştiriyor, sana yeni bir şey
+vermiyor.
+→ [ayrıntı](#elmas-penguenler)
 
 ### 🏔️ Kıta — yamaç, uçurum, yarık, tünel
 Bölümler koordinat değil **plan** olarak yazılıyor; geometri o bölümdeki gerçek
@@ -160,8 +171,16 @@ tutmazsa derleme düşer.
 mu diye bakar.
 
 Tarayıcı tarafı testler `playwright` ile yürütülüyor: bot 20 bölüm oynuyor,
-ekipman fiziği ölçülüyor, kuş uyarı→dalış→çekiliş döngüsü izleniyor, 20 portre
+ekipman fiziği ölçülüyor, kuş uyarı→dalış→çekiliş döngüsü izleniyor, 24 portre
 ve 10 iz önizlemesinin gerçekten piksel bastığı doğrulanıyor.
+
+Ayrıca **dayanıklılık** testi: sanal bir gamepad takılıyor (yön, zıplama, ölü
+bölge, ve `getGamepads()` hata attığında karenin hayatta kalması), sekme arkaya
+alınıp kronometrenin kaymadığı ölçülüyor, odak kaybında tuşların bırakıldığı
+görülüyor, sayfa kapatılıp yeniden açılıyor ve pengueninin **aynı kontrol
+noktasında, aynı süreyle** başladığı piksel piksel doğrulanıyor. Elmas
+penguenlerin yetenekleri de burada fiziğe ulaştıkları yerden ölçülüyor —
+Albatros'un kanatsızken 0 kazandırdığı dahil.
 
 ---
 
@@ -510,6 +529,17 @@ gerçek bir uygulama kimliği ve ağ bağlantısı ister — bu yüzden **henüz
 bağlanmadı**. Bağlandığında mekanikler hazır olacak şekilde tasarlandı:
 ödül kaynağı tek bir adaptör.
 
+### İnternet gerekiyor mu
+
+**Bugün: hayır.** Oyun bir kere yüklendikten sonra tamamen çevrimdışı çalışıyor —
+bölümler, kayıt, hayalet, lig, görevler, gardırop, hepsi cihazda.
+
+**Gerçek para ve ödüllü reklam devreye girdiğinde: evet**, ama sadece o iki iş
+için. Doğru mimari şu: oyun çevrimdışı oynanabilir kalır, ağ sadece iki noktada
+gerekir — ödeme doğrulaması (`canPurchase`) ve reklam gösterimi. Ağ yoksa o iki
+düğme kapanır, oyunun geri kalanı hiç etkilenmez. İkisi de bilerek tek
+fonksiyonun arkasına toplandı ki bağlantı kontrolü tek yerde yaşasın.
+
 ---
 
 ## Geri gelme sebepleri
@@ -591,7 +621,7 @@ Penguen her karede sıfırdan çiziliyor, yani bir "skin" görsel dosyası deği
 bir palet artı küçük bir aksesuar çizeri. Bu yüzden her penguen birkaç yüz bayt,
 her büyüme ölçeğinde çalışıyor ve gövdenin ezilip uzamasına kendiliğinden uyuyor.
 
-**İki slot var**, ve mesele bu: **20 penguen × 10 iz = 200 kombin**. Bir gardırobu
+**İki slot var**, ve mesele bu: **24 penguen × 10 iz = 240 kombin**. Bir gardırobu
 liste olmaktan çıkarıp gardırop yapan şey, ikisinin birden *senin seçimin*
 olması.
 
@@ -606,11 +636,41 @@ Nadirlik bir güç seviyesi değil — her şey kozmetik ve öyle kalacak. Nadir
 | Nadir | Ninja · Korsan · Yılbaşı · Frak · Kâşif · Dalgıç · Aşçı | 50 ölümsüz bölüm · 20×3 yıldız · Aralık/240 balık · 300 balık · 120 bölüm · 150 ölüm · 380 balık |
 | Efsanevi | Kral · Astronot · Ateş · Rock · Uzaylı · Hayalet · Şövalye | 1000 balık · 5000 m · 15 hız balığı · 60 hız balığı · 5 gece turu · 400 ölüm · 25 kuş dalışı |
 | Mitik | Altın · Siber · Kutup Işığı · Buz Kraliçesi · Gölge | 7 günlük seri · Elmas lig · 300 sn süzülme · 45×3 yıldız · 15 penguen topla |
+| Elmas | Elmas · Jet · Albatros · İmparator | 6.500 · 7.200 · 8.000 · 9.000 balık |
 
 Aksesuarlar gerçekten çiziliyor: astronotun kaskı ve havada ateşleyen jeti,
 ninjanın koşarken savrulan bandı, şövalyenin miğferi ve sorguçu, aşçının
 sallanan kepi, uzaylının zıplayan antenleri, hayaletin dalgalanan eteği, Buz
 Kraliçesi'nin omuzlarından çıkan kristaller.
+
+### Elmas penguenler
+
+Yirmi penguen kozmetik. Dördü değil — ve fark **kasten** dördüyle sınırlı, çünkü
+"en pahalı penguen en güçlü penguendir" kuralı bir gardırobu bir güç merdivenine
+çevirir.
+
+| Penguen | Yetenek | Fiyat |
+|---|---|---|
+| 💎 Elmas | +%8 zıplama · kaymayı %30 azaltır | 6.500 |
+| 🚀 Jet | +%10 hız · +0.20 sn kuş uyarısı | 7.200 |
+| 🕊️ Albatros | +0.7 sn süzülme | 8.000 |
+| 👑 İmparator | 120 px balık çekimi · +%5 zıplama | 9.000 |
+
+Üç tasarım kuralı:
+
+1. **Etki bir market kademesi kadar.** Elmas'ın zıplaması, Zıplama Botu'nun ilk
+   kademesiyle aynı büyüklükte. Bölüm doğrulayıcısı erişimi *yeteneksiz* penguene
+   göre hesaplıyor — yani elmas penguen hiçbir bölümü açmıyor, sadece açık olanı
+   biraz rahatlatıyor.
+2. **Yetenek sahip olduğun şeyi iyileştiriyor.** Albatros'un +0.7 saniyesi
+   `glideMax`'e ekleniyor, ama `glideMax` kanat yoksa zaten 0 — yani Albatros'u
+   giyip Planör Kanat'ı almadıysan hiçbir şey kazanmıyorsun. Test bunu ayrıca
+   doğruluyor.
+3. **Fiyatlar ekonominin en üstünde.** En ucuz elmas, marketin tamamından pahalı.
+   Simülatöre göre ortalama oyuncu ilk elması ~10. saatte görüyor.
+
+Yetenekler `world.js`'te market yükseltmeleriyle *toplanıyor*, çarpılmıyor:
+kayma azaltma 0.92'de tavanlanıyor ki hiçbir kombinasyon buzu asfalta çevirmesin.
 
 ### İzler
 
@@ -674,6 +734,35 @@ Sıralama gerçek bir sıralama; sadece sunucu yerine paylaşım koduyla dolaş�
 Dokunmatik ekranda alttaki üç tuş, ayrıca gamepad desteği var. Ekipmanların
 ikisi de aynı zıplama tuşuna bindi — çünkü dokunmatikte dördüncü bir düğme
 olmamalı, ve "bas" ile "basılı tut" zaten iki farklı niyet.
+
+**Gamepad**: sol çubuk ve D-pad yürütüyor (%35 ölü bölge), A/B/X/Y zıplatıyor,
+Start duraklatıyor. Tarayıcı `getGamepads()` çağrısı hata atarsa kare düşmüyor —
+o kare klavyeye düşülüyor, oyun devam ediyor.
+
+---
+
+## Arka plan ve kaldığın yer
+
+Üç ayrı şey, üçü de ayrı ayrı test ediliyor:
+
+**Sekme arkaya alınınca** oyun duraklıyor. Önemli olan sadece durması değil,
+*kronometrenin akmaması*: `visibilitychange` geldiğinde döngü duruyor ve
+geri dönünce biriktirici sıfırlanıyor, yani beş dakika başka sekmedeysen
+süren beş dakika artmıyor (test ölçtü: `0 sn` kayma).
+
+**Pencere odağını kaybedince** basılı tuşlar bırakılıyor. Alt+Tab yaparken sağ
+ok basılıysa penguen sonsuza kadar sağa yürümüyor.
+
+**Sekmeyi kapatınca** koşu kaydediliyor — kontrol noktasına her değdiğinde,
+duraklatınca, ölünce ve `pagehide`'da. Geri geldiğinde ana ekrandaki düğme
+**"Devam et · Bölüm 7 · 00:12.53"** diyor ve bastığında bıraktığın kontrol
+noktasında, aynı süreyle, aynı ölüm ve balık sayısıyla başlıyorsun. Kayıt 36
+saat sonra kendini siliyor, bölümü bitirince de siliniyor.
+
+> Bu özellik yazılırken **gerçekten bozuktu** ve testle bulundu: başlık ekranı
+> UI kurucusunda, yani `game` nesnesi var olmadan önce çiziliyordu — bu yüzden
+> yarım kalmış koşuyu bilmesine imkân yoktu ve "Devam et" hiç görünmüyordu.
+> `main.js` artık `attach()` sonrasında başlığı bir kez daha çiziyor.
 
 ---
 

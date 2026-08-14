@@ -41,6 +41,10 @@ function start() {
 
   const game = new Game({ canvas, input, audio, storage: save, ui });
   ui.attach(game, input);
+  // The title was first drawn inside the UI constructor, before the game
+  // existed — so it could not know about an interrupted run. Draw it again now
+  // that it can, or "Devam et" never appears after a reload.
+  ui.refreshTitle();
 
   ui.onReset(() => {
     save = Storage.reset();
@@ -70,7 +74,14 @@ function start() {
   window.addEventListener('keydown', unlock, { once: false });
 
   // Pause automatically when the tab or window loses focus.
+  // `pagehide` is the one event iOS Safari reliably fires when an app is
+  // swiped away; `visibilitychange` alone loses the last few seconds there.
+  window.addEventListener('pagehide', () => game.saveSession());
+
   document.addEventListener('visibilitychange', () => {
+    // The page may never get another frame after this — a backgrounded tab can
+    // be discarded outright — so the attempt goes to disk before anything else.
+    if (document.hidden) game.saveSession();
     if (document.hidden && game.state === 'playing') game.togglePause();
   });
 

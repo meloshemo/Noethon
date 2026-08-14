@@ -13,7 +13,7 @@ import { LEVELS } from '../game/levels.js';
 import { Storage, todayKey } from '../core/storage.js';
 import { ensureMissions } from '../game/missions.js';
 import { shareText, withName } from '../game/ghost.js';
-import { SKINS, TRAILS, RARITY, getSkin, getTrail, skinStatus, drawPortrait } from '../game/skins.js';
+import { SKINS, TRAILS, RARITY, getSkin, getTrail, skinStatus, drawPortrait, perkText } from '../game/skins.js';
 import { standing, weekKey } from '../game/league.js';
 import { dailyObjectives } from '../game/daily.js';
 import { generateDailyLevel } from '../game/generator.js';
@@ -182,8 +182,19 @@ export class UI {
   refreshTitle() {
     const next = this.save.unlocked;
     const isNew = next === 1 && !Object.keys(this.save.levels).length;
-    this.el.playLabel.textContent = isNew ? 'Başla' : 'Devam et';
-    this.el.playSub.textContent = `Bölüm ${next}`;
+
+    // An interrupted attempt outranks everything: somebody who closed the tab
+    // mid-level wants that level back, not the next one.
+    const session = this.game?.pendingSession ?? null;
+    this._session = session;
+    if (session) {
+      const where = session.daily ? 'Günün Bölümü' : `Bölüm ${session.level}`;
+      this.el.playLabel.textContent = 'Devam et';
+      this.el.playSub.textContent = `${where} · ${formatTime(session.elapsed ?? 0)}`;
+    } else {
+      this.el.playLabel.textContent = isNew ? 'Başla' : 'Devam et';
+      this.el.playSub.textContent = `Bölüm ${next}`;
+    }
 
     const stars = Object.values(this.save.levels).reduce((s, l) => s + (l.stars ?? 0), 0);
     const done = Object.keys(this.save.levels).length;
@@ -358,10 +369,12 @@ export class UI {
 
       const body = document.createElement('div');
       body.className = 'skin__body';
+      const perks = perkText(item);
       body.innerHTML = `
         <span class="skin__rarity" style="color:${rarity.color}">${rarity.name}</span>
         <strong class="skin__name">${item.name}</strong>
         <small class="skin__blurb">${item.blurb}</small>
+        ${perks ? `<span class="skin__perk">${perks}</span>` : ''}
         ${
           st.owned
             ? '<span class="skin__state">Açıldı</span>'
@@ -1283,6 +1296,7 @@ export class UI {
   _bindGame() {
     $('playBtn').addEventListener('click', () => {
       this.audio.ui();
+      if (this._session && this.game.resumeSession()) return;
       this.game.startLevel(this.save.unlocked);
     });
 

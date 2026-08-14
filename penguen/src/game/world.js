@@ -13,6 +13,7 @@ import {
   VIEW, VIEW_LIMITS, ASSIST, ICE, STORM, BOOST, ROT, REWARDS, AMBUSH, COLLAPSE, scaleForLevel, upgradeEffect,
 } from './config.js';
 import { WATER_Y } from './levels.js';
+import { getSkin } from './skins.js';
 import { clamp, damp, rectsOverlap, rand } from '../core/util.js';
 
 export class World {
@@ -82,23 +83,29 @@ export class World {
     /** Seconds ahead of the ghost (positive) or behind it (negative). */
     this.ghostLead = null;
 
-    // Shop upgrades. Levels are validated against base stats, so these only
-    // ever make the penguin better — they never unlock anything.
+    // Shop upgrades, plus whatever the worn penguin brings. Levels are
+    // validated against a penguin with neither, so both can only ever make a
+    // course easier — never unlock one.
     const owned = deps.upgrades ?? {};
+    const perk = getSkin(this.skinId).perk ?? {};
     this.player.boost = {
-      jump: upgradeEffect(owned, 'boots'),
-      speed: upgradeEffect(owned, 'speed'),
-      grip: upgradeEffect(owned, 'crampons'),
+      jump: upgradeEffect(owned, 'boots') + (perk.jump ?? 0),
+      speed: upgradeEffect(owned, 'speed') + (perk.speed ?? 0),
+      // Grip is a fraction toward "not slippery", so it is capped rather than
+      // summed past 1 — a penguin that cannot slide at all is a different game.
+      grip: Math.min(0.92, upgradeEffect(owned, 'crampons') + (perk.grip ?? 0)),
       wind: upgradeEffect(owned, 'vest'),
     };
     this.player.gear = {
       wings: owned.wings ?? 0,
       rocket: (owned.rocket ?? 0) > 0 ? owned.rocket : 0,
     };
+    /** Extra glide seconds the worn penguin adds on top of the wings. */
+    this.player.glideBonus = perk.glide ?? 0;
     this.player.reset(def.spawn.x, def.spawn.y);
     /** Extra warning the bird radar buys, in seconds. */
-    this.radar = upgradeEffect(owned, 'radar');
-    this.magnetRange = upgradeEffect(owned, 'magnet');
+    this.radar = upgradeEffect(owned, 'radar') + (perk.radar ?? 0);
+    this.magnetRange = upgradeEffect(owned, 'magnet') + (perk.magnet ?? 0);
     /** "Kalın Tüy" — one free save per attempt at the level. */
     this.shields = upgradeEffect(owned, 'down') ? 1 : 0;
     this.maxShields = this.shields;
@@ -409,6 +416,8 @@ export class World {
       this.audio.checkpoint();
       this.particles.sparkle(c.x + c.w / 2, c.y - 20, '#7fe7ff');
       this.showHint('Kontrol noktası', 1.4);
+      // A checkpoint is exactly the position worth keeping if the phone dies.
+      this.onCheckpoint?.();
     }
   }
 
