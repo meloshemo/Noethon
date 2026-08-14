@@ -129,6 +129,7 @@
             </span>
             <span class="daily__streak" id="dailyStreak" hidden></span>
           </button>
+          <ul class="goals" id="dailyGoals"></ul>
 
           <div class="actions__row">
             <button class="btn" id="levelsBtn">Bölümler</button>
@@ -136,11 +137,29 @@
               Market
               <small class="btn__badge" id="shopBadge" hidden></small>
             </button>
+            <button class="btn" id="skinsBtn">
+              Koleksiyon
+              <small class="btn__badge" id="skinsBadge" hidden></small>
+            </button>
             <button class="btn" id="boardBtn">Sıralama</button>
             <button class="btn" id="howtoBtn">Nasıl oynanır</button>
             <button class="btn" id="settingsBtn">Ayarlar</button>
           </div>
         </div>
+
+        <button class="league" id="leagueCard" type="button">
+          <span class="league__badge" id="leagueBadge" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M5 3h14v4a5 5 0 0 1-4 4.9V15h3v2H6v-2h3v-3.1A5 5 0 0 1 5 7V3Z" fill="currentColor"/><path d="M3 5h2v3a3 3 0 0 1-2-2.8V5Zm16 0h2v.2A3 3 0 0 1 19 8V5Z" fill="currentColor"/></svg>
+          </span>
+          <span class="league__body">
+            <span class="league__head">
+              <strong id="leagueName">Bronz Lig</strong>
+              <span class="league__points" id="leaguePoints">0</span>
+            </span>
+            <span class="league__bar"><i id="leagueFill"></i></span>
+            <small class="league__next" id="leagueNext">Bu hafta</small>
+          </span>
+        </button>
 
         <div class="missions" id="missionsCard">
           <h3 class="missions__title">Günün görevleri</h3>
@@ -313,6 +332,7 @@
           </dl>
 
           <div class="payout" id="winPayout"></div>
+          <div class="rewards" id="winRewards" hidden></div>
 
           <div class="share" id="winShare" hidden>
             <p class="share__rank" id="winRank"></p>
@@ -335,6 +355,20 @@
             <button class="btn btn--ghost" id="winMenuBtn">Ana menü</button>
           </div>
         </div>
+      </section>
+
+      <!-- Collection -->
+      <section class="screen screen--skins" data-name="skins" hidden>
+        <header class="screen__head">
+          <button class="btn btn--ghost btn--back" data-back>← Geri</button>
+          <h2 class="screen__title">Koleksiyon</h2>
+          <span class="screen__meta" id="skinsMeta"></span>
+        </header>
+        <div class="skins" id="skinGrid"></div>
+        <p class="screen__foot">
+          Penguenlerin çoğu satın alınmaz, kazanılır. Seçtiğin penguen bölümde
+          gerçekten o penguen olarak koşar.
+        </p>
       </section>
 
       <!-- Leaderboard -->

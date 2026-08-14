@@ -12,6 +12,9 @@ import { CRAFTED_LEVELS, ASSIST_AFTER_DEATHS, REWARDS, scaleForLevel } from './c
 import { Storage, todayKey } from '../core/storage.js';
 import { ensureMissions, progressMission } from './missions.js';
 import { encodeRun, decodeRun } from './ghost.js';
+import { newlyEarned, getSkin } from './skins.js';
+import { weekKey, scoreRun, tierFor } from './league.js';
+import { dailyObjectives, applyRun } from './daily.js';
 
 /** Fixed physics step — decoupled from the display refresh rate. */
 const STEP = 1 / 120;
@@ -112,6 +115,7 @@ export class Game {
       assist: this.save.settings.assist,
       upgrades: this.save.upgrades,
       ghost: this._ghostFor(this.boardKey),
+      skin: this.save.skin ?? 'normal',
     });
     this.runDeaths = 0;
     this.assistOffered = false;
@@ -266,6 +270,10 @@ export class Game {
 
     this._bankRun(w, result);
     this._runMissions(w, result);
+    this._recordFeats(w, result);
+    this._runDailyObjectives(w, result);
+    this._runLeague(w, result);
+    this._grantSkins(result);
     Storage.save(this.save);
     this.ui.onLevelComplete(result);
     this.ui.refreshTitle();
@@ -413,6 +421,79 @@ export class Game {
     return added
       ? { ok: true, key, message: `${name} ${where} sıralamasına eklendi.` }
       : { ok: false, key, message: `${name} için daha hızlı bir süre zaten kayıtlı.` };
+  }
+
+  /**
+   * The lifetime counters the collection is earned on.
+   *
+   * These are deliberately cumulative and never reset: a skin unlocked by
+   * finishing fifty levels without dying is a record of something you did, and
+   * it should not evaporate.
+   */
+  _recordFeats(w, result) {
+    const st = this.save.stats;
+    if (result.deaths === 0) st.flawless = (st.flawless ?? 0) + 1;
+    st.boosts = (st.boosts ?? 0) + w.boostsTaken;
+    // Endless levels are the ones that count as distance travelled, at the
+    // game's own scale of ten pixels to the metre.
+    if (!this.dailyRun && this.levelId > CRAFTED_LEVELS) {
+      result.meters = Math.round(w.worldW / 10);
+      st.endlessMeters = (st.endlessMeters ?? 0) + result.meters;
+    }
+    result.boosts = w.boostsTaken;
+    result.rotten = w.rottenTaken;
+  }
+
+  /**
+   * Daily Pengu: the day's objectives, ticked off across every attempt rather
+   * than demanded in one run. That is what makes a fifth go worth starting.
+   */
+  _runDailyObjectives(w, result) {
+    if (!result.daily) return;
+    const key = todayKey();
+    const daily = Storage.touchDaily(this.save);
+    const { done, newly } = applyRun(key, w.def.target, daily.objectives, result);
+    Storage.setDailyObjectives(this.save, done);
+
+    const list = dailyObjectives(key, w.def.target);
+    result.objectives = list.map((o) => ({ ...o, done: done.includes(o.id), fresh: newly.includes(o.id) }));
+    result.objectivesDone = newly.length;
+    result.objectivesTotal = list.length;
+
+    if (newly.length) {
+      const pay = newly.length * REWARDS.dailyObjective;
+      Storage.addCoins(this.save, pay);
+      result.coins += pay;
+      result.breakdown.push({ label: `${newly.length} günlük hedef`, value: pay });
+    }
+  }
+
+  /** Score the run into this week's league. */
+  _runLeague(w, result) {
+    const week = weekKey();
+    Storage.touchLeague(this.save, week);
+    const { points, rows } = scoreRun(result);
+    const before = this.save.league.points;
+    const after = before + points;
+    Storage.addLeaguePoints(this.save, week, points, tierFor(after));
+    result.league = {
+      points,
+      rows,
+      total: after,
+      promoted: tierFor(after) > tierFor(before),
+    };
+  }
+
+  /**
+   * Hand over anything the run just earned. Checked here rather than on the
+   * collection screen so the unlock lands on the win sheet, at the moment it
+   * was earned, which is the only moment it means anything.
+   */
+  _grantSkins(result) {
+    const earned = newlyEarned(this.save);
+    if (!earned.length) return;
+    for (const skin of earned) Storage.grantSkin(this.save, skin.id);
+    result.unlockedSkins = earned.map((s) => ({ id: s.id, name: s.name }));
   }
 
   /** Feed the run into today's missions and pay out anything completed. */

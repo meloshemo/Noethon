@@ -68,6 +68,9 @@ src/
     particles.js           havuzlanmış parçacık sistemi (çöp üretmez)
   game/
     config.js              tüm oyun hissi sabitleri + zıplama erişimi (reachFor)
+    skins.js               penguen koleksiyonu: palet, aksesuar çizimi, açılma şartları
+    league.js              haftalık lig: puanlama, kademeler, hafta anahtarı
+    daily.js               Günün Pengu'su: güne göre seçilen hedefler
     terrain.js             parkur bestecisi: raf, yamaç, uçurum, yarık, tünel
     entities.js            buz kütleleri, tehlikeler, balıklar, kontrol noktaları
     player.js              penguen fiziği ve çarpışma çözümü
@@ -276,6 +279,52 @@ temel değerlerle kontrol ediyor; market rahatlık ve hız satıyor, erişim de�
   dönerdi.
 
 ---
+
+## Koleksiyon
+
+Penguen her karede sıfırdan çiziliyor, yani bir "skin" görsel dosyası değil —
+bir palet artı küçük bir aksesuar çizeri. Bu yüzden her penguen birkaç yüz bayt,
+her büyüme ölçeğinde çalışıyor ve gövdenin ezilip uzamasına kendiliğinden uyuyor.
+
+Dokuz penguen var ve biri hariç hepsi **satın alınmaz, kazanılır**:
+
+| Penguen | Şart |
+|---|---|
+| Penguen | Başlangıç |
+| Ninja | 50 bölümü ölmeden bitir |
+| Kral | 1000 balık topla |
+| Astronot | Sonsuz modda 5000 metre |
+| Altın | 7 gün üst üste günün bölümü |
+| Korsan | 20 bölümde 3 yıldız |
+| Ateş | 15 hız balığı yut |
+| Siber | Elmas lige çık |
+| Yılbaşı | Aralık'ta bedava, diğer aylarda 240 balık |
+
+Sayaçlar kalıcı ve hiç sıfırlanmıyor: elli bölümü ölmeden bitirerek açılan bir
+penguen, yaptığın şeyin kaydıdır ve buharlaşmamalı. Açılma anı bölüm sonu
+ekranında gösteriliyor — kazanıldığı an, çünkü anlamlı olduğu tek an o.
+
+## Haftalık lig
+
+Sezon bir hafta. Puan uzun oynamaktan değil iyi oynamaktan geliyor: bölümü
+bitirmek az, yıldızlar ve ölümsüz turlar daha çok, günün bölümü en çok. Pazartesi
+puanlar sıfırlanıyor, **çıktığın kademe kalıyor**.
+
+Bronz → Gümüş (500) → Altın (2.000) → Elmas (5.000).
+
+Burada da dürüst olmak gerek: sunucu olmadan sıralanacak başka oyuncu yok, yani
+kademeler bir *hedef*, bir sıralama değil. "Bu hafta Elmas'a çıkacağım" dedirten
+şey merdivenin kendisi. Arka uç geldiğinde aynı puanlar hiçbir değişiklik
+gerekmeden gerçek bir tabloyu besler.
+
+## Günün Pengu'su
+
+Günün bölümü tek parkur ve tek kronometreydi; bir kez yapılan bir şey. Artık aynı
+parkurun üstünde bir hedef listesi var — hızlı bitir, balıkları topla, ölmeden
+geç, çürük balığa dokunma — ve hedefler **gün boyunca birikiyor**, tek turda
+hepsini yapmak gerekmiyor. Beşinci denemeyi başlatmaya değer kılan da bu.
+
+Hedefler tarihten seçiliyor, yani aynı gün herkeste aynı liste çıkıyor.
 
 ## Hayalet yarışı ve sıralama
 

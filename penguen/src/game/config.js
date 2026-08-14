@@ -227,6 +227,8 @@ export const REWARDS = {
   /** Bonus per consecutive day, capped. */
   streakStep: 5,
   streakCap: 50,
+  /** Each of the day's objectives, the first time it is ticked off. */
+  dailyObjective: 30,
 };
 
 /**

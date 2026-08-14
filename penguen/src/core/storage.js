@@ -7,7 +7,7 @@
  */
 
 const KEY = 'pengu.save.v1';
-const VERSION = 3;
+const VERSION = 4;
 
 /**
  * Ghost runs are the biggest thing in the save by far, so they are capped.
@@ -24,13 +24,37 @@ function defaults() {
     unlocked: 1,
     levels: {}, // { [id]: { stars, bestTime, deaths, fish } }
     settings: { sfx: true, music: true, reducedMotion: false, assist: false },
-    stats: { totalDeaths: 0, totalPlays: 0, totalFish: 0 },
+    stats: {
+      totalDeaths: 0,
+      totalPlays: 0,
+      totalFish: 0,
+      /** Levels finished without dying once — the ninja's condition. */
+      flawless: 0,
+      /** Distance covered in endless mode, in metres (10px = 1m). */
+      endlessMeters: 0,
+      /** Speed fish swallowed, ever. */
+      boosts: 0,
+    },
     /** Spendable currency. */
     coins: 0,
     /** { [upgradeId]: ownedLevel } */
     upgrades: {},
-    /** Daily challenge state. */
-    daily: { date: null, done: false, bestTime: null, streak: 0, lastPlayed: null },
+    /** Daily challenge state, including the day's completed objectives. */
+    daily: {
+      date: null,
+      done: false,
+      bestTime: null,
+      streak: 0,
+      bestStreak: 0,
+      lastPlayed: null,
+      objectives: [],
+    },
+    /** { [skinId]: true } — everything unlocked or bought. */
+    skins: {},
+    /** The skin currently worn. */
+    skin: 'normal',
+    /** Weekly league: { week, points, bestTier, lastWeekPoints }. */
+    league: { week: null, points: 0, bestTier: 0, lastWeekPoints: 0 },
     /** Rotating missions, regenerated once a day. */
     missions: { date: null, list: [] },
     /** The name this player's runs are shared under. */
@@ -59,7 +83,17 @@ function migrate(parsed) {
     name: typeof parsed.name === 'string' ? parsed.name : '',
     ghosts: parsed.ghosts ?? {},
     rivals: parsed.rivals ?? {},
+    skins: parsed.skins ?? {},
+    skin: parsed.skin ?? 'normal',
+    league: { ...base.league, ...(parsed.league ?? {}) },
   };
+
+  // v3 had no record of the best streak ever reached, only the live one. The
+  // golden penguin is earned on that record, so seed it from what we know
+  // rather than making a long-standing player start again.
+  if ((parsed.version ?? 1) < 4) {
+    out.daily.bestStreak = Math.max(out.daily.bestStreak ?? 0, out.daily.streak ?? 0);
+  }
 
   // v1 had no economy. Rather than starting a returning player at zero, pay
   // them retroactively for the fish and stars they already earned.
@@ -183,11 +217,21 @@ export const Storage = {
         done: false,
         bestTime: null,
         streak: gap === 1 ? data.daily.streak : 0,
+        bestStreak: data.daily.bestStreak ?? 0,
         lastPlayed: data.daily.lastPlayed,
+        objectives: [],
       };
       write(data);
     }
     return data.daily;
+  },
+
+  /** Record which of the day's objectives are now ticked off. */
+  setDailyObjectives(data, done) {
+    this.touchDaily(data);
+    data.daily.objectives = done;
+    write(data);
+    return data.daily.objectives;
   },
 
   completeDaily(data, time) {
@@ -199,9 +243,65 @@ export const Storage = {
     if (first) {
       data.daily.streak = data.daily.lastPlayed === today ? data.daily.streak : data.daily.streak + 1;
       data.daily.lastPlayed = today;
+      // The best streak ever reached is what the golden penguin is earned on,
+      // so it is kept separately from the live one, which a missed day resets.
+      data.daily.bestStreak = Math.max(data.daily.bestStreak ?? 0, data.daily.streak);
     }
     write(data);
     return { first, streak: data.daily.streak };
+  },
+
+  /* -------------------------------------------------------- skins */
+
+  /** Unlock a skin. Returns false if it was already owned. */
+  grantSkin(data, id) {
+    if (data.skins[id]) return false;
+    data.skins[id] = true;
+    write(data);
+    return true;
+  },
+
+  /** Buy a skin with fish. Returns false when it cannot be afforded. */
+  buySkin(data, id, cost) {
+    if (data.skins[id]) return false;
+    if ((data.coins ?? 0) < cost) return false;
+    data.coins -= cost;
+    data.skins[id] = true;
+    write(data);
+    return true;
+  },
+
+  wearSkin(data, id) {
+    data.skin = id;
+    write(data);
+    return id;
+  },
+
+  /* ------------------------------------------------------- league */
+
+  /**
+   * Roll the league over if the week has turned, then return it.
+   * The tier reached is kept forever; the points are not.
+   */
+  touchLeague(data, week) {
+    if (data.league.week !== week) {
+      data.league = {
+        week,
+        points: 0,
+        bestTier: data.league.bestTier ?? 0,
+        lastWeekPoints: data.league.week ? (data.league.points ?? 0) : 0,
+      };
+      write(data);
+    }
+    return data.league;
+  },
+
+  addLeaguePoints(data, week, points, tierIndex) {
+    this.touchLeague(data, week);
+    data.league.points += points;
+    data.league.bestTier = Math.max(data.league.bestTier ?? 0, tierIndex);
+    write(data);
+    return data.league;
   },
 
   /* ------------------------------------------------------- ghosts */

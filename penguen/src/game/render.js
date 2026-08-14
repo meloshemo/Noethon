@@ -9,6 +9,7 @@
  */
 
 import { VIEW, VIEW_LIMITS } from './config.js';
+import { getSkin } from './skins.js';
 import { clamp, lerp, makeRng } from '../core/util.js';
 
 const PALETTE = {
@@ -1270,9 +1271,14 @@ export class Renderer {
     const sy = p.squashY;
     const s = p.scale;
 
-    // Down colour darkens as the chick grows up.
+    const skin = getSkin(world.skinId);
+
+    // Down colour darkens as the chick grows up — but only for the ordinary
+    // penguin. A gold one is gold at every size.
     const t = clamp((s - 1) / 0.62, 0, 1);
-    let body = `rgb(${Math.round(lerp(88, 26, t))}, ${Math.round(lerp(100, 36, t))}, ${Math.round(lerp(118, 52, t))})`;
+    let body = skin.grows
+      ? `rgb(${Math.round(lerp(88, 26, t))}, ${Math.round(lerp(100, 36, t))}, ${Math.round(lerp(118, 52, t))})`
+      : skin.tint;
     if (p.charge > 0) {
       // Crimson, not merely tinted — at speed he should look like a different
       // animal from across the screen.
@@ -1289,6 +1295,24 @@ export class Renderer {
     ctx.scale(sx, sy);
     ctx.translate(-cx, -by);
 
+    const bodyH = p.h * 0.82;
+    const headY = by - bodyH - p.h * 0.06;
+    const step = p.onGround ? Math.sin(p.walkPhase) : 0;
+    const geo = {
+      cx,
+      by,
+      w: p.w,
+      h: p.h,
+      bodyH,
+      headY,
+      facing: p.facing,
+      step,
+      time,
+      airborne: !p.onGround,
+    };
+    // Some skins wear things behind the bird — a jetpack, a cape.
+    if (skin.behind && skin.paint) skin.paint(ctx, geo, 'behind');
+
     // Shadow on the floe
     if (p.onGround) {
       ctx.fillStyle = 'rgba(10,30,50,0.18)';
@@ -1297,11 +1321,10 @@ export class Renderer {
       ctx.fill();
     }
 
-    const step = p.onGround ? Math.sin(p.walkPhase) : 0;
     const footY = by - 1;
 
     // Feet
-    ctx.fillStyle = '#ff9c3f';
+    ctx.fillStyle = skin.foot;
     for (const sgn of [-1, 1]) {
       const fx = cx + sgn * p.w * 0.24 + (sgn === 1 ? step * 3 : -step * 3);
       ctx.beginPath();
@@ -1310,14 +1333,13 @@ export class Renderer {
     }
 
     // Body
-    const bodyH = p.h * 0.82;
     ctx.fillStyle = body;
     ctx.beginPath();
     ctx.ellipse(cx, by - bodyH * 0.5, p.w * 0.46, bodyH * 0.52, 0, 0, Math.PI * 2);
     ctx.fill();
 
     // Belly
-    ctx.fillStyle = '#f6fbff';
+    ctx.fillStyle = skin.belly;
     ctx.beginPath();
     ctx.ellipse(cx + p.facing * p.w * 0.05, by - bodyH * 0.44, p.w * 0.29, bodyH * 0.4, 0, 0, Math.PI * 2);
     ctx.fill();
@@ -1334,14 +1356,13 @@ export class Renderer {
     ctx.restore();
 
     // Head
-    const headY = by - bodyH - p.h * 0.06;
     ctx.fillStyle = body;
     ctx.beginPath();
     ctx.ellipse(cx + p.facing * p.w * 0.04, headY, p.w * 0.34, p.h * 0.24, 0, 0, Math.PI * 2);
     ctx.fill();
 
     // Beak
-    ctx.fillStyle = '#ff9c3f';
+    ctx.fillStyle = skin.beak;
     ctx.beginPath();
     ctx.moveTo(cx + p.facing * p.w * 0.3, headY + p.h * 0.01);
     ctx.lineTo(cx + p.facing * p.w * 0.52, headY + p.h * 0.05);
@@ -1365,7 +1386,7 @@ export class Renderer {
         ctx.beginPath();
         ctx.ellipse(ex, headY - p.h * 0.03, p.w * 0.075, p.h * 0.065, 0, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = '#0e1723';
+        ctx.fillStyle = skin.eye ?? '#0e1723';
         ctx.beginPath();
         ctx.arc(ex + p.facing * p.w * 0.02, headY - p.h * 0.03, p.w * 0.038, 0, Math.PI * 2);
         ctx.fill();
@@ -1384,7 +1405,27 @@ export class Renderer {
       ctx.lineCap = 'butt';
     }
 
+    // Whatever this penguin wears, drawn inside the body transform so it
+    // squashes and stretches with the bird rather than sliding around on it.
+    if (skin.paint) {
+      skin.paint(ctx, geo, 'front');
+    }
+
     ctx.restore();
+
+    // A skin's own glow — always on, unlike the speed boost's.
+    if (skin.aura && !this.reducedMotion) {
+      const ax = p.x + p.w / 2;
+      const ay = p.y + p.h * 0.5;
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      const glow = ctx.createRadialGradient(ax, ay, p.w * 0.25, ax, ay, p.w * 1.25);
+      glow.addColorStop(0, skin.aura);
+      glow.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = glow;
+      ctx.fillRect(ax - p.w * 1.4, ay - p.h * 1.4, p.w * 2.8, p.h * 2.8);
+      ctx.restore();
+    }
 
     // Charged aura: a crimson glow with gold lightning snapping off it. Drawn
     // after the bird so it reads as energy coming off him, not paint on him.

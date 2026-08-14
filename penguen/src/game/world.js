@@ -58,6 +58,8 @@ export class World {
     /** What the player actually collides with. Built once; holds references. */
     this.solids = [...this.floes, ...this.terrain];
     this.zones = def.zones ?? [];
+    /** Which penguin is being worn — the renderer reads it every frame. */
+    this.skinId = deps.skin ?? 'normal';
     this.hazards = (def.hazards ?? []).map((d) => new Hazard(d));
     this.fish = (def.fish ?? []).map((d) => new Fish(d, 'normal'));
     /** Speed fish are scored separately, so the 3-fish star stays a 3-fish star. */
@@ -111,6 +113,8 @@ export class World {
     this.burstDodges = 0;
     this.orcaPasses = 0;
     this.boostsTaken = 0;
+    /** Rotten fish swallowed this run — one of the daily objectives reads it. */
+    this.rottenTaken = 0;
     this._orcaSeen = new Set();
 
     this.player.reset(this.spawn.x, this.spawn.y);
@@ -341,6 +345,7 @@ export class World {
       f.taken = true;
       f.pop = 1;
       this.player.afflict(f.kind);
+      this.rottenTaken++;
       this.audio.rot();
       this.particles.sparkle(f.x + f.w / 2, f.y + f.h / 2, '#7fbf4d');
       this.shake(3);
@@ -473,6 +478,7 @@ export class World {
     for (const f of this.boosts) f.reset();
     for (const f of this.rotten) f.reset();
     this.boostsTaken = 0;
+    this.rottenTaken = 0;
     this.particles.puff(this.respawn.x, this.respawn.y, 10);
     this._centerCamera();
   }

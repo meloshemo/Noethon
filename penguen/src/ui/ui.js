@@ -13,6 +13,10 @@ import { LEVELS } from '../game/levels.js';
 import { Storage } from '../core/storage.js';
 import { ensureMissions } from '../game/missions.js';
 import { shareText, withName } from '../game/ghost.js';
+import { SKINS, getSkin, skinStatus, drawPortrait } from '../game/skins.js';
+import { standing, weekKey } from '../game/league.js';
+import { dailyObjectives } from '../game/daily.js';
+import { generateDailyLevel } from '../game/generator.js';
 
 const ICE_LEGEND = [
   ['crack', 'Çatlak buz', 'Basınca çatlar, kısa süre sonra kırılır'],
@@ -102,6 +106,15 @@ export class UI {
       boardCode: $('boardCode'),
       boardMsg: $('boardMsg'),
       boardMeta: $('boardMeta'),
+      skinGrid: $('skinGrid'),
+      skinsMeta: $('skinsMeta'),
+      skinsBadge: $('skinsBadge'),
+      dailyGoals: $('dailyGoals'),
+      leagueName: $('leagueName'),
+      leaguePoints: $('leaguePoints'),
+      leagueFill: $('leagueFill'),
+      leagueNext: $('leagueNext'),
+      leagueBadge: $('leagueBadge'),
     };
 
     this._buildLegend();
@@ -159,6 +172,35 @@ export class UI {
     this.refreshWallet();
     this.refreshDaily();
     this.refreshMissions();
+    this.refreshLeague();
+    this.refreshSkinsBadge();
+  }
+
+  /**
+   * The weekly ladder. Points reset on Monday; the tier you reached does not,
+   * which is what makes a Sunday-night push worth making.
+   */
+  refreshLeague() {
+    const league = Storage.touchLeague(this.save, weekKey());
+    const st = standing(league);
+    this.el.leagueName.textContent = `${st.tier.name} Lig`;
+    this.el.leaguePoints.textContent = `${st.points} puan`;
+    this.el.leagueFill.style.width = `${Math.round(st.pct * 100)}%`;
+    this.el.leagueFill.style.background = st.tier.color;
+    this.el.leagueBadge.style.color = st.tier.color;
+    this.el.leagueNext.textContent = st.next
+      ? `${st.tier.name} → ${st.next.name} için ${st.toNext} puan`
+      : 'En üst lig — bu hafta zirvedesin';
+  }
+
+  /** Badge the collection when something is claimable or affordable. */
+  refreshSkinsBadge() {
+    const n = SKINS.filter((skin) => {
+      const st = skinStatus(this.save, skin);
+      return !st.owned && (st.pct >= 1 || (st.kind === 'coins' && (this.save.coins ?? 0) >= st.cost));
+    }).length;
+    this.el.skinsBadge.hidden = n === 0;
+    this.el.skinsBadge.textContent = n || '';
   }
 
   refreshWallet() {
@@ -178,12 +220,115 @@ export class UI {
 
   refreshDaily() {
     const d = Storage.touchDaily(this.save);
+    const done = d.objectives ?? [];
+
+    // The day's target time comes from the day's own level, so the objective
+    // reads as a real number rather than a generic "be fast".
+    let list = [];
+    try {
+      list = dailyObjectives(d.date ?? '', generateDailyLevel(d.date ?? '').target);
+    } catch {
+      list = [];
+    }
+    const got = list.filter((o) => done.includes(o.id)).length;
+
     this.el.dailyState.textContent = d.done
-      ? `Bugün bitti · ${formatTime(d.bestTime)} — daha hızlı dene`
-      : 'Herkes için aynı — süreni karşılaştır';
+      ? `${got}/${list.length} hedef · en iyi ${formatTime(d.bestTime)}`
+      : `${list.length} hedef · herkes için aynı bölüm`;
     this.el.dailyStreak.hidden = !d.streak;
     this.el.dailyStreak.textContent = d.streak ? `${d.streak} gün` : '';
-    document.getElementById('dailyBtn').classList.toggle('daily--done', d.done);
+    document.getElementById('dailyBtn').classList.toggle('daily--done', got === list.length && list.length > 0);
+
+    this.el.dailyGoals.innerHTML = list
+      .map(
+        (o) => `
+        <li class="goal${done.includes(o.id) ? ' goal--done' : ''}">
+          <span class="goal__tick" aria-hidden="true">${done.includes(o.id) ? '✓' : ''}</span>
+          <span>${o.text}</span>
+        </li>`,
+      )
+      .join('');
+  }
+
+  /* ------------------------------------------------------ collection */
+
+  /**
+   * The collection.
+   *
+   * Each card draws its own penguin, so what you see on the card is the palette
+   * and the accessories the game will actually put on the ice — not an
+   * illustration of them.
+   */
+  buildSkins() {
+    const grid = this.el.skinGrid;
+    grid.innerHTML = '';
+    const worn = this.save.skin ?? 'normal';
+    let owned = 0;
+
+    for (const skin of SKINS) {
+      const st = skinStatus(this.save, skin);
+      if (st.owned) owned++;
+
+      const card = document.createElement('div');
+      card.className = `skin${st.owned ? '' : ' skin--locked'}${worn === skin.id ? ' skin--worn' : ''}`;
+
+      const canvas = document.createElement('canvas');
+      canvas.className = 'skin__art';
+      canvas.width = 132;
+      canvas.height = 132;
+      canvas.setAttribute('aria-hidden', 'true');
+      const ctx = canvas.getContext('2d');
+      if (ctx) drawPortrait(ctx, skin, { w: 132, h: 132, time: 0.4 });
+
+      const body = document.createElement('div');
+      body.className = 'skin__body';
+      body.innerHTML = `
+        <strong class="skin__name">${skin.name}</strong>
+        <small class="skin__blurb">${skin.blurb}</small>
+        ${
+          st.owned
+            ? '<span class="skin__state">Açıldı</span>'
+            : `<span class="skin__bar"><i style="width:${Math.round(st.pct * 100)}%"></i></span>
+               <span class="skin__state">${st.label}</span>`
+        }`;
+
+      const btn = document.createElement('button');
+      btn.className = 'btn skin__btn';
+      btn.type = 'button';
+      if (st.owned) {
+        const isWorn = worn === skin.id;
+        btn.textContent = isWorn ? 'Giyildi' : 'Giy';
+        btn.disabled = isWorn;
+        if (!isWorn) btn.classList.add('btn--primary');
+        btn.addEventListener('click', () => {
+          Storage.wearSkin(this.save, skin.id);
+          this.audio.ui();
+          this.buildSkins();
+          // The menu backdrop is a live world, so the change shows immediately.
+          if (this.game?.world) this.game.world.skinId = skin.id;
+        });
+      } else if (st.kind === 'coins') {
+        const can = (this.save.coins ?? 0) >= st.cost;
+        btn.disabled = !can;
+        if (can) btn.classList.add('btn--primary');
+        btn.innerHTML = st.cost === 0 ? 'Al' : `<span>Al</span><small class="btn__sub">${st.cost} balık</small>`;
+        btn.addEventListener('click', () => {
+          if (!Storage.buySkin(this.save, skin.id, st.cost)) return;
+          this.audio.fish();
+          this.buildSkins();
+          this.refreshWallet();
+          this.refreshSkinsBadge();
+        });
+      } else {
+        btn.textContent = 'Kilitli';
+        btn.disabled = true;
+      }
+
+      card.append(canvas, body, btn);
+      grid.append(card);
+    }
+
+    this.el.skinsMeta.textContent = `${owned} / ${SKINS.length} penguen`;
   }
 
   refreshMissions() {
@@ -522,6 +667,7 @@ export class UI {
     this.el.nextBtn.hidden = Boolean(result.daily);
 
     this._renderPayout(result);
+    this._renderRewards(result);
     this._renderShare(result);
     this.showScreen('complete');
     this.refreshTitle();
@@ -656,6 +802,51 @@ export class UI {
     }, 1600);
   }
 
+  /**
+   * League points, the day's objectives and anything unlocked — the meta half
+   * of the win sheet. Shown under the coins because that is the order they
+   * matter in: coins are spendable now, the rest is why you play tomorrow.
+   */
+  _renderRewards(result) {
+    const box = $('winRewards');
+    if (!box) return;
+    const parts = [];
+
+    if (result.league?.points > 0) {
+      const rows = result.league.rows.map((r) => `<li><span>${r.label}</span><span>+${r.value}</span></li>`).join('');
+      parts.push(`
+        <div class="reward reward--league${result.league.promoted ? ' is-promoted' : ''}">
+          <div class="reward__head">
+            <span>Lig puanı</span>
+            <strong>+${result.league.points}</strong>
+          </div>
+          <ul class="reward__rows">${rows}</ul>
+          ${result.league.promoted ? '<p class="reward__note">Lig atladın!</p>' : ''}
+        </div>`);
+    }
+
+    if (result.objectives?.length) {
+      const items = result.objectives
+        .map(
+          (o) => `<li class="goal${o.done ? ' goal--done' : ''}${o.fresh ? ' goal--fresh' : ''}">
+            <span class="goal__tick" aria-hidden="true">${o.done ? '✓' : ''}</span><span>${o.text}</span></li>`,
+        )
+        .join('');
+      parts.push(`<div class="reward"><div class="reward__head"><span>Günün hedefleri</span></div><ul class="goals">${items}</ul></div>`);
+    }
+
+    if (result.unlockedSkins?.length) {
+      parts.push(`
+        <div class="reward reward--unlock">
+          <div class="reward__head"><span>Yeni penguen!</span></div>
+          <p class="reward__note">${result.unlockedSkins.map((s) => s.name).join(' · ')} açıldı — Koleksiyon'dan giyebilirsin.</p>
+        </div>`);
+    }
+
+    box.innerHTML = parts.join('');
+    box.hidden = parts.length === 0;
+  }
+
   /** The coin breakdown, so the reward never feels like a black box. */
   _renderPayout(result) {
     const box = $('winPayout');
@@ -742,6 +933,17 @@ export class UI {
       this.audio.ui();
       this._syncSettings();
       this.showScreen('settings');
+    });
+    $('skinsBtn').addEventListener('click', () => {
+      this.audio.ui();
+      this.buildSkins();
+      this.showScreen('skins');
+    });
+    $('leagueCard').addEventListener('click', () => {
+      this.audio.ui();
+      this.buildBoard();
+      this._boardMessage(null);
+      this.showScreen('board');
     });
     $('boardBtn').addEventListener('click', () => {
       this.audio.ui();
