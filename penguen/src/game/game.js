@@ -116,6 +116,7 @@ export class Game {
       upgrades: this.save.upgrades,
       ghost: this._ghostFor(this.boardKey),
       skin: this.save.skin ?? 'normal',
+      trail: this.save.trail ?? 'none',
     });
     this.runDeaths = 0;
     this.assistOffered = false;
@@ -444,6 +445,13 @@ export class Game {
     result.rotten = w.rottenTaken;
     result.skuasDodged = w.skuasDodged;
     result.skuaGrabs = w.skuaGrabs;
+    st.skuaDodges = (st.skuaDodges ?? 0) + w.skuasDodged;
+    st.glideSeconds = (st.glideSeconds ?? 0) + w.glideTime;
+    st.rocketFires = (st.rocketFires ?? 0) + w.rocketFires;
+    // A run that starts between midnight and five in the morning. The alien
+    // penguin is for people who play at times they should not.
+    const hour = new Date().getHours();
+    if (hour >= 0 && hour < 5) st.nightRuns = (st.nightRuns ?? 0) + 1;
   }
 
   /**
@@ -494,8 +502,8 @@ export class Game {
   _grantSkins(result) {
     const earned = newlyEarned(this.save);
     if (!earned.length) return;
-    for (const skin of earned) Storage.grantSkin(this.save, skin.id);
-    result.unlockedSkins = earned.map((s) => ({ id: s.id, name: s.name }));
+    for (const item of earned) Storage.grantSkin(this.save, item.id, item.bag);
+    result.unlockedSkins = earned.map((s) => ({ id: s.id, name: s.name, bag: s.bag }));
   }
 
   /** Feed the run into today's missions and pay out anything completed. */

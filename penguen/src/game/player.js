@@ -25,6 +25,14 @@ export class Player {
     this.curse = { heavy: 0, dizzy: 0, blind: 0 };
     /** Afterimages, so the boost reads as speed rather than as a colour. */
     this.trail = [];
+    /**
+     * A short ring buffer of where the penguin has been, kept always and
+     * reused in place so it produces no garbage. The cosmetic trail paints
+     * from this — which is why a trail costs nothing but eighteen objects.
+     */
+    this.history = Array.from({ length: 18 }, () => ({ x: 0, y: 0, age: 1 }));
+    this._histAt = 0;
+    this._histAcc = 0;
     this.reset(0, 0);
   }
 
@@ -72,6 +80,11 @@ export class Player {
     this.charge = 0;
     this.curse = { heavy: 0, dizzy: 0, blind: 0 };
     this.trail.length = 0;
+    for (const p of this.history) {
+      p.x = x;
+      p.y = y;
+      p.age = 1;
+    }
     this.gliding = false;
     this.glideLeft = this.glideMax;
     this.rocketLeft = this.rocketMax;
@@ -305,6 +318,19 @@ export class Player {
     this.slideAmount = damp(this.slideAmount, slippery && Math.abs(this.vx) > 60 ? 1 : 0, 8, dt);
     this.blink -= dt;
     if (this.blink < -0.14) this.blink = 2.4 + Math.random() * 3.2;
+
+    // Breadcrumb for the cosmetic trail, on a fixed clock rather than per
+    // frame, so the spacing is the same at 60 and 144 Hz.
+    for (const p of this.history) p.age = Math.min(1, p.age + dt * 1.9);
+    this._histAcc += dt;
+    if (this._histAcc >= 0.035) {
+      this._histAcc = 0;
+      const slot = this.history[this._histAt];
+      slot.x = this.x + this.w / 2;
+      slot.y = this.y + this.h * 0.6;
+      slot.age = 0;
+      this._histAt = (this._histAt + 1) % this.history.length;
+    }
   }
 
   _resolveX(floes) {

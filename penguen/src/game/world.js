@@ -60,6 +60,8 @@ export class World {
     this.zones = def.zones ?? [];
     /** Which penguin is being worn — the renderer reads it every frame. */
     this.skinId = deps.skin ?? 'normal';
+    /** And what it leaves behind. */
+    this.trailId = deps.trail ?? 'none';
     this.hazards = (def.hazards ?? []).map((d) => new Hazard(d));
     this.fish = (def.fish ?? []).map((d) => new Fish(d, 'normal'));
     /** Speed fish are scored separately, so the 3-fish star stays a 3-fish star. */

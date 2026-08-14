@@ -326,23 +326,34 @@ Penguen her karede sıfırdan çiziliyor, yani bir "skin" görsel dosyası deği
 bir palet artı küçük bir aksesuar çizeri. Bu yüzden her penguen birkaç yüz bayt,
 her büyüme ölçeğinde çalışıyor ve gövdenin ezilip uzamasına kendiliğinden uyuyor.
 
-Dokuz penguen var ve biri hariç hepsi **satın alınmaz, kazanılır**:
+**İki slot var**, ve mesele bu: **20 penguen × 10 iz = 200 kombin**. Bir gardırobu
+liste olmaktan çıkarıp gardırop yapan şey, ikisinin birden *senin seçimin*
+olması.
 
-| Penguen | Şart |
-|---|---|
-| Penguen | Başlangıç |
-| Ninja | 50 bölümü ölmeden bitir |
-| Kral | 1000 balık topla |
-| Astronot | Sonsuz modda 5000 metre |
-| Altın | 7 gün üst üste günün bölümü |
-| Korsan | 20 bölümde 3 yıldız |
-| Ateş | 15 hız balığı yut |
-| Siber | Elmas lige çık |
-| Yılbaşı | Aralık'ta bedava, diğer aylarda 240 balık |
+### Penguenler
 
-Sayaçlar kalıcı ve hiç sıfırlanmıyor: elli bölümü ölmeden bitirerek açılan bir
-penguen, yaptığın şeyin kaydıdır ve buharlaşmamalı. Açılma anı bölüm sonu
-ekranında gösteriliyor — kazanıldığı an, çünkü anlamlı olduğu tek an o.
+Nadirlik bir güç seviyesi değil — her şey kozmetik ve öyle kalacak. Nadirlik
+"bunu elde etmek ne kadar zordu"nun dilbilgisi:
+
+| | Penguen | Şart |
+|---|---|---|
+| Yaygın | Penguen | Başlangıç |
+| Nadir | Ninja · Korsan · Yılbaşı · Frak · Kâşif · Dalgıç · Aşçı | 50 ölümsüz bölüm · 20×3 yıldız · Aralık/240 balık · 300 balık · 120 bölüm · 150 ölüm · 380 balık |
+| Efsanevi | Kral · Astronot · Ateş · Rock · Uzaylı · Hayalet · Şövalye | 1000 balık · 5000 m · 15 hız balığı · 60 hız balığı · 5 gece turu · 400 ölüm · 25 kuş dalışı |
+| Mitik | Altın · Siber · Kutup Işığı · Buz Kraliçesi · Gölge | 7 günlük seri · Elmas lig · 300 sn süzülme · 45×3 yıldız · 15 penguen topla |
+
+Aksesuarlar gerçekten çiziliyor: astronotun kaskı ve havada ateşleyen jeti,
+ninjanın koşarken savrulan bandı, şövalyenin miğferi ve sorguçu, aşçının
+sallanan kepi, uzaylının zıplayan antenleri, hayaletin dalgalanan eteği, Buz
+Kraliçesi'nin omuzlarından çıkan kristaller.
+
+### İzler
+
+Ayrı bir slot: penguenin arkasında ne bıraktığı. Oyuncunun son konumlarından
+çiziliyor — yani bir izin maliyeti on sekiz nesnelik bir halka tampon, o kadar.
+
+Kar tozu, kabarcık, kıvılcım, buz kırığı, kalp, nota, alev izi, kutup ışığı ve
+Boşluk (geçtiğin yerde ışık bırakmayan mitik iz).
 
 ## Haftalık lig
 

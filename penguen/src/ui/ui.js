@@ -13,7 +13,7 @@ import { LEVELS } from '../game/levels.js';
 import { Storage } from '../core/storage.js';
 import { ensureMissions } from '../game/missions.js';
 import { shareText, withName } from '../game/ghost.js';
-import { SKINS, getSkin, skinStatus, drawPortrait } from '../game/skins.js';
+import { SKINS, TRAILS, RARITY, getSkin, getTrail, skinStatus, drawPortrait } from '../game/skins.js';
 import { standing, weekKey } from '../game/league.js';
 import { dailyObjectives } from '../game/daily.js';
 import { generateDailyLevel } from '../game/generator.js';
@@ -115,6 +115,7 @@ export class UI {
       boardMsg: $('boardMsg'),
       boardMeta: $('boardMeta'),
       skinGrid: $('skinGrid'),
+      skinTabs: $('skinTabs'),
       skinsMeta: $('skinsMeta'),
       skinsBadge: $('skinsBadge'),
       dailyGoals: $('dailyGoals'),
@@ -203,10 +204,12 @@ export class UI {
 
   /** Badge the collection when something is claimable or affordable. */
   refreshSkinsBadge() {
-    const n = SKINS.filter((skin) => {
-      const st = skinStatus(this.save, skin);
-      return !st.owned && (st.pct >= 1 || (st.kind === 'coins' && (this.save.coins ?? 0) >= st.cost));
-    }).length;
+    const count = (list, bag) =>
+      list.filter((item) => {
+        const st = skinStatus(this.save, item, new Date(), bag);
+        return !st.owned && (st.pct >= 1 || (st.kind === 'coins' && (this.save.coins ?? 0) >= st.cost));
+      }).length;
+    const n = count(SKINS, 'skins') + count(TRAILS, 'trails');
     this.el.skinsBadge.hidden = n === 0;
     this.el.skinsBadge.textContent = n || '';
   }
@@ -267,18 +270,35 @@ export class UI {
    * and the accessories the game will actually put on the ice — not an
    * illustration of them.
    */
-  buildSkins() {
+  buildSkins(tab = this._skinTab ?? 'skins') {
+    this._skinTab = tab;
+    const trails = tab === 'trails';
+    const list = trails ? TRAILS : SKINS;
+    const bag = trails ? 'trails' : 'skins';
+    const worn = trails ? (this.save.trail ?? 'none') : (this.save.skin ?? 'normal');
+
+    this.el.skinTabs?.querySelectorAll('.tab').forEach((b) => {
+      b.classList.toggle('is-on', b.dataset.tab === tab);
+    });
+
     const grid = this.el.skinGrid;
     grid.innerHTML = '';
-    const worn = this.save.skin ?? 'normal';
     let owned = 0;
 
-    for (const skin of SKINS) {
-      const st = skinStatus(this.save, skin);
+    // Rarest last: the wall should build toward the things worth wanting.
+    const sorted = [...list].sort(
+      (a, b) => (RARITY[a.rarity]?.order ?? 0) - (RARITY[b.rarity]?.order ?? 0),
+    );
+
+    for (const item of sorted) {
+      const st = skinStatus(this.save, item, new Date(), bag);
       if (st.owned) owned++;
+      const rarity = RARITY[item.rarity] ?? RARITY.common;
 
       const card = document.createElement('div');
-      card.className = `skin${st.owned ? '' : ' skin--locked'}${worn === skin.id ? ' skin--worn' : ''}`;
+      card.className =
+        `skin skin--${item.rarity ?? 'common'}` +
+        `${st.owned ? '' : ' skin--locked'}${worn === item.id ? ' skin--worn' : ''}`;
 
       const canvas = document.createElement('canvas');
       canvas.className = 'skin__art';
@@ -286,17 +306,21 @@ export class UI {
       canvas.height = 132;
       canvas.setAttribute('aria-hidden', 'true');
       const ctx = canvas.getContext('2d');
-      if (ctx) drawPortrait(ctx, skin, { w: 132, h: 132, time: 0.4 });
+      if (ctx) {
+        if (trails) UI.drawTrailPreview(ctx, item, 132, 132);
+        else drawPortrait(ctx, item, { w: 132, h: 132, time: 0.4 });
+      }
 
       const body = document.createElement('div');
       body.className = 'skin__body';
       body.innerHTML = `
-        <strong class="skin__name">${skin.name}</strong>
-        <small class="skin__blurb">${skin.blurb}</small>
+        <span class="skin__rarity" style="color:${rarity.color}">${rarity.name}</span>
+        <strong class="skin__name">${item.name}</strong>
+        <small class="skin__blurb">${item.blurb}</small>
         ${
           st.owned
             ? '<span class="skin__state">Açıldı</span>'
-            : `<span class="skin__bar"><i style="width:${Math.round(st.pct * 100)}%"></i></span>
+            : `<span class="skin__bar"><i style="width:${Math.round(st.pct * 100)}%;background:${rarity.color}"></i></span>
                <span class="skin__state">${st.label}</span>`
         }`;
 
@@ -304,16 +328,19 @@ export class UI {
       btn.className = 'btn skin__btn';
       btn.type = 'button';
       if (st.owned) {
-        const isWorn = worn === skin.id;
+        const isWorn = worn === item.id;
         btn.textContent = isWorn ? 'Giyildi' : 'Giy';
         btn.disabled = isWorn;
         if (!isWorn) btn.classList.add('btn--primary');
         btn.addEventListener('click', () => {
-          Storage.wearSkin(this.save, skin.id);
+          Storage.wearSkin(this.save, item.id, bag);
           this.audio.ui();
-          this.buildSkins();
-          // The menu backdrop is a live world, so the change shows immediately.
-          if (this.game?.world) this.game.world.skinId = skin.id;
+          this.buildSkins(tab);
+          // The menu backdrop is a live world, so the change shows at once.
+          if (this.game?.world) {
+            if (trails) this.game.world.trailId = item.id;
+            else this.game.world.skinId = item.id;
+          }
         });
       } else if (st.kind === 'coins') {
         const can = (this.save.coins ?? 0) >= st.cost;
@@ -321,9 +348,9 @@ export class UI {
         if (can) btn.classList.add('btn--primary');
         btn.innerHTML = st.cost === 0 ? 'Al' : `<span>Al</span><small class="btn__sub">${st.cost} balık</small>`;
         btn.addEventListener('click', () => {
-          if (!Storage.buySkin(this.save, skin.id, st.cost)) return;
+          if (!Storage.buySkin(this.save, item.id, st.cost, bag)) return;
           this.audio.fish();
-          this.buildSkins();
+          this.buildSkins(tab);
           this.refreshWallet();
           this.refreshSkinsBadge();
         });
@@ -336,7 +363,38 @@ export class UI {
       grid.append(card);
     }
 
-    this.el.skinsMeta.textContent = `${owned} / ${SKINS.length} penguen`;
+    this.el.skinsMeta.textContent = `${owned} / ${list.length} ${trails ? 'iz' : 'penguen'}`;
+  }
+
+  /**
+   * A trail has nothing to draw without a penguin moving, so the card fakes
+   * one: an arc of positions across the card, oldest to newest, exactly the
+   * shape the painter gets in play.
+   */
+  static drawTrailPreview(ctx, trail, w, h) {
+    ctx.clearRect(0, 0, w, h);
+    if (!trail.paint) {
+      ctx.strokeStyle = 'rgba(143,196,226,0.35)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 6]);
+      ctx.beginPath();
+      ctx.moveTo(w * 0.2, h * 0.6);
+      ctx.lineTo(w * 0.8, h * 0.6);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      return;
+    }
+    const n = 14;
+    const hist = Array.from({ length: n }, (_, i) => {
+      const k = i / (n - 1);
+      return { x: w * (0.16 + k * 0.62), y: h * (0.66 - Math.sin(k * Math.PI) * 0.22), age: 1 - k };
+    });
+    // A card is smaller than the screen, so the shapes are drawn against a
+    // larger notional penguin than the real one — otherwise the delicate
+    // trails come out as a few stray pixels and sell nothing.
+    ctx.save();
+    trail.paint(ctx, hist, { w: 58, h: 64 }, 0.6);
+    ctx.restore();
   }
 
   refreshMissions() {
@@ -878,7 +936,9 @@ export class UI {
     if (result.unlockedSkins?.length) {
       parts.push(`
         <div class="reward reward--unlock">
-          <div class="reward__head"><span>Yeni penguen!</span></div>
+          <div class="reward__head"><span>${
+            result.unlockedSkins.some((s) => s.bag === 'skins') ? 'Yeni penguen!' : 'Yeni iz!'
+          }</span></div>
           <p class="reward__note">${result.unlockedSkins.map((s) => s.name).join(' · ')} açıldı — Koleksiyon'dan giyebilirsin.</p>
         </div>`);
     }
@@ -976,8 +1036,14 @@ export class UI {
     });
     $('skinsBtn').addEventListener('click', () => {
       this.audio.ui();
-      this.buildSkins();
+      this.buildSkins('skins');
       this.showScreen('skins');
+    });
+    $('skinTabs').addEventListener('click', (e) => {
+      const tab = e.target.closest('.tab')?.dataset.tab;
+      if (!tab || tab === this._skinTab) return;
+      this.audio.ui();
+      this.buildSkins(tab);
     });
     $('leagueCard').addEventListener('click', () => {
       this.audio.ui();

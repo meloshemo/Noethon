@@ -9,7 +9,7 @@
  */
 
 import { VIEW, VIEW_LIMITS, AMBUSH } from './config.js';
-import { getSkin } from './skins.js';
+import { getSkin, getTrail } from './skins.js';
 import { clamp, lerp, makeRng } from '../core/util.js';
 
 const PALETTE = {
@@ -1365,7 +1365,24 @@ export class Renderer {
   _penguin(ctx, world, time) {
     const p = world.player;
 
-    // Afterimages first, so the live bird draws on top of its own streak.
+    // The cosmetic trail goes down before anything else — it is behind the
+    // penguin in every sense.
+    const trail = getTrail(world.trailId);
+    if (trail.paint && !this.reducedMotion) {
+      const hist = [];
+      // Oldest first, so a trail that draws a line draws it in order.
+      for (let i = 0; i < p.history.length; i++) {
+        const slot = p.history[(p._histAt + i) % p.history.length];
+        if (slot.age < 1) hist.push(slot);
+      }
+      if (hist.length) {
+        ctx.save();
+        trail.paint(ctx, hist, { w: p.w, h: p.h }, time);
+        ctx.restore();
+      }
+    }
+
+    // Afterimages next, so the live bird draws on top of its own streak.
     if (p.charge > 0 && !this.reducedMotion) {
       for (const g of p.trail) {
         const a = Math.max(0, g.life / 0.22);

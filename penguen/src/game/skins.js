@@ -15,6 +15,20 @@
  * where cx/by are the centre and the feet, and headY is the eye line.
  */
 
+/**
+ * Rarity.
+ *
+ * Not a power level — everything here is cosmetic and always will be. It is a
+ * grammar for *how hard this was to get*, so a card can say at a glance whether
+ * it is a starting item or the thing somebody played all week for.
+ */
+export const RARITY = {
+  common: { name: 'Yaygın', color: '#8fc4e2', order: 0 },
+  rare: { name: 'Nadir', color: '#4fd7ff', order: 1 },
+  epic: { name: 'Efsanevi', color: '#9b8cff', order: 2 },
+  mythic: { name: 'Mitik', color: '#ffd23f', order: 3 },
+};
+
 /** Where an unlock's progress is read from. Kept here so the UI can show it. */
 export const FEATS = {
   flawless: { label: 'ölmeden bitirilen bölüm', read: (s) => s.stats.flawless ?? 0 },
@@ -23,7 +37,15 @@ export const FEATS = {
   streak: { label: 'gün üst üste günün bölümü', read: (s) => s.daily?.bestStreak ?? 0 },
   perfect: { label: '3 yıldızlı bölüm', read: (s) => Object.values(s.levels).filter((l) => l.stars >= 3).length },
   boosts: { label: 'hız balığı', read: (s) => s.stats.boosts ?? 0 },
-  diamond: { label: 'Elmas lige çıkış', read: (s) => (s.league?.bestTier ?? 0) >= 3 ? 1 : 0 },
+  diamond: { label: 'Elmas lige çıkış', read: (s) => ((s.league?.bestTier ?? 0) >= 3 ? 1 : 0) },
+  skua: { label: 'boşa çıkarılan kuş dalışı', read: (s) => s.stats.skuaDodges ?? 0 },
+  glide: { label: 'saniye süzülme', read: (s) => Math.floor(s.stats.glideSeconds ?? 0) },
+  rockets: { label: 'motor ateşlemesi', read: (s) => s.stats.rocketFires ?? 0 },
+  spent: { label: 'markette harcanan balık', read: (s) => s.stats.spent ?? 0 },
+  deaths: { label: 'ölüm', read: (s) => s.stats.totalDeaths ?? 0 },
+  plays: { label: 'oynanan bölüm', read: (s) => s.stats.totalPlays ?? 0 },
+  night: { label: 'gece yarısı turu', read: (s) => s.stats.nightRuns ?? 0 },
+  wardrobe: { label: 'penguen topla', read: (s) => Object.keys(s.skins ?? {}).length },
 };
 
 /* ------------------------------------------------------------------ */
@@ -235,6 +257,174 @@ const shimmer = (ctx, g) => {
   ctx.restore();
 };
 
+/** Goggles pushed up on the brow, for the explorer and the diver. */
+const goggles = (ctx, g, glass, strap) => {
+  ctx.save();
+  ctx.strokeStyle = strap;
+  ctx.lineWidth = Math.max(1.6, g.w * 0.05);
+  ctx.beginPath();
+  ctx.moveTo(g.cx - g.w * 0.33, g.headY - g.h * 0.05);
+  ctx.lineTo(g.cx + g.w * 0.33, g.headY - g.h * 0.05);
+  ctx.stroke();
+  ctx.fillStyle = glass;
+  for (const sgn of [-1, 1]) {
+    ctx.beginPath();
+    ctx.ellipse(
+      g.cx + g.facing * g.w * 0.12 + sgn * g.w * 0.13,
+      g.headY - g.h * 0.05,
+      g.w * 0.105,
+      g.h * 0.085,
+      0, 0, Math.PI * 2,
+    );
+    ctx.fill();
+  }
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  ctx.beginPath();
+  ctx.ellipse(g.cx + g.facing * g.w * 0.06, g.headY - g.h * 0.08, g.w * 0.03, g.h * 0.025, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+};
+
+/** A fur-trimmed parka hood around the head. */
+const hood = (ctx, g, shell, fur) => {
+  ctx.save();
+  ctx.fillStyle = shell;
+  ctx.beginPath();
+  ctx.arc(g.cx + g.facing * g.w * 0.02, g.headY - g.h * 0.02, g.w * 0.44, Math.PI * 0.82, Math.PI * 2.18);
+  ctx.fill();
+  ctx.strokeStyle = fur;
+  ctx.lineWidth = Math.max(2.6, g.w * 0.1);
+  ctx.beginPath();
+  ctx.arc(g.cx + g.facing * g.w * 0.02, g.headY - g.h * 0.02, g.w * 0.44, Math.PI * 0.86, Math.PI * 2.14);
+  ctx.stroke();
+  ctx.restore();
+};
+
+/** A top hat, worn straight. */
+const topHat = (ctx, g, band = '#e23b4b') => {
+  ctx.save();
+  const y = g.headY - g.h * 0.19;
+  ctx.fillStyle = '#12161f';
+  ctx.fillRect(g.cx - g.w * 0.42, y - g.h * 0.02, g.w * 0.84, g.h * 0.05);
+  ctx.fillRect(g.cx - g.w * 0.24, y - g.h * 0.34, g.w * 0.48, g.h * 0.34);
+  ctx.fillStyle = band;
+  ctx.fillRect(g.cx - g.w * 0.24, y - g.h * 0.1, g.w * 0.48, g.h * 0.06);
+  ctx.restore();
+};
+
+/** A bow tie under the beak — the joke the whole species is built on. */
+const bowTie = (ctx, g, color = '#12161f') => {
+  ctx.save();
+  ctx.fillStyle = color;
+  const y = g.headY + g.h * 0.17;
+  for (const sgn of [-1, 1]) {
+    ctx.beginPath();
+    ctx.moveTo(g.cx, y);
+    ctx.lineTo(g.cx + sgn * g.w * 0.2, y - g.h * 0.06);
+    ctx.lineTo(g.cx + sgn * g.w * 0.2, y + g.h * 0.06);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.beginPath();
+  ctx.arc(g.cx, y, g.w * 0.05, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+};
+
+/** Antennae with a bobbing tip. */
+const antennae = (ctx, g, color) => {
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = Math.max(1.2, g.w * 0.035);
+  for (const sgn of [-1, 1]) {
+    const bob = Math.sin(g.time * 6 + sgn) * g.h * 0.03;
+    ctx.beginPath();
+    ctx.moveTo(g.cx + sgn * g.w * 0.14, g.headY - g.h * 0.18);
+    ctx.quadraticCurveTo(
+      g.cx + sgn * g.w * 0.26,
+      g.headY - g.h * 0.34,
+      g.cx + sgn * g.w * 0.2,
+      g.headY - g.h * 0.44 + bob,
+    );
+    ctx.stroke();
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(g.cx + sgn * g.w * 0.2, g.headY - g.h * 0.44 + bob, g.w * 0.055, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+};
+
+/** A knight's great helm with a slit and a plume. */
+const helm = (ctx, g) => {
+  ctx.save();
+  ctx.fillStyle = '#9aa8bd';
+  ctx.beginPath();
+  ctx.ellipse(g.cx + g.facing * g.w * 0.04, g.headY - g.h * 0.02, g.w * 0.38, g.h * 0.28, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#0d1420';
+  ctx.fillRect(g.cx - g.w * 0.3, g.headY - g.h * 0.06, g.w * 0.66, g.h * 0.06);
+  ctx.fillStyle = '#c3ced9';
+  ctx.fillRect(g.cx + g.facing * g.w * 0.02 - g.w * 0.03, g.headY - g.h * 0.24, g.w * 0.06, g.h * 0.34);
+  // Plume
+  ctx.fillStyle = '#e23b4b';
+  ctx.beginPath();
+  ctx.moveTo(g.cx, g.headY - g.h * 0.26);
+  ctx.quadraticCurveTo(
+    g.cx - g.facing * g.w * 0.3,
+    g.headY - g.h * (0.52 + 0.04 * Math.sin(g.time * 8)),
+    g.cx - g.facing * g.w * 0.44,
+    g.headY - g.h * 0.2,
+  );
+  ctx.quadraticCurveTo(g.cx - g.facing * g.w * 0.18, g.headY - g.h * 0.3, g.cx, g.headY - g.h * 0.2);
+  ctx.fill();
+  ctx.restore();
+};
+
+/** Aurora ribbons streaming off the body. */
+const auroraRibbons = (ctx, g) => {
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.lineWidth = Math.max(2, g.w * 0.09);
+  ctx.lineCap = 'round';
+  for (let i = 0; i < 3; i++) {
+    const hue = 150 + i * 55;
+    const ph = g.time * 2.2 + i * 2.1;
+    ctx.strokeStyle = `hsla(${hue}, 90%, 68%, 0.5)`;
+    ctx.beginPath();
+    ctx.moveTo(g.cx - g.facing * g.w * 0.3, g.by - g.bodyH * (0.35 + i * 0.2));
+    ctx.quadraticCurveTo(
+      g.cx - g.facing * g.w * (0.8 + 0.2 * Math.sin(ph)),
+      g.by - g.bodyH * (0.5 + i * 0.22) + Math.sin(ph * 1.3) * g.h * 0.12,
+      g.cx - g.facing * g.w * 1.3,
+      g.by - g.bodyH * (0.3 + i * 0.26) + Math.cos(ph) * g.h * 0.16,
+    );
+    ctx.stroke();
+  }
+  ctx.lineCap = 'butt';
+  ctx.restore();
+};
+
+/** Frost crystals growing off the shoulders. */
+const crystals = (ctx, g) => {
+  ctx.save();
+  ctx.fillStyle = 'rgba(190,240,255,0.85)';
+  for (let i = 0; i < 5; i++) {
+    const a = -Math.PI * 0.85 + (i / 4) * Math.PI * 0.7;
+    const r = g.w * 0.44;
+    const px = g.cx + Math.cos(a) * r;
+    const py = g.by - g.bodyH * 0.62 + Math.sin(a) * g.bodyH * 0.34;
+    const len = g.h * (0.1 + 0.06 * Math.sin(g.time * 2 + i));
+    ctx.beginPath();
+    ctx.moveTo(px - g.w * 0.04, py);
+    ctx.lineTo(px + g.w * 0.04, py);
+    ctx.lineTo(px + Math.cos(a) * len, py + Math.sin(a) * len);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+};
+
 /* ------------------------------------------------------------------ */
 /* The catalogue                                                       */
 /* ------------------------------------------------------------------ */
@@ -246,6 +436,7 @@ const shimmer = (ctx, g) => {
 export const SKINS = [
   {
     id: 'normal',
+    rarity: 'common',
     name: 'Penguen',
     blurb: 'Yeni yumurtadan çıkmış hâli. Büyüdükçe tüyleri koyulaşır.',
     tint: '#4a5a72',
@@ -257,6 +448,7 @@ export const SKINS = [
   },
   {
     id: 'ninja',
+    rarity: 'rare',
     name: 'Ninja Penguen',
     blurb: 'Ölmeden geçmeyi bilenlere.',
     tint: '#1d2330',
@@ -269,6 +461,7 @@ export const SKINS = [
   },
   {
     id: 'king',
+    rarity: 'epic',
     name: 'Kral Penguen',
     blurb: 'Buzulun tacı senindir.',
     tint: '#2a3550',
@@ -291,6 +484,7 @@ export const SKINS = [
   },
   {
     id: 'astronaut',
+    rarity: 'epic',
     name: 'Astronot Penguen',
     blurb: 'Sonsuz modda çok uzağa gidenlere.',
     tint: '#dfe7f2',
@@ -307,6 +501,7 @@ export const SKINS = [
   },
   {
     id: 'golden',
+    rarity: 'mythic',
     name: 'Altın Penguen',
     blurb: 'Yedi gün üst üste günün bölümünü bitirenlere.',
     tint: '#c9922b',
@@ -320,6 +515,7 @@ export const SKINS = [
   },
   {
     id: 'pirate',
+    rarity: 'rare',
     name: 'Korsan Penguen',
     blurb: 'Üç yıldızı toplamayı huy edinenlere.',
     tint: '#33405a',
@@ -331,6 +527,7 @@ export const SKINS = [
   },
   {
     id: 'fire',
+    rarity: 'epic',
     name: 'Ateş Penguen',
     blurb: 'Hız balığını huy edinenlere.',
     tint: '#5a1c1c',
@@ -344,6 +541,7 @@ export const SKINS = [
   },
   {
     id: 'cyber',
+    rarity: 'mythic',
     name: 'Siber Penguen',
     blurb: 'Elmas lige çıkanlara.',
     tint: '#1a2140',
@@ -371,6 +569,7 @@ export const SKINS = [
   },
   {
     id: 'christmas',
+    rarity: 'rare',
     name: 'Yılbaşı Penguen',
     blurb: 'Aralık ayında bedava, diğer aylarda balıkla.',
     tint: '#1f4030',
@@ -393,9 +592,486 @@ export const SKINS = [
     },
     unlock: { kind: 'coins', cost: 240, freeInDecember: true },
   },
+
+  /* ---------------------------------------------------- the wardrobe */
+  {
+    id: 'tuxedo',
+    rarity: 'rare',
+    name: 'Frak Penguen',
+    blurb: 'Zaten smokin giyiyordu. Şimdi ciddiye alıyor.',
+    tint: '#12161f',
+    belly: '#ffffff',
+    beak: '#ffb43f',
+    foot: '#ffb43f',
+    paint: (ctx, g) => {
+      bowTie(ctx, g);
+      topHat(ctx, g);
+    },
+    unlock: { kind: 'coins', cost: 300 },
+  },
+  {
+    id: 'explorer',
+    rarity: 'rare',
+    name: 'Kâşif Penguen',
+    blurb: 'Kıtayı haritalayanlara.',
+    tint: '#4a3f33',
+    belly: '#e8dcc6',
+    beak: '#ff9c3f',
+    foot: '#8a6b45',
+    paint: (ctx, g) => {
+      hood(ctx, g, '#c25a2e', '#e8dcc6');
+      goggles(ctx, g, '#2b4a70', '#7a5c3a');
+    },
+    unlock: { kind: 'feat', feat: 'plays', goal: 120 },
+  },
+  {
+    id: 'diver',
+    rarity: 'rare',
+    name: 'Dalgıç Penguen',
+    blurb: 'Suya düşmekten korkmayanlara.',
+    tint: '#123a4a',
+    belly: '#bfe8ff',
+    beak: '#ffb43f',
+    foot: '#39c2c9',
+    paint: (ctx, g) => {
+      goggles(ctx, g, '#7ce8ff', '#0d2430');
+      // Snorkel, bobbing with the walk.
+      ctx.save();
+      ctx.strokeStyle = '#ffb43f';
+      ctx.lineWidth = Math.max(1.6, g.w * 0.055);
+      ctx.beginPath();
+      ctx.moveTo(g.cx - g.facing * g.w * 0.3, g.headY + g.h * 0.08);
+      ctx.quadraticCurveTo(
+        g.cx - g.facing * g.w * 0.42,
+        g.headY - g.h * 0.2,
+        g.cx - g.facing * g.w * 0.3,
+        g.headY - g.h * 0.32,
+      );
+      ctx.stroke();
+      ctx.restore();
+    },
+    unlock: { kind: 'feat', feat: 'deaths', goal: 150 },
+  },
+  {
+    id: 'chef',
+    rarity: 'rare',
+    name: 'Aşçı Penguen',
+    blurb: 'Bütün o balıkla bir şey yapması lazımdı.',
+    tint: '#2e3542',
+    belly: '#fdfdfa',
+    beak: '#ff9c3f',
+    foot: '#ff9c3f',
+    paint: (ctx, g) => {
+      // Toque, puffed with a little wobble.
+      ctx.save();
+      ctx.fillStyle = '#fdfdfa';
+      const y = g.headY - g.h * 0.18;
+      ctx.fillRect(g.cx - g.w * 0.26, y - g.h * 0.06, g.w * 0.52, g.h * 0.1);
+      for (let i = -1; i <= 1; i++) {
+        ctx.beginPath();
+        ctx.arc(
+          g.cx + i * g.w * 0.17,
+          y - g.h * (0.16 + 0.02 * Math.sin(g.time * 5 + i)),
+          g.w * 0.15,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      }
+      // Neckerchief
+      ctx.fillStyle = '#e23b4b';
+      ctx.fillRect(g.cx - g.w * 0.3, g.headY + g.h * 0.15, g.w * 0.6, g.h * 0.07);
+      ctx.restore();
+    },
+    unlock: { kind: 'coins', cost: 380 },
+  },
+  {
+    id: 'rockstar',
+    rarity: 'epic',
+    name: 'Rock Penguen',
+    blurb: 'Buzulun tek gitaristi.',
+    tint: '#1a1622',
+    belly: '#f0e6ff',
+    beak: '#ff5f6d',
+    foot: '#ff5f6d',
+    eye: '#ffd23f',
+    paint: (ctx, g) => {
+      // Mohawk
+      ctx.save();
+      ctx.fillStyle = '#ff2d6f';
+      for (let i = -2; i <= 2; i++) {
+        const hgt = g.h * (0.3 - Math.abs(i) * 0.05);
+        ctx.beginPath();
+        ctx.moveTo(g.cx + i * g.w * 0.07 - g.w * 0.035, g.headY - g.h * 0.18);
+        ctx.lineTo(g.cx + i * g.w * 0.07 + g.w * 0.035, g.headY - g.h * 0.18);
+        ctx.lineTo(g.cx + i * g.w * 0.07, g.headY - g.h * 0.18 - hgt);
+        ctx.closePath();
+        ctx.fill();
+      }
+      // Shades
+      ctx.fillStyle = '#0d1018';
+      ctx.fillRect(g.cx - g.w * 0.28, g.headY - g.h * 0.09, g.w * 0.62, g.h * 0.09);
+      ctx.restore();
+    },
+    aura: 'rgba(255,45,111,0.22)',
+    unlock: { kind: 'feat', feat: 'boosts', goal: 60 },
+  },
+  {
+    id: 'alien',
+    rarity: 'epic',
+    name: 'Uzaylı Penguen',
+    blurb: 'Buraya nasıl geldiği belli değil.',
+    tint: '#4a8f4d',
+    belly: '#d8ffcf',
+    beak: '#8ad86a',
+    foot: '#8ad86a',
+    eye: '#0d1018',
+    paint: (ctx, g) => antennae(ctx, g, '#b6ff8a'),
+    aura: 'rgba(120,255,140,0.2)',
+    unlock: { kind: 'feat', feat: 'night', goal: 5 },
+  },
+  {
+    id: 'ghost',
+    rarity: 'epic',
+    name: 'Hayalet Penguen',
+    blurb: 'Buzda çok fazla kaybolanlara.',
+    tint: '#7d90b8',
+    belly: '#e6efff',
+    beak: '#b9c8e6',
+    foot: '#b9c8e6',
+    eye: '#5cf0ff',
+    paint: (ctx, g) => {
+      // A tattered hem instead of feet, drifting.
+      ctx.save();
+      ctx.globalAlpha = 0.55;
+      ctx.fillStyle = '#cddcf5';
+      ctx.beginPath();
+      ctx.moveTo(g.cx - g.w * 0.42, g.by - g.h * 0.1);
+      for (let i = 0; i <= 6; i++) {
+        const x = g.cx - g.w * 0.42 + (i / 6) * g.w * 0.84;
+        const y = g.by + (i % 2 === 0 ? 0 : g.h * 0.09) + Math.sin(g.time * 5 + i) * g.h * 0.02;
+        ctx.lineTo(x, y);
+      }
+      ctx.lineTo(g.cx + g.w * 0.42, g.by - g.h * 0.1);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    },
+    aura: 'rgba(160,200,255,0.24)',
+    unlock: { kind: 'feat', feat: 'deaths', goal: 400 },
+  },
+  {
+    id: 'knight',
+    rarity: 'epic',
+    name: 'Şövalye Penguen',
+    blurb: 'Kuşlara karşı zırh giyenlere.',
+    tint: '#5b6577',
+    belly: '#c3ced9',
+    beak: '#ffb43f',
+    foot: '#8a94a6',
+    paint: helm,
+    unlock: { kind: 'feat', feat: 'skua', goal: 25 },
+  },
+  {
+    id: 'aurora',
+    rarity: 'mythic',
+    name: 'Kutup Işığı Penguen',
+    blurb: 'Gökyüzünü sırtında taşıyanlara.',
+    tint: '#1b2a52',
+    belly: '#c9f5ff',
+    beak: '#7ce8ff',
+    foot: '#7ce8ff',
+    eye: '#c9f5ff',
+    paint: auroraRibbons,
+    behind: true,
+    aura: 'rgba(110,240,200,0.24)',
+    unlock: { kind: 'feat', feat: 'glide', goal: 300 },
+  },
+  {
+    id: 'frost',
+    rarity: 'mythic',
+    name: 'Buz Kraliçesi',
+    blurb: 'Kıtanın kendisi kadar soğuk olanlara.',
+    tint: '#8fd8ef',
+    belly: '#ffffff',
+    beak: '#dff6ff',
+    foot: '#bfe8ff',
+    eye: '#1b4a6b',
+    paint: (ctx, g) => {
+      crystals(ctx, g);
+      crown(ctx, g);
+    },
+    aura: 'rgba(150,230,255,0.3)',
+    unlock: { kind: 'feat', feat: 'perfect', goal: 45 },
+  },
+  {
+    id: 'shadow',
+    rarity: 'mythic',
+    name: 'Gölge Penguen',
+    blurb: 'Bütün gardırobu toplayanlara.',
+    tint: '#0b0d14',
+    belly: '#1a1f2e',
+    beak: '#6b4dff',
+    foot: '#6b4dff',
+    eye: '#b39cff',
+    paint: (ctx, g) => {
+      // A dark corona that eats the light instead of adding to it.
+      ctx.save();
+      ctx.globalAlpha = 0.5;
+      ctx.fillStyle = '#0b0d14';
+      for (let i = 0; i < 4; i++) {
+        const a = g.time * 1.6 + (i * Math.PI) / 2;
+        ctx.beginPath();
+        ctx.ellipse(
+          g.cx + Math.cos(a) * g.w * 0.5,
+          g.by - g.bodyH * 0.5 + Math.sin(a) * g.bodyH * 0.4,
+          g.w * 0.24,
+          g.h * 0.16,
+          a,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      }
+      ctx.restore();
+    },
+    aura: 'rgba(107,77,255,0.3)',
+    unlock: { kind: 'feat', feat: 'wardrobe', goal: 15 },
+  },
 ];
 
 export const SKIN_BY_ID = Object.fromEntries(SKINS.map((s) => [s.id, s]));
+
+/* ------------------------------------------------------------------ */
+/* Trails — the second slot                                            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * What the penguin leaves behind.
+ *
+ * A separate slot from the skin, which is the whole point: twenty penguins and
+ * ten trails is two hundred looks, and two of them being *yours* is what makes
+ * a wardrobe a wardrobe rather than a list. A trail paints from the player's
+ * recent positions, so it costs nothing but a ring buffer.
+ *
+ * `paint(ctx, history, geo, time)` — history is newest-last, each entry
+ * {x, y, age} where age is 0..1 from fresh to gone.
+ */
+export const TRAILS = [
+  {
+    id: 'none',
+    rarity: 'common',
+    name: 'Yok',
+    blurb: 'Arkanda hiçbir şey bırakma.',
+    unlock: { kind: 'default' },
+    paint: null,
+  },
+  {
+    id: 'snow',
+    rarity: 'common',
+    name: 'Kar Tozu',
+    blurb: 'Ayağının kaldırdığı ince kar.',
+    color: '#e8f6ff',
+    unlock: { kind: 'coins', cost: 60 },
+    paint: (ctx, hist, g) => {
+      ctx.fillStyle = '#e8f6ff';
+      for (const p of hist) {
+        ctx.globalAlpha = (1 - p.age) * 0.5;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, g.w * 0.09 * (1 - p.age * 0.6), 0, Math.PI * 2);
+        ctx.fill();
+      }
+    },
+  },
+  {
+    id: 'bubbles',
+    rarity: 'common',
+    name: 'Kabarcık',
+    blurb: 'Denizden çıkmış gibi.',
+    color: '#7ce8ff',
+    unlock: { kind: 'coins', cost: 90 },
+    paint: (ctx, hist, g, time) => {
+      ctx.strokeStyle = '#7ce8ff';
+      ctx.lineWidth = 1.4;
+      hist.forEach((p, i) => {
+        ctx.globalAlpha = (1 - p.age) * 0.6;
+        const r = g.w * (0.06 + 0.07 * ((i * 7919) % 10) / 10);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y - p.age * g.h * 0.5 + Math.sin(time * 4 + i) * 2, r, 0, Math.PI * 2);
+        ctx.stroke();
+      });
+    },
+  },
+  {
+    id: 'sparks',
+    rarity: 'rare',
+    name: 'Kıvılcım',
+    blurb: 'Buzu yakarak geç.',
+    color: '#ffd23f',
+    unlock: { kind: 'coins', cost: 220 },
+    paint: (ctx, hist, g, time) => {
+      ctx.globalCompositeOperation = 'lighter';
+      hist.forEach((p, i) => {
+        ctx.globalAlpha = (1 - p.age) * 0.8;
+        ctx.fillStyle = i % 2 ? '#ffd23f' : '#ff8a3f';
+        const jig = Math.sin(time * 30 + i * 2) * g.w * 0.1;
+        ctx.beginPath();
+        ctx.arc(p.x + jig, p.y + Math.cos(time * 22 + i) * g.h * 0.08, g.w * 0.05, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    },
+  },
+  {
+    id: 'ice',
+    rarity: 'rare',
+    name: 'Buz Kırığı',
+    blurb: 'Havada kalan kristaller.',
+    color: '#bfe8ff',
+    unlock: { kind: 'feat', feat: 'flawless', goal: 20 },
+    paint: (ctx, hist, g) => {
+      ctx.fillStyle = '#bfe8ff';
+      hist.forEach((p, i) => {
+        ctx.globalAlpha = (1 - p.age) * 0.7;
+        const r = g.w * 0.12 * (1 - p.age);
+        const a = i * 0.7;
+        ctx.beginPath();
+        ctx.moveTo(p.x + Math.cos(a) * r, p.y + Math.sin(a) * r);
+        ctx.lineTo(p.x + Math.cos(a + 2.1) * r, p.y + Math.sin(a + 2.1) * r);
+        ctx.lineTo(p.x + Math.cos(a + 4.2) * r, p.y + Math.sin(a + 4.2) * r);
+        ctx.closePath();
+        ctx.fill();
+      });
+    },
+  },
+  {
+    id: 'hearts',
+    rarity: 'rare',
+    name: 'Kalp',
+    blurb: 'Kimse sormadı ama işte.',
+    color: '#ff5f8d',
+    unlock: { kind: 'coins', cost: 260 },
+    paint: (ctx, hist, g, time) => {
+      ctx.fillStyle = '#ff5f8d';
+      hist.forEach((p, i) => {
+        if (i % 2) return;
+        ctx.globalAlpha = (1 - p.age) * 0.8;
+        const r = g.w * 0.17 * (1 - p.age * 0.45);
+        const y = p.y - p.age * g.h * 0.6 + Math.sin(time * 3 + i) * 2;
+        ctx.beginPath();
+        ctx.moveTo(p.x, y + r * 0.7);
+        ctx.bezierCurveTo(p.x - r * 1.4, y - r * 0.4, p.x - r * 0.2, y - r * 1.1, p.x, y - r * 0.35);
+        ctx.bezierCurveTo(p.x + r * 0.2, y - r * 1.1, p.x + r * 1.4, y - r * 0.4, p.x, y + r * 0.7);
+        ctx.fill();
+      });
+    },
+  },
+  {
+    id: 'notes',
+    rarity: 'rare',
+    name: 'Nota',
+    blurb: 'Rock penguene yakışır.',
+    color: '#c9b6ff',
+    unlock: { kind: 'feat', feat: 'plays', goal: 60 },
+    paint: (ctx, hist, g, time) => {
+      ctx.fillStyle = '#c9b6ff';
+      ctx.strokeStyle = '#c9b6ff';
+      ctx.lineWidth = 1.6;
+      hist.forEach((p, i) => {
+        if (i % 3) return;
+        ctx.globalAlpha = (1 - p.age) * 0.85;
+        const y = p.y - p.age * g.h * 0.7 + Math.sin(time * 3 + i) * 3;
+        const r = g.w * 0.12;
+        ctx.beginPath();
+        ctx.ellipse(p.x, y, r, r * 0.78, -0.4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(p.x + r * 0.9, y);
+        ctx.lineTo(p.x + r * 0.9, y - r * 2.4);
+        ctx.stroke();
+      });
+    },
+  },
+  {
+    id: 'flame',
+    rarity: 'epic',
+    name: 'Alev İzi',
+    blurb: 'Arkanda yanan bir çizgi.',
+    color: '#ff7a2f',
+    unlock: { kind: 'feat', feat: 'boosts', goal: 40 },
+    paint: (ctx, hist, g, time) => {
+      ctx.globalCompositeOperation = 'lighter';
+      hist.forEach((p, i) => {
+        const k = 1 - p.age;
+        ctx.globalAlpha = k * 0.55;
+        const r = g.w * 0.34 * k;
+        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
+        grad.addColorStop(0, 'rgba(255,236,170,0.9)');
+        grad.addColorStop(0.45, 'rgba(255,120,40,0.5)');
+        grad.addColorStop(1, 'rgba(255,60,20,0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y - Math.sin(time * 8 + i) * 2, r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    },
+  },
+  {
+    id: 'aurora',
+    rarity: 'epic',
+    name: 'Kutup Işığı',
+    blurb: 'Gökyüzünü peşinden sürükle.',
+    color: '#5ce1a6',
+    unlock: { kind: 'feat', feat: 'streak', goal: 14 },
+    paint: (ctx, hist, g, time) => {
+      if (hist.length < 3) return;
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.lineWidth = g.w * 0.5;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      for (let band = 0; band < 3; band++) {
+        ctx.strokeStyle = `hsla(${150 + band * 55}, 90%, 66%, 0.28)`;
+        ctx.beginPath();
+        hist.forEach((p, i) => {
+          const y = p.y + Math.sin(time * 3 + i * 0.6 + band) * g.h * 0.14 * (1 - p.age);
+          i === 0 ? ctx.moveTo(p.x, y) : ctx.lineTo(p.x, y);
+        });
+        ctx.stroke();
+      }
+      ctx.lineCap = 'butt';
+    },
+  },
+  {
+    id: 'void',
+    rarity: 'mythic',
+    name: 'Boşluk',
+    blurb: 'Geçtiğin yerde ışık kalmasın.',
+    color: '#6b4dff',
+    unlock: { kind: 'feat', feat: 'diamond', goal: 1 },
+    paint: (ctx, hist, g, time) => {
+      hist.forEach((p, i) => {
+        const k = 1 - p.age;
+        ctx.globalAlpha = k * 0.6;
+        ctx.fillStyle = '#0b0d14';
+        const r = g.w * 0.4 * k;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = k * 0.45;
+        ctx.strokeStyle = '#6b4dff';
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r * (0.8 + 0.2 * Math.sin(time * 6 + i)), 0, Math.PI * 2);
+        ctx.stroke();
+      });
+    },
+  },
+];
+
+export const TRAIL_BY_ID = Object.fromEntries(TRAILS.map((t) => [t.id, t]));
+
+export function getTrail(id) {
+  return TRAIL_BY_ID[id] ?? TRAIL_BY_ID.none;
+}
 
 /**
  * A still portrait for the collection screen.
@@ -479,8 +1155,8 @@ export function getSkin(id) {
  * @returns {{owned:boolean, kind:string, have:number, goal:number, pct:number,
  *            cost:number|null, label:string}}
  */
-export function skinStatus(save, skin, now = new Date()) {
-  const owned = skin.unlock.kind === 'default' || Boolean(save.skins?.[skin.id]);
+export function skinStatus(save, skin, now = new Date(), bag = 'skins') {
+  const owned = skin.unlock.kind === 'default' || Boolean(save[bag]?.[skin.id]);
   if (skin.unlock.kind === 'default') {
     return { owned: true, kind: 'default', have: 1, goal: 1, pct: 1, cost: null, label: 'Başlangıç' };
   }
@@ -515,9 +1191,15 @@ export function skinStatus(save, skin, now = new Date()) {
  * Called after each run, so an unlock lands the moment it is earned.
  */
 export function newlyEarned(save, now = new Date()) {
-  return SKINS.filter((skin) => {
-    if (skin.unlock.kind !== 'feat' && !(skin.unlock.freeInDecember && now.getMonth() === 11)) return false;
-    const st = skinStatus(save, skin, now);
-    return !st.owned && st.pct >= 1;
-  });
+  const check = (list, bag) =>
+    list
+      .filter((item) => {
+        if (item.unlock.kind !== 'feat' && !(item.unlock.freeInDecember && now.getMonth() === 11)) {
+          return false;
+        }
+        const st = skinStatus(save, item, now, bag);
+        return !st.owned && st.pct >= 1;
+      })
+      .map((item) => ({ ...item, bag }));
+  return [...check(SKINS, 'skins'), ...check(TRAILS, 'trails')];
 }

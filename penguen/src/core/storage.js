@@ -7,7 +7,7 @@
  */
 
 const KEY = 'pengu.save.v1';
-const VERSION = 4;
+const VERSION = 5;
 
 /**
  * Ghost runs are the biggest thing in the save by far, so they are capped.
@@ -34,6 +34,13 @@ function defaults() {
       endlessMeters: 0,
       /** Speed fish swallowed, ever. */
       boosts: 0,
+      /** Bird dives survived, seconds glided, motor bursts, fish spent. */
+      skuaDodges: 0,
+      glideSeconds: 0,
+      rocketFires: 0,
+      spent: 0,
+      /** Runs started between midnight and five. */
+      nightRuns: 0,
     },
     /** Spendable currency. */
     coins: 0,
@@ -53,6 +60,9 @@ function defaults() {
     skins: {},
     /** The skin currently worn. */
     skin: 'normal',
+    /** { [trailId]: true } and the one in use. */
+    trails: {},
+    trail: 'none',
     /** Weekly league: { week, points, bestTier, lastWeekPoints }. */
     league: { week: null, points: 0, bestTier: 0, lastWeekPoints: 0 },
     /** Rotating missions, regenerated once a day. */
@@ -85,6 +95,8 @@ function migrate(parsed) {
     rivals: parsed.rivals ?? {},
     skins: parsed.skins ?? {},
     skin: parsed.skin ?? 'normal',
+    trails: parsed.trails ?? {},
+    trail: parsed.trail ?? 'none',
     league: { ...base.league, ...(parsed.league ?? {}) },
   };
 
@@ -196,6 +208,7 @@ export const Storage = {
     const cost = spec.levels[owned].cost;
     if (data.coins < cost) return false;
     data.coins -= cost;
+    data.stats.spent = (data.stats.spent ?? 0) + cost;
     data.upgrades[spec.id] = owned + 1;
     write(data);
     return true;
@@ -253,26 +266,31 @@ export const Storage = {
 
   /* -------------------------------------------------------- skins */
 
-  /** Unlock a skin. Returns false if it was already owned. */
-  grantSkin(data, id) {
-    if (data.skins[id]) return false;
-    data.skins[id] = true;
+  /**
+   * Unlock a cosmetic. `bag` is which wardrobe it goes in — 'skins' or
+   * 'trails' — so the two slots share one set of rules.
+   */
+  grantSkin(data, id, bag = 'skins') {
+    if (data[bag][id]) return false;
+    data[bag][id] = true;
     write(data);
     return true;
   },
 
-  /** Buy a skin with fish. Returns false when it cannot be afforded. */
-  buySkin(data, id, cost) {
-    if (data.skins[id]) return false;
+  /** Buy one with fish. Returns false when it cannot be afforded. */
+  buySkin(data, id, cost, bag = 'skins') {
+    if (data[bag][id]) return false;
     if ((data.coins ?? 0) < cost) return false;
     data.coins -= cost;
-    data.skins[id] = true;
+    data.stats.spent = (data.stats.spent ?? 0) + cost;
+    data[bag][id] = true;
     write(data);
     return true;
   },
 
-  wearSkin(data, id) {
-    data.skin = id;
+  wearSkin(data, id, bag = 'skins') {
+    if (bag === 'trails') data.trail = id;
+    else data.skin = id;
     write(data);
     return id;
   },

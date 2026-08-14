@@ -2157,3 +2157,61 @@ kbd {
   background: var(--c-amber);
   box-shadow: 0 0 6px rgba(255, 196, 90, 0.6);
 }
+
+/* ================================================= Collection · tabs */
+
+.tabs {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-full);
+  align-self: flex-start;
+}
+
+.tab {
+  padding: 0.42em 1.1em;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--text-muted);
+  border-radius: var(--r-full);
+  transition: color var(--t-fast) var(--e-out), background var(--t-fast) var(--e-out);
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+.tab.is-on {
+  color: #06121f;
+  background: var(--accent);
+}
+
+/* ---- rarity ---- */
+
+.skin__rarity {
+  font-size: var(--fs-2xs);
+  font-weight: 800;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+/* The card border carries the rarity, so the wall reads at a glance. */
+.skin--rare { border-color: rgba(79, 215, 255, 0.32); }
+.skin--epic { border-color: rgba(155, 140, 255, 0.36); }
+.skin--mythic {
+  border-color: rgba(255, 210, 63, 0.42);
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(255, 210, 63, 0.1), transparent 70%),
+    var(--surface);
+}
+
+.skin--mythic:not(.skin--locked) {
+  box-shadow: 0 0 0 1px rgba(255, 210, 63, 0.18), 0 10px 34px rgba(255, 196, 90, 0.14);
+}
+
+.skin--worn {
+  border-color: var(--accent);
+  box-shadow: var(--glow-accent);
+}
