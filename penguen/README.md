@@ -1,14 +1,114 @@
 # Pengu — Antarktika'dan Kaçış
 
 Yeni doğmuş bir penguen, eriyen buzlar arasında Antarktika'dan kaçmaya çalışıyor.
-Buzlar üstüne basınca çatlıyor, bazıları eriyip yok oluyor, bazıları tuzak, bazıları
-altındaki gayzerle seni havaya fırlatıyor. Bölüm ilerledikçe penguen büyüyor:
-daha ağır zıplıyor, daha geniş yer istiyor.
+Buzlar üstüne basınca çatlıyor, bazıları eriyip yok oluyor, bazıları tuzak,
+bazıları altındaki gayzerle seni havaya fırlatıyor. Tepeden bir kutup kuşu
+dalıyor. Bölüm ilerledikçe penguen büyüyor: daha ağır zıplıyor, daha geniş yer
+istiyor.
 
-30 elle tasarlanmış bölüm, sonsuz mod, günün bölümü, günlük görevler ve balıkla
-alışveriş yapılan bir market var.
+**Bağımlılık yok, derleme adımı yok, backend yok, görsel/ses dosyası yok.**
+Penguen de, buz da, kuzey ışıkları da, bütün sesler de kodla üretiliyor.
+Toplam yük tek dosyada ~385 KB ve çevrimdışı çalışıyor.
 
-Bağımlılık yok, derleme adımı yok, backend yok. Sadece HTML + CSS + JavaScript.
+▶ **[Oyunu aç](https://claude.ai/code/artifact/2f6dd29b-3ad8-4d60-b4f7-c8490114b96f)**
+
+---
+
+## İçindekiler bir bakışta
+
+| | |
+|---|---|
+| **31 elle yazılmış bölüm** | 1.600–5.400 px arası parkurlar, 481 buz kütlesi |
+| **Sonsuz mod** | Bölüm numarasıyla tohumlanmış — 42. bölüm herkeste aynı |
+| **9 buz türü** | sağlam · çatlak · cilalı · eriyen · sürüklenen · düşen · tuzak · kaçan · gayzer |
+| **4 tehlike** | sarkıt · fok · fırtına kuşağı · orka |
+| **1 pusu** | Bölümün planlamadığı anda dalan kutup kuşu |
+| **3 çürük balık etkisi** | ağırlaşma · ters kontrol · körlük |
+| **20 penguen + 10 iz** | 4 nadirlik seviyesi, 200 kombin |
+| **9 market eşyası** | 3'ü penguenin *ne yapabildiğini* değiştiriyor |
+| **21 günlük görev** | üç ağırlıkta, her gün birer tane |
+| **Haftalık lig** | Bronz → Gümüş (500) → Altın (2.000) → Elmas (5.000) |
+| **Günün Pengu'su** | Herkese aynı bölüm, gün boyu biriken 4 hedef |
+| **Hayalet yarışı** | Rekorun yanında koşuyor; kodunu paylaşınca arkadaşın da |
+
+---
+
+## Öne çıkan özellikler
+
+### 🪽 Aktif ekipman — tek tuşta iki yetenek
+Markette **Planör Kanat** ve **Sırt Motoru** var. Havada zıplamayı *basılı tutmak*
+kanatları açıyor ve düşüşü terminal hızın beşte birine indiriyor; *tek dokunuş*
+motoru ateşliyor. İkisi de sadece yere değince doluyor — bu uçmak değil, zaten
+verdiğin bir zıplama kararını havada tartışma hakkı.
+→ [ayrıntı](#aktif-ekipman)
+
+### 🦅 Kutup kuşu — bölümün planlamadığı tehlike
+Bir skua tepeden dalıp pengueni kapıyor. Bölümün parçası değil, **yönetmen
+olayı**: ezberlediğin parkurun dokuzuncu turda hâlâ seni korkutabilmesinin tek
+yolu. Buzun üstünde bir gölge beliriyor ve yaklaştıkça daha hızlı atıyor.
+→ [ayrıntı](#pusu-kutup-kuşu)
+
+### 🐧 Gardırop — 20 penguen, 10 iz
+Ninja, Kral, Astronot, Altın, Korsan, Ateş, Siber, Yılbaşı, Frak, Kâşif, Dalgıç,
+Aşçı, Rock, Uzaylı, Hayalet, Şövalye, Kutup Işığı, Buz Kraliçesi, Gölge.
+Çoğu satın alınmıyor, **kazanılıyor**. Seçtiğin penguen buzun üstünde gerçekten
+o penguen — aksesuarlar canlı çiziliyor, jet havada ateşliyor, bant koşarken
+savruluyor.
+→ [ayrıntı](#koleksiyon)
+
+### 🏔️ Kıta — yamaç, uçurum, yarık, tünel
+Bölümler koordinat değil **plan** olarak yazılıyor; geometri o bölümdeki gerçek
+zıplama erişiminden hesaplanıyor. Tünel tavanı gerçekten katı ve zıplamayı
+kısaltıyor, o yüzden tüneldeki boşluklar *tavan altındaki* erişime göre ölçülüyor.
+→ [ayrıntı](#parkurlar-piksel-değil-cümle)
+
+### 👻 Hayalet yarışı ve sıralama
+Her deneme kaydediliyor. En iyi koşun bir dahaki oynayışında yanında saydam bir
+penguen olarak koşuyor; HUD'daki `−0.42` o an rekordan ne kadar önde olduğunu
+gösteriyor. 30 saniyelik bir koşu ~370 karakterlik bir koda dönüşüyor — mesajla
+gönderilecek kadar kısa.
+→ [ayrıntı](#hayalet-yarışı-ve-sıralama)
+
+### 🏆 Haftalık lig ve Günün Pengu'su
+Pazartesi puanlar sıfırlanıyor, çıktığın kademe kalıyor. Günün bölümünde dört
+hedef var ve **gün boyunca birikiyorlar** — tek turda hepsini yapman gerekmiyor.
+→ [ayrıntı](#haftalık-lig)
+
+---
+
+## Belgeler
+
+| Bölüm | Ne anlatıyor |
+|-------|--------------|
+| [Çalıştırma](#çalıştırma) · [Testler](#testler) | Nasıl açılır, nasıl doğrulanır |
+| [Mimari](#mimari) | Dosya düzeni ve neden böyle |
+| [Zorluk eğrisi](#zorluk-eğrisi) | 31 bölümün rampa tasarımı |
+| [Buz türleri](#buz-türleri) · [Tehlikeler](#tehlikeler) | Oyun içi her mekanik |
+| [Pusu mekanikleri](#pusu-mekanikleri-buzun-tuzakları) · [Kutup kuşu](#pusu-kutup-kuşu) | Ani ölüm olayları |
+| [Ekonomi ve market](#ekonomi-ve-market) | Balık nasıl kazanılır, neye harcanır |
+| [Koleksiyon](#koleksiyon) | 20 penguen, 10 iz, nadirlikler |
+| [Haftalık lig](#haftalık-lig) · [Günün Pengu'su](#günün-pengusu) | Meta sistemler |
+| [Hayalet yarışı](#hayalet-yarışı-ve-sıralama) | Rekor yarışı ve paylaşım kodu |
+| [Kontroller](#kontroller) | Tuşlar |
+
+---
+
+## Adalet sözleşmesi
+
+Bu oyunun en çok emek verilen kısmı zorluğun *adil* olması. Üç katman:
+
+1. **Besteci** (`terrain.js`) boşlukları piksel olarak değil, erişimin yüzdesi
+   olarak alıyor. İmkânsız bir boşluk yazmak mümkün değil.
+2. **Fizikten türeyen sınırlar**: tuzak buzun genişliği fitilinden, gayzerinki
+   uyarı süresinden, fırtınanın gücü yürüme ivmesinden hesaplanıyor. Bir plan
+   "160 piksellik gayzer" isteyemez.
+3. **Doğrulayıcı** (`tests/validate-levels.mjs`) 31 elle yazılmış + 80 üretilmiş
+   bölümü, 3.188 buzu analitik olarak kontrol ediyor. Geçilemez tek bir zıplama
+   varsa derleme düşüyor.
+
+Market ve ekipman bu denklemin dışında: bütün bölümler **hiçbir şeyi olmayan**
+bir penguene göre doğrulanıyor, yani satın aldıkların bir parkuru asla açamaz,
+sadece kolaylaştırır.
 
 ---
 
@@ -40,12 +140,26 @@ geçmez, hata verip durur.
 ## Testler
 
 ```bash
-node tests/validate-levels.mjs
+node tests/validate-levels.mjs   # bölüm geçilebilirlik doğrulayıcısı
+node tests/ghost.mjs             # paylaşım kodu çözücüsü
+node tools/bundle.mjs            # tek dosyaya paketle (isim çakışmasını da yakalar)
 ```
 
-Bu, oynamadan — analitik olarak — her bölümdeki her sıçramanın penguenin o
-bölümdeki gerçek erişim mesafesi içinde olduğunu doğrular. 30 elle tasarlanmış
-bölümü ve üretilen bölümlerden 80'lik bir örneklemi kapsar (1800'den fazla buz).
+**Doğrulayıcı** oynamadan — analitik olarak — her bölümdeki her sıçramanın
+penguenin o bölümdeki gerçek erişim mesafesi içinde olduğunu doğrular. 31 elle
+yazılmış bölümü ve üretilen bölümlerden 80'lik bir örneklemi kapsar: **3.188
+buz**. Ayrıca kaya-buz çakışması, tavan yüksekliği, fok devriyesinin kalkış
+kenarını kapatması, orkanın buzun altında kalması, fırtınanın havada savurması,
+dikey çeşitlilik ve parkur uzunluğu gibi kuralları da kontrol eder — biri
+tutmazsa derleme düşer.
+
+**Hayalet testi** 30 saniyelik bir koşuyu örnek örnek gidip geliyor mu, on bir
+çeşit bozuk yapıştırma sessizce reddediliyor mu, isim değişikliği koşuyu koruyor
+mu diye bakar.
+
+Tarayıcı tarafı testler `playwright` ile yürütülüyor: bot 20 bölüm oynuyor,
+ekipman fiziği ölçülüyor, kuş uyarı→dalış→çekiliş döngüsü izleniyor, 20 portre
+ve 10 iz önizlemesinin gerçekten piksel bastığı doğrulanıyor.
 
 ---
 
@@ -221,10 +335,11 @@ durmadığını kontrol ediyor.
 
 ---
 
-## Pusu mekanikleri
+## Pusu mekanikleri: buzun tuzakları
 
 Oyunun "sinir bozucu ama adil" olması gereken kısmı. İkisinin de tek bir kuralı
 var: **oyuncu bir kez öğrendikten sonra bir daha aynı şekilde ölmemeli.**
+(Bölümün planlamadığı üçüncü pusu için → [kutup kuşu](#pusu-kutup-kuşu).)
 
 **Gayzer buzu.** Üstüne bastığın an buz tıslamaya, kabarcıklar büyümeye ve buz
 titremeye başlar. Yarım saniye sonra su sütunu patlar ve pengueni havaya
@@ -253,15 +368,34 @@ tek kaynak olsaydı market kısa sürede anlamını yitirirdi:
 | Yeni kazanılan her yıldız | 8 |
 | Hiç ölmeden bitirmek | 15 |
 | Günün bölümü | 40 + seri başına 5 (en fazla 50) |
-| Günlük görevler | 25–50 |
+| Günlük görevler | 25–110 |
+| Günün Pengu'su hedefleri | her biri 30 |
 
 Bölümü tekrar oynamak yalnızca *yeni* ilerleme için ödeme yapar — ilk bölümü
 sonsuza kadar tekrarlayarak para basmak mümkün değil.
 
-Markette altı yükseltme var: Kar Botu (zıplama), Hızlı Ayak (hız), Krampon
-(kayma), Kalın Tüy (denemede bir can), Balık Mıknatısı (balık çekimi) ve Rüzgar
-Yeleği. **Hiçbiri bir bölümü açmaz.** Doğrulayıcı bütün bölümleri yükseltmesiz
-temel değerlerle kontrol ediyor; market rahatlık ve hız satıyor, erişim değil.
+Markette dokuz eşya var. Altısı sayı büyütüyor:
+
+| Eşya | Etkisi | Seviye |
+|------|--------|--------|
+| Kar Botu | +%5 → %16 zıplama | 3 |
+| Hızlı Ayak | +%5 → %15 hız | 3 |
+| Krampon | cilalı buzda kayma %45 → %75 az | 2 |
+| Kalın Tüy | her denemede bir kez ölümden kurtarır | 1 |
+| Balık Mıknatısı | 90 → 165 px çekim | 2 |
+| Rüzgâr Yeleği | fırtına savurması %55 az | 1 |
+
+Üçü penguenin **ne yapabildiğini** değiştiriyor — [Aktif ekipman](#aktif-ekipman):
+
+| Eşya | Etkisi | Seviye |
+|------|--------|--------|
+| Planör Kanat | havada basılı tut: 1.1 → 2.9 sn süzülme | 3 |
+| Sırt Motoru | havada dokun: 1 → 2 ateşleme | 2 |
+| Kuş Radarı | kuş uyarısı +0.35 → +0.7 sn | 2 |
+
+**Hiçbiri bir bölümü açmaz.** Doğrulayıcı bütün bölümleri yükseltmesiz ve
+ekipmansız temel değerlerle kontrol ediyor; market rahatlık ve hız satıyor,
+erişim değil.
 
 > Not: bunlar oyun içi balıkla yapılan alımlar. Gerçek parayla satın alma bir
 > ödeme sağlayıcısı ve sunucu tarafı doğrulama gerektirir — statik bir sitede
@@ -271,12 +405,34 @@ temel değerlerle kontrol ediyor; market rahatlık ve hız satıyor, erişim de�
 
 ## Geri gelme sebepleri
 
-- **Günün bölümü** — tarihe göre tohumlanır, yani o gün herkes aynı bölümü
-  oynar. Süre karşılaştırmak ancak böyle anlam taşır.
+Oyunun kendisi bir sebep, ama tek sebep olmamalı. Beş katman:
+
+- **Günün Pengu'su** — tarihe göre tohumlanır, o gün herkes aynı bölümü oynar.
+  Dört hedefi var ve **gün boyunca birikirler**: hızlı bitir, balıkları topla,
+  ölmeden geç, çürük balığa dokunma. Tek turda hepsini yapmak gerekmez — beşinci
+  denemeyi başlatmaya değer kılan da bu.
 - **Seri** — arka arkaya gün oynadıkça büyür, bir gün atlayınca sıfırlanır.
-- **Günlük görevler** — havuzdan tarihe göre çekilen üç görev. Aynı olayı
-  izleyen iki görev seçilmez, yoksa gün tek görevin üç kat ödediği bir güne
-  dönerdi.
+  Yedi günlük seri Altın Penguen'i açar.
+- **Günlük görevler** — 21 görevlik havuzdan tarihe göre çekilen üç görev: bir
+  kolay, bir orta, bir zor. Üç kolay görev hedefsiz bir gün demek; üç zor görev
+  insanların atladığı gün demek. Aynı olayı izleyen iki görev seçilmez.
+  Almadığın ekipmanı isteyen görevler listeye hiç girmez.
+- **Haftalık lig** — puanlar pazartesi sıfırlanır, çıktığın kademe kalır. Pazar
+  gecesi son bir hamle yapmaya değer olmasının sebebi bu.
+- **Koleksiyon** — 20 penguen ve 10 iz, çoğu kazanılıyor. "Bir bölüm daha
+  oynayayım" cümlesinin en somut karşılığı: 50. ölümsüz bölüm Ninja'yı,
+  1000. balık Kral'ı, 5000. metre Astronot'u açıyor.
+
+### Örnek görevler
+
+| Ağırlık | Görev | Ödül |
+|---------|-------|------|
+| Kolay | 12 balık topla | 30 |
+| Orta | Bir kuşun pençesinden kıl payı kurtul | 55 |
+| Orta | Kanatlarınla 6 saniye süzül | 50 |
+| Zor | Bir bölümü hiç durmadan bitir | 70 |
+| Zor | Üç kuş dalışını boşa çıkar | 110 |
+| Zor | Bir tüneli hiç ölmeden geç | 60 |
 
 ---
 
@@ -400,11 +556,15 @@ Sıralama gerçek bir sıralama; sadece sunucu yerine paylaşım koduyla dolaş�
 | | |
 |---|---|
 | ← → veya A D | Yürü |
-| Boşluk / ↑ / W | Zıpla (basılı tut, yükseğe çık) |
+| Boşluk / ↑ / W | Zıpla — basılı tut, yükseğe çık |
+| Boşluk **havada basılı tut** | Kanatları aç, süzül *(Planör Kanat gerekir)* |
+| Boşluk **havada tek dokunuş** | Sırt motorunu ateşle *(Sırt Motoru gerekir)* |
 | R | Bölümü baştan başlat |
 | Esc veya P | Duraklat |
 
-Dokunmatik ekranda alttaki tuşlar, ayrıca gamepad desteği var.
+Dokunmatik ekranda alttaki üç tuş, ayrıca gamepad desteği var. Ekipmanların
+ikisi de aynı zıplama tuşuna bindi — çünkü dokunmatikte dördüncü bir düğme
+olmamalı, ve "bas" ile "basılı tut" zaten iki farklı niyet.
 
 ---
 
