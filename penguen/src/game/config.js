@@ -270,6 +270,108 @@ export const COLLAPSE = {
   fromLevel: 8,
 };
 
+/**
+ * Climbing: the second verb.
+ *
+ * Thirty-one levels of a running game teach the player exactly one question —
+ * "can I reach that?" — and no amount of new ice changes the question. So the
+ * mountain chapter adds a different one: "can I hold on long enough?"
+ *
+ * A penguin pressed into an ice wall digs in and hangs there. Hanging costs
+ * stamina; creeping upward costs more; kicking off the wall costs a chunk in
+ * one go. Stamina only comes back on solid ground. That single rule turns a
+ * vertical shaft from a stack of jumps into a route you have to plan a rest
+ * into — which is what climbing actually is.
+ *
+ * No new button. Hold *toward* the wall to cling, hold jump to climb, tap jump
+ * to kick off. Same three inputs the game has always had, so it works on a
+ * phone with no extra thumb.
+ */
+export const CLIMB = {
+  /** Seconds of hanging on a full bar. */
+  stamina: 4.4,
+  /** Upward creep while clinging and holding jump, px/s. */
+  climbSpeed: 96,
+  /** Downward slide while merely hanging on, px/s. */
+  slideSpeed: 54,
+  /** Stamina per second: hanging, climbing. */
+  drainHold: 0.55,
+  drainClimb: 1.25,
+  /** One kick off the wall, in stamina. */
+  kickCost: 0.5,
+  /** Back on the ground, the bar refills this fast. */
+  regen: 3.2,
+  /** Kick-off velocity: sideways in px/s, upward as a fraction of a jump. */
+  kickX: 292,
+  kickY: 0.9,
+  /**
+   * How long the wall you just left refuses to be grabbed again. Short enough
+   * that a chimney can be chained, long enough that one wall alone cannot be
+   * ridden to the top for free.
+   */
+  regrab: 0.22,
+  /** Below this fraction the penguin visibly shakes — the only warning given. */
+  tired: 0.3,
+  /** Grip upgrades and crampons buy extra hang time, up to this many seconds. */
+  gripBonus: 1.6,
+};
+
+/**
+ * What one kick off an ice wall is actually worth.
+ *
+ * A chimney is crossed by bouncing between two faces, so the question that
+ * decides whether a shaft is climbable is not "how high can it jump" but "does
+ * a kick still gain height by the time it reaches the far wall". Cross a narrow
+ * chimney and you arrive near the apex with most of the height kept; cross a
+ * wide one and you arrive on the way down having gained nothing.
+ *
+ * `width` is the inner span of the shaft. Returns the net height gained per
+ * kick — zero or negative means that shaft cannot be climbed by kicking, and
+ * the composer refuses to place it.
+ */
+export function kickGain(scale, width) {
+  const v = Math.abs(PHYS.jumpVelocity) * (1 - PENGUIN.jumpPenaltyPerScale * (scale - 1)) * CLIMB.kickY;
+  const speed = PHYS.moveSpeed * (1 - PENGUIN.speedPenaltyPerScale * (scale - 1));
+  const penguinW = PENGUIN.w * scale;
+  // Only the span the body has to actually travel counts.
+  const travel = Math.max(0, width - penguinW);
+  const t = travel / speed;
+  const tUp = v / PHYS.gravityUp;
+  const apex = (v * v) / (2 * PHYS.gravityUp);
+  if (t <= tUp) return v * t - 0.5 * PHYS.gravityUp * t * t;
+  return apex - 0.5 * PHYS.gravityDown * (t - tUp) ** 2;
+}
+
+/**
+ * How far a jump reaches *given that it also has to gain height*.
+ *
+ * `reachFor` answers the flat question and treats distance and rise as two
+ * separate budgets, which is close enough on a shelf where climbs are gentle.
+ * On a mountain it is not: a jump that spends its arc getting 110 px higher has
+ * almost no horizontal travel left, and two independent budgets would happily
+ * sign off on a ledge nobody can reach.
+ *
+ * So this couples them. Land `rise` pixels above where you left, and the answer
+ * is how far sideways you got — exactly, from the trajectory.
+ */
+export function reachAt(scale, rise) {
+  const v = Math.abs(PHYS.jumpVelocity) * (1 - PENGUIN.jumpPenaltyPerScale * (scale - 1));
+  const speed = PHYS.moveSpeed * (1 - PENGUIN.speedPenaltyPerScale * (scale - 1));
+  const apex = (v * v) / (2 * PHYS.gravityUp);
+  if (rise > apex) return 0; // simply cannot get that high
+  const tUp = v / PHYS.gravityUp;
+  const tDown = Math.sqrt((2 * (apex - rise)) / PHYS.gravityDown);
+  return speed * (tUp + tDown);
+}
+
+/** How far a full stamina bar goes: creeping up, and kicking up. */
+export function climbBudget(scale, width) {
+  const creep = CLIMB.climbSpeed * (CLIMB.stamina / CLIMB.drainClimb);
+  const kicks = Math.floor(CLIMB.stamina / CLIMB.kickCost);
+  const gain = kickGain(scale, width);
+  return { creep, kicks, perKick: gain, kicked: Math.max(0, gain) * kicks };
+}
+
 /** Assist mode is offered after this many deaths on the same level. */
 export const ASSIST_AFTER_DEATHS = 4;
 
@@ -282,11 +384,12 @@ export const ASSIST = {
 
 /** Handcrafted levels end here; beyond this the generator takes over. */
 /**
- * How many handcrafted levels there are. levels.js must contain exactly this
- * many plans — the validator fails the build if the two ever disagree, which
- * is the only way a number in one file and a list in another stay honest.
+ * How many handcrafted levels there are, across every chapter. chapters.js
+ * must add up to exactly this many — the validator fails the build if the two
+ * ever disagree, which is the only way a number in one file and a list of
+ * plans in another stay honest.
  */
-export const CRAFTED_LEVELS = 31;
+export const CRAFTED_LEVELS = 38;
 
 /** Growth curve: how big the penguin is on a given level. */
 export function scaleForLevel(level) {

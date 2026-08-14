@@ -6,7 +6,7 @@
  * exactly what the early levels need.
  */
 
-import { PHYS, PENGUIN, BOOST, ROT, GEAR } from './config.js';
+import { PHYS, PENGUIN, BOOST, ROT, GEAR, CLIMB } from './config.js';
 import { clamp, damp, rectsOverlap } from '../core/util.js';
 
 export class Player {
@@ -98,6 +98,39 @@ export class Player {
     this.rocketCool = 0;
     /** Set for one frame when the motor fires, so the world can make a noise. */
     this.rocketFired = false;
+
+    /* --- climbing ---------------------------------------------------- */
+    /** Which side the gripped wall is on: -1 left, +1 right, 0 not gripping. */
+    this.wallSide = 0;
+    this.clinging = false;
+    this.climbing = false;
+    this.stamina = this.staminaMax;
+    /** Seconds the wall just kicked off stays ungrabbable, and which one. */
+    this.noGrab = 0;
+    this.noGrabSide = 0;
+    /** Set for one frame on a kick-off, so the world can spray chips. */
+    this.wallJumped = false;
+    /** Pulling over the head of a wall rather than climbing its face. */
+    this.mantling = false;
+    /** Seconds a wall kick is immune to the jump-cut. */
+    this.kickGrace = 0;
+    /** The block currently being gripped, so the climb knows where its top is. */
+    this.wallBlock = null;
+  }
+
+  /**
+   * How long the penguin can hang.
+   *
+   * Crampons help here for the same reason they help on polished ice — they
+   * are the one upgrade that is about the *contact* rather than about power —
+   * but they only lengthen the bar, they never remove it.
+   */
+  get staminaMax() {
+    return CLIMB.stamina + CLIMB.gripBonus * (this.boost?.grip ?? 0);
+  }
+
+  get staminaFrac() {
+    return this.staminaMax > 0 ? this.stamina / this.staminaMax : 0;
   }
 
   get glideMax() {
@@ -192,6 +225,15 @@ export class Player {
       if (this.trail[i].life <= 0) this.trail.splice(i, 1);
     }
 
+    // Kicking off a wall means holding *toward* that wall at the moment you
+    // leave it — so without this, air control immediately drags the penguin
+    // back into the ice it just pushed away from and the kick eats itself. For
+    // the length of the no-regrab window, steering into the wall you just left
+    // does nothing. Steering away, or letting go, works normally.
+    if (this.noGrab > 0 && Math.sign(intent.axis) === this.noGrabSide) {
+      intent = { ...intent, axis: 0 };
+    }
+
     const target = intent.axis * this.moveSpeed;
     if (this.launched > 0) {
       // Tumbling: steering is heavily damped, but not gone — the player can
@@ -232,6 +274,51 @@ export class Player {
       events?.onJump?.();
     }
 
+    // --- The wall ------------------------------------------------------
+    // Grip first, because everything below it — the motor, the wings, gravity
+    // itself — has to know whether the penguin is currently holding on.
+    this.wallJumped = false;
+    this.noGrab = this.onGround ? 0 : Math.max(0, this.noGrab - dt);
+    this.wallBlock = null;
+    const wall = this.onGround ? 0 : this._probeWall(floes);
+    const holdingInto = wall !== 0 && Math.sign(intent.axis) === wall;
+    const barred = this.noGrab > 0 && this.noGrabSide === wall;
+    this.clinging = holdingInto && !barred && this.stamina > 0;
+    this.climbing = false;
+    if (!this.clinging) {
+      this.wallSide = 0;
+      this.mantling = false;
+    }
+    else {
+      this.wallSide = wall;
+      // A tap kicks off. Checked before the motor so the same button means the
+      // same thing it always has: press to leave where you are.
+      if (intent.jumpPressed) {
+        this.vx = -wall * CLIMB.kickX;
+        this.vy = this.jumpVelocity * CLIMB.kickY;
+        this.stamina = Math.max(0, this.stamina - CLIMB.kickCost);
+        this.noGrab = CLIMB.regrab;
+        this.noGrabSide = wall;
+        this.clinging = false;
+        this.wallSide = 0;
+        this.facing = -wall;
+        this.buffer = 0;
+        this.jumpedThisFrame = true;
+        this.wallJumped = true;
+        // A kick is fired by a *tap*, so the button is already up by the next
+        // frame — and the variable-height jump cut would then shave two thirds
+        // off it. Playing it the way the control is designed to be played was
+        // being punished, and the shaft became uncrossable for exactly the
+        // players who used the mechanic correctly. The impulse is protected
+        // for as long as it takes to leave the wall.
+        this.kickGrace = CLIMB.regrab;
+        this.squashX = 0.76;
+        this.squashY = 1.28;
+        events?.onWallJump?.(wall);
+      }
+    }
+    if (this.onGround) this.stamina = Math.min(this.staminaMax, this.stamina + CLIMB.regen * dt);
+
     // --- Gear ---------------------------------------------------------
     // Both meters refill only on the ground: gear turns a jump you already
     // committed to into one you can still argue with, never into flight.
@@ -250,6 +337,7 @@ export class Player {
       this.rocketMax > 0 &&
       intent.jumpPressed &&
       !this.onGround &&
+      !this.clinging &&
       !this.jumpedThisFrame &&
       this.rocketLeft > 0 &&
       this.rocketCool <= 0
@@ -270,6 +358,7 @@ export class Player {
       this.glideMax > 0 &&
       intent.jumpHeld &&
       !this.onGround &&
+      !this.clinging &&
       this.vy > 60 &&
       this.burn <= 0 &&
       this.glideLeft > 0;
@@ -283,13 +372,54 @@ export class Player {
     // Releasing the button early cuts the jump short — but only a jump. A
     // geyser throw is not the player's to cut, and letting the same code path
     // damp it turned the eruption into a hop.
-    if (!intent.jumpHeld && this.vy < 0 && this.launched <= 0) {
+    this.kickGrace = Math.max(0, this.kickGrace - dt);
+    if (!intent.jumpHeld && this.vy < 0 && this.launched <= 0 && this.kickGrace <= 0) {
       this.vy *= 1 - (1 - PHYS.jumpCut) * Math.min(1, dt * 30);
     }
 
     const g = this.vy < 0 ? PHYS.gravityUp : PHYS.gravityDown;
     this.vy = Math.min(PHYS.maxFall, this.vy + g * dt);
     if (this.gliding) this.vy = Math.min(this.vy, PHYS.maxFall * GEAR.wings.fallFactor);
+
+    // Holding on replaces gravity outright. Hanging still costs; creeping
+    // upward costs more than twice as much; and when the bar empties the wall
+    // simply stops being a wall — the penguin does not fall *off*, it stops
+    // being able to hold on, which is a distinction the player can feel.
+    if (this.clinging) {
+      // Topping out. Once the feet clear the head of the wall there is nothing
+      // left to climb, and hanging there creeping sideways at grip speed would
+      // take two seconds — so the pull-over happens at running pace and the
+      // penguin ends up standing on top of what it was hanging from. Without
+      // this a wall is a dead end: you can reach its top and never get onto it.
+      const head = this.wallBlock ? this.wallBlock.y : -Infinity;
+      if (this.y + this.h <= head + 6) {
+        this.vx = this.wallSide * this.moveSpeed * 0.85;
+        this.vy = -CLIMB.climbSpeed * 0.35;
+        this.stamina -= CLIMB.drainClimb * dt;
+        this.climbing = true;
+        this.mantling = true;
+      } else if (intent.jumpHeld) {
+        this.mantling = false;
+        this.vy = -CLIMB.climbSpeed;
+        this.stamina -= CLIMB.drainClimb * dt;
+        this.climbing = true;
+      } else {
+        this.mantling = false;
+        this.vy = CLIMB.slideSpeed;
+        this.stamina -= CLIMB.drainHold * dt;
+      }
+      // Stay pressed into the ice, otherwise the probe loses the wall the
+      // instant friction eats the sideways speed and the grip flickers. While
+      // pulling over the top the sideways speed is the whole point, so it is
+      // left alone.
+      if (!this.mantling) this.vx = this.wallSide * 24;
+      if (this.stamina <= 0) {
+        this.stamina = 0;
+        this.clinging = false;
+        this.wallSide = 0;
+        events?.onSlip?.();
+      }
+    }
 
     // --- Move & resolve, one axis at a time ---------------------------
     const ridden = this.groundFloe;
@@ -341,6 +471,46 @@ export class Player {
     }
   }
 
+  /**
+   * Which side a climbable wall is on, or 0.
+   *
+   * A probe rather than a collision result: while clinging the sideways speed
+   * is nearly nothing, so there is no push-out to read, and grip would flicker
+   * on and off every other frame. Reaching a few pixels past the body each way
+   * asks the question the player is actually asking — "is there ice here?"
+   *
+   * Only surfaces marked climbable count. Tunnel roofs and cliff faces stay
+   * exactly as solid and exactly as ungrippable as they have always been, so
+   * nothing in the first thirty-one levels changes underfoot.
+   */
+  _probeWall(solids) {
+    const REACH = 4;
+    const top = this.y + this.h * 0.15;
+    const h = this.h * 0.7;
+    // Mantling. Grip survives a little past the top of the wall, so a climb
+    // can finish by pulling over the edge instead of stopping dead one body
+    // length short of it. Without this every wall in the game would need a
+    // ledge bolted to its side, and topping out — the most satisfying move in
+    // climbing — would not exist.
+    const MANTLE = this.h * 0.5;
+    const right = this.x + this.w;
+    for (const f of solids) {
+      if (!f.solid || !f.climb) continue;
+      if (top + h <= f.y - MANTLE || top >= f.y + f.h) continue;
+      // The body has to be *against the face*, not merely overlapping the
+      // block: a wide block would otherwise be grippable from inside it.
+      if (right >= f.x - REACH && right <= f.x + REACH) {
+        this.wallBlock = f;
+        return 1;
+      }
+      if (this.x >= f.x + f.w - REACH && this.x <= f.x + f.w + REACH) {
+        this.wallBlock = f;
+        return -1;
+      }
+    }
+    return 0;
+  }
+
   _resolveX(floes) {
     const box = this.box;
     for (const f of floes) {
@@ -350,6 +520,27 @@ export class Player {
       // Only push out sideways if we're clearly beside the floe, not on top.
       const overlapTop = box.y + box.h - fb.y;
       if (overlapTop < 8) continue;
+
+      // Ledge assist.
+      //
+      // Coming up the side of a ledge and missing its lip by a few pixels used
+      // to stop the jump dead against the wall of it — the penguin was a
+      // finger's width short and got nothing. That is barely noticeable on a
+      // shelf, where you approach platforms from the side at the same height,
+      // and it is constant on a mountain, where every jump arrives at a ledge
+      // from underneath and beside it.
+      //
+      // So a near miss on the way up is pulled onto the ledge instead. The
+      // assist is a fraction of the penguin's own height, which makes it a few
+      // percent of a jump: enough that "I made that" is never answered with
+      // "no you didn't", small enough that it never reaches something the
+      // level was not measured to give you.
+      if (this.vy < 0 && overlapTop < this.h * 0.3 && f.type !== 'rock') {
+        this.y = fb.y - this.h;
+        this.vy = Math.min(this.vy, -40);
+        box.y = this.y;
+        continue;
+      }
       if (this.vx > 0) this.x = fb.x - this.w;
       else if (this.vx < 0) this.x = fb.x + fb.w;
       else continue;
@@ -373,9 +564,23 @@ export class Player {
         this.groundFloe = f;
         events?.onStand?.(f);
       } else if (this.vy < 0) {
-        // Bonked the underside.
-        this.y = fb.y + fb.h;
-        this.vy = 40;
+        // Rising with the feet already level with the top of the block is a
+        // pull-over, not a head-bump. Treating it as a bump teleports the
+        // penguin to the *bottom* of whatever it was climbing — the whole
+        // height of the wall, in one frame, at the exact moment the climb was
+        // about to succeed.
+        const overlapTop = box.y + box.h - fb.y;
+        if (overlapTop < 10) {
+          this.y = fb.y - this.h;
+          this.vy = 0;
+          this.onGround = true;
+          this.groundFloe = f;
+          events?.onStand?.(f);
+        } else {
+          // Bonked the underside.
+          this.y = fb.y + fb.h;
+          this.vy = 40;
+        }
       }
       box.y = this.y;
     }

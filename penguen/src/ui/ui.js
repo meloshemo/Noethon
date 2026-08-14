@@ -9,7 +9,7 @@
 import { formatTime } from '../core/util.js';
 import { CRAFTED_LEVELS, UPGRADES, MONUMENT, monumentCost, scaleForLevel } from '../game/config.js';
 import { getLevel } from '../game/game.js';
-import { LEVELS } from '../game/levels.js';
+import { ALL_LEVELS as LEVELS, chapterOf, startsChapter } from '../game/chapters.js';
 import { Storage, todayKey } from '../core/storage.js';
 import { ensureMissions } from '../game/missions.js';
 import { shareText, withName } from '../game/ghost.js';
@@ -626,6 +626,18 @@ export class UI {
       const rec = this.save.levels[id];
       const open = id <= unlocked;
       const def = id <= CRAFTED_LEVELS ? LEVELS[id - 1] : null;
+
+      // A chapter changes what the game *is*, so the list says so rather than
+      // letting the mountain start silently between two numbered buttons.
+      if (startsChapter(id)) {
+        const chapter = chapterOf(id);
+        const head = document.createElement('h3');
+        head.className = 'levels__chapter';
+        head.innerHTML =
+          `<span class="levels__chapterName">${chapter.name}</span>` +
+          `<span class="levels__chapterVerb">${chapter.verb}</span>`;
+        grid.appendChild(head);
+      }
 
       const btn = document.createElement('button');
       btn.className = 'level';

@@ -11,6 +11,7 @@
 
 import { PHYS, PENGUIN, ICE, STORM, scaleForLevel, reachFor, CRAFTED_LEVELS } from '../src/game/config.js';
 import { LEVELS, WATER_Y } from '../src/game/levels.js';
+import { CRAFTED_TOTAL, CHAPTERS } from '../src/game/chapters.js';
 import { generateLevel } from '../src/game/generator.js';
 
 /** How much of the theoretical maximum jump a level is allowed to demand. */
@@ -385,8 +386,13 @@ if (introducedEarly.some((t) => t !== 'solid')) {
 
 // The list and the constant must agree, or the endless mode starts in the
 // middle of the campaign or skips the end of it.
-if (LEVELS.length !== CRAFTED_LEVELS) {
-  problems.push(`CRAFTED_LEVELS ${CRAFTED_LEVELS}, ama ${LEVELS.length} bölüm var`);
+// The count now spans every chapter, not just the shelf — chapters.js is the
+// list, config.js is the number, and they are not allowed to drift.
+if (CRAFTED_TOTAL !== CRAFTED_LEVELS) {
+  problems.push(
+    `CRAFTED_LEVELS ${CRAFTED_LEVELS}, ama bölümler toplamı ${CRAFTED_TOTAL} ` +
+      `(${CHAPTERS.map((c) => `${c.name} ${c.levels.length}`).join(' + ')})`,
+  );
 }
 
 // Monotony is a defect, not a taste. Antarctica is not a corridor at one

@@ -464,6 +464,35 @@
   gap: var(--s-3);
 }
 
+/*
+ * A chapter heading spans the whole grid rather than sitting in a cell — it is
+ * a divider in a list of levels, not another level.
+ */
+.levels__chapter {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin: var(--s-3) 0 0;
+  padding-top: var(--s-3);
+  border-top: 1px solid rgba(150, 200, 240, 0.18);
+}
+.levels__chapter:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+.levels__chapterName {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.levels__chapterVerb {
+  font-size: 0.78rem;
+  font-weight: 500;
+  opacity: 0.66;
+}
+
 .level {
   position: relative;
   display: flex;

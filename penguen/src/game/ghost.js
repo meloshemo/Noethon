@@ -120,13 +120,17 @@ export class Ghost {
    * How far ahead the player is, in seconds, judged by who reached this x first.
    * Positive means the player is winning.
    */
-  leadAt(playerX) {
+  leadAt(playerX, playerY = null, axis = 'across') {
     if (!this.visible) return null;
+    // On a mountain "how far along" is height, not distance, and y grows
+    // downward — so the same scan runs with the comparison flipped.
+    const passed =
+      axis === 'up' ? (s) => s.y >= playerY : (s) => s.x <= playerX;
     // The ghost's index is its timestamp, so a linear scan back from the
-    // current point finds when it passed this x.
+    // current point finds when it passed this point.
     const upto = Math.min(this.samples.length - 1, Math.ceil(this.t / SAMPLE_RATE));
     for (let i = upto; i >= 0; i--) {
-      if (this.samples[i].x <= playerX) {
+      if (passed(this.samples[i])) {
         const ghostTime = i * SAMPLE_RATE;
         return ghostTime - this.t;
       }

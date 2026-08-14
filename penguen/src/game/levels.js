@@ -583,7 +583,3 @@ export const LEVELS = PLANS.map((plan, i) => {
   }));
   return def;
 });
-
-export function getCraftedLevel(id) {
-  return LEVELS[id - 1] ?? null;
-}

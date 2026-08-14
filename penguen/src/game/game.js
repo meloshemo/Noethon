@@ -6,7 +6,7 @@
 import { World } from './world.js';
 import { Renderer } from './render.js';
 import { Particles } from '../core/particles.js';
-import { getCraftedLevel, LEVELS } from './levels.js';
+import { getCraftedLevel, ALL_LEVELS } from './chapters.js';
 import { generateLevel, generateDailyLevel } from './generator.js';
 import { CRAFTED_LEVELS, ASSIST_AFTER_DEATHS, REWARDS, scaleForLevel } from './config.js';
 import { Storage, todayKey } from '../core/storage.js';
@@ -27,7 +27,7 @@ export function getLevel(id) {
   return id <= CRAFTED_LEVELS ? getCraftedLevel(id) : generateLevel(id);
 }
 
-export const TOTAL_CRAFTED = LEVELS.length;
+export const TOTAL_CRAFTED = ALL_LEVELS.length;
 
 export class Game {
   constructor({ canvas, input, audio, storage, ui }) {

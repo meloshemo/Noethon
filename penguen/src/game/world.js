@@ -40,6 +40,12 @@ export class World {
     this.contentTop = Math.max(0, Math.min(...tops, this.waterY) - 170);
     this.contentBottom = Math.min(this.worldH, this.waterY + 60);
     this.fog = def.fog ?? 0;
+    /**
+     * Which way "forward" is. 'across' is the shelf — the game as it has always
+     * been. 'up' is a mountain: progress, the camera, the finish check and the
+     * ghost comparison all read height instead of distance.
+     */
+    this.axis = def.axis ?? 'across';
 
     this.floes = (def.floes ?? []).map((d, i) => new Floe(d, i));
     /**
@@ -143,7 +149,12 @@ export class World {
     /** Seconds spent standing still — "finish without stopping" reads this. */
     this.stillTime = 0;
     /** Set by the game: ambushes only start once the player knows the game. */
-    this.ambushes = (def.id ?? 1) >= AMBUSH.fromLevel || Boolean(def.daily) || Boolean(def.generated);
+    // The skua hunts over open ice. Inside a shaft there is nowhere for it to
+    // dive from and nowhere for the player to dodge to, so the mountain gets
+    // its own ambushes — falling seracs — rather than this one.
+    this.ambushes =
+      this.axis !== 'up' &&
+      ((def.id ?? 1) >= AMBUSH.fromLevel || Boolean(def.daily) || Boolean(def.generated));
     /**
      * The serac that calves off the cliff as you reach the raft. Armed once per
      * attempt, on a coin flip, and only past the point where the level is
@@ -151,11 +162,16 @@ export class World {
      */
     this.collapse = null;
     this.collapseArmed =
+      this.axis !== 'up' &&
       ((def.id ?? 1) >= COLLAPSE.fromLevel || Boolean(def.daily) || Boolean(def.generated)) &&
       Math.random() < COLLAPSE.chance * (this.assist ? 0.45 : 1);
     this.boostsTaken = 0;
     /** Rotten fish swallowed this run — one of the daily objectives reads it. */
     this.rottenTaken = 0;
+    /** Kicks off an ice wall, so missions can ask for them. */
+    this.wallKicks = 0;
+    /** Seconds spent hanging on ice — the climbing counterpart of glide time. */
+    this.clingTime = 0;
     this._orcaSeen = new Set();
 
     this.player.reset(this.spawn.x, this.spawn.y);
@@ -196,15 +212,43 @@ export class World {
     return { min: top, max: bottom - VIEW.h };
   }
 
+  /**
+   * How far the camera may travel sideways.
+   *
+   * A mountain is narrower than the screen, so there is nothing to scroll to —
+   * and clamping to [0, worldW - VIEW.w] pins it at zero, which draws the whole
+   * climb hard against the left edge with a third of the screen empty. Same
+   * treatment the vertical range already gets: when the view is wider than the
+   * level, centre the level instead of scrolling it.
+   */
+  get _camXRange() {
+    const slack = VIEW.w - this.worldW;
+    if (slack > 0) {
+      const at = -slack / 2;
+      return { min: at, max: at };
+    }
+    return { min: 0, max: this.worldW - VIEW.w };
+  }
+
   _centerCamera() {
+    const up = this.axis === 'up';
+    const x = this._camXRange;
     const y = this._camYRange;
-    this.camera.x = clamp(this.player.centerX - VIEW.w * 0.42, 0, Math.max(0, this.worldW - VIEW.w));
-    this.camera.y = clamp(this.player.y - VIEW.h * 0.55, y.min, y.max);
+    this.camera.x = clamp(this.player.centerX - VIEW.w * (up ? 0.5 : 0.42), x.min, x.max);
+    this.camera.y = clamp(this.player.y - VIEW.h * (up ? 0.64 : 0.55), y.min, y.max);
   }
 
   /** Progress along the level, 0..1 — drives the HUD bar. */
   get progress() {
+    if (this.axis === 'up') {
+      return clamp((this.spawn.y - this.player.y) / Math.max(1, this.spawn.y - this.goal.y), 0, 1);
+    }
     return clamp((this.player.centerX - this.spawn.x) / Math.max(1, this.goal.x - this.spawn.x), 0, 1);
+  }
+
+  /** Height climbed, in the metres the HUD shows on a mountain. */
+  get metresClimbed() {
+    return Math.max(0, Math.round((this.spawn.y - this.player.y) / 12));
   }
 
   showHint(text, seconds = 2.6) {
@@ -222,7 +266,7 @@ export class World {
       this.recorder.sample(dt, this.player);
       if (this.ghost) {
         this.ghost.update(dt);
-        this.ghostLead = this.ghost.leadAt(this.player.x);
+        this.ghostLead = this.ghost.leadAt(this.player.x, this.player.y, this.axis);
       }
     }
     if (this.hintTimer > 0) this.hintTimer = Math.max(0, this.hintTimer - dt);
@@ -297,6 +341,24 @@ export class World {
         if (floe) this._touchFloe(floe);
       },
       onStand: (floe) => this._touchFloe(floe),
+      onWallJump: (side) => {
+        this.audio.jump();
+        this.wallKicks++;
+        this.particles.burstIce(
+          this.player.x + (side > 0 ? this.player.w : 0),
+          this.player.y + this.player.h * 0.5,
+          7,
+          10,
+        );
+      },
+      onSlip: () => {
+        // The bar emptying is the one thing in the climb that has to be
+        // unmissable, because the penguin will look fine for another half
+        // second while it falls.
+        this.audio.crack();
+        this.particles.puff(this.player.centerX, this.player.y + this.player.h * 0.4, 8);
+        this.showHint('Tutunamıyorsun!', 1.1);
+      },
     });
     this._trackGear(dt);
 
@@ -464,8 +526,14 @@ export class World {
       h: 200,
     };
     if (rectsOverlap(this.player.box, box)) return this.win();
-    // Last resort — overshooting the raft still counts as escaping.
-    if (this.player.onGround && this.player.centerX > this.goal.x + 52) this.win();
+    // Last resort — overshooting the raft still counts as escaping. On a
+    // mountain "past it" means above it, and standing on anything higher than
+    // the summit ledge is unambiguously the top.
+    if (this.axis === 'up') {
+      if (this.player.onGround && this.player.y + this.player.h <= this.goal.y + 6) this.win();
+    } else if (this.player.onGround && this.player.centerX > this.goal.x + 52) {
+      this.win();
+    }
     return undefined;
   }
 
@@ -540,10 +608,15 @@ export class World {
 
   _followCamera(dt) {
     // Look ahead in the direction of travel so fast runs still show the path.
-    const lead = clamp(this.player.vx * 0.35, -110, 110);
-    const targetX = clamp(this.player.centerX + lead - VIEW.w * 0.42, 0, Math.max(0, this.worldW - VIEW.w));
+    // On a mountain the direction of travel is up, so the lead is vertical and
+    // the penguin sits low in the frame: what matters is the next hold, and the
+    // next hold is always above.
+    const up = this.axis === 'up';
+    const lead = up ? 0 : clamp(this.player.vx * 0.35, -110, 110);
+    const xr = this._camXRange;
     const yr = this._camYRange;
-    const targetY = clamp(this.player.y - VIEW.h * 0.55, yr.min, yr.max);
+    const targetX = clamp(this.player.centerX + lead - VIEW.w * (up ? 0.5 : 0.42), xr.min, xr.max);
+    const targetY = clamp(this.player.y - VIEW.h * (up ? 0.64 : 0.55), yr.min, yr.max);
     this.camera.x = damp(this.camera.x, targetX, 7, dt);
     this.camera.y = damp(this.camera.y, targetY, 5, dt);
     this.camera.shake = damp(this.camera.shake, 0, 9, dt);
@@ -559,6 +632,7 @@ export class World {
   _trackGear(dt) {
     if (this.status !== 'playing') return;
     if (this.player.gliding) this.glideTime += dt;
+    if (this.player.clinging) this.clingTime += dt;
     if (this.player.rocketFired) {
       this.rocketFires++;
       this.audio.rocket?.();

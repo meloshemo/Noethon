@@ -317,6 +317,7 @@ export class Floe {
  *   gust   — wind column, pushes but never kills
  *   orca   — breaches out of the gap on a timer, lethal at the top of its arc
  *   storm  — a stretch of coast with the wind against you, surging in waves
+ *   shard  — serac ice down a shaft, on its own clock rather than on yours
  */
 export class Hazard {
   constructor(def) {
@@ -342,12 +343,17 @@ export class Hazard {
     // Storm: 0..1 wind strength this frame, and whether it is still building.
     this.intensity = 0;
     this.building = false;
+    /** Serac: when its cycle started, or null while it is still asleep. */
+    this.armedAt = null;
   }
 
   get lethal() {
     if (this.kind === 'gust' || this.kind === 'storm') return false;
     // An orca only bites while it is actually out of the water.
     if (this.kind === 'orca') return this.rise > 0.12;
+    // Falling ice is only dangerous while it is falling. Hanging above you it
+    // is a warning, and once it is past you it is scenery.
+    if (this.kind === 'shard') return this.state === 'drop';
     return true;
   }
 
@@ -393,6 +399,42 @@ export class Hazard {
         }
         break;
       }
+      case 'shard': {
+        // An icicle waits for you to walk under it; a serac does not care where
+        // you are. On a wall you cannot stop and you cannot step aside, so the
+        // only fair version is one with a clock you can learn — the crack is
+        // always the same length, and it always comes at the same interval.
+        //
+        // But the clock must not already be running when the player arrives.
+        // Left free-running, the first thing a level with a serac in it does is
+        // drop one on somebody who has not moved yet, which is not a clock, it
+        // is a coin flip on the loading screen. So it sleeps until the penguin
+        // is actually in the shaft, and then starts from the top of its cycle —
+        // the first crack a player ever hears is always a full warning.
+        if (this.armedAt == null) {
+          if (player.y > (this.arm ?? -Infinity)) {
+            this.state = 'idle';
+            this.y = this.baseY;
+            break;
+          }
+          this.armedAt = time;
+        }
+        const period = this.period ?? 3;
+        const warn = this.warn ?? 0.5;
+        const cycle = (((time - this.armedAt) * s) / period) % 1;
+        const fallFrom = warn / period;
+        if (cycle < fallFrom) {
+          this.state = 'warn';
+          this.y = this.baseY;
+          this.vy = 0;
+        } else {
+          this.state = 'drop';
+          const t = (cycle - fallFrom) * period;
+          this.y = this.baseY + 0.5 * 2000 * t * t;
+          if (this.y > this.baseY + (this.fall ?? 600)) this.state = 'spent';
+        }
+        break;
+      }
       case 'gust': {
         this.strength = (this.power ?? 320) * (0.6 + 0.4 * Math.sin(time * 2.2 + this.phase * 6));
         break;
@@ -433,6 +475,9 @@ export class Hazard {
     this.state = 'idle';
     this.vy = 0;
     this.timer = 0;
+    // A serac that has already been woken goes back to sleep on a retry, so a
+    // respawn always buys the same full warning the first attempt did.
+    this.armedAt = null;
   }
 }
 

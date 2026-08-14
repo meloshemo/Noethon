@@ -8,7 +8,7 @@
  * hazards → penguin → particles → weather → post effects.
  */
 
-import { VIEW, VIEW_LIMITS, AMBUSH } from './config.js';
+import { VIEW, VIEW_LIMITS, AMBUSH, CLIMB } from './config.js';
 import { getSkin, getTrail } from './skins.js';
 import { clamp, lerp, makeRng } from '../core/util.js';
 
@@ -357,6 +357,16 @@ export class Renderer {
       const b =
         raw.y + raw.h > world.waterY ? { ...raw, h: Math.max(6, world.waterY - raw.y) } : raw;
 
+      // A climbable wall has to be unmistakable. Everything else in this game
+      // is a shade of the same blue-grey, and if the one surface the penguin
+      // can hang on looks like the ones it cannot, the chapter is unfair by
+      // construction — so grippable ice is drawn pale, cracked and vertically
+      // grained, and nothing else in the game is.
+      if (b.climb) {
+        this._iceWall(ctx, b, time);
+        continue;
+      }
+
       const g = ctx.createLinearGradient(0, b.y, 0, b.y + b.h);
       if (b.kind === 'roof') {
         // A roof is seen from underneath, so it is lit from above and its cut
@@ -408,6 +418,61 @@ export class Renderer {
         }
       }
     }
+  }
+
+  /**
+   * Ice you can hold on to.
+   *
+   * Pale, vertically grained and split by fracture lines, with a bright rim
+   * down both faces — the faces are the part that matters, because they are
+   * literally what the penguin grabs, and the player has to be able to see
+   * where one ends without counting pixels.
+   */
+  _iceWall(ctx, b, time) {
+    const g = ctx.createLinearGradient(b.x, 0, b.x + b.w, 0);
+    g.addColorStop(0, '#cfe9fb');
+    g.addColorStop(0.3, '#9dc9e8');
+    g.addColorStop(0.62, '#7db0d6');
+    g.addColorStop(1, '#b9dcf3');
+    ctx.fillStyle = g;
+    ctx.fillRect(b.x, b.y, b.w, b.h);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(b.x, b.y, b.w, b.h);
+    ctx.clip();
+
+    // Vertical grain: the direction of the ice, and the direction of travel.
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+    ctx.lineWidth = 1;
+    for (let x = b.x + 5; x < b.x + b.w; x += 9) {
+      ctx.beginPath();
+      ctx.moveTo(x, b.y);
+      ctx.lineTo(x + Math.sin(x * 0.4) * 2, b.y + b.h);
+      ctx.stroke();
+    }
+    // Fractures across it, spaced by position so a wall looks the same every
+    // time it is drawn rather than shimmering.
+    ctx.strokeStyle = 'rgba(72,120,164,0.5)';
+    ctx.lineWidth = 1.6;
+    const step = 30 + ((b.x * 13) % 22);
+    for (let y = b.y + step * 0.6; y < b.y + b.h; y += step) {
+      const skew = ((y * 7) % 11) - 5;
+      ctx.beginPath();
+      ctx.moveTo(b.x - 2, y);
+      ctx.lineTo(b.x + b.w * 0.55, y + skew);
+      ctx.lineTo(b.x + b.w + 2, y - skew * 0.4);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Both faces, lit. This is the grip line.
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.fillRect(b.x, b.y, 2.5, b.h);
+    ctx.fillRect(b.x + b.w - 2.5, b.y, 2.5, b.h);
+    // And the top, so the end of a wall is visible from below.
+    ctx.fillStyle = 'rgba(255,255,255,0.95)';
+    ctx.fillRect(b.x - 2, b.y, b.w + 4, 3);
   }
 
   /**
@@ -1048,6 +1113,46 @@ export class Renderer {
           ctx.setLineDash([]);
         }
         ctx.restore();
+      } else if (h.kind === 'shard') {
+        // A serac keeps its own time. While it is still hanging it is drawn
+        // with a shivering crack line and a shaft of dust down the fall line,
+        // because in a chimney there is nowhere to dodge to — the only way it
+        // can be fair is if you can see the clock.
+        ctx.save();
+        const dropping = h.state === 'drop';
+        if (h.state === 'spent') {
+          ctx.restore();
+          continue;
+        }
+        if (!dropping) {
+          ctx.strokeStyle = 'rgba(255,150,170,0.35)';
+          ctx.setLineDash([5, 9]);
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(h.x + h.w / 2, h.y + h.h);
+          ctx.lineTo(h.x + h.w / 2, h.y + h.h + (h.fall ?? 400));
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+        const shake = dropping ? 0 : Math.sin(time * 48) * 1.8;
+        ctx.translate(h.x + shake, h.y);
+        if (dropping) {
+          ctx.fillStyle = 'rgba(220,240,255,0.35)';
+          ctx.fillRect(h.w * 0.2, -34, h.w * 0.6, 34);
+        }
+        ctx.fillStyle = dropping ? '#eaf6ff' : '#ffd9e0';
+        ctx.beginPath();
+        ctx.moveTo(h.w * 0.5, 0);
+        ctx.lineTo(h.w, h.h * 0.42);
+        ctx.lineTo(h.w * 0.72, h.h);
+        ctx.lineTo(h.w * 0.2, h.h * 0.88);
+        ctx.lineTo(0, h.h * 0.3);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.restore();
       } else if (h.kind === 'seal') {
         ctx.save();
         ctx.translate(h.x + h.w / 2, h.y + h.h);
@@ -1452,6 +1557,68 @@ export class Renderer {
 
   /* ---------------------------------------------------------------- */
 
+  /**
+   * The grip: claws in the ice, and how much is left in the arms.
+   *
+   * The bar rides above the penguin rather than sitting in the HUD, and it is
+   * only there when it means something — clinging, or partly spent. A meter in
+   * the corner would be a thing to look away for, and on a wall the one place
+   * the player cannot afford to look away from is the penguin.
+   */
+  _grip(ctx, p, body, time) {
+    if (p.clinging) {
+      // Claws. Four short strokes into the wall, shivering when the bar is low.
+      const side = p.wallSide;
+      const x = side > 0 ? p.x + p.w : p.x;
+      const low = p.staminaFrac < CLIMB.tired;
+      const jitter = low ? Math.sin(time * 44) * 1.6 : 0;
+      ctx.save();
+      ctx.strokeStyle = body;
+      ctx.lineWidth = Math.max(1.6, p.w * 0.07);
+      ctx.lineCap = 'round';
+      for (let i = 0; i < 3; i++) {
+        const y = p.y + p.h * (0.26 + i * 0.2);
+        ctx.beginPath();
+        ctx.moveTo(x - side * p.w * 0.18, y + jitter);
+        ctx.lineTo(x + side * 4, y - p.h * 0.05 + jitter);
+        ctx.stroke();
+      }
+      ctx.lineCap = 'butt';
+      // Chips of ice coming off the hold, more of them the harder it is going.
+      if (!this.reducedMotion) {
+        ctx.fillStyle = 'rgba(230,246,255,0.75)';
+        const n = p.climbing ? 4 : 2;
+        for (let i = 0; i < n; i++) {
+          const t = (time * 3 + i * 0.37) % 1;
+          ctx.globalAlpha = 0.7 * (1 - t);
+          ctx.fillRect(x - side * 2, p.y + p.h * 0.3 + t * p.h * 0.9, 2.5, 2.5);
+        }
+        ctx.globalAlpha = 1;
+      }
+      ctx.restore();
+    }
+
+    // The bar itself: hidden when full and on the ground, because a meter that
+    // is always there stops being read.
+    const frac = p.staminaFrac;
+    if (frac >= 0.999 && !p.clinging) return;
+    const w = p.w * 1.5;
+    const x = p.x + p.w / 2 - w / 2;
+    const y = p.y - p.h * 0.42;
+    ctx.save();
+    ctx.fillStyle = 'rgba(8,22,38,0.55)';
+    ctx.fillRect(x - 1, y - 1, w + 2, 6);
+    const low = frac < CLIMB.tired;
+    ctx.fillStyle = low ? '#ff7a8a' : '#9ee6ff';
+    ctx.fillRect(x, y, w * Math.max(0, frac), 4);
+    if (low && !this.reducedMotion) {
+      ctx.globalAlpha = 0.35 + 0.35 * Math.sin(time * 14);
+      ctx.fillStyle = '#ffd0d8';
+      ctx.fillRect(x, y, w * Math.max(0, frac), 4);
+    }
+    ctx.restore();
+  }
+
   _penguin(ctx, world, time) {
     const p = world.player;
 
@@ -1680,6 +1847,8 @@ export class Renderer {
     }
 
     ctx.restore();
+
+    this._grip(ctx, p, body, time);
 
     // A skin's own glow — always on, unlike the speed boost's.
     if (skin.aura && !this.reducedMotion) {

@@ -18,7 +18,9 @@ Toplam yük tek dosyada ~385 KB ve çevrimdışı çalışıyor.
 
 | | |
 |---|---|
-| **31 elle yazılmış bölüm** | 1.600–5.400 px arası parkurlar, 481 buz kütlesi |
+| **İki bölüm (chapter)** | Buz Sahanlığı 1–31 · Zirve 32–38 — ikisi ayrı fiil |
+| **38 elle yazılmış bölüm** | 31 sahanlık parkuru + 7 dikey tırmanış |
+| **Tutunma** | Buz duvarına asıl, tırman, tekmele — ve kollarında sınırlı güç var |
 | **Sonsuz mod** | Bölüm numarasıyla tohumlanmış — 42. bölüm herkeste aynı |
 | **10 buz türü** | sağlam · çatlak · cilalı · eriyen · sürüklenen · düşen · tuzak · **sahte** · kaçan · gayzer |
 | **4 tehlike** | sarkıt · fok · fırtına kuşağı · orka |
@@ -37,6 +39,15 @@ Toplam yük tek dosyada ~385 KB ve çevrimdışı çalışıyor.
 ---
 
 ## Öne çıkan özellikler
+
+### 🧗 Zirve — oyunun ikinci fiili
+32. bölümden itibaren dağ başlıyor ve soru değişiyor. Sahanlıkta soru "oraya
+yetişir miyim?"di; dağda "ne kadar tutunabilirim?". Penguen buz duvarına
+gömülüp asılı kalıyor, yavaşça tırmanıyor, ya da tekmeleyip karşı duvara
+atlıyor. Asılmak azar azar, tırmanmak iki katından fazla, tekme bir çırpıda
+tüketiyor — ve bar **sadece sağlam zeminde** doluyor. Yeni tuş yok: duvara
+doğru bas (tutun), BOŞLUK'u basılı tut (tırman), BOŞLUK'a dokun (tekmele).
+→ [ayrıntı](#zirve--tırmanış)
 
 ### 🪽 Aktif ekipman — tek tuşta iki yetenek
 Markette **Planör Kanat** ve **Sırt Motoru** var. Havada zıplamayı *basılı tutmak*
@@ -94,11 +105,12 @@ hedef var ve **gün boyunca birikiyorlar** — tek turda hepsini yapman gerekmiy
 |-------|--------------|
 | [Çalıştırma](#çalıştırma) · [Testler](#testler) | Nasıl açılır, nasıl doğrulanır |
 | [Mimari](#mimari) | Dosya düzeni ve neden böyle |
-| [Zorluk eğrisi](#zorluk-eğrisi) | 31 bölümün rampa tasarımı |
+| [Zirve](#zirve--tırmanış) | Tutunma, tekme, baca — ikinci bölümün fiili |
+| [Zorluk eğrisi](#zorluk-eğrisi) | Rampa tasarımı |
 | [Buz türleri](#buz-türleri) · [Tehlikeler](#tehlikeler) | Oyun içi her mekanik |
 | [Pusu mekanikleri](#pusu-mekanikleri-buzun-tuzakları) · [Kutup kuşu](#pusu-kutup-kuşu) | Ani ölüm olayları |
 | [Ekonomi ve market](#ekonomi-ve-market) | Balık nasıl kazanılır, neye harcanır |
-| [Koleksiyon](#koleksiyon) | 20 penguen, 10 iz, nadirlikler |
+| [Koleksiyon](#koleksiyon) | 24 penguen, 10 iz, nadirlikler |
 | [Haftalık lig](#haftalık-lig) · [Günün Pengu'su](#günün-pengusu) | Meta sistemler |
 | [Hayalet yarışı](#hayalet-yarışı-ve-sıralama) | Rekor yarışı ve paylaşım kodu |
 | [Kontroller](#kontroller) | Tuşlar |
@@ -115,8 +127,16 @@ Bu oyunun en çok emek verilen kısmı zorluğun *adil* olması. Üç katman:
    uyarı süresinden, fırtınanın gücü yürüme ivmesinden hesaplanıyor. Bir plan
    "160 piksellik gayzer" isteyemez.
 3. **Doğrulayıcı** (`tests/validate-levels.mjs`) 31 elle yazılmış + 80 üretilmiş
-   bölümü, 3.188 buzu analitik olarak kontrol ediyor. Geçilemez tek bir zıplama
+   bölümü, 3.172 buzu analitik olarak kontrol ediyor. Geçilemez tek bir zıplama
    varsa derleme düşüyor.
+4. **Çözücü** (`tests/climb-run.mjs`) tırmanış bölümlerinde bir adım daha ileri
+   gidiyor: *gerçek* `Player` sınıfını gerçek bölüm verisine karşı çalıştırıp
+   her adım için işe yarayan bir tuş dizisi **arıyor**. Kalkış yerini, zamanını
+   ve tuşu ne kadar basılı tuttuğunu tarıyor; hiçbir deneme tutmuyorsa o adımı
+   kimse yapamıyordur ve bölüm yayına girmiyor. Bu kural üç gerçek oyun hatası
+   yakaladı — duvar tekmesinin sessizce kesilmesi, tepeye çıkarken pengueni
+   duvarın dibine ışınlayan çarpışma, ve oyuncu daha yerinden kıpırdamadan
+   düşen serak.
 
 Market ve ekipman bu denklemin dışında: bütün bölümler **hiçbir şeyi olmayan**
 bir penguene göre doğrulanıyor, yani satın aldıkların bir parkuru asla açamaz,
@@ -152,7 +172,9 @@ geçmez, hata verip durur.
 ## Testler
 
 ```bash
-node tests/validate-levels.mjs   # bölüm geçilebilirlik doğrulayıcısı
+node tests/validate-levels.mjs   # sahanlık bölümleri: geçilebilirlik
+node tests/validate-climb.mjs    # tırmanış bölümleri: geometri
+node tests/climb-run.mjs         # tırmanış bölümleri: gerçek fizikle çözücü
 node tests/ghost.mjs             # paylaşım kodu çözücüsü
 node tests/economy.mjs           # ekonomi dengesi simülasyonu
 node tools/bundle.mjs            # tek dosyaya paketle (isim çakışmasını da yakalar)
@@ -720,14 +742,72 @@ kodu **Sıralama** ekranına yapıştırınca o kişi tabloya giriyor ve hayalet
 
 Sıralama gerçek bir sıralama; sadece sunucu yerine paylaşım koduyla dolaşıyor.
 
+## Zirve — tırmanış
+
+Otuz bir bölüm boyunca oyun tek bir soru sordu: **oraya yetişir miyim?** Yeni buz
+türü eklemek o soruyu değiştirmiyor, sadece süslüyor. 32. bölümde soru değişiyor:
+**ne kadar tutunabilirim?**
+
+### Fiil
+
+Penguen buz duvarına gömülüp asılı kalabiliyor. Asılmak bir bar tüketiyor ve bar
+**sadece sağlam zeminde** doluyor. Üç hareket, sıfır yeni tuş:
+
+| | |
+|---|---|
+| Duvara doğru bas | Tutun — yavaşça kayarsın, bar azar azar iner |
+| Tutunurken BOŞLUK'u **basılı tut** | Tırman — 96 px/sn yukarı, bar iki katından hızlı iner |
+| Tutunurken BOŞLUK'a **dokun** | Tekmele — duvardan itip karşıya fırla |
+| Tepeye varınca | Kendiliğinden kenardan yukarı çekiliyorsun |
+
+Ve asıl karar burada: **tekme sürünmekten çok daha verimli.** Bir bar 4,4 saniye;
+sürünerek 338 piksel çıkarsın, tekmeleyerek 690. Ama tekme karşı duvarı
+tutturmayı gerektiriyor — ıskalarsan bacanın dibine kadar düşersin. Güvenli olan
+yavaş, hızlı olan riskli. Bir tırmanışın olması gereken şey tam olarak bu.
+
+### Baca
+
+İki karşılıklı duvar ve aralarında basacak hiçbir şey yok. Zıplayarak geçilmiyor;
+tek yol tutunmak, ve tutunma tükeniyor. Uzun bacalarda duvara yapışık küçük
+**mola çıkıntıları** var — barı orada doldurup ikinci nefese başlıyorsun. Tepede
+bir **saçak** duvarlardan birine yaslanıyor; diğer duvarın yanındaki açıklık
+çıkış yolu. Yani bacadan çıkış da bacadaki her hareketle aynı hareket: tutun,
+tekmele, kon.
+
+### Bunun matematiği tahmin değil
+
+Bir tekmenin gerçekte ne kadar yükselttiği `kickGain(ölçek, genişlik)` ile
+fizikten türetiliyor: dar bacada karşı duvara *tepe noktasından önce* varırsın ve
+yüksekliği korursun, geniş bacada düşerken varırsın ve hiçbir şey kazanmazsın.
+Besteci, tekmenin sıfır ya da eksi kazandırdığı bir bacayı **kurmayı reddediyor**.
+
+Aynı şekilde `reachAt(ölçek, yükseliş)`: 110 piksel yükselen bir zıplamanın
+yatayda neredeyse hiç yolu kalmaz. Sahanlıkta mesafe ve yükseklik ayrı bütçelerdi
+ve orada yeterince doğru; dağda değil — bu yüzden ikisi birlikte hesaplanıyor.
+
+### Yayına giren ve girmeyen
+
+`climb.js` içinde on beş tırmanış planı var. Yedisi hem geometri doğrulayıcısını
+hem de fizik çözücüsünü geçiyor ve oyunda: **32–38**. Diğer sekizinde çözücünün
+bir yol bulamadığı en az bir adım var, ve *kimsenin çıkabildiğini kanıtlayamadığım
+bir bölümü oyuna koymam*. Dosyada `ship: false` ile duruyorlar; besteci düzeldikçe
+açılacaklar.
+
+Bu, bir eksiği saklamak yerine ölçmenin sonucu. Kolay olanı yapıp on beşini de
+göndermek, oyuncuyu geçilemeyen bir duvara çarptırmak olurdu.
+
+---
+
 ## Kontroller
 
 | | |
 |---|---|
-| ← → veya A D | Yürü |
+| ← → veya A D | Yürü — *buz duvarına doğru basılıysa: tutun* |
 | Boşluk / ↑ / W | Zıpla — basılı tut, yükseğe çık |
 | Boşluk **havada basılı tut** | Kanatları aç, süzül *(Planör Kanat gerekir)* |
 | Boşluk **havada tek dokunuş** | Sırt motorunu ateşle *(Sırt Motoru gerekir)* |
+| Boşluk **tutunurken basılı tut** | Duvarı tırman |
+| Boşluk **tutunurken dokun** | Duvardan tekmele |
 | R | Bölümü baştan başlat |
 | Esc veya P | Duraklat |
 
