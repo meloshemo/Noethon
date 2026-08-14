@@ -20,9 +20,9 @@ Toplam yük tek dosyada ~385 KB ve çevrimdışı çalışıyor.
 |---|---|
 | **31 elle yazılmış bölüm** | 1.600–5.400 px arası parkurlar, 481 buz kütlesi |
 | **Sonsuz mod** | Bölüm numarasıyla tohumlanmış — 42. bölüm herkeste aynı |
-| **9 buz türü** | sağlam · çatlak · cilalı · eriyen · sürüklenen · düşen · tuzak · kaçan · gayzer |
+| **10 buz türü** | sağlam · çatlak · cilalı · eriyen · sürüklenen · düşen · tuzak · **sahte** · kaçan · gayzer |
 | **4 tehlike** | sarkıt · fok · fırtına kuşağı · orka |
-| **1 pusu** | Bölümün planlamadığı anda dalan kutup kuşu |
+| **2 pusu** | Bölümün planlamadığı anda dalan kutup kuşu · bayrağa 100 px kala kopan buzul |
 | **3 çürük balık etkisi** | ağırlaşma · ters kontrol · körlük |
 | **20 penguen + 10 iz** | 4 nadirlik seviyesi, 200 kombin |
 | **9 market eşyası** | 3'ü penguenin *ne yapabildiğini* değiştiriyor |
@@ -337,6 +337,29 @@ durmadığını kontrol ediyor.
 
 ---
 
+## Sahte buz ve bayraktaki çöküş
+
+İki tane bilerek "haksız hisseden" mekanik var. İkisi de aynı sözleşmeye tabi:
+**ilk sefer şok, öğrendikten sonra kaçılabilir.**
+
+**Sahte buz (`fake`).** Sağlam buzdan hiçbir farkı yok — ne kızıl damar, ne
+renk, ne çatlak. Bastığında 0.46 saniye sonra gidiyor. Fitil, besteci
+tarafından *koşarak geçilebilecek* genişliği garantiliyor: durup etrafına
+bakan ölür, koşmaya devam eden geçer. Bilmemeyi değil, tereddüt etmeyi
+cezalandırıyor. 23. bölümden itibaren.
+
+**Bayraktaki çöküş.** Sala son 100–200 px kala yukarıdaki uçurumdan bir buzul
+kopuyor. Oyunun en zalim şeyi ve bilerek öyle: bir bölümün son dört saniyesi
+dikkatin düştüğü yerdir, seni orada da alabilen bir bölüm uykuda oynanmaz.
+
+Coin-flip olmasını engelleyen üç şey: her yaklaşımda değil, yarısında
+tetikleniyor; düşmeden önce buza gölge düşürüyor; ve **salın kendisine değil,
+salın önündeki buza** iniyor — smashladığı şey hâlâ geçmen gereken zemin.
+Varlığını bilen her seferinde geçer. Bilmeyen öğrenir. 8. bölümden itibaren,
+kolay modda hem daha seyrek hem daha uzun uyarılı.
+
+---
+
 ## Pusu mekanikleri: buzun tuzakları
 
 Oyunun "sinir bozucu ama adil" olması gereken kısmı. İkisinin de tek bir kuralı
@@ -413,14 +436,27 @@ kampanyadan sonsuz moda kadar dakika dakika yürütüyor, gerçek ödül tablosu
 | Kilometre taşı | Süre | Gün | Bölüm |
 |---|---|---|---|
 | İlk market eşyası | 4 dk | 1 | 1 |
-| İlk aktif ekipman (Planör Kanat) | 47 dk | 2 | 20 |
-| Marketin yarısı | 7.4 saat | 18 | 119 |
-| Marketteki her şey | 15.1 saat | 36 | 229 |
-| Market + kozmetikler | 18.6 saat | 44 | 279 |
+| İlk aktif ekipman (Planör Kanat) | 1.9 saat | 5 | 40 |
+| Marketin yarısı | 17 saat | 40 | 256 |
+| Marketteki her şey | 34 saat | 81 | 498 |
+| Market + kozmetikler | 37.5 saat | 89 | 547 |
 
 Dosyanın sonundaki eşikler **tasarımın kendisi** ve denge kayarsa derlemeyi
-düşürüyorlar: ilk alım 3–12 dakika arasında olmalı, Planör Kanat en az 45
-dakika uzakta olmalı, marketin tamamı en az 8 saat ve 10 gün sürmeli.
+düşürüyorlar: ilk alım 3–12 dakika arasında olmalı, Planör Kanat en az 90
+dakika uzakta olmalı, marketin tamamı en az 20 saat ve 40 gün sürmeli.
+
+### Ama asıl mesele: ekonomi bitmemeli
+
+Fiyat yükseltmek her şeyi sahiplenme gününü sadece **erteler**. O gün yine
+gelir ve geldiğinde para birimi ölür — bir daha balık toplamanın anlamı kalmaz.
+
+Bu yüzden hiç bitmeyen tek bir şey var: **Buzul Anıtı**. Blok blok fonladığın
+bir buz yığını; her blok bir öncekinden %35 pahalı, karşılığında sadece bir
+rütbe ve daha yüksek bir anıt alıyorsun. Hiçbir işe yaramıyor — sonsuz
+olabilmesinin ve oyunu bozmamasının sebebi tam olarak bu.
+
+İlk 40 blok **233 milyon balık** eder. Pratikte bitmez; her zaman balığı
+koyacak bir yer var.
 
 Bu ölçüm ilk çalıştırıldığında Planör Kanat'ın **9 dakikada** alınabildiğini
 gösterdi — oyunun en ilginç eşyası, oyuncu daha kuşla tanışmadan. Fiyatlar buna

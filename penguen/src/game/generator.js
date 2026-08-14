@@ -50,8 +50,12 @@ function iceTypes(rng, d, n) {
     ['melt', lerp(0.05, 0.14, d)],
     ['fall', lerp(0.03, 0.18, d)],
     ['trap', lerp(0.02, 0.22, d)],
+    // Ice that looks solid and is not. Only in the back half: it is the one
+    // type a player cannot read, so it has to arrive after they have learned
+    // that reading the ice normally works.
+    ['fake', d > 0.35 ? lerp(0, 0.26, d) : 0],
   ];
-  const risky = (x) => x === 'crack' || x === 'trap' || x === 'fall' || x === 'melt';
+  const risky = (x) => ['crack', 'trap', 'fall', 'melt', 'fake'].includes(x);
   // Timing ice needs somewhere to wait out its cycle, and you cannot hold a
   // position on polished ice — so melting ice may only follow ice you can
   // stand still on.

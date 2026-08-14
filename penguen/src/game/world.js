@@ -10,7 +10,7 @@ import { Floe, Hazard, Fish, Checkpoint } from './entities.js';
 import { Player } from './player.js';
 import { GhostRecorder, Ghost } from './ghost.js';
 import {
-  VIEW, VIEW_LIMITS, ASSIST, ICE, STORM, BOOST, ROT, REWARDS, AMBUSH, scaleForLevel, upgradeEffect,
+  VIEW, VIEW_LIMITS, ASSIST, ICE, STORM, BOOST, ROT, REWARDS, AMBUSH, COLLAPSE, scaleForLevel, upgradeEffect,
 } from './config.js';
 import { WATER_Y } from './levels.js';
 import { clamp, damp, rectsOverlap, rand } from '../core/util.js';
@@ -137,6 +137,15 @@ export class World {
     this.stillTime = 0;
     /** Set by the game: ambushes only start once the player knows the game. */
     this.ambushes = (def.id ?? 1) >= AMBUSH.fromLevel || Boolean(def.daily) || Boolean(def.generated);
+    /**
+     * The serac that calves off the cliff as you reach the raft. Armed once per
+     * attempt, on a coin flip, and only past the point where the level is
+     * visibly nearly over — which is exactly where attention drops.
+     */
+    this.collapse = null;
+    this.collapseArmed =
+      ((def.id ?? 1) >= COLLAPSE.fromLevel || Boolean(def.daily) || Boolean(def.generated)) &&
+      Math.random() < COLLAPSE.chance * (this.assist ? 0.45 : 1);
     this.boostsTaken = 0;
     /** Rotten fish swallowed this run — one of the daily objectives reads it. */
     this.rottenTaken = 0;
@@ -225,6 +234,7 @@ export class World {
     for (const f of this.boosts) f.update(dt);
     for (const f of this.rotten) f.update(dt);
     this._updateSkua(dt);
+    this._updateCollapse(dt);
     for (const c of this.checkpoints) c.update(dt);
     for (const h of this.hazards) h.update(dt, this.time, this.player, this.hazardSpeed);
     this.goal.pulse = (this.goal.pulse + dt * 2) % (Math.PI * 2);
@@ -504,6 +514,9 @@ export class World {
     // never costs you collectibles you already earned this run.
     for (const f of this.boosts) f.reset();
     for (const f of this.rotten) f.reset();
+    // A collapse that already happened does not happen twice on the same
+    // attempt — the shock is the mechanic, and a repeat is just a wall.
+    this.collapse = null;
     this.skua = null;
     this.skuaCooldown = AMBUSH.grace;
     this.boostsTaken = 0;
@@ -625,6 +638,83 @@ export class World {
         this.skuaCooldown = AMBUSH.cooldown;
         this.die('skua');
       }
+    }
+  }
+
+  /**
+   * The collapse at the flag.
+   *
+   * Ice falls from above onto the approach, not onto the raft: what it smashes
+   * is ground you still have to cross. A player who knows it is coming waits a
+   * beat or runs early and never sees it again; a player who does not, loses a
+   * level they had already spent.
+   */
+  _updateCollapse(dt) {
+    if (this.status !== 'playing') return;
+
+    if (!this.collapse) {
+      if (!this.collapseArmed || this.progress < COLLAPSE.from) return;
+      this.collapseArmed = false;
+      const gx = this.goal.x;
+      // Lands short of the raft, on the last stretch of ice.
+      const x = gx - 120 - Math.random() * 90;
+      const floor = this.floes
+        .filter((f) => x > f.x - 30 && x < f.x + f.w + 30)
+        .sort((a, b) => a.y - b.y)[0];
+      this.collapse = {
+        state: 'fall',
+        t: 0,
+        x,
+        y: Math.max(this.contentTop - 60, (floor?.y ?? this.goal.y) - 420),
+        landY: (floor?.y ?? this.goal.y) - 6,
+        w: 74,
+        vy: 0,
+        floor,
+      };
+      this.audio.crack?.();
+      this.shake(3);
+      return;
+    }
+
+    const c = this.collapse;
+    c.t += dt;
+
+    if (c.state === 'fall') {
+      // Falls fast enough to be frightening, slow enough that the shadow it
+      // throws is a real warning rather than a formality.
+      c.vy += 2400 * dt;
+      c.y += c.vy * dt;
+      const box = { x: c.x - c.w / 2, y: c.y - c.w, w: c.w, h: c.w };
+      if (this.player.alive && rectsOverlap(this.player.box, box)) {
+        this.shake(9);
+        this.die('ice');
+        return;
+      }
+      if (c.y >= c.landY) {
+        c.y = c.landY;
+        c.state = 'debris';
+        c.t = 0;
+        this.shake(10);
+        this.flash = 0.5;
+        this.audio.shatter();
+        this.particles.burstIce(c.x, c.landY, 26, c.w);
+        // What it smashes, it takes with it: the ice under the impact goes.
+        if (c.floor && c.floor.type !== 'rock') {
+          c.floor.state = 'cracking';
+          c.floor.timer = 0.28;
+        }
+      }
+      return;
+    }
+
+    // The debris is lethal while it settles, then it is scenery.
+    if (c.state === 'debris') {
+      const box = { x: c.x - c.w / 2, y: c.landY - c.w * 0.6, w: c.w, h: c.w * 0.6 };
+      if (c.t < 0.5 && this.player.alive && rectsOverlap(this.player.box, box)) {
+        this.die('ice');
+        return;
+      }
+      if (c.t >= COLLAPSE.linger) this.collapse = null;
     }
   }
 

@@ -16,8 +16,10 @@
  *   14–18 real pressure. Traps, storms, seals, bait that poisons you.
  *   19–22 the ambushes: geysers that throw you off the map, orcas out of the
  *         water, a summit with a long way down.
- *   23–30 nothing can be trusted. Tunnels full of trap ice, chained geysers,
- *         cliffs taken at speed. This is where the game is meant to hurt.
+ *   23–30 nothing can be trusted — including ice that looks completely solid
+ *         and is not. Tunnels full of it, chained geysers, cliffs taken at
+ *         speed, and a cornice that can come down on the run to the raft.
+ *         This is where the game is meant to hurt.
  *   31+   procedurally generated (see generator.js).
  *
  * Nothing here explains itself. No intro cards, no signs past the one that
@@ -234,7 +236,7 @@ const PLANS = [
       c.slope({ n: 3, rise: 0.42, gap: 0.36, w: 165 });
       c.put(c.gapOf(0.42), 72, c.y, 'trap');
       c.put(c.gapOf(0.34), 175, c.y);
-      c.slope({ n: 3, rise: 0.34, gap: 0.4, w: 155 });
+      c.slope({ n: 3, rise: 0.34, gap: 0.4, w: 155, types: ['solid', 'fake'] });
       c.put(c.gapOf(0.42), 72, c.y, 'trap');
       c.put(c.gapOf(0.34), 180, c.y);
       c.cliff({ drop: 340, ledges: 4 });
@@ -398,7 +400,7 @@ const PLANS = [
     build: (c) => {
       c.shelf({ n: 2, gap: 0.32, w: 180 });
       c.slope({ n: 3, rise: 0.44, gap: 0.36, w: 155 });
-      c.tunnel({ n: 6, headroom: 114, gap: 0.42, w: 150, icicles: 3, types: ['solid', 'crack', 'solid'] });
+      c.tunnel({ n: 6, headroom: 114, gap: 0.42, w: 150, icicles: 3, types: ['solid', 'fake', 'solid'] });
       c.put(c.gapOf(0.4), 72, c.y, 'trap');
       c.put(c.gapOf(0.34), 170, c.y);
       c.cliff({ drop: 280, ledges: 3 });
@@ -466,7 +468,7 @@ const PLANS = [
     build: (c) => {
       c.shelf({ n: 2, gap: 0.3, w: 175 });
       c.summit({ height: 240, steps: 4, w: 175 });
-      c.shelf({ n: 3, gap: 0.4, w: 150, types: ['crack', 'trap', 'solid'] });
+      c.shelf({ n: 3, gap: 0.4, w: 150, types: ['crack', 'fake', 'solid'] });
       c.put(c.gapOf(0.36), 200, c.y, 'burst');
       c.cliff({ drop: 400, ledges: 5, gap: 0.3 });
       c.landing();
@@ -484,7 +486,7 @@ const PLANS = [
       c.tunnel({ n: 4, headroom: 112, gap: 0.42, w: 145, icicles: 2 });
       c.slope({ n: 3, rise: 0.44, gap: 0.36, w: 145 });
       c.crevasse({ pillars: 3, gap: 0.6, depth: 240 });
-      c.tunnel({ n: 4, headroom: 110, gap: 0.42, w: 140, types: ['solid', 'crack'] });
+      c.tunnel({ n: 4, headroom: 110, gap: 0.42, w: 140, types: ['solid', 'fake'] });
       c.cliff({ drop: 300, ledges: 4 });
       c.landing();
       c.scatterFish(3, 58);
@@ -543,7 +545,7 @@ const PLANS = [
     build: (c) => {
       c.shelf({ n: 2, gap: 0.3, w: 170 });
       c.summit({ height: 260, steps: 4, w: 165 });
-      c.tunnel({ n: 5, headroom: 108, gap: 0.42, w: 138, icicles: 3, types: ['solid', 'trap', 'solid'] });
+      c.tunnel({ n: 5, headroom: 108, gap: 0.42, w: 138, icicles: 3, types: ['solid', 'fake', 'trap'] });
       c.cliff({ drop: 420, ledges: 5, gap: 0.3 });
       for (let i = 0; i < 3; i++) {
         const before = c.x;

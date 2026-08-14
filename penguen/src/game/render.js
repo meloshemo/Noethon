@@ -189,6 +189,7 @@ export class Renderer {
     this._ghost(ctx, world, time);
     if (world.status !== 'dying') this._penguin(ctx, world, time);
     this._skua(ctx, world, time);
+    this._collapse(ctx, world, time);
     particles.draw(ctx);
     // Drawn last so a tunnel darkens the penguin inside it too.
     this._zones(ctx, world, camX, time);
@@ -572,7 +573,7 @@ export class Renderer {
 
   _floeDecor(ctx, f, x, y, w, time) {
     const cx = x + w / 2;
-    if (f.type === 'crack' || (f.state === 'cracking' && f.type !== 'trap')) {
+    if (f.type === 'crack' || (f.state === 'cracking' && f.type !== 'trap' && !f.isFake)) {
       const progress = f.state === 'cracking' ? 1 - clamp(f.timer / f.breakDelay(), 0, 1) : 0.25;
       ctx.strokeStyle = `rgba(74,163,216,${0.5 + progress * 0.5})`;
       ctx.lineWidth = 1 + progress * 2;
@@ -587,6 +588,28 @@ export class Renderer {
         for (let i = 0; i < segs; i++) {
           px += (rng() - 0.5) * 26;
           py += 4 + rng() * 5;
+          ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+      }
+    }
+
+    // Fake ice carries no tell at all while it is idle — that is the entire
+    // point of it. Once it commits, the cracks come fast and wide, so the
+    // half-second you have reads as "run" rather than as a decoration.
+    if (f.isFake && f.state === 'cracking') {
+      const progress = 1 - clamp(f.timer / f.breakDelay(), 0, 1);
+      ctx.strokeStyle = `rgba(255,120,110,${0.35 + progress * 0.6})`;
+      ctx.lineWidth = 1.5 + progress * 3;
+      const rng = makeRng(f.id * 977 + 3);
+      for (let b = 0; b < 4; b++) {
+        ctx.beginPath();
+        let px = x + w * (0.14 + b * 0.24);
+        let py = y + 2;
+        ctx.moveTo(px, py);
+        for (let i = 0; i < 4; i++) {
+          px += (rng() - 0.5) * 34 * (0.4 + progress);
+          py += 3 + rng() * 6;
           ctx.lineTo(px, py);
         }
         ctx.stroke();
@@ -1171,6 +1194,73 @@ export class Renderer {
         ctx.fillRect(h.x, h.y, h.w, h.h);
         ctx.restore();
       }
+    }
+  }
+
+  /**
+   * The serac coming down on the approach to the raft.
+   *
+   * Drawn with its own shadow on the ice below it, growing as it falls — the
+   * only warning there is, and the reason a second run past this spot is not
+   * the same as the first.
+   */
+  _collapse(ctx, world, time) {
+    const c = world.collapse;
+    if (!c) return;
+
+    if (c.state === 'fall') {
+      // Shadow first: it is on the ground, under everything.
+      const drop = Math.max(0.001, c.landY - c.y);
+      const k = 1 - Math.min(1, drop / 420);
+      ctx.save();
+      ctx.globalAlpha = 0.2 + k * 0.5;
+      ctx.fillStyle = '#03101f';
+      ctx.beginPath();
+      ctx.ellipse(c.x, c.landY + 8, c.w * (0.35 + k * 0.5), c.w * 0.16 * (0.4 + k), 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    const y = c.state === 'fall' ? c.y : c.landY;
+    const settle = c.state === 'debris' ? Math.min(1, c.t / 0.3) : 0;
+    const h = c.w * (1 - settle * 0.45);
+
+    ctx.save();
+    ctx.translate(c.x, y);
+    if (c.state === 'fall') ctx.rotate(Math.sin(time * 6) * 0.06);
+
+    // A chunk of the cliff, not a floe: darker, harder-edged, with a bright
+    // fracture face where it tore away.
+    const g = ctx.createLinearGradient(0, -h, 0, 0);
+    g.addColorStop(0, '#dff1ff');
+    g.addColorStop(0.35, '#8fb8d8');
+    g.addColorStop(1, '#33557d');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(-c.w * 0.5, 0);
+    ctx.lineTo(-c.w * 0.38, -h * 0.78);
+    ctx.lineTo(-c.w * 0.05, -h);
+    ctx.lineTo(c.w * 0.34, -h * 0.82);
+    ctx.lineTo(c.w * 0.5, -h * 0.2);
+    ctx.lineTo(c.w * 0.2, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+
+    if (c.state === 'fall' && !this.reducedMotion) {
+      // Powder trailing the fall.
+      ctx.save();
+      ctx.globalAlpha = 0.3;
+      ctx.fillStyle = '#eaf6ff';
+      for (let i = 0; i < 4; i++) {
+        ctx.beginPath();
+        ctx.arc(c.x + Math.sin(time * 20 + i) * 12, y - c.w - i * 22, 6 - i, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
     }
   }
 

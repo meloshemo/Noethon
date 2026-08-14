@@ -29,6 +29,7 @@ const LANDING = 0.75;
 /** How long a floe stays put after being stepped on, or null if it never goes. */
 function fuseOf(floe) {
   if (floe.type === 'trap') return floe.delay ?? ICE.trapDelay;
+  if (floe.type === 'fake') return floe.delay ?? ICE.fakeDelay;
   if (floe.type === 'fall') return floe.delay ?? 0.35;
   if (floe.type === 'crack') return floe.delay ?? ICE.crackDelay;
   // A geyser gives you its warning time to get clear.
@@ -92,7 +93,7 @@ function check(def, { tutorial = false } = {}) {
           `${i}. buz (${a.type}) ${a.w}px genişliğinde, ${Math.round(need)}px koşmak gerekiyor ama ${fuse}s içinde ancak ${Math.round(walkable)}px koşulabilir`,
         );
       }
-      const steppingStone = a.type === 'trap' || a.type === 'fall';
+      const steppingStone = a.type === 'trap' || a.type === 'fall' || a.type === 'fake';
       const fromLanding = steppingStone ? a.w * LANDING + gap : gap;
       if (fromLanding > reach.distance * budget.distance) {
         fail(
@@ -226,7 +227,7 @@ function check(def, { tutorial = false } = {}) {
     // Every floe has to be wide enough to actually stand on, with margin.
     if (f.w < penguinW + 20) fail(`buz penguenden dar: ${f.w}px, penguen ${Math.round(penguinW)}px`);
     // Short-fuse floes and bait are meant to be tight; the rest are not.
-    else if (!['trap', 'fall', 'snap'].includes(f.type) && f.w < penguinW * 1.6) {
+    else if (!['trap', 'fall', 'snap', 'fake'].includes(f.type) && f.w < penguinW * 1.6) {
       warn(`çok dar buz: ${f.w}px, penguen ${Math.round(penguinW)}px`);
     }
   }

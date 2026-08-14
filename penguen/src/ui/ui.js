@@ -7,7 +7,7 @@
  */
 
 import { formatTime } from '../core/util.js';
-import { CRAFTED_LEVELS, UPGRADES, scaleForLevel } from '../game/config.js';
+import { CRAFTED_LEVELS, UPGRADES, MONUMENT, monumentCost, scaleForLevel } from '../game/config.js';
 import { getLevel } from '../game/game.js';
 import { LEVELS } from '../game/levels.js';
 import { Storage, todayKey } from '../core/storage.js';
@@ -133,6 +133,10 @@ export class UI {
       offerNow: $('offerNow'),
       offerOff: $('offerOff'),
       offerClock: $('offerClock'),
+      monumentCard: $('monumentCard'),
+      monumentRank: $('monumentRank'),
+      monumentCost: $('monumentCost'),
+      monumentBlocks: $('monumentBlocks'),
     };
 
     this._buildLegend();
@@ -456,7 +460,29 @@ export class UI {
       .join('');
   }
 
+  /**
+   * The monument.
+   *
+   * The one thing in the economy that never runs out. Raising prices only ever
+   * postpones the day a player owns everything; this makes sure that day is not
+   * the day the currency dies.
+   */
+  refreshMonument() {
+    const blocks = this.save.monument ?? 0;
+    const cost = monumentCost(blocks);
+    const rank =
+      blocks < MONUMENT.ranks.length
+        ? MONUMENT.ranks[blocks]
+        : `${MONUMENT.ranks[MONUMENT.ranks.length - 1]} +${blocks - MONUMENT.ranks.length + 1}`;
+    this.el.monumentRank.textContent = rank;
+    this.el.monumentCost.textContent = `${cost.toLocaleString('tr-TR')} balık`;
+    this.el.monumentBlocks.textContent = `${blocks} blok`;
+    this.el.monumentCard.classList.toggle('is-affordable', (this.save.coins ?? 0) >= cost);
+    this._monumentCost = cost;
+  }
+
   buildShop() {
+    this.refreshMonument();
     const coins = this.save.coins ?? 0;
     this.el.shopGrid.innerHTML = '';
 
@@ -1071,6 +1097,16 @@ export class UI {
       this.audio.ui();
       this.showScreen('howto');
     });
+    $('monumentCard').addEventListener('click', () => {
+      if (!Storage.fundMonument(this.save, this._monumentCost)) {
+        this.audio.ui('back');
+        return;
+      }
+      this.audio.fish();
+      this.refreshMonument();
+      this.refreshWallet();
+    });
+
     $('shopBtn').addEventListener('click', () => {
       this.audio.ui();
       this.buildShop();

@@ -70,7 +70,20 @@ export class Floe {
   }
 
   get breakable() {
-    return this.type === 'crack' || this.type === 'trap' || this.type === 'fall';
+    return (
+      this.type === 'crack' || this.type === 'trap' || this.type === 'fall' || this.type === 'fake'
+    );
+  }
+
+  /**
+   * Ice that lies about what it is.
+   *
+   * Drawn as ordinary solid ice, with none of the veins or the colour that
+   * every other breakable type wears. The renderer has to ask, because there is
+   * no other way to tell.
+   */
+  get isFake() {
+    return this.type === 'fake';
   }
 
   /** Floes that do something violent rather than simply disappearing. */
@@ -94,6 +107,7 @@ export class Floe {
   breakDelay(assistMult = 1) {
     if (this.delay != null) return this.delay * assistMult;
     if (this.type === 'trap') return ICE.trapDelay * assistMult;
+    if (this.type === 'fake') return ICE.fakeDelay * assistMult;
     if (this.type === 'fall') return 0.35 * assistMult;
     return ICE.crackDelay * assistMult;
   }

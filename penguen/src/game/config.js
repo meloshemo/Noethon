@@ -108,6 +108,14 @@ export const ICE = {
   /** "burst": how hard it throws the penguin. */
   burstUp: -1180,
   burstSide: 210,
+  /**
+   * "fake": ice that is drawn exactly like solid ice and is not.
+   *
+   * The fuse is long enough to run off if you keep moving and short enough to
+   * drown anybody who stops to look around. That is the whole design: it does
+   * not punish you for not knowing, it punishes you for hesitating.
+   */
+  fakeDelay: 0.46,
   /** "snap": how close to landing the ice waits before vanishing. */
   snapTrigger: 0.26,
   /** "snap": stays gone this long, so the retry is a fair one. */
@@ -236,6 +244,32 @@ export const AMBUSH = {
   carry: 0.9,
 };
 
+/**
+ * The collapse at the flag.
+ *
+ * A serac calves off the cliff above the raft just as you arrive. It is the
+ * nastiest thing in the game and it is deliberate: the last four seconds of a
+ * level are where attention drops, and a level that can still take you there is
+ * a level you do not sleepwalk through.
+ *
+ * What stops it being a coin flip: it only fires on a fraction of arrivals, it
+ * throws a shadow before it lands, and it falls *short of the raft* — the ice
+ * it smashes is ground you have to cross, not the goal itself. Somebody who
+ * knows it exists gets past it every time. Somebody who does not, finds out.
+ */
+export const COLLAPSE = {
+  /** Chance of a collapse on any given approach to the goal. */
+  chance: 0.55,
+  /** How close to the goal, as a fraction of the level, it arms. */
+  from: 0.82,
+  /** Shadow time before impact. */
+  warn: 0.5,
+  /** How long the debris stays lethal on the ice. */
+  linger: 1.6,
+  /** Never in the first levels: the player has to have somewhere to fall from. */
+  fromLevel: 8,
+};
+
 /** Assist mode is offered after this many deaths on the same level. */
 export const ASSIST_AFTER_DEATHS = 4;
 
@@ -259,6 +293,35 @@ export function scaleForLevel(level) {
   if (level <= 3) return 1;
   const t = Math.min(1, (level - 3) / 30);
   return +(1 + 0.62 * t).toFixed(3);
+}
+
+/**
+ * The endless sink.
+ *
+ * Raising prices only ever *delays* the moment a player owns everything. The
+ * moment still arrives, and when it does the currency dies and with it the
+ * reason to pick up another fish.
+ *
+ * So there is one thing that never runs out. The monument is a pile of ice you
+ * fund a block at a time; each block costs more than the last, and all you get
+ * is a rank and a taller monument. It buys nothing and affects nothing — which
+ * is exactly why it can be infinite without breaking the game.
+ */
+export const MONUMENT = {
+  /** First block. */
+  base: 500,
+  /** Each block costs this much more than the last. */
+  growth: 1.35,
+  /** Rank names, in order. Past the end the number just keeps going. */
+  ranks: [
+    'Buz Parçası', 'Kar Yığını', 'Buz Sütunu', 'Sarkıt', 'Buz Kemeri',
+    'Donmuş Şelale', 'Buzul Dili', 'Buz Kalesi', 'Kutup Kulesi', 'Ebedi Buzul',
+  ],
+};
+
+/** What the next monument block costs at a given size. */
+export function monumentCost(blocks) {
+  return Math.round((MONUMENT.base * MONUMENT.growth ** blocks) / 10) * 10;
 }
 
 /** Star thresholds are per level; these are the fallbacks. */
@@ -319,9 +382,9 @@ export const UPGRADES = [
     blurb: 'Daha yükseğe ve daha uzağa zıpla.',
     icon: 'boot',
     levels: [
-      { cost: 80, effect: 0.05, label: '+%5 zıplama' },
-      { cost: 230, effect: 0.1, label: '+%10 zıplama' },
-      { cost: 520, effect: 0.16, label: '+%16 zıplama' },
+      { cost: 90, effect: 0.05, label: '+%5 zıplama' },
+      { cost: 320, effect: 0.1, label: '+%10 zıplama' },
+      { cost: 850, effect: 0.16, label: '+%16 zıplama' },
     ],
   },
   {
@@ -330,9 +393,9 @@ export const UPGRADES = [
     blurb: 'Buz üstünde daha çevik koş.',
     icon: 'bolt',
     levels: [
-      { cost: 75, effect: 0.05, label: '+%5 hız' },
-      { cost: 210, effect: 0.1, label: '+%10 hız' },
-      { cost: 480, effect: 0.15, label: '+%15 hız' },
+      { cost: 85, effect: 0.05, label: '+%5 hız' },
+      { cost: 300, effect: 0.1, label: '+%10 hız' },
+      { cost: 800, effect: 0.15, label: '+%15 hız' },
     ],
   },
   {
@@ -341,8 +404,8 @@ export const UPGRADES = [
     blurb: 'Cilalı buzda kayma azalır.',
     icon: 'spike',
     levels: [
-      { cost: 140, effect: 0.45, label: 'Kayma %45 az' },
-      { cost: 360, effect: 0.75, label: 'Kayma %75 az' },
+      { cost: 220, effect: 0.45, label: 'Kayma %45 az' },
+      { cost: 620, effect: 0.75, label: 'Kayma %75 az' },
     ],
   },
   {
@@ -350,7 +413,7 @@ export const UPGRADES = [
     name: 'Kalın Tüy',
     blurb: 'Her denemede bir kez ölümden kurtarır.',
     icon: 'shield',
-    levels: [{ cost: 480, effect: 1, label: 'Denemede 1 can' }],
+    levels: [{ cost: 900, effect: 1, label: 'Denemede 1 can' }],
   },
   {
     id: 'magnet',
@@ -358,8 +421,8 @@ export const UPGRADES = [
     blurb: 'Balıklar sana doğru gelir.',
     icon: 'magnet',
     levels: [
-      { cost: 170, effect: 90, label: '90px çekim' },
-      { cost: 420, effect: 165, label: '165px çekim' },
+      { cost: 260, effect: 90, label: '90px çekim' },
+      { cost: 780, effect: 165, label: '165px çekim' },
     ],
   },
   {
@@ -367,7 +430,7 @@ export const UPGRADES = [
     name: 'Rüzgar Yeleği',
     blurb: 'Kutup rüzgarı seni daha az savurur.',
     icon: 'wind',
-    levels: [{ cost: 300, effect: 0.55, label: 'Rüzgar %55 az' }],
+    levels: [{ cost: 560, effect: 0.55, label: 'Rüzgar %55 az' }],
   },
   {
     id: 'wings',
@@ -375,9 +438,9 @@ export const UPGRADES = [
     blurb: 'Havada zıplamayı basılı tut — kanatlar açılır, düşüş yavaşlar.',
     icon: 'wings',
     levels: [
-      { cost: 1100, effect: 1, label: '1.1 sn süzülme' },
-      { cost: 2200, effect: 1.7, label: '1.9 sn süzülme' },
-      { cost: 3900, effect: 2.6, label: '2.9 sn süzülme' },
+      { cost: 2400, effect: 1, label: '1.1 sn süzülme' },
+      { cost: 5200, effect: 1.7, label: '1.9 sn süzülme' },
+      { cost: 9500, effect: 2.6, label: '2.9 sn süzülme' },
     ],
   },
   {
@@ -386,8 +449,8 @@ export const UPGRADES = [
     blurb: 'Havadayken zıplamaya bas — motor bir kez ateşler.',
     icon: 'rocket',
     levels: [
-      { cost: 1500, effect: 1, label: 'Havada 1 ateşleme' },
-      { cost: 2900, effect: 2, label: 'Havada 2 ateşleme' },
+      { cost: 3400, effect: 1, label: 'Havada 1 ateşleme' },
+      { cost: 7000, effect: 2, label: 'Havada 2 ateşleme' },
     ],
   },
   {
@@ -396,8 +459,8 @@ export const UPGRADES = [
     blurb: 'Kuş dalışa geçmeden önce daha uzun uyarı verir.',
     icon: 'radar',
     levels: [
-      { cost: 600, effect: 0.35, label: '+0.35 sn uyarı' },
-      { cost: 1300, effect: 0.7, label: '+0.7 sn uyarı' },
+      { cost: 1400, effect: 0.35, label: '+0.35 sn uyarı' },
+      { cost: 3200, effect: 0.7, label: '+0.7 sn uyarı' },
     ],
   },
 ];

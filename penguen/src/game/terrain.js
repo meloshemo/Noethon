@@ -94,6 +94,7 @@ export class Course {
     const run = this.runSpeed;
     switch (type) {
       case 'trap': return (ICE.trapDelay * run) / LANDING;
+      case 'fake': return (ICE.fakeDelay * run) / LANDING;
       case 'fall': return (0.35 * run) / LANDING;
       case 'burst': return ICE.burstWarn * run * 0.85;
       default: return Infinity;
@@ -135,7 +136,7 @@ export class Course {
     // jump. Shortening it here means no plan can accidentally ask for a jump
     // and a sprint in the time of a jump.
     const prev = this.floes[this.floes.length - 1];
-    if (prev && (prev.type === 'trap' || prev.type === 'fall')) {
+    if (prev && (prev.type === 'trap' || prev.type === 'fall' || prev.type === 'fake')) {
       const budget = this.reach.distance * 0.8 - prev.w * LANDING;
       gap = Math.max(this.gapOf(0.16), Math.min(gap, budget));
     }
@@ -181,7 +182,7 @@ export class Course {
 
   /** The floe at a fraction along the course — how plans point at a place. */
   at(fraction) {
-    const usable = this.floes.filter((f) => !['trap', 'snap', 'fall'].includes(f.type));
+    const usable = this.floes.filter((f) => !['trap', 'snap', 'fall', 'fake'].includes(f.type));
     const list = usable.length ? usable : this.floes;
     return list[Math.max(0, Math.min(list.length - 1, Math.round(fraction * (list.length - 1))))];
   }

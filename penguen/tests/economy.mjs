@@ -25,7 +25,7 @@
  * be weeks away.
  */
 
-import { REWARDS, UPGRADES } from '../src/game/config.js';
+import { REWARDS, UPGRADES, monumentCost } from '../src/game/config.js';
 import { SKINS, TRAILS } from '../src/game/skins.js';
 import { LEVELS } from '../src/game/levels.js';
 import { generateLevel } from '../src/game/generator.js';
@@ -226,19 +226,29 @@ if (first.minutes < 3) problems.push(`İlk eşya çok erken: ${Math.round(first.
 
 // The active gear is the first real goal, and should be worth saving for.
 const gear = find('ilk aktif ekipman (Planör Kanat)');
-if (gear.minutes < 45) problems.push(`Planör Kanat çok ucuz: ${Math.round(gear.minutes)} dk (en az 45 dk olmalı)`);
+if (gear.minutes < 90) problems.push(`Planör Kanat çok ucuz: ${Math.round(gear.minutes)} dk (en az 90 dk olmalı)`);
 
 // Half the shop is the mid-game. Reaching it in one sitting is too fast.
 const half = find('marketin yarısı');
-if (half.minutes < 150) problems.push(`Marketin yarısı çok hızlı: ${(half.minutes / 60).toFixed(1)} saat (en az 2.5 saat olmalı)`);
+if (half.minutes < 60 * 8) problems.push(`Marketin yarısı çok hızlı: ${(half.minutes / 60).toFixed(1)} saat (en az 8 saat olmalı)`);
 
 // And the whole thing should be a long-term goal measured in weeks of play,
 // not an afternoon. This is the assertion the whole file exists for.
 const all = find('marketteki her şey');
-if (all.minutes < 60 * 8) {
-  problems.push(`Market çok çabuk bitiyor: ${(all.minutes / 60).toFixed(1)} saat (en az 8 saat olmalı)`);
+if (all.minutes < 60 * 20) {
+  problems.push(`Market çok çabuk bitiyor: ${(all.minutes / 60).toFixed(1)} saat (en az 20 saat olmalı)`);
 }
-if (all.days < 10) problems.push(`Market ${all.days} günde bitiyor (en az 10 gün olmalı)`);
+if (all.days < 40) problems.push(`Market ${all.days} günde bitiyor (en az 40 gün olmalı)`);
+
+// And the point of the monument: even a player who owns literally everything
+// still has somewhere to put a fish. This is the assertion that says the
+// economy never actually ends.
+const blocks = 40;
+const monumentTotal = Array.from({ length: blocks }, (_, i) => monumentCost(i)).reduce((a, b) => a + b, 0);
+if (monumentTotal < 60_000_000) {
+  problems.push(`Anıt yeterince derin değil: ${blocks} blok = ${monumentTotal} balık`);
+}
+console.log(`  Anıtın ilk ${blocks} bloğu: ${monumentTotal.toLocaleString('tr-TR')} balık — pratikte bitmez.`);
 
 console.log('');
 if (problems.length) {

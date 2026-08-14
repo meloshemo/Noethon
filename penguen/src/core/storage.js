@@ -7,7 +7,7 @@
  */
 
 const KEY = 'pengu.save.v1';
-const VERSION = 5;
+const VERSION = 6;
 
 /**
  * Ghost runs are the biggest thing in the save by far, so they are capped.
@@ -63,6 +63,8 @@ function defaults() {
     /** { [trailId]: true } and the one in use. */
     trails: {},
     trail: 'none',
+    /** The endless sink: how many blocks of the monument have been funded. */
+    monument: 0,
     /** Weekly league: { week, points, bestTier, lastWeekPoints }. */
     league: { week: null, points: 0, bestTier: 0, lastWeekPoints: 0 },
     /** Rotating missions, regenerated once a day. */
@@ -98,6 +100,7 @@ function migrate(parsed) {
     trails: parsed.trails ?? {},
     trail: parsed.trail ?? 'none',
     league: { ...base.league, ...(parsed.league ?? {}) },
+    monument: Number.isFinite(parsed.monument) ? parsed.monument : 0,
   };
 
   // v3 had no record of the best streak ever reached, only the live one. The
@@ -293,6 +296,22 @@ export const Storage = {
     else data.skin = id;
     write(data);
     return id;
+  },
+
+  /**
+   * Fund one more block of the monument.
+   *
+   * The only bottomless thing in the economy. It buys nothing — that is what
+   * lets it be infinite without unbalancing anything, and it is why there is
+   * always somewhere for a fish to go.
+   */
+  fundMonument(data, cost) {
+    if ((data.coins ?? 0) < cost) return false;
+    data.coins -= cost;
+    data.stats.spent = (data.stats.spent ?? 0) + cost;
+    data.monument = (data.monument ?? 0) + 1;
+    write(data);
+    return true;
   },
 
   /* ------------------------------------------------------- league */
