@@ -10,13 +10,14 @@ import { formatTime } from '../core/util.js';
 import { CRAFTED_LEVELS, UPGRADES, scaleForLevel } from '../game/config.js';
 import { getLevel } from '../game/game.js';
 import { LEVELS } from '../game/levels.js';
-import { Storage } from '../core/storage.js';
+import { Storage, todayKey } from '../core/storage.js';
 import { ensureMissions } from '../game/missions.js';
 import { shareText, withName } from '../game/ghost.js';
 import { SKINS, TRAILS, RARITY, getSkin, getTrail, skinStatus, drawPortrait } from '../game/skins.js';
 import { standing, weekKey } from '../game/league.js';
 import { dailyObjectives } from '../game/daily.js';
 import { generateDailyLevel } from '../game/generator.js';
+import { dailyOffer, offerSecondsLeft, formatCountdown } from '../game/store.js';
 
 const ICE_LEGEND = [
   ['crack', 'Çatlak buz', 'Basınca çatlar, kısa süre sonra kırılır'],
@@ -124,6 +125,14 @@ export class UI {
       leagueFill: $('leagueFill'),
       leagueNext: $('leagueNext'),
       leagueBadge: $('leagueBadge'),
+      offerCard: $('offerCard'),
+      offerArt: $('offerArt'),
+      offerName: $('offerName'),
+      offerBlurb: $('offerBlurb'),
+      offerWas: $('offerWas'),
+      offerNow: $('offerNow'),
+      offerOff: $('offerOff'),
+      offerClock: $('offerClock'),
     };
 
     this._buildLegend();
@@ -183,6 +192,38 @@ export class UI {
     this.refreshMissions();
     this.refreshLeague();
     this.refreshSkinsBadge();
+    this.refreshOffer();
+  }
+
+  /**
+   * Today's offer.
+   *
+   * One cosmetic, discounted, for twenty-four hours — including ones that are
+   * normally *earned*, which makes the offer a genuine shortcut past a
+   * condition you might never meet rather than a sale on something you were
+   * going to get anyway. The clock is the whole point.
+   */
+  refreshOffer() {
+    const key = todayKey();
+    const offer = dailyOffer(key);
+    const bag = offer.bag;
+    const owned = Boolean(this.save[bag]?.[offer.item.id]);
+    this._offer = offer;
+
+    this.el.offerCard.classList.toggle('is-owned', owned);
+    this.el.offerName.textContent = offer.item.name;
+    this.el.offerBlurb.textContent = owned ? 'Bu zaten sende.' : offer.item.blurb;
+    this.el.offerWas.textContent = `${offer.was}`;
+    this.el.offerNow.textContent = owned ? '—' : `${offer.price} balık`;
+    this.el.offerOff.textContent = `%${Math.round(offer.off * 100)}`;
+    this.el.offerClock.textContent = formatCountdown(offerSecondsLeft());
+    this.el.offerCard.style.setProperty('--offer-color', offer.rarity.color);
+
+    const ctx = this.el.offerArt?.getContext('2d');
+    if (ctx) {
+      if (bag === 'trails') UI.drawTrailPreview(ctx, offer.item, 112, 112);
+      else drawPortrait(ctx, offer.item, { w: 112, h: 112, time: 0.4 });
+    }
   }
 
   /**
@@ -685,6 +726,13 @@ export class UI {
     );
   }
 
+  /** A one-off message on the title screen, reusing the in-game toast. */
+  _toastOnce(text, seconds = 2.2) {
+    this._showToast(text);
+    clearTimeout(this._onceTimer);
+    this._onceTimer = setTimeout(() => this._hideToast(), seconds * 1000);
+  }
+
   _showToast(text) {
     if (this._toastShown === text) return;
     this._toastShown = text;
@@ -1034,6 +1082,30 @@ export class UI {
       this._syncSettings();
       this.showScreen('settings');
     });
+    $('offerCard').addEventListener('click', () => {
+      const offer = this._offer;
+      if (!offer) return;
+      const bag = offer.bag;
+      if (this.save[bag]?.[offer.item.id]) {
+        this.audio.ui('back');
+        this.buildSkins(bag);
+        this.showScreen('skins');
+        return;
+      }
+      if (!Storage.buySkin(this.save, offer.item.id, offer.price, bag)) {
+        this.audio.ui('back');
+        this._toastOnce(`${offer.price - (this.save.coins ?? 0)} balık daha lazım`);
+        return;
+      }
+      this.audio.fish();
+      Storage.wearSkin(this.save, offer.item.id, bag);
+      if (this.game?.world) {
+        if (bag === 'trails') this.game.world.trailId = offer.item.id;
+        else this.game.world.skinId = offer.item.id;
+      }
+      this.refreshTitle();
+    });
+
     $('skinsBtn').addEventListener('click', () => {
       this.audio.ui();
       this.buildSkins('skins');

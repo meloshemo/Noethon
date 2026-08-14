@@ -35,6 +35,7 @@ const MODULES = [
   'src/game/skins.js',
   'src/game/league.js',
   'src/game/daily.js',
+  'src/game/store.js',
   'src/game/terrain.js',
   'src/game/levels.js',
   'src/game/generator.js',

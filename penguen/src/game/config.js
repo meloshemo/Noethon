@@ -303,6 +303,15 @@ export const REWARDS = {
  * level validator runs against *base* stats, so no level is ever gated behind
  * a purchase. Upgrades buy comfort and speed, not access.
  */
+/**
+ * The shop.
+ *
+ * Prices come from the economy simulator (`tests/economy.mjs`), not from feel.
+ * The shape they encode: the first purchase inside five minutes so the currency
+ * means something immediately, and the active gear — the only items that change
+ * what the penguin can *do* — deliberately far enough away that owning one is
+ * something you saved for rather than something that happened on the way past.
+ */
 export const UPGRADES = [
   {
     id: 'boots',
@@ -310,9 +319,9 @@ export const UPGRADES = [
     blurb: 'Daha yükseğe ve daha uzağa zıpla.',
     icon: 'boot',
     levels: [
-      { cost: 60, effect: 0.05, label: '+%5 zıplama' },
-      { cost: 150, effect: 0.1, label: '+%10 zıplama' },
-      { cost: 320, effect: 0.16, label: '+%16 zıplama' },
+      { cost: 80, effect: 0.05, label: '+%5 zıplama' },
+      { cost: 230, effect: 0.1, label: '+%10 zıplama' },
+      { cost: 520, effect: 0.16, label: '+%16 zıplama' },
     ],
   },
   {
@@ -321,9 +330,9 @@ export const UPGRADES = [
     blurb: 'Buz üstünde daha çevik koş.',
     icon: 'bolt',
     levels: [
-      { cost: 55, effect: 0.05, label: '+%5 hız' },
-      { cost: 140, effect: 0.1, label: '+%10 hız' },
-      { cost: 300, effect: 0.15, label: '+%15 hız' },
+      { cost: 75, effect: 0.05, label: '+%5 hız' },
+      { cost: 210, effect: 0.1, label: '+%10 hız' },
+      { cost: 480, effect: 0.15, label: '+%15 hız' },
     ],
   },
   {
@@ -332,8 +341,8 @@ export const UPGRADES = [
     blurb: 'Cilalı buzda kayma azalır.',
     icon: 'spike',
     levels: [
-      { cost: 90, effect: 0.45, label: 'Kayma %45 az' },
-      { cost: 220, effect: 0.75, label: 'Kayma %75 az' },
+      { cost: 140, effect: 0.45, label: 'Kayma %45 az' },
+      { cost: 360, effect: 0.75, label: 'Kayma %75 az' },
     ],
   },
   {
@@ -341,7 +350,7 @@ export const UPGRADES = [
     name: 'Kalın Tüy',
     blurb: 'Her denemede bir kez ölümden kurtarır.',
     icon: 'shield',
-    levels: [{ cost: 260, effect: 1, label: 'Denemede 1 can' }],
+    levels: [{ cost: 480, effect: 1, label: 'Denemede 1 can' }],
   },
   {
     id: 'magnet',
@@ -349,8 +358,8 @@ export const UPGRADES = [
     blurb: 'Balıklar sana doğru gelir.',
     icon: 'magnet',
     levels: [
-      { cost: 110, effect: 90, label: '90px çekim' },
-      { cost: 240, effect: 165, label: '165px çekim' },
+      { cost: 170, effect: 90, label: '90px çekim' },
+      { cost: 420, effect: 165, label: '165px çekim' },
     ],
   },
   {
@@ -358,7 +367,7 @@ export const UPGRADES = [
     name: 'Rüzgar Yeleği',
     blurb: 'Kutup rüzgarı seni daha az savurur.',
     icon: 'wind',
-    levels: [{ cost: 180, effect: 0.55, label: 'Rüzgar %55 az' }],
+    levels: [{ cost: 300, effect: 0.55, label: 'Rüzgar %55 az' }],
   },
   {
     id: 'wings',
@@ -366,9 +375,9 @@ export const UPGRADES = [
     blurb: 'Havada zıplamayı basılı tut — kanatlar açılır, düşüş yavaşlar.',
     icon: 'wings',
     levels: [
-      { cost: 320, effect: 1, label: '1.1 sn süzülme' },
-      { cost: 620, effect: 1.7, label: '1.9 sn süzülme' },
-      { cost: 1100, effect: 2.6, label: '2.9 sn süzülme' },
+      { cost: 1100, effect: 1, label: '1.1 sn süzülme' },
+      { cost: 2200, effect: 1.7, label: '1.9 sn süzülme' },
+      { cost: 3900, effect: 2.6, label: '2.9 sn süzülme' },
     ],
   },
   {
@@ -377,8 +386,8 @@ export const UPGRADES = [
     blurb: 'Havadayken zıplamaya bas — motor bir kez ateşler.',
     icon: 'rocket',
     levels: [
-      { cost: 420, effect: 1, label: 'Havada 1 ateşleme' },
-      { cost: 780, effect: 2, label: 'Havada 2 ateşleme' },
+      { cost: 1500, effect: 1, label: 'Havada 1 ateşleme' },
+      { cost: 2900, effect: 2, label: 'Havada 2 ateşleme' },
     ],
   },
   {
@@ -387,8 +396,8 @@ export const UPGRADES = [
     blurb: 'Kuş dalışa geçmeden önce daha uzun uyarı verir.',
     icon: 'radar',
     levels: [
-      { cost: 200, effect: 0.35, label: '+0.35 sn uyarı' },
-      { cost: 460, effect: 0.7, label: '+0.7 sn uyarı' },
+      { cost: 600, effect: 0.35, label: '+0.35 sn uyarı' },
+      { cost: 1300, effect: 0.7, label: '+0.7 sn uyarı' },
     ],
   },
 ];

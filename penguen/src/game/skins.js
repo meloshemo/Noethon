@@ -590,7 +590,7 @@ export const SKINS = [
       ctx.restore();
       santaHat(ctx, g);
     },
-    unlock: { kind: 'coins', cost: 240, freeInDecember: true },
+    unlock: { kind: 'coins', cost: 520, freeInDecember: true },
   },
 
   /* ---------------------------------------------------- the wardrobe */
@@ -607,7 +607,7 @@ export const SKINS = [
       bowTie(ctx, g);
       topHat(ctx, g);
     },
-    unlock: { kind: 'coins', cost: 300 },
+    unlock: { kind: 'coins', cost: 750 },
   },
   {
     id: 'explorer',
@@ -683,7 +683,7 @@ export const SKINS = [
       ctx.fillRect(g.cx - g.w * 0.3, g.headY + g.h * 0.15, g.w * 0.6, g.h * 0.07);
       ctx.restore();
     },
-    unlock: { kind: 'coins', cost: 380 },
+    unlock: { kind: 'coins', cost: 980 },
   },
   {
     id: 'rockstar',
@@ -872,7 +872,7 @@ export const TRAILS = [
     name: 'Kar Tozu',
     blurb: 'Ayağının kaldırdığı ince kar.',
     color: '#e8f6ff',
-    unlock: { kind: 'coins', cost: 60 },
+    unlock: { kind: 'coins', cost: 120 },
     paint: (ctx, hist, g) => {
       ctx.fillStyle = '#e8f6ff';
       for (const p of hist) {
@@ -889,7 +889,7 @@ export const TRAILS = [
     name: 'Kabarcık',
     blurb: 'Denizden çıkmış gibi.',
     color: '#7ce8ff',
-    unlock: { kind: 'coins', cost: 90 },
+    unlock: { kind: 'coins', cost: 190 },
     paint: (ctx, hist, g, time) => {
       ctx.strokeStyle = '#7ce8ff';
       ctx.lineWidth = 1.4;
@@ -908,7 +908,7 @@ export const TRAILS = [
     name: 'Kıvılcım',
     blurb: 'Buzu yakarak geç.',
     color: '#ffd23f',
-    unlock: { kind: 'coins', cost: 220 },
+    unlock: { kind: 'coins', cost: 560 },
     paint: (ctx, hist, g, time) => {
       ctx.globalCompositeOperation = 'lighter';
       hist.forEach((p, i) => {
@@ -949,7 +949,7 @@ export const TRAILS = [
     name: 'Kalp',
     blurb: 'Kimse sormadı ama işte.',
     color: '#ff5f8d',
-    unlock: { kind: 'coins', cost: 260 },
+    unlock: { kind: 'coins', cost: 640 },
     paint: (ctx, hist, g, time) => {
       ctx.fillStyle = '#ff5f8d';
       hist.forEach((p, i) => {

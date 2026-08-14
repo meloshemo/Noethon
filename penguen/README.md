@@ -29,6 +29,7 @@ Toplam yük tek dosyada ~385 KB ve çevrimdışı çalışıyor.
 | **21 günlük görev** | üç ağırlıkta, her gün birer tane |
 | **Haftalık lig** | Bronz → Gümüş (500) → Altın (2.000) → Elmas (5.000) |
 | **Günün Pengu'su** | Herkese aynı bölüm, gün boyu biriken 4 hedef |
+| **Günün Teklifi** | 24 saatlik indirimli kozmetik, geri sayımlı |
 | **Hayalet yarışı** | Rekorun yanında koşuyor; kodunu paylaşınca arkadaşın da |
 
 ---
@@ -142,6 +143,7 @@ geçmez, hata verip durur.
 ```bash
 node tests/validate-levels.mjs   # bölüm geçilebilirlik doğrulayıcısı
 node tests/ghost.mjs             # paylaşım kodu çözücüsü
+node tests/economy.mjs           # ekonomi dengesi simülasyonu
 node tools/bundle.mjs            # tek dosyaya paketle (isim çakışmasını da yakalar)
 ```
 
@@ -397,9 +399,80 @@ Markette dokuz eşya var. Altısı sayı büyütüyor:
 ekipmansız temel değerlerle kontrol ediyor; market rahatlık ve hız satıyor,
 erişim değil.
 
-> Not: bunlar oyun içi balıkla yapılan alımlar. Gerçek parayla satın alma bir
-> ödeme sağlayıcısı ve sunucu tarafı doğrulama gerektirir — statik bir sitede
-> güvenli biçimde yapılamaz, ayrı bir backend ister.
+### Denge tahminle değil, ölçümle
+
+Bir para biriminin tek önemli sorusu şu: **istenecek bir şey kalmayana kadar ne
+kadar sürüyor?** Çeyrek saatte marketi bitiren bir ekonomi cömert değil,
+bitmiştir — o andan sonra topladığın her balık değersizdir.
+
+`tests/economy.mjs` oyunu kâğıt üstünde oynuyor: simüle edilmiş bir oyuncuyu
+kampanyadan sonsuz moda kadar dakika dakika yürütüyor, gerçek ödül tablosunun
+ödediğini ödüyor ve her kilometre taşına ne zaman ulaşıldığını yazıyor.
+200 koşunun medyanı:
+
+| Kilometre taşı | Süre | Gün | Bölüm |
+|---|---|---|---|
+| İlk market eşyası | 4 dk | 1 | 1 |
+| İlk aktif ekipman (Planör Kanat) | 47 dk | 2 | 20 |
+| Marketin yarısı | 7.4 saat | 18 | 119 |
+| Marketteki her şey | 15.1 saat | 36 | 229 |
+| Market + kozmetikler | 18.6 saat | 44 | 279 |
+
+Dosyanın sonundaki eşikler **tasarımın kendisi** ve denge kayarsa derlemeyi
+düşürüyorlar: ilk alım 3–12 dakika arasında olmalı, Planör Kanat en az 45
+dakika uzakta olmalı, marketin tamamı en az 8 saat ve 10 gün sürmeli.
+
+Bu ölçüm ilk çalıştırıldığında Planör Kanat'ın **9 dakikada** alınabildiğini
+gösterdi — oyunun en ilginç eşyası, oyuncu daha kuşla tanışmadan. Fiyatlar buna
+göre yeniden yazıldı.
+
+---
+
+## Günün Teklifi
+
+Her gün bir kozmetik, indirimli, 24 saatliğine. Tarihe göre seçiliyor, yani o
+gün herkes aynı teklifi görüyor. Kartın üstünde geri sayım var.
+
+Normalde **kazanılan** kozmetikler de teklife giriyor — teklifin asıl anlamı bu:
+belki hiç sağlayamayacağın bir şartın kısayolu. Ama nadirliğe göre fiyatlanıyor,
+yani kısayol hiçbir zaman ucuz değil (Yaygın 260, Nadir 620, Efsanevi 1400,
+Mitik 2600 balık; indirim %25–40).
+
+---
+
+## Para modeli
+
+**Oyunun tamamı ücretsiz ve öyle kalıyor:** 31 bölüm, sonsuz mod, Günün
+Bölümü, görevler, hayalet yarışı, lig, koleksiyonun tamamı. Satılan tek şey
+kısayol.
+
+Fiyat basamakları `src/game/store.js` içinde **veri olarak** duruyor:
+
+| SKU | Fiyat | Ne veriyor |
+|-----|-------|------------|
+| `trail.single` | $0.99 | 1 iz |
+| `skin.rare` | $1.99 | 1 nadir/efsanevi penguen |
+| `skin.mythic` | $2.99 | 1 mitik penguen |
+| `bundle.daily` | $2.99 | Günün teklifi + 500 balık |
+| `bundle.full` | $4.99 | Penguen + iz + 1500 balık |
+
+> **Hiçbiri şu an para almıyor ve alamaz.** Tarayıcı bir ödemeyi güvenle
+> doğrulayamaz: oyuncu ile bedava alım arasındaki tek engel kendi
+> localStorage'ındaki bir bayrak olurdu. `canPurchase()` bu yüzden tek kapı ve
+> bilerek kapalı — yalan söyleyen bir düğme göstermek yerine dürüst bir cümle
+> döndürüyor.
+>
+> Arka uç geldiğinde bu fonksiyon şuna dönüşür: SKU'yu POST et, imzalı makbuzu
+> al, sunucuda doğrula, eşyayı sunucu versin. Oyunda başka hiçbir şey
+> değişmiyor — kozmetikler zaten tek bir fonksiyondan veriliyor.
+
+### Reklamlar
+
+Ödüllü reklam (`CONTINUE`, `DOUBLE FISH`, `LUCKY START`) doğru fikir: banner
+değil, oyuncunun kendi seçtiği reklam. Ama bir reklam SDK'sı (AdMob, IronSource)
+gerçek bir uygulama kimliği ve ağ bağlantısı ister — bu yüzden **henüz
+bağlanmadı**. Bağlandığında mekanikler hazır olacak şekilde tasarlandı:
+ödül kaynağı tek bir adaptör.
 
 ---
 
