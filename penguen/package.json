@@ -1,0 +1,23 @@
+{
+  "name": "pengu",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Pengu — Antarktika'dan Kaçış. Bağımlılıksız, derleme adımı olmayan bir HTML5 platform oyunu.",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node tools/serve.mjs",
+    "build": "node tools/bundle.mjs",
+    "lint": "node tools/lint.mjs",
+    "test": "node tools/test.mjs",
+    "test:node": "node tools/test.mjs --no-browser",
+    "test:browser": "node tools/test.mjs --only-browser",
+    "setup:browser": "npx playwright install --with-deps chromium"
+  },
+  "devDependencies": {
+    "playwright": "^1.49.0"
+  }
+}

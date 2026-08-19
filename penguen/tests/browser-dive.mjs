@@ -10,43 +10,11 @@
  *   node tests/browser-dive.mjs       (with the game served on :8123)
  */
 
-import { chromium } from 'playwright';
+import { launch, openGame, checklist } from './browser-kit.mjs';
 
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
-const p = await b.newPage({ viewport: { width: 1280, height: 720 } });
-const errors = [];
-p.on('pageerror', (e) => errors.push(e.message));
-p.on('console', (m) => {
-  if (m.type() === 'error' && !m.text().includes('CONNECTION_RESET')) errors.push('console: ' + m.text());
-});
-
-await p.goto('http://localhost:8123/index.html', { waitUntil: 'domcontentloaded' });
-await p.waitForTimeout(600);
-
-const fails = [];
-const ok = (name, cond, extra = '') => {
-  if (cond) console.log(`  ✓ ${name}${extra ? ' — ' + extra : ''}`);
-  else {
-    console.log(`  ✗ ${name}${extra ? ' — ' + extra : ''}`);
-    fails.push(name);
-  }
-};
-
-await p.evaluate(() => {
-  window.__pengu.save.unlocked = 70;
-  const inp = window.__pengu.input;
-  window.__ctl = {
-    hold(a, on) {
-      if (on) inp._sources.touch.add(a);
-      else inp._sources.touch.delete(a);
-      inp._sync();
-    },
-    release() {
-      for (const a of ['left', 'right', 'jump']) inp._sources.touch.delete(a);
-      inp._sync();
-    },
-  };
-});
+const b = await launch();
+const { page: p, errors } = await openGame(b, { width: 1280, height: 720 });
+const { ok, finish } = checklist();
 
 const start = async (id) => {
   await p.evaluate((l) => window.__pengu.startLevel(l), id);
@@ -182,6 +150,6 @@ ok('hâlâ oynuyor', run.status === 'playing', run.status);
 console.log('\n8) Konsol');
 ok('hata yok', errors.length === 0, errors.slice(0, 3).join(' | '));
 
-console.log(fails.length ? `\n✗ ${fails.length} başarısız: ${fails.join(', ')}` : '\n✓ yüzme mekaniği çalışıyor');
+const code = finish('yüzme mekaniği çalışıyor');
 await b.close();
-process.exit(fails.length ? 1 : 0);
+process.exit(code);

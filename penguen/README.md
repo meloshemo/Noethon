@@ -180,15 +180,28 @@ sadece kolaylaştırır.
 
 ## Çalıştırma
 
-ES modülleri `file://` üzerinden çalışmaz, bu yüzden bir sunucu gerekiyor:
+ES modülleri `file://` üzerinden çalışmaz, bu yüzden bir sunucu gerekiyor — ve
+o da bu depoda, tek dosya, bağımlılıksız:
 
 ```bash
-python3 -m http.server 8000
-# tarayıcıda: http://localhost:8000
+npm start          # → http://localhost:8123
 ```
 
+Kurulum yok: `tools/serve.mjs` düz Node. Python'un ya da global bir CLI'ın olup
+olmadığı ilk beş dakikayı belirlememeli.
+
 Yayına almak için klasörü olduğu gibi herhangi bir statik hostinge koymak yeterli
-(GitHub Pages, Netlify, Vercel, Cloudflare Pages).
+(GitHub Pages, Netlify, Vercel, Cloudflare Pages). Bir `push` yeterliyse:
+`.github/workflows/deploy.yml` bütün testleri koşuyor ve ancak yeşilse
+yayınlıyor.
+
+### Çevrimdışı
+
+`sw.js` bir servis çalışanı: sayfanın kendisi **ağ öncelikli** (yeni sürüm
+kaçmasın), geri kalan her şey **önbellek öncelikli, arkada tazelenen**. İlk
+açılış online olmalı; sonrası uçakta da çalışır. Tek dosya sürümü kasten
+kaydetmiyor — yanında `sw.js` olmayan bir sayfanın onu araması, kusursuz çalışan
+bir sayfanın konsoluna hata yazmaktan başka bir işe yaramaz.
 
 ### Tek dosyalık sürüm
 
@@ -205,7 +218,19 @@ geçmez, hata verip durur.
 
 ## Testler
 
+Tek komut, on beş paket, kendi sunucusunu kurup kapatıyor:
+
 ```bash
+npm test               # lint + node testleri + paketleme + tarayıcı testleri
+npm run test:node      # hiçbir kurulum gerektirmez — ~7 sn
+npm run test:browser   # sadece tarayıcı (bir kere: npm run setup:browser)
+```
+
+Ayrı ayrı:
+
+```bash
+node tools/lint.mjs              # proje kuralları (aşağıda)
+node tests/save.mjs              # kayıt dosyası: her eski sürüm kayıpsız açılıyor
 node tests/validate-levels.mjs   # sahanlık bölümleri: geçilebilirlik
 node tests/validate-climb.mjs    # tırmanış bölümleri: geometri
 node tests/climb-run.mjs         # tırmanış bölümleri: gerçek fizikle çözücü
@@ -217,6 +242,29 @@ node tests/ghost.mjs             # paylaşım kodu çözücüsü
 node tests/economy.mjs           # ekonomi dengesi simülasyonu
 node tools/bundle.mjs            # tek dosyaya paketle (isim çakışmasını da yakalar)
 ```
+
+### Proje kuralları (`tools/lint.mjs`)
+
+Biçim denetleyicisi değil — bu kod zaten tutarlı yazılıyor ve noktalı virgül
+tartışan bir araç burada hiçbir şey satın almıyor. Denetlenen şey, **gerçekten
+başa gelmiş** ve her seferinde sessizce bozulmuş dört kural:
+
+| Kural | Bozulunca ne oluyordu |
+|---|---|
+| Her modül `bundle.mjs` listesinde | Tek dosya sürümü bir chapter eksik çıkıyordu |
+| `CRAFTED_LEVELS` = chapter toplamı | Bölüm seçimi elle yazılan setin ucundan taşıyordu |
+| Kaynakta `console.log`/`debugger`/`TODO` yok | Sıcak döngüde unutulmuş debug |
+| Tek dosya ≤ 900 KB | Kötü bağlantıdaki telefonun beklemeyeceği boyut |
+
+### Sürekli entegrasyon
+
+Her `push`'ta iki iş: **Bölümler ve kurallar** (kurulumsuz, ~15 sn) ve
+**Mekanikler** (Chromium indirip üç tarayıcı testi, ~2 dk). `main`'e giden
+yol yeşil olmadan yayına çıkmıyor.
+
+Bilgisayarda yapılması gerekenler — Pages'i açmak, gerçek cihazda oynamak,
+mağaza ve ödeme kararları — ayrı bir dosyada:
+**[`docs/BILGISAYARDA.md`](docs/BILGISAYARDA.md)**.
 
 **Doğrulayıcı** oynamadan — analitik olarak — her bölümdeki her sıçramanın
 penguenin o bölümdeki gerçek erişim mesafesi içinde olduğunu doğrular. 31 elle

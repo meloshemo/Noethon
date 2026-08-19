@@ -110,6 +110,12 @@ const body = html
   .replace(/<script[^>]*src=[^>]*><\/script>/g, '')
   .trim();
 
+// The single file has no siblings: no manifest to link to, no service worker
+// to register, no icon on disk. Anything that reaches for one turns a page
+// that works perfectly into a page with errors in its console.
+const head = html.slice(0, html.indexOf('</head>'));
+const links = (head.match(/<link[^>]*rel="(manifest|icon|apple-touch-icon)"[^>]*>/g) ?? []).length;
+
 const doc = `<title>Pengu</title>
 <style>
 ${css}
@@ -118,6 +124,8 @@ ${css}
 ${body}
 
 <script type="module">
+globalThis.__PENGU_SINGLE = true;
+
 ${parts.join('\n\n')}
 </script>
 `;
@@ -128,3 +136,4 @@ await writeFile(out, doc, 'utf8');
 const kb = (doc.length / 1024).toFixed(0);
 console.log(`✓ ${out}`);
 console.log(`  ${MODULES.length} modül + ${STYLES.length} stil dosyası → tek dosya, ${kb} KB`);
+if (links) console.log(`  ${links} dış bağlantı (manifest/ikon) dışarıda bırakıldı`);

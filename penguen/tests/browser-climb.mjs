@@ -1,61 +1,8 @@
-import { chromium } from 'playwright';
+import { launch, openGame, checklist } from './browser-kit.mjs';
 
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
-const p = await b.newPage({ viewport: { width: 1280, height: 720 } });
-const errors = [];
-p.on('pageerror', (e) => errors.push(e.message + '\n' + (e.stack ?? '')));
-p.on('console', (m) => {
-  if (m.type() === 'error' && !m.text().includes('CONNECTION_RESET')) errors.push('console: ' + m.text());
-});
-
-await p.goto('http://localhost:8123/index.html', { waitUntil: 'domcontentloaded' });
-await p.waitForTimeout(500);
-
-const fails = [];
-const ok = (name, cond, extra = '') => {
-  if (cond) console.log(`  ✓ ${name}${extra ? ' — ' + extra : ''}`);
-  else {
-    console.log(`  ✗ ${name}${extra ? ' — ' + extra : ''}`);
-    fails.push(name);
-  }
-};
-
-// Unlock everything so any level can be started.
-await p.evaluate(() => {
-  window.__pengu.save.unlocked = 60;
-});
-
-/* ---------------------------------------------------------- helpers */
-await p.evaluate(() => {
-  const inp = window.__pengu.input;
-  window.__ctl = {
-    hold(a, on) {
-      if (on) inp._sources.touch.add(a);
-      else inp._sources.touch.delete(a);
-      inp._sync();
-    },
-    tap(a) {
-      inp._sources.touch.add(a);
-      inp._sync();
-      inp._emit(a);
-      setTimeout(() => {
-        inp._sources.touch.delete(a);
-        inp._sync();
-      }, 40);
-    },
-    release() {
-      for (const a of ['left', 'right', 'jump']) inp._sources.touch.delete(a);
-      inp._sync();
-    },
-    // A jump is an edge, not a level: `jumpPressed` only ever comes from the
-    // emit, so holding the button without emitting never jumps at all.
-    press(a) {
-      inp._sources.touch.add(a);
-      inp._sync();
-      inp._emit(a);
-    },
-  };
-});
+const b = await launch();
+const { page: p, errors } = await openGame(b, { width: 1280, height: 720 });
+const { ok, finish } = checklist();
 
 const start = async (id) => {
   await p.evaluate((lv) => {
@@ -293,6 +240,6 @@ await p.waitForTimeout(2500);
 await p.evaluate(() => window.__ctl.release());
 ok('hata yok', errors.length === 0, errors.slice(0, 3).join(' | '));
 
+const code = finish('tırmanma mekaniği çalışıyor');
 await b.close();
-console.log(fails.length ? `\n✗ ${fails.length} başarısız: ${fails.join(', ')}` : '\n✓ tırmanma mekaniği çalışıyor');
-process.exit(fails.length ? 1 : 0);
+process.exit(code);

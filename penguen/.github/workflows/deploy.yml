@@ -1,3 +1,9 @@
+# Publish to GitHub Pages — but only from a green tree.
+#
+# The whole test suite runs first, including the solvers: this game's one
+# unbreakable promise is that every level it ships can be finished, and the
+# only way that promise survives contact with a busy afternoon is if nothing
+# reaches a player without the solvers agreeing.
 name: Deploy to GitHub Pages
 
 on:
@@ -16,16 +22,18 @@ concurrency:
 
 jobs:
   test:
+    name: Bütün testler
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Validate every level is beatable
-        run: node tests/validate-levels.mjs
+      - name: Testler (tarayıcısız)
+        run: node tools/test.mjs --no-browser --verbose
 
   deploy:
+    name: Yayına al
     needs: test
     environment:
       name: github-pages
@@ -33,6 +41,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Tek dosya sürümünü üret
+        run: node tools/bundle.mjs dist/pengu.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

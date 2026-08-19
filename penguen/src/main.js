@@ -108,3 +108,23 @@ if (document.readyState === 'loading') {
 } else {
   boot();
 }
+
+/**
+ * Register the service worker, so the game works with no signal.
+ *
+ * Guarded three ways, and each guard is a real case rather than defensive
+ * noise: `file://` has no service workers at all, the single-file build has no
+ * `sw.js` next to it to register (asking for one would print an error on a page
+ * that is otherwise perfect), and a browser without the API should simply carry
+ * on playing. A failed registration is never worth telling the player about —
+ * the game already works, it just will not work offline.
+ */
+if (
+  !globalThis.__PENGU_SINGLE &&
+  'serviceWorker' in navigator &&
+  location.protocol.startsWith('http')
+) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => undefined);
+  });
+}
