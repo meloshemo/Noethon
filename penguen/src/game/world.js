@@ -6,11 +6,11 @@
  * is pure simulation so it stays easy to reason about.
  */
 
-import { Floe, Hazard, Fish, Checkpoint } from './entities.js';
+import { Floe, Hazard, Fish, Checkpoint, Rival, Snowball } from './entities.js';
 import { Player } from './player.js';
 import { GhostRecorder, Ghost } from './ghost.js';
 import {
-  VIEW, VIEW_LIMITS, ASSIST, ICE, STORM, SWIM, BOOST, ROT, REWARDS, AMBUSH, COLLAPSE, scaleForLevel, upgradeEffect,
+  VIEW, VIEW_LIMITS, ASSIST, ICE, STORM, SWIM, BRAWL, BOOST, ROT, REWARDS, AMBUSH, COLLAPSE, scaleForLevel, upgradeEffect,
 } from './config.js';
 import { WATER_Y } from './levels.js';
 import { getSkin } from './skins.js';
@@ -73,6 +73,16 @@ export class World {
      * composer inside a lungful of each other.
      */
     this.airHoles = (def.air ?? []).map((a) => ({ ...a, glow: 0 }));
+    /**
+     * The snowball fight. Rival penguins that throw, and what they have thrown.
+     *
+     * A brawl level is an ordinary shelf level in every other respect — same
+     * axis, same camera, same ice — because the chapter's idea is not a new
+     * kind of world, it is a new kind of question asked inside the old one.
+     */
+    this.brawl = Boolean(def.brawl);
+    this.rivals = (def.rivals ?? []).map((d) => new Rival(d));
+    this.snowballs = [];
 
     this.floes = (def.floes ?? []).map((d, i) => new Floe(d, i));
     /**
@@ -181,6 +191,7 @@ export class World {
     // its own ambushes — falling seracs — rather than this one.
     this.ambushes =
       this.axis === 'across' &&
+      !this.brawl &&
       ((def.id ?? 1) >= AMBUSH.fromLevel || Boolean(def.daily) || Boolean(def.generated));
     /**
      * The serac that calves off the cliff as you reach the raft. Armed once per
@@ -190,6 +201,7 @@ export class World {
     this.collapse = null;
     this.collapseArmed =
       this.axis === 'across' &&
+      !this.brawl &&
       ((def.id ?? 1) >= COLLAPSE.fromLevel || Boolean(def.daily) || Boolean(def.generated)) &&
       Math.random() < COLLAPSE.chance * (this.assist ? 0.45 : 1);
     this.boostsTaken = 0;
@@ -199,6 +211,8 @@ export class World {
     this.wallKicks = 0;
     /** Seconds spent hanging on ice — the climbing counterpart of glide time. */
     this.clingTime = 0;
+    /** Rivals knocked out with somebody else's snowball. */
+    this.brawlKnockouts = 0;
     this._orcaSeen = new Set();
 
     this._submerge();
@@ -280,6 +294,21 @@ export class World {
 
   /** Progress along the level, 0..1 — drives the HUD bar. */
   get progress() {
+    // In an arena, "how far along" is not a distance. You spend the level
+    // walking back and forth on purpose, and a bar that swings with you says
+    // nothing. What is actually progressing is how many guards are left.
+    if (this.brawl) {
+      const guards = this.rivals.filter((r) => r.guard);
+      if (guards.length) {
+        const down = guards.filter((r) => r.out).length;
+        const walk = clamp(
+          (this.player.centerX - this.spawn.x) / Math.max(1, this.goal.x - this.spawn.x),
+          0,
+          1,
+        );
+        return clamp((down + walk * 0.35) / (guards.length + 0.35), 0, 1);
+      }
+    }
     if (this.axis === 'up') {
       return clamp((this.spawn.y - this.player.y) / Math.max(1, this.spawn.y - this.goal.y), 0, 1);
     }
@@ -424,11 +453,88 @@ export class World {
     this._checkOrcaPasses();
     this._checkGoal();
 
+    if (this.brawl) this._brawl(dt);
+
     if (this.diving) this._breathe(dt);
     else if (this.player.y > this.waterY - this.player.h * 0.35) this.die('water');
 
     this._followCamera(dt);
     this.flash = Math.max(0, this.flash - dt * 2.5);
+  }
+
+  /**
+   * The snowball fight.
+   *
+   * Everything here is one rule applied three times: a snowball stops at the
+   * first thing it touches. Which thing that is decides whether the throw was
+   * a threat, a tool or a waste — and the player decides which, by standing
+   * somewhere, which is the only move the chapter gives them.
+   */
+  _brawl(dt) {
+    if (this.status !== 'playing') return;
+    const speed = this.assist ? ASSIST.hazardSpeed : 1;
+
+    for (const r of this.rivals) {
+      const shot = r.update(dt, this.player, speed);
+      if (!shot) continue;
+      this.snowballs.push(new Snowball(r.hand, shot));
+      this.audio.jump?.();
+      this.particles.puff(r.hand.x, r.hand.y, 4);
+    }
+
+    for (let i = this.snowballs.length - 1; i >= 0; i--) {
+      const b = this.snowballs[i];
+      // Stepped in slices, because a ball crossing five hundred pixels a second
+      // steps eight pixels a frame — enough to pass clean through a penguin at
+      // sixty hertz and out the other side, which would make a perfectly aimed
+      // shot fail at random.
+      const slices = 4;
+      let stopped = false;
+      for (let k = 0; k < slices && !stopped; k++) {
+        b.update((dt * speed) / slices);
+        const box = b.box;
+
+        for (const r of this.rivals) {
+          if (r.out) continue;
+          // Never its own thrower: the ball starts inside that penguin's hand.
+          if (Math.hypot(r.hand.x - b.origin.x, r.hand.y - b.origin.y) < 2) continue;
+          if (!rectsOverlap(box, r.box)) continue;
+          r.knockOut();
+          this.brawlKnockouts++;
+          this.particles.puff(r.x + r.w / 2, r.y + r.h / 2, 16);
+          this.audio.shatter();
+          this.shake(4);
+          if (this.rivals.every((o) => !o.guard || o.out)) {
+            this.showHint('Yol açıldı!', 1.6);
+            this.audio.checkpoint();
+          }
+          stopped = true;
+          break;
+        }
+        if (stopped) break;
+
+        if (rectsOverlap(box, this.player.box)) {
+          this.particles.puff(b.x, b.y, 10);
+          this.die('snowball');
+          return;
+        }
+
+        for (const f of this.solids) {
+          if (f.state === 'gone' || f.state === 'melted') continue;
+          if (!rectsOverlap(box, f.box ?? f)) continue;
+          this.particles.puff(b.x, b.y, 7);
+          stopped = true;
+          break;
+        }
+        if (b.dead) stopped = true;
+      }
+      if (stopped || b.dead) this.snowballs.splice(i, 1);
+    }
+  }
+
+  /** True while the way out is still being guarded. */
+  get exitLocked() {
+    return this.brawl && this.rivals.some((r) => r.guard && !r.out);
   }
 
   /**
@@ -614,6 +720,10 @@ export class World {
   }
 
   _checkGoal() {
+    // The way out is guarded until the guards are down. Nothing subtle about
+    // it: the raft is there, you can see it, and walking onto it does nothing
+    // while somebody is still standing in front of it.
+    if (this.exitLocked) return undefined;
     // Generous on purpose: a fast player jumping in at head height used to sail
     // straight over a raft-sized box and land past the finish.
     const box = {
@@ -695,6 +805,12 @@ export class World {
     // Floes reset so a broken path never soft-locks the player after a death.
     for (const f of this.floes) f.reset();
     for (const h of this.hazards) h.reset();
+    // Rivals get back up. A brawl arena is a puzzle, and a puzzle that is
+    // half-solved when you die teaches nothing — you would learn to trade
+    // deaths for knockouts instead of learning where to stand.
+    for (const r of this.rivals) r.reset();
+    this.snowballs.length = 0;
+    this.brawlKnockouts = 0;
     // Speed fish come back on a retry; the normal three stay taken so a death
     // never costs you collectibles you already earned this run.
     for (const f of this.boosts) f.reset();

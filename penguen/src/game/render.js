@@ -8,7 +8,7 @@
  * hazards → penguin → particles → weather → post effects.
  */
 
-import { VIEW, VIEW_LIMITS, AMBUSH, CLIMB } from './config.js';
+import { VIEW, VIEW_LIMITS, AMBUSH, CLIMB, BRAWL } from './config.js';
 import { getSkin, getTrail } from './skins.js';
 import { clamp, lerp, makeRng } from '../core/util.js';
 
@@ -190,6 +190,7 @@ export class Renderer {
     this._fish(ctx, world, time);
     this._goal(ctx, world, time);
     this._hazards(ctx, world, time);
+    if (world.brawl) this._brawl(ctx, world, time);
     this._skuaShadow(ctx, world, time);
     this._ghost(ctx, world, time);
     if (world.status !== 'dying') this._penguin(ctx, world, time);
@@ -1152,15 +1153,35 @@ export class Renderer {
   _goal(ctx, world, time) {
     const { x, y } = world.goal;
     const bob = Math.sin(time * 1.6) * 3;
+    // In the snowball chapter the raft is there the whole time and does
+    // nothing, which is the level's way of telling you what the level is
+    // about: the way out is not somewhere to get to, it is something to earn.
+    // So it is drawn cold and grey and counts down how many are still standing.
+    const locked = world.exitLocked;
     ctx.save();
     ctx.translate(x, y + bob);
 
     // Glow beacon
     const g = ctx.createRadialGradient(0, -40, 4, 0, -40, 90);
-    g.addColorStop(0, 'rgba(120,255,205,0.35)');
+    g.addColorStop(0, locked ? 'rgba(150,175,205,0.22)' : 'rgba(120,255,205,0.35)');
     g.addColorStop(1, 'rgba(120,255,205,0)');
     ctx.fillStyle = g;
     ctx.fillRect(-90, -130, 180, 180);
+
+    if (locked) {
+      const left = world.rivals.filter((r) => r.guard && !r.out).length;
+      ctx.fillStyle = 'rgba(10,26,44,0.72)';
+      ctx.beginPath();
+      ctx.roundRect(-34, -108, 68, 26, 13);
+      ctx.fill();
+      ctx.fillStyle = '#ff9aa5';
+      ctx.font = '600 15px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`${left} kaldı`, 0, -94);
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+    }
 
     // Raft
     ctx.fillStyle = '#8a5a35';
@@ -1179,7 +1200,7 @@ export class Renderer {
     ctx.stroke();
 
     const wave = Math.sin(time * 4) * 4;
-    ctx.fillStyle = '#5ce1a6';
+    ctx.fillStyle = locked ? '#7d8ea4' : '#5ce1a6';
     ctx.beginPath();
     ctx.moveTo(2, -66);
     ctx.quadraticCurveTo(22, -60 + wave, 40, -54);
@@ -1769,6 +1790,156 @@ export class Renderer {
         0,
         Math.PI * 2,
       );
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  /**
+   * The snowball fight: the rivals, what they are about to do, and what they
+   * have already done.
+   *
+   * The aim line is the whole user interface of the chapter. A rival that
+   * winds up and throws with no warning is a coin toss; a rival that draws the
+   * shot on the ice for two thirds of a second before releasing it is a
+   * puzzle, because that line is the thing the player is arranging. So it is
+   * drawn long, drawn bright, and drawn all the way to where it will end —
+   * through whoever happens to be standing in it, which is the point.
+   */
+  _brawl(ctx, world, time) {
+    const view = this._viewBounds(world);
+
+    for (const r of world.rivals) {
+      if (r.x + r.w < view.left - 80 || r.x > view.right + 80) continue;
+
+      if (r.out) {
+        // A heap of snow where a penguin was. It stays for the rest of the
+        // level: what you have already solved should keep being visible.
+        ctx.fillStyle = 'rgba(232,246,255,0.9)';
+        ctx.beginPath();
+        ctx.ellipse(r.x + r.w / 2, r.y + r.h - 4, r.w * 0.62, r.h * 0.26, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(150,196,230,0.5)';
+        ctx.beginPath();
+        ctx.ellipse(r.x + r.w / 2, r.y + r.h - 1, r.w * 0.7, r.h * 0.14, 0, 0, Math.PI * 2);
+        ctx.fill();
+        continue;
+      }
+
+      // The aim, while it is being taken.
+      if (r.aim && !this.reducedMotion) {
+        const hand = r.hand;
+        const dx = r.aim.x - hand.x;
+        const dy = r.aim.y - hand.y;
+        const len = Math.hypot(dx, dy) || 1;
+        // Carry the line well past the aim point: what the player is arranging
+        // is what the ball passes *through*, and a line that stops at their own
+        // feet hides exactly that.
+        const far = { x: hand.x + (dx / len) * (len + 260), y: hand.y + (dy / len) * (len + 260) };
+        const charge = clamp(1 - r.timer / BRAWL.windup, 0, 1);
+        ctx.save();
+        ctx.setLineDash([9, 9]);
+        ctx.lineDashOffset = -time * 90;
+        ctx.strokeStyle = `rgba(255,236,180,${0.28 + charge * 0.5})`;
+        ctx.lineWidth = 1.6 + charge * 1.6;
+        ctx.beginPath();
+        ctx.moveTo(hand.x, hand.y);
+        ctx.lineTo(far.x, far.y);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      this._rival(ctx, r, time);
+    }
+
+    for (const b of world.snowballs) {
+      const g = ctx.createRadialGradient(b.x - b.r * 0.3, b.y - b.r * 0.3, 1, b.x, b.y, b.r);
+      g.addColorStop(0, '#ffffff');
+      g.addColorStop(1, '#bcdcf2');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+      ctx.fill();
+      if (this.reducedMotion) continue;
+      // A short streak behind it, so a fast ball reads as a fast ball.
+      const len = Math.hypot(b.vx, b.vy) || 1;
+      ctx.strokeStyle = 'rgba(226,244,255,0.35)';
+      ctx.lineWidth = b.r * 1.2;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(b.x, b.y);
+      ctx.lineTo(b.x - (b.vx / len) * 26, b.y - (b.vy / len) * 26);
+      ctx.stroke();
+      ctx.lineCap = 'butt';
+    }
+  }
+
+  /**
+   * One rival, drawn as a penguin and not as a hazard.
+   *
+   * Simplified on purpose — a flat silhouette with a scarf — because the
+   * player has to read *where it is looking* and *whether it is winding up*
+   * from across the arena, and the full hand-drawn bird has too much going on
+   * at that size. A guard wears a red scarf and a heckler a blue one, which is
+   * the only thing separating "shut the door" from "just noise".
+   */
+  _rival(ctx, r, time) {
+    const cx = r.x + r.w / 2;
+    const by = r.y + r.h;
+    const wind = r.aim ? clamp(1 - r.timer / BRAWL.windup, 0, 1) : 0;
+    const lean = r.facing * wind * 4;
+
+    ctx.save();
+    ctx.translate(lean, 0);
+
+    // Body
+    ctx.fillStyle = '#232b3d';
+    ctx.beginPath();
+    ctx.ellipse(cx, by - r.h * 0.42, r.w * 0.44, r.h * 0.44, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Belly
+    ctx.fillStyle = '#f2f7ff';
+    ctx.beginPath();
+    ctx.ellipse(cx + r.facing * 2, by - r.h * 0.38, r.w * 0.26, r.h * 0.32, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Head
+    ctx.fillStyle = '#232b3d';
+    ctx.beginPath();
+    ctx.arc(cx, by - r.h * 0.78, r.w * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+    // Eye and beak, both on the side it is facing
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(cx + r.facing * r.w * 0.12, by - r.h * 0.82, 2.6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ffb03a';
+    ctx.beginPath();
+    ctx.moveTo(cx + r.facing * r.w * 0.28, by - r.h * 0.78);
+    ctx.lineTo(cx + r.facing * r.w * 0.5, by - r.h * 0.74);
+    ctx.lineTo(cx + r.facing * r.w * 0.28, by - r.h * 0.7);
+    ctx.closePath();
+    ctx.fill();
+    // Feet
+    ctx.fillStyle = '#ff9a2e';
+    ctx.fillRect(cx - r.w * 0.26, by - 3, r.w * 0.22, 3);
+    ctx.fillRect(cx + r.w * 0.05, by - 3, r.w * 0.22, 3);
+    // Scarf: red guards the door, blue just throws
+    ctx.fillStyle = r.guard ? '#ff5f6d' : '#5fc9ff';
+    ctx.fillRect(cx - r.w * 0.3, by - r.h * 0.64, r.w * 0.6, 4);
+    ctx.beginPath();
+    ctx.moveTo(cx - r.facing * r.w * 0.22, by - r.h * 0.62);
+    ctx.lineTo(cx - r.facing * r.w * 0.5, by - r.h * 0.46 + Math.sin(time * 3 + cx) * 2);
+    ctx.lineTo(cx - r.facing * r.w * 0.34, by - r.h * 0.44);
+    ctx.closePath();
+    ctx.fill();
+
+    // The snowball in the raised flipper, growing as the wind-up finishes.
+    if (wind > 0) {
+      const hx = cx - r.facing * r.w * (0.34 + wind * 0.2);
+      const hy = by - r.h * (0.5 + wind * 0.26);
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(hx, hy, 3 + wind * 5, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.restore();

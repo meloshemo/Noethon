@@ -8,10 +8,11 @@
  *   I   · Buz Sahanlığı  1–31  running and jumping, left to right
  *   II  · Zirve         32–46  climbing: hold on, and the holding runs out
  *   III · Buz Altı      47–61  swimming: fast at last, and out of air
+ *   IV  · Kar Topu      62–76  a fight you win by standing somewhere
  *
  * Each chapter brings its own composer — `Course` walks a shelf sideways,
- * `Tower` walks a mountain upward, `Deep` swims a corridor under the ice —
- * and its own validator. What they share is everything below the composer: the
+ * `Tower` walks a mountain upward, `Deep` swims a corridor under the ice,
+ * `Arena` draws lines of fire — and its own validator. What they share is everything below the composer: the
  * same penguin, the same physics, the same three inputs, the same save file. A chapter changes the question, never the
  * controls.
  *
@@ -22,6 +23,7 @@
 import { LEVELS } from './levels.js';
 import { CLIMB_LEVELS } from './climb.js';
 import { DIVE_LEVELS } from './dive.js';
+import { BRAWL_LEVELS } from './brawl.js';
 
 export const CHAPTERS = [
   {
@@ -45,6 +47,13 @@ export const CHAPTERS = [
     subtitle: 'Deniz buzun altında',
     verb: 'Dal: bas ve in, bırak ve yüksel, nefesin bitmeden deliği bul',
     levels: DIVE_LEVELS,
+  },
+  {
+    id: 4,
+    name: 'Kar Topu',
+    subtitle: 'Koloni yolunu kesti',
+    verb: 'Nişan alma — hizala: kapıdakini atıcıyla arana koy, sonra oradan çekil',
+    levels: BRAWL_LEVELS,
   },
 ];
 

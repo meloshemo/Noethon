@@ -18,10 +18,10 @@ Toplam yük tek dosyada ~385 KB ve çevrimdışı çalışıyor.
 
 | | |
 |---|---|
-| **Üç bölüm (chapter)** | Buz Sahanlığı 1–31 · Zirve 32–46 · Buz Altı 47–61 — üçü ayrı fiil |
-| **61 elle yazılmış bölüm** | 31 sahanlık parkuru + 15 tırmanış + 15 dalış |
+| **Dört bölüm (chapter)** | Buz Sahanlığı 1–31 · Zirve 32–46 · Buz Altı 47–61 · Kar Topu 62–76 |
+| **76 elle yazılmış bölüm** | 31 parkur + 15 tırmanış + 15 dalış + 15 arena — dördü ayrı fiil |
 | **Tutunma** | Buz duvarına asıl, tırman, tekmele — ve kollarında sınırlı güç var |
-| **Sonsuz mod** | Bölüm numarasıyla tohumlanmış — 62. bölüm herkeste aynı |
+| **Sonsuz mod** | Bölüm numarasıyla tohumlanmış — 77. bölüm herkeste aynı |
 | **10 buz türü** | sağlam · çatlak · cilalı · eriyen · sürüklenen · düşen · tuzak · **sahte** · kaçan · gayzer |
 | **4 tehlike** | sarkıt · fok · fırtına kuşağı · orka |
 | **2 pusu** | Bölümün planlamadığı anda dalan kutup kuşu · bayrağa 100 px kala kopan buzul |
@@ -57,6 +57,14 @@ değil, **bırakarak** zorlaşıyor. Karşılığında elinden alınan tek şey 
 Bırakırsan yükselirsin (penguen yüzer, yukarı bedava), basarsan dalarsın. Bir
 ciğer dokuz buçuk saniye ve sadece buzdaki deliklerde doluyor. Yeni tuş yok.
 → [ayrıntı](#buz-altı--dalış)
+
+### ❄️ Kar Topu — hiç yapmadığın bir fiil
+62. bölümde koloni yolunu kesiyor ve oyun sana **hiçbir şey vermiyor**. Atma
+tuşu yok, kar topu toplamak yok, yeni tuş yok. Rakip pengueler atıyor; hem de
+tam **nişan aldıkları anda durduğun yere**. Bir kar topu değdiği ilk şeyde
+duruyor. Gerisi tek bir fikir: *birinin arkasına geç.* Devirmek istediğin
+penguen ile atıcının arasına gir, sonra top gelmeden oradan çekil.
+→ [ayrıntı](#kar-topu--hizalama)
 
 ### 🪽 Aktif ekipman — tek tuşta iki yetenek
 Markette **Planör Kanat** ve **Sırt Motoru** var. Havada zıplamayı *basılı tutmak*
@@ -116,6 +124,7 @@ hedef var ve **gün boyunca birikiyorlar** — tek turda hepsini yapman gerekmiy
 | [Mimari](#mimari) | Dosya düzeni ve neden böyle |
 | [Zirve](#zirve--tırmanış) | Tutunma, tekme, baca — ikinci bölümün fiili |
 | [Buz Altı](#buz-altı--dalış) | Dalış, nefes, akıntı — üçüncü bölümün fiili |
+| [Kar Topu](#kar-topu--hizalama) | Hizalama, nişan kilidi, kaçış — dördüncü bölümün fiili |
 | [Zorluk eğrisi](#zorluk-eğrisi) | Rampa tasarımı |
 | [Buz türleri](#buz-türleri) · [Tehlikeler](#tehlikeler) | Oyun içi her mekanik |
 | [Pusu mekanikleri](#pusu-mekanikleri-buzun-tuzakları) · [Kutup kuşu](#pusu-kutup-kuşu) | Ani ölüm olayları |
@@ -156,6 +165,13 @@ Bu oyunun en çok emek verilen kısmı zorluğun *adil* olması. Üç katman:
    leopar yaklaşınca üstünden ya da altından geç. Tek bir ileri-bakış sayısıyla
    çalışan bu şey geçebiliyorsa, gözü olan bir insan da geçebilir.
 
+6. **Arena çözücüsü** (`tests/brawl-run.mjs`) kar topu bölümlerini gerçek
+   `World` ile oynuyor: nişan kilidi, uçuş, kapalı çıkış, ölüm kuralları.
+   Sürdüğü oyuncu kasten aptal — bölümün işaret ettiği yere yürü, biri sana
+   nişan alana kadar bekle, hattan çık, kapıdakinin düşmesini izle. Nişan
+   almıyor, arenayı okumuyor, doğaçlama yapmıyor. Bu kadarı yetiyorsa, noktalı
+   çizgiyi görebilen bir insan da yapabilir.
+
 Market ve ekipman bu denklemin dışında: bütün bölümler **hiçbir şeyi olmayan**
 bir penguene göre doğrulanıyor, yani satın aldıkların bir parkuru asla açamaz,
 sadece kolaylaştırır.
@@ -195,6 +211,8 @@ node tests/validate-climb.mjs    # tırmanış bölümleri: geometri
 node tests/climb-run.mjs         # tırmanış bölümleri: gerçek fizikle çözücü
 node tests/validate-dive.mjs     # dalış bölümleri: geometri ve nefes bütçesi
 node tests/dive-run.mjs          # dalış bölümleri: gerçek World ile çözücü
+node tests/validate-brawl.mjs    # arenalar: her kapıcının temiz atış hattı var mı
+node tests/brawl-run.mjs         # arenalar: gerçek World ile çözücü
 node tests/ghost.mjs             # paylaşım kodu çözücüsü
 node tests/economy.mjs           # ekonomi dengesi simülasyonu
 node tools/bundle.mjs            # tek dosyaya paketle (isim çakışmasını da yakalar)
@@ -907,6 +925,63 @@ girilen bir geçide aşağıdan girmek çoğu zaman imkânsız. `breathRange` de
 piksele çeviriyor, ve besteci bir ciğerin taşıyamayacağı iki delik arasını
 **kurmayı reddediyor** — dahası, gerektiğinde buzda kendi deliğini açıyor. Bir
 planın hatırlamak zorunda olduğu söz, tutulmayan sözdür.
+
+---
+
+## Kar Topu — hizalama
+
+Üç bölüm boyunca oyun penguene bir fiil verdi: zıpla, tutun, dal. Dördüncüsü
+hepsini geri alıyor ve yerine bir **konum** veriyor.
+
+### Elinde hiçbir şey yok
+
+Atma tuşu yok. Kar topu toplamak yok. Yeni tuş yok — bu bölümde penguenin
+yapabildiği tek şey bir yerde durmak. Ama:
+
+- Rakipler **nişan aldıkları anda durduğun yere** atıyor, sonrasına bakmıyor.
+- Bir kar topu **değdiği ilk şeyde** duruyor: bir penguen, sen, ya da buz.
+
+Bu iki cümleden çıkan tek fikir bütün bölüm: **birinin arkasına geç.** Yolu
+kapatan pengueni atıcıyla arana koy, at sinyalini bekle, sonra o hattan çekil.
+Kırmızı atkılı olanlar kapıyı tutuyor — hepsi düşmeden sal açılmıyor. Mavi
+atkılılar sadece sana atıyor; onları devirmek zorunda değilsin, ama sana
+duracak yeri onlar dar ediyor.
+
+### Nişan neden kilitleniyor
+
+Çünkü kilitlenmezse baştan aşağı farklı bir oyun oluyor. Seni takip eden bir
+nişanla yapabileceğin tek şey kaçmak; **kilitli** bir nişanla yapabileceğin şey
+*hattı seçmek*. Wind-up 0,62 saniye sürüyor ve o süre boyunca hat buzun üstüne
+noktalı çiziliyor — hem de hedefinin çok ötesine kadar, çünkü oyuncunun
+düzenlediği şey topun **içinden geçtiği** şey.
+
+### Neden düz atıyorlar
+
+Bir parabolü gözle hizalayamazsın. Bu bölümün tamamı hizalamaksa ve oyuncu
+hattı göremiyorsa ortada bulmaca değil şans vardır. O yüzden atış sert ve düz.
+
+### Buz sivrileri
+
+Rakipler raf üstünde değil, ince buz sivrilerinin tepesinde duruyor — ve bu bir
+görsel tercih değil, geometrinin dayattığı şey. Kar topu değdiği ilk buzda
+durduğu için, geniş bir rafın üstündeki birinin içinden geçen hat birkaç piksel
+sonra o rafa çarpıyor: oyuncunun kusursuz hizaladığı atış yerde patlıyor. Raf ne
+kadar dar olursa hat o kadar dik olabilir. `SLOPE_MAX` bu yüzden seçilmiş değil,
+**türetilmiş**: kar topunun yarıçapı, penguenin boyu ve sivrinin genişliği.
+
+### Besteci çözümü kurarak yapıyor
+
+`Arena` bir arena kurup "umarım vardır" demiyor. Her düello **cevabından geriye
+doğru** kuruluyor: oyuncunun duracağı yeri seç, kapıdakini yerleştir, ikisinden
+geçen hattı çiz, atıcıyı o hattın üstüne koy. Sonra sıra önemli — kapıcılar ve
+manzara önce, atıcılar tek tek en son, ve her yeni atıcı daha önce çizilmiş
+bütün hatları yeniden kontrol ediyor. Çünkü ikinci düellonun sivrisi birincinin
+atış hattına düşüyor: bakması hoş, oynaması bozuk.
+
+Kayalar da bu yüzden **yukarıdan sarkıyor**, yerden yükselmiyor. Zemin bu
+bölümde her şeyin oynandığı yer — bütün duracak noktalar orada — ve zeminden
+çıkan bir sütun cevabın iki parçası arasına duvar koyuyor. Tavandan sarkınca
+getirildiği işi yapıyor: hatları yiyor, altından yürüyüp geçiyorsun.
 
 ---
 

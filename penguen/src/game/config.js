@@ -465,6 +465,53 @@ export function breathFor(scale) {
   return SWIM.breath * (0.86 + 0.14 * scale);
 }
 
+/**
+ * Kar topu — the chapter's fourth verb, and the only one you do not perform.
+ *
+ * Every other chapter gave the penguin something to do: jump, hold on, dive.
+ * This one gives it nothing at all. The rival penguins throw; you cannot throw
+ * back, you cannot pick anything up, you have no button for it. What you have
+ * is where you stand — and a thrown snowball goes where it was aimed, which is
+ * wherever *you* were when the thrower wound up.
+ *
+ * So the whole chapter is one idea: **stand behind somebody.** Line yourself up
+ * so the rival you want gone is on the line between you and the one throwing,
+ * and the throw does the work. Then get off that line before it arrives.
+ *
+ * Two consequences worth stating, because both of them are the point:
+ *
+ *   · The throw is flat and fast — a hard, straight snowball, not a lob. An arc
+ *     cannot be lined up by eye; a straight line can, and a chapter about
+ *     aiming has to be a chapter you can *see* the aim in.
+ *   · The aim is locked when the wind-up starts, not when the ball leaves. That
+ *     is what makes baiting possible at all: you choose the line, then you are
+ *     no longer on it.
+ */
+export const BRAWL = {
+  /** Telegraph before a throw. The aim is locked for all of it. */
+  windup: 0.62,
+  /** Seconds between one throw and the next wind-up. */
+  period: 2.6,
+  /** Flight speed. Flat and fast enough that the line reads as a line. */
+  speed: 540,
+  /** Snowball radius. */
+  radius: 9,
+  /** Nobody throws at something further away than this. */
+  range: 1250,
+  /** How much of a body a shot must cover to count as lined up. */
+  hitFrac: 0.55,
+};
+
+/**
+ * How long the player has to leave the line once the aim is locked.
+ *
+ * The wind-up plus the flight, minus nothing: this is the real number, and a
+ * level is only fair if a standing start can clear a body's width inside it.
+ */
+export function dodgeWindow(distance) {
+  return BRAWL.windup + distance / BRAWL.speed;
+}
+
 /** Assist mode is offered after this many deaths on the same level. */
 export const ASSIST_AFTER_DEATHS = 4;
 
@@ -482,7 +529,7 @@ export const ASSIST = {
  * ever disagree, which is the only way a number in one file and a list of
  * plans in another stay honest.
  */
-export const CRAFTED_LEVELS = 61;
+export const CRAFTED_LEVELS = 76;
 
 /** Growth curve: how big the penguin is on a given level. */
 export function scaleForLevel(level) {

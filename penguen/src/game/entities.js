@@ -5,7 +5,7 @@
  * `{x, y, w, h}` box that the collision code in level.js consumes.
  */
 
-import { ICE, STORM } from './config.js';
+import { ICE, STORM, BRAWL } from './config.js';
 import { clamp, easeOutCubic, lerp } from '../core/util.js';
 
 /* ------------------------------------------------------------------ */
@@ -552,5 +552,138 @@ export class Checkpoint {
 
   update(dt) {
     if (this.pulse > 0) this.pulse = Math.max(0, this.pulse - dt * 2);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* The snowball fight                                                  */
+/* ------------------------------------------------------------------ */
+
+/**
+ * A rival penguin.
+ *
+ * It stands on its ledge and throws. It does not chase, it does not jump, it
+ * does not aim anywhere except at you — and that last part is the whole
+ * mechanic, because a thing that always aims at you is a thing you can point
+ * at somebody else.
+ *
+ * The cycle is: wait, wind up (aim locked, arm back, line drawn), throw. The
+ * lock is the fair part. Without it the ball would follow you and there would
+ * be no baiting, only dodging; with it the level becomes a question about
+ * where to be standing rather than how fast you can move.
+ */
+export class Rival {
+  constructor(def) {
+    this.x = def.x;
+    this.y = def.y;
+    this.w = def.w ?? 30;
+    this.h = def.h ?? 40;
+    /** Guards the way out. The exit stays shut while any guard is standing. */
+    this.guard = def.guard ?? false;
+    this.period = def.period ?? BRAWL.period;
+    /** Offset into the cycle, so a room full of rivals is not a volley. */
+    this.phase = def.phase ?? 0;
+    this.facing = def.facing ?? -1;
+    this.skin = def.skin ?? 'rival';
+    this.reset();
+  }
+
+  reset() {
+    this.out = false;
+    this.state = 'wait'; // wait | windup
+    this.timer = this.period * (1 - (this.phase % 1));
+    /** Where the throw is going, locked when the wind-up begins. */
+    this.aim = null;
+    this.puff = 0;
+    this.throwFlash = 0;
+  }
+
+  get box() {
+    return { x: this.x, y: this.y, w: this.w, h: this.h };
+  }
+
+  get hand() {
+    return { x: this.x + this.w / 2, y: this.y + this.h * 0.34 };
+  }
+
+  /**
+   * @returns {null | {x:number, y:number}} the aim point, on the frame it throws
+   */
+  update(dt, player, speedMult = 1) {
+    if (this.out) {
+      this.puff = Math.max(0, this.puff - dt);
+      return null;
+    }
+    this.throwFlash = Math.max(0, this.throwFlash - dt * 3);
+    this.timer -= dt * speedMult;
+    if (this.timer > 0) return null;
+
+    if (this.state === 'wait') {
+      const cx = player.x + player.w / 2;
+      const cy = player.y + player.h / 2;
+      const hand = this.hand;
+      if (Math.hypot(cx - hand.x, cy - hand.y) > BRAWL.range) {
+        this.timer = 0.4;
+        return null;
+      }
+      this.state = 'windup';
+      this.timer = BRAWL.windup;
+      this.aim = { x: cx, y: cy };
+      this.facing = cx < hand.x ? -1 : 1;
+      return null;
+    }
+
+    this.state = 'wait';
+    this.timer = this.period;
+    this.throwFlash = 1;
+    const shot = this.aim;
+    this.aim = null;
+    return shot;
+  }
+
+  knockOut() {
+    this.out = true;
+    this.state = 'wait';
+    this.aim = null;
+    this.puff = 0.6;
+  }
+}
+
+/**
+ * A thrown snowball.
+ *
+ * Straight, and that is a design decision rather than a simplification. A lob
+ * cannot be lined up by eye, and this chapter is entirely about lining things
+ * up: if the player cannot see the line, there is no puzzle, only luck. So the
+ * throw is flat and hard, and the ball stops at the first thing it touches —
+ * a rival, the player, or ice.
+ */
+export class Snowball {
+  constructor(from, to) {
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    const len = Math.hypot(dx, dy) || 1;
+    this.x = from.x;
+    this.y = from.y;
+    this.vx = (dx / len) * BRAWL.speed;
+    this.vy = (dy / len) * BRAWL.speed;
+    this.r = BRAWL.radius;
+    this.life = 3.2;
+    this.dead = false;
+    this.spin = 0;
+    /** Where it came from, so a thrower never shoots itself. */
+    this.origin = from;
+  }
+
+  get box() {
+    return { x: this.x - this.r, y: this.y - this.r, w: this.r * 2, h: this.r * 2 };
+  }
+
+  update(dt) {
+    this.x += this.vx * dt;
+    this.y += this.vy * dt;
+    this.spin += dt * 14;
+    this.life -= dt;
+    if (this.life <= 0) this.dead = true;
   }
 }

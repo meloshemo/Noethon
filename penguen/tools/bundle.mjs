@@ -42,6 +42,8 @@ const MODULES = [
   'src/game/climb.js',
   'src/game/deep.js',
   'src/game/dive.js',
+  'src/game/arena.js',
+  'src/game/brawl.js',
   'src/game/chapters.js',
   'src/game/generator.js',
   'src/game/entities.js',
