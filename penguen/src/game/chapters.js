@@ -5,13 +5,14 @@
  * asks a question the last stretch did not, and it exists because thirty levels
  * of the same verb is where a good platformer stops being one.
  *
- *   I  · Buz Sahanlığı  1–31  running and jumping, left to right
- *   II · Zirve         32–46  climbing: hold on, and the holding runs out
+ *   I   · Buz Sahanlığı  1–31  running and jumping, left to right
+ *   II  · Zirve         32–46  climbing: hold on, and the holding runs out
+ *   III · Buz Altı      47–61  swimming: fast at last, and out of air
  *
  * Each chapter brings its own composer — `Course` walks a shelf sideways,
- * `Tower` walks a mountain upward — and its own validator. What they share is
- * everything below the composer: the same penguin, the same physics, the same
- * three inputs, the same save file. A chapter changes the question, never the
+ * `Tower` walks a mountain upward, `Deep` swims a corridor under the ice —
+ * and its own validator. What they share is everything below the composer: the
+ * same penguin, the same physics, the same three inputs, the same save file. A chapter changes the question, never the
  * controls.
  *
  * This file is the only place that knows which level belongs to which, so
@@ -20,6 +21,7 @@
 
 import { LEVELS } from './levels.js';
 import { CLIMB_LEVELS } from './climb.js';
+import { DIVE_LEVELS } from './dive.js';
 
 export const CHAPTERS = [
   {
@@ -36,6 +38,13 @@ export const CHAPTERS = [
     subtitle: 'Buzul yükseliyor',
     verb: 'Tırman: duvara tutun, tekmele, kolların dayandığı kadar',
     levels: CLIMB_LEVELS,
+  },
+  {
+    id: 3,
+    name: 'Buz Altı',
+    subtitle: 'Deniz buzun altında',
+    verb: 'Dal: bas ve in, bırak ve yüksel, nefesin bitmeden deliği bul',
+    levels: DIVE_LEVELS,
   },
 ];
 

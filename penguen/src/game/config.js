@@ -372,6 +372,99 @@ export function climbBudget(scale, width) {
   return { creep, kicks, perKick: gain, kicked: Math.max(0, gain) * kicks };
 }
 
+/**
+ * Under the ice — the chapter's third verb.
+ *
+ * On the ice a penguin is a comedian: short legs, no grip, everything is an
+ * effort. In the water it is the fastest thing for a hundred miles. So the
+ * third chapter does not make the penguin work harder, it lets it *go* — and
+ * takes away the one thing it needs instead. You can swim anywhere. You just
+ * cannot breathe.
+ *
+ * The control is still one button and a direction, and it means the one thing
+ * a swimming body has to decide:
+ *
+ *   · let go  → you float. A penguin is buoyant; up is free and constant.
+ *   · hold    → you dive. Down costs effort, which is why it is the held one.
+ *
+ * Nothing else changed. Left and right are left and right, they are simply
+ * quicker and they keep going, because water carries you and ice does not.
+ */
+export const SWIM = {
+  /**
+   * Constant upward drift with the button up, and the pull while it is held.
+   *
+   * Both are large and both terminal speeds are small, which is the whole
+   * trick: the penguin reaches its cruising rise or sink in about a fifth of a
+   * second and then simply holds it. Softer numbers gave a submarine — a full
+   * second to turn a rise into a dive — and threading a gap in the ice with a
+   * one-second lag is not a skill, it is a guess.
+   */
+  buoyancy: 1500,
+  dive: 3400,
+  /** Terminal speeds. Down is quicker than up: it is the one you work for. */
+  riseMax: 250,
+  sinkMax: 380,
+  /** Horizontal cruise, as a multiple of the walking speed. */
+  speed: 1.5,
+  /** How hard the penguin accelerates sideways, and how fast it coasts down. */
+  accel: 2100,
+  drag: 620,
+  /** Seconds of breath in a full lungful. */
+  breath: 9,
+  /** Breathing at a hole in the ice, in seconds of breath per second. */
+  refill: 6,
+  /**
+   * Hitting the ceiling or the floor does not hurt — this is water, not a
+   * fall — but it does cost you the momentum you had.
+   */
+  bump: 0.35,
+};
+
+/**
+ * How far a swimmer travels in the time it takes to rise or sink `dy` pixels.
+ *
+ * The counterpart of `reachAt` for the mountain: distance and height are not
+ * separate budgets under the ice either. Rising is slow and free, diving is
+ * quick and costs nothing but the breath the whole level is costing you — so
+ * the two directions have genuinely different geometry, and a gap that is easy
+ * to reach from below is often impossible from above.
+ *
+ * @param {number} scale penguin growth
+ * @param {number} dy    positive to sink, negative to rise
+ */
+export function swimReach(scale, dy) {
+  const speed = PHYS.moveSpeed * SWIM.speed * (1 - PENGUIN.speedPenaltyPerScale * (scale - 1));
+  const up = dy < 0;
+  const accel = up ? SWIM.buoyancy : SWIM.dive - SWIM.buoyancy;
+  const top = up ? SWIM.riseMax : SWIM.sinkMax;
+  const dist = Math.abs(dy);
+  // Accelerate to terminal, then coast.
+  const rampT = top / accel;
+  const rampY = (top * rampT) / 2;
+  const t = dist <= rampY ? Math.sqrt((2 * dist) / accel) : rampT + (dist - rampY) / top;
+  return speed * t;
+}
+
+/**
+ * How far a single lungful goes, swimming flat out.
+ *
+ * Both halves are scale-dependent and they pull opposite ways: a bigger bird
+ * is slightly slower and has noticeably bigger lungs. Keeping the lung term
+ * here identical to `Player.breathMax` is what makes the composer's refusals
+ * mean anything — a budget computed from a different number than the one the
+ * game runs is not a budget, it is a decoration.
+ */
+export function breathRange(scale) {
+  const speed = PHYS.moveSpeed * SWIM.speed * (1 - PENGUIN.speedPenaltyPerScale * (scale - 1));
+  return speed * breathFor(scale);
+}
+
+/** Seconds in a lungful at a given growth. `Player.breathMax` reads this too. */
+export function breathFor(scale) {
+  return SWIM.breath * (0.86 + 0.14 * scale);
+}
+
 /** Assist mode is offered after this many deaths on the same level. */
 export const ASSIST_AFTER_DEATHS = 4;
 
@@ -389,7 +482,7 @@ export const ASSIST = {
  * ever disagree, which is the only way a number in one file and a list of
  * plans in another stay honest.
  */
-export const CRAFTED_LEVELS = 46;
+export const CRAFTED_LEVELS = 61;
 
 /** Growth curve: how big the penguin is on a given level. */
 export function scaleForLevel(level) {

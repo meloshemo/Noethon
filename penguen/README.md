@@ -18,10 +18,10 @@ Toplam yük tek dosyada ~385 KB ve çevrimdışı çalışıyor.
 
 | | |
 |---|---|
-| **İki bölüm (chapter)** | Buz Sahanlığı 1–31 · Zirve 32–46 — ikisi ayrı fiil |
-| **46 elle yazılmış bölüm** | 31 sahanlık parkuru + 15 dikey tırmanış |
+| **Üç bölüm (chapter)** | Buz Sahanlığı 1–31 · Zirve 32–46 · Buz Altı 47–61 — üçü ayrı fiil |
+| **61 elle yazılmış bölüm** | 31 sahanlık parkuru + 15 tırmanış + 15 dalış |
 | **Tutunma** | Buz duvarına asıl, tırman, tekmele — ve kollarında sınırlı güç var |
-| **Sonsuz mod** | Bölüm numarasıyla tohumlanmış — 47. bölüm herkeste aynı |
+| **Sonsuz mod** | Bölüm numarasıyla tohumlanmış — 62. bölüm herkeste aynı |
 | **10 buz türü** | sağlam · çatlak · cilalı · eriyen · sürüklenen · düşen · tuzak · **sahte** · kaçan · gayzer |
 | **4 tehlike** | sarkıt · fok · fırtına kuşağı · orka |
 | **2 pusu** | Bölümün planlamadığı anda dalan kutup kuşu · bayrağa 100 px kala kopan buzul |
@@ -48,6 +48,15 @@ atlıyor. Asılmak azar azar, tırmanmak iki katından fazla, tekme bir çırpı
 tüketiyor — ve bar **sadece sağlam zeminde** doluyor. Yeni tuş yok: duvara
 doğru bas (tutun), BOŞLUK'u basılı tut (tırman), BOŞLUK'a dokun (tekmele).
 → [ayrıntı](#zirve--tırmanış)
+
+### 🌊 Buz Altı — oyunun üçüncü fiili
+47. bölümde buzun *altına* geçiyorsun ve oyun tersine dönüyor. Buzun üstünde
+penguen bir komedyendir: kısa bacaklı, tutunamayan, her hareketi zahmetli. Suda
+yüz mil çevrenin en hızlı şeyidir — ve bölüm penguene daha çok iş yaptırarak
+değil, **bırakarak** zorlaşıyor. Karşılığında elinden alınan tek şey var: hava.
+Bırakırsan yükselirsin (penguen yüzer, yukarı bedava), basarsan dalarsın. Bir
+ciğer dokuz buçuk saniye ve sadece buzdaki deliklerde doluyor. Yeni tuş yok.
+→ [ayrıntı](#buz-altı--dalış)
 
 ### 🪽 Aktif ekipman — tek tuşta iki yetenek
 Markette **Planör Kanat** ve **Sırt Motoru** var. Havada zıplamayı *basılı tutmak*
@@ -106,6 +115,7 @@ hedef var ve **gün boyunca birikiyorlar** — tek turda hepsini yapman gerekmiy
 | [Çalıştırma](#çalıştırma) · [Testler](#testler) | Nasıl açılır, nasıl doğrulanır |
 | [Mimari](#mimari) | Dosya düzeni ve neden böyle |
 | [Zirve](#zirve--tırmanış) | Tutunma, tekme, baca — ikinci bölümün fiili |
+| [Buz Altı](#buz-altı--dalış) | Dalış, nefes, akıntı — üçüncü bölümün fiili |
 | [Zorluk eğrisi](#zorluk-eğrisi) | Rampa tasarımı |
 | [Buz türleri](#buz-türleri) · [Tehlikeler](#tehlikeler) | Oyun içi her mekanik |
 | [Pusu mekanikleri](#pusu-mekanikleri-buzun-tuzakları) · [Kutup kuşu](#pusu-kutup-kuşu) | Ani ölüm olayları |
@@ -137,6 +147,14 @@ Bu oyunun en çok emek verilen kısmı zorluğun *adil* olması. Üç katman:
    yakaladı — duvar tekmesinin sessizce kesilmesi, tepeye çıkarken pengueni
    duvarın dibine ışınlayan çarpışma, ve oyuncu daha yerinden kıpırdamadan
    düşen serak.
+
+5. **Dalış çözücüsü** (`tests/dive-run.mjs`) bir adım daha ileri gidiyor ve
+   sadece `Player`'ı değil **`World`'ün kendisini** çalıştırıyor: akıntı, deniz
+   leoparı, nefes sayacı, ölüm kuralları ve bitiş kontrolü oyundaki halleriyle.
+   Buzun altında bunlar bölümün *çevresindeki* şeyler değil, bölümün kendisi.
+   Kumandası kasten aptal — düz git, bir sonraki geçit aşağıdaysa tuşa bas,
+   leopar yaklaşınca üstünden ya da altından geç. Tek bir ileri-bakış sayısıyla
+   çalışan bu şey geçebiliyorsa, gözü olan bir insan da geçebilir.
 
 Market ve ekipman bu denklemin dışında: bütün bölümler **hiçbir şeyi olmayan**
 bir penguene göre doğrulanıyor, yani satın aldıkların bir parkuru asla açamaz,
@@ -175,6 +193,8 @@ geçmez, hata verip durur.
 node tests/validate-levels.mjs   # sahanlık bölümleri: geçilebilirlik
 node tests/validate-climb.mjs    # tırmanış bölümleri: geometri
 node tests/climb-run.mjs         # tırmanış bölümleri: gerçek fizikle çözücü
+node tests/validate-dive.mjs     # dalış bölümleri: geometri ve nefes bütçesi
+node tests/dive-run.mjs          # dalış bölümleri: gerçek World ile çözücü
 node tests/ghost.mjs             # paylaşım kodu çözücüsü
 node tests/economy.mjs           # ekonomi dengesi simülasyonu
 node tools/bundle.mjs            # tek dosyaya paketle (isim çakışmasını da yakalar)
@@ -831,12 +851,71 @@ yerine duvarın kendisi düzeldi.
 
 ---
 
+## Buz Altı — dalış
+
+Sahanlık "oraya yetişir miyim?" diye sordu. Dağ "ne kadar tutunabilirim?" diye
+sordu. 47. bölümde soru üçüncü kez değişiyor: **nefesim ne kadar yeter?**
+
+### Tersine çevirme
+
+Bu bölüm oyunun tek gerçek tersine çevirmesi. Buzun üstünde penguen bir
+komedyendir — kısa bacaklı, tutunamayan, her hareketi zahmetli. Suda yüz mil
+çevrenin en hızlı şeyidir. Bu yüzden Buz Altı zorluğunu penguene **daha çok iş
+yaptırarak** kurmuyor; tam tersine, otuz bölümdür kısıtladığı şeyi serbest
+bırakıyor: suda yürüme hızının bir buçuk katıyla gidiyorsun, durmak yok, sürtünme
+yok, su seni taşıyor. Karşılığında elinden alınan tek şey hava.
+
+### Fiil
+
+| | |
+|---|---|
+| Hiçbir şeye basma | **Yüksel.** Penguen yüzer; yukarı bedava ve sürekli |
+| BOŞLUK'u basılı tut | **Dal.** Aşağı emek ister, o yüzden basılı olan bu |
+| ← → | Sağa sola — daha hızlı, ve bıraktığında bir saniye daha sürüyor |
+| Buzdaki delik | Kafanı çıkar, nefes al |
+
+Yeni tuş yok, yeni kural yok. Buton artık *derinlik*. Ve ilk saniyede kendini
+öğretiyor: giriş deliğinden çıkmanın tek yolu dalmak, çünkü buz bir tavan ve
+delik o tavandaki tek boşluk.
+
+### Nefes
+
+Bir ciğer 9,5–9,8 saniye — büyüyen penguenin ciğeri de büyüyor, ve bu, oyunda
+irileşmenin katıksız iyi haber olduğu tek yer. Sayaç sen hareket etmesen de
+işliyor: **dağ acele etmeni cezalandırıyordu, deniz oyalanmanı cezalandırıyor.**
+Doldurmanın tek yolu buzdaki bir delikten kafanı çıkarmak.
+
+Delikler geniş — kasten. İlk hallerinde bir kapı genişliğindeydiler ve seyir
+hızında içlerinden 0,38 saniyede geçiliyordu: bu bir nefes değil, bir yudum.
+Çözücü dört bölümü, çıkış görünürken, ciğeri sıfırlanmış halde kaybetti. Artık
+bir delik yavaşlayıp kafanı çıkaracak kadar uzun.
+
+### Koridorun kuralı
+
+Tavan ile deniz tabanı arasındaki boşluk her parçada aynı yükseklikte başlıyor
+ve bitiyor; bir geçit koridoru **daraltabilir, asla taşamaz**. Bu bir estetik
+tercih değil: taşan bir geçit, bir sonraki parçanın başladığı yerde tabanda bir
+basamak bırakıyor, ve tabandaki bir basamak duvardır. Penguen geçidin içinden
+kusursuz bir çizgi çizip ekin dibinde duruyordu. Çözücü bunu buldu.
+
+### Bunun matematiği de tahmin değil
+
+`swimReach(ölçek, dy)` mesafeyi ve derinliği tek bütçede birleştiriyor —
+dağdaki `reachAt`'in denizdeki karşılığı. Yükselmek yavaş ve bedava, dalmak
+hızlı ve emekli, yani **iki yön gerçekten farklı geometri**: yukarıdan kolay
+girilen bir geçide aşağıdan girmek çoğu zaman imkânsız. `breathRange` de ciğeri
+piksele çeviriyor, ve besteci bir ciğerin taşıyamayacağı iki delik arasını
+**kurmayı reddediyor** — dahası, gerektiğinde buzda kendi deliğini açıyor. Bir
+planın hatırlamak zorunda olduğu söz, tutulmayan sözdür.
+
+---
+
 ## Kontroller
 
 | | |
 |---|---|
-| ← → veya A D | Yürü — *buz duvarına doğru basılıysa: tutun* |
-| Boşluk / ↑ / W | Zıpla — basılı tut, yükseğe çık |
+| ← → veya A D | Yürü — *buz duvarına doğru basılıysa: tutun* · *suda: yüz* |
+| Boşluk / ↑ / W | Zıpla — basılı tut, yükseğe çık · *suda: basılı tut, dal* |
 | Boşluk **havada basılı tut** | Kanatları aç, süzül *(Planör Kanat gerekir)* |
 | Boşluk **havada tek dokunuş** | Sırt motorunu ateşle *(Sırt Motoru gerekir)* |
 | Boşluk **tutunurken basılı tut** | Duvarı tırman |

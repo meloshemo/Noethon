@@ -6,7 +6,7 @@
  * exactly what the early levels need.
  */
 
-import { PHYS, PENGUIN, BOOST, ROT, GEAR, CLIMB } from './config.js';
+import { PHYS, PENGUIN, BOOST, ROT, GEAR, CLIMB, SWIM, breathFor } from './config.js';
 import { clamp, damp, rectsOverlap } from '../core/util.js';
 
 export class Player {
@@ -118,6 +118,19 @@ export class Player {
     this.wallBlock = null;
     /** The block being pulled over, kept until the penguin is standing on it. */
     this.mantleBlock = null;
+
+    /* --- under the ice ----------------------------------------------- */
+    /**
+     * Set by the world for a dive level. Nothing reads it anywhere else, so a
+     * shelf level and a mountain level behave exactly as they always have.
+     */
+    this.submerged = false;
+    /** Seconds of breath left. Only meaningful while submerged. */
+    this.breath = SWIM.breath;
+    /** Diving this frame — the button is down. Drawn, and used for bubbles. */
+    this.diving = false;
+    /** Head is in air: at a hole in the ice, or above the surface. */
+    this.breathing = false;
   }
 
   /**
@@ -133,6 +146,26 @@ export class Player {
 
   get staminaFrac() {
     return this.staminaMax > 0 ? this.stamina / this.staminaMax : 0;
+  }
+
+  /**
+   * How long a lungful lasts.
+   *
+   * Crampons do nothing here — they are about contact — but the growth curve
+   * does: a bigger bird has bigger lungs, which is the one place in the game
+   * where getting heavier is purely good news, and it is the chapter where the
+   * penguin has already earned it.
+   */
+  get breathMax() {
+    return breathFor(this.scale);
+  }
+
+  get breathFrac() {
+    return this.breathMax > 0 ? this.breath / this.breathMax : 0;
+  }
+
+  get swimSpeed() {
+    return this.moveSpeed * SWIM.speed;
   }
 
   get glideMax() {
@@ -199,6 +232,10 @@ export class Player {
     this.landedThisFrame = false;
     this.jumpedThisFrame = false;
     this.wasOnGround = this.onGround;
+    if (this.submerged) {
+      this._swim(dt, intent, floes, events);
+      return;
+    }
 
     const slippery = this.groundFloe?.slippery;
     // Crampons pull the slip factor back toward normal ground friction.
@@ -506,6 +543,89 @@ export class Player {
 
     // Breadcrumb for the cosmetic trail, on a fixed clock rather than per
     // frame, so the spacing is the same at 60 and 144 Hz.
+    for (const p of this.history) p.age = Math.min(1, p.age + dt * 1.9);
+    this._histAcc += dt;
+    if (this._histAcc >= 0.035) {
+      this._histAcc = 0;
+      const slot = this.history[this._histAt];
+      slot.x = this.x + this.w / 2;
+      slot.y = this.y + this.h * 0.6;
+      slot.age = 0;
+      this._histAt = (this._histAt + 1) % this.history.length;
+    }
+  }
+
+  /**
+   * Swimming.
+   *
+   * A separate integration rather than gravity with different numbers, because
+   * a swimming body is not a falling body with a smaller `g`. It has no ground
+   * state, no coyote time, no jump to buffer and no wall to hold — none of
+   * those questions mean anything down here — and threading them through the
+   * land update with `if (!this.submerged)` in a dozen places would have made
+   * both halves harder to read and neither of them safer.
+   *
+   * What it *does* share is the collision solver, so ice is ice: the same
+   * boxes, resolved on the same two passes, in the same order.
+   */
+  _swim(dt, intent, floes, events) {
+    this.onGround = false;
+    this.groundFloe = null;
+    this.clinging = false;
+    this.wallSide = 0;
+    this.gliding = false;
+
+    this.charge = Math.max(0, this.charge - dt);
+    for (const k of ['heavy', 'dizzy', 'blind']) {
+      this.curse[k] = Math.max(0, this.curse[k] - dt);
+    }
+    if (this.curse.dizzy > 0) intent = { ...intent, axis: -intent.axis };
+
+    if (this.charge > 0) {
+      this.trail.push({ x: this.x, y: this.y, f: this.facing, life: 0.22 });
+      if (this.trail.length > 8) this.trail.shift();
+    }
+    for (let i = this.trail.length - 1; i >= 0; i--) {
+      this.trail[i].life -= dt;
+      if (this.trail[i].life <= 0) this.trail.splice(i, 1);
+    }
+
+    // Sideways. Water carries a body: there is no friction cliff at the moment
+    // you let go, you keep going and slow down over a second or so. That coast
+    // is most of why swimming feels like swimming rather than like walking in
+    // a room with no floor.
+    const top = this.swimSpeed;
+    if (intent.axis !== 0) {
+      this.vx += Math.sign(intent.axis) * SWIM.accel * dt;
+      this.vx = clamp(this.vx, -top, top);
+      this.facing = Math.sign(intent.axis);
+    } else {
+      const drop = SWIM.drag * dt;
+      this.vx = Math.abs(this.vx) <= drop ? 0 : this.vx - Math.sign(this.vx) * drop;
+    }
+    this.vx += (intent.push ?? 0) * dt;
+
+    // Up is free, down is held. A penguin floats; it has to *work* to go
+    // under, and that is the whole control: the button is the depth.
+    this.diving = Boolean(intent.jumpHeld);
+    if (this.diving) {
+      this.vy = Math.min(SWIM.sinkMax, this.vy + (SWIM.dive - SWIM.buoyancy) * dt);
+    } else {
+      this.vy = Math.max(-SWIM.riseMax, this.vy - SWIM.buoyancy * dt);
+    }
+
+    this.x += this.vx * dt;
+    this._resolveX(floes);
+    this.y += this.vy * dt;
+    this._resolveY(floes, events);
+
+    this.airTime = 0;
+    this.squashX = damp(this.squashX, 1, 14, dt);
+    this.squashY = damp(this.squashY, 1, 14, dt);
+    this.walkPhase += dt * (3 + Math.abs(this.vx) / 90);
+    this.blink -= dt;
+    if (this.blink < -0.14) this.blink = 2.4 + Math.random() * 3.2;
+
     for (const p of this.history) p.age = Math.min(1, p.age + dt * 1.9);
     this._histAcc += dt;
     if (this._histAcc >= 0.035) {

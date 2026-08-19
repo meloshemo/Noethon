@@ -10,7 +10,7 @@ import { Floe, Hazard, Fish, Checkpoint } from './entities.js';
 import { Player } from './player.js';
 import { GhostRecorder, Ghost } from './ghost.js';
 import {
-  VIEW, VIEW_LIMITS, ASSIST, ICE, STORM, BOOST, ROT, REWARDS, AMBUSH, COLLAPSE, scaleForLevel, upgradeEffect,
+  VIEW, VIEW_LIMITS, ASSIST, ICE, STORM, SWIM, BOOST, ROT, REWARDS, AMBUSH, COLLAPSE, scaleForLevel, upgradeEffect,
 } from './config.js';
 import { WATER_Y } from './levels.js';
 import { getSkin } from './skins.js';
@@ -33,19 +33,46 @@ export class World {
     // centred rather than dumped below the ice.
     this.worldH = def.worldH ?? VIEW_LIMITS.baseH;
     this.waterY = def.waterY ?? WATER_Y;
-
-    // The band the camera is allowed to show: from the highest thing in the
-    // level down to the sea, with enough sky above the top to jump into.
-    const tops = [...(def.floes ?? []), ...(def.terrain ?? [])].map((f) => f.y);
-    this.contentTop = Math.max(0, Math.min(...tops, this.waterY) - 170);
-    this.contentBottom = Math.min(this.worldH, this.waterY + 60);
-    this.fog = def.fog ?? 0;
     /**
      * Which way "forward" is. 'across' is the shelf — the game as it has always
      * been. 'up' is a mountain: progress, the camera, the finish check and the
-     * ghost comparison all read height instead of distance.
+     * ghost comparison all read height instead of distance. 'dive' is the sea.
+     *
+     * Read this early: the camera band below is the first thing that asks, and
+     * setting it forty lines further down meant every underwater level spent
+     * its first frame — and therefore its whole camera range — believing it was
+     * a shelf.
      */
     this.axis = def.axis ?? 'across';
+    /**
+     * Under the ice. The level is water from the surface down, so the sea is
+     * not the thing that kills you any more — the clock on your lungs is.
+     */
+    this.diving = this.axis === 'dive';
+
+    // The band the camera is allowed to show: from the highest thing in the
+    // level down to the sea, with enough sky above the top to jump into.
+    if (this.axis === 'dive') {
+      // Under the ice the level *is* the water column: the surface is the top
+      // of the world and the seabed is the bottom, both of them hard limits
+      // the penguin can touch. Deriving the band from the highest slab instead
+      // reaches up into the ice cap the holes are cut through, and the camera
+      // spends the level looking at a ceiling with the penguin off the bottom
+      // of the screen.
+      this.contentTop = -40;
+      this.contentBottom = this.worldH;
+    } else {
+      const tops = [...(def.floes ?? []), ...(def.terrain ?? [])].map((f) => f.y);
+      this.contentTop = Math.max(0, Math.min(...tops, this.waterY) - 170);
+      this.contentBottom = Math.min(this.worldH, this.waterY + 60);
+    }
+    this.fog = def.fog ?? 0;
+    /**
+     * Holes in the ice. Swim your head into one and you breathe. They are the
+     * only checkpoints the chapter has that matter, and they are placed by the
+     * composer inside a lungful of each other.
+     */
+    this.airHoles = (def.air ?? []).map((a) => ({ ...a, glow: 0 }));
 
     this.floes = (def.floes ?? []).map((d, i) => new Floe(d, i));
     /**
@@ -153,7 +180,7 @@ export class World {
     // dive from and nowhere for the player to dodge to, so the mountain gets
     // its own ambushes — falling seracs — rather than this one.
     this.ambushes =
-      this.axis !== 'up' &&
+      this.axis === 'across' &&
       ((def.id ?? 1) >= AMBUSH.fromLevel || Boolean(def.daily) || Boolean(def.generated));
     /**
      * The serac that calves off the cliff as you reach the raft. Armed once per
@@ -162,7 +189,7 @@ export class World {
      */
     this.collapse = null;
     this.collapseArmed =
-      this.axis !== 'up' &&
+      this.axis === 'across' &&
       ((def.id ?? 1) >= COLLAPSE.fromLevel || Boolean(def.daily) || Boolean(def.generated)) &&
       Math.random() < COLLAPSE.chance * (this.assist ? 0.45 : 1);
     this.boostsTaken = 0;
@@ -174,8 +201,21 @@ export class World {
     this.clingTime = 0;
     this._orcaSeen = new Set();
 
-    this.player.reset(this.spawn.x, this.spawn.y);
+    this._submerge();
     this._centerCamera();
+  }
+
+  /**
+   * Put the penguin back in the water with full lungs.
+   *
+   * Called from every reset there is — spawn, respawn, checkpoint — because a
+   * penguin that respawns holding the breath it drowned with respawns to drown
+   * again, which is not a hard level, it is a broken one.
+   */
+  _submerge() {
+    this.player.reset(this.respawn.x, this.respawn.y);
+    this.player.submerged = this.diving;
+    this.player.breath = this.player.breathMax;
   }
 
   get assistMult() {
@@ -235,7 +275,7 @@ export class World {
     const x = this._camXRange;
     const y = this._camYRange;
     this.camera.x = clamp(this.player.centerX - VIEW.w * (up ? 0.5 : 0.42), x.min, x.max);
-    this.camera.y = clamp(this.player.y - VIEW.h * (up ? 0.64 : 0.55), y.min, y.max);
+    this.camera.y = clamp(this.player.y - VIEW.h * (up ? 0.64 : this.diving ? 0.5 : 0.55), y.min, y.max);
   }
 
   /** Progress along the level, 0..1 — drives the HUD bar. */
@@ -317,6 +357,18 @@ export class World {
       if (h.kind === 'storm') this.windPressure = Math.max(this.windPressure, h.intensity ?? 0);
     }
 
+    // Currents. A band of moving water, and the only reason the sea has a wind
+    // system at all — but it is not wind: it pushes a *swimmer*, so there is no
+    // ground factor and the down parka does nothing about it. You do not shrug
+    // off the ocean, you swim across it.
+    if (this.diving) {
+      for (const z of this.zones) {
+        if (z.kind !== 'current') continue;
+        if (!rectsOverlap(this.player.box, z)) continue;
+        push += z.power ?? 0;
+      }
+    }
+
     // "snap" ice decides to vanish while the player is still in the air, so it
     // has to be checked before the move, not after the landing.
     for (const f of this.floes) {
@@ -372,10 +424,52 @@ export class World {
     this._checkOrcaPasses();
     this._checkGoal();
 
-    if (this.player.y > this.waterY - this.player.h * 0.35) this.die('water');
+    if (this.diving) this._breathe(dt);
+    else if (this.player.y > this.waterY - this.player.h * 0.35) this.die('water');
 
     this._followCamera(dt);
     this.flash = Math.max(0, this.flash - dt * 2.5);
+  }
+
+  /**
+   * The lungs.
+   *
+   * The only clock in the chapter, and the only thing that kills you on its
+   * own. It runs whether you are moving or not, which is what makes hesitating
+   * expensive — the mountain punished you for hurrying, the sea punishes you
+   * for dithering, and that is the point of putting them next to each other.
+   *
+   * A hole in the ice refills it fast enough that a breath is a beat and not a
+   * wait: about a second and a half from empty, so you dip in, gasp and go.
+   */
+  _breathe(dt) {
+    if (this.status !== 'playing') return;
+    const p = this.player;
+    const head = { x: p.x, y: p.y, w: p.w, h: p.h * 0.45 };
+    let inAir = false;
+    for (const hole of this.airHoles) {
+      hole.glow = Math.max(0, hole.glow - dt * 2);
+      if (!rectsOverlap(head, hole)) continue;
+      inAir = true;
+      hole.glow = 1;
+    }
+    p.breathing = inAir;
+    if (inAir) {
+      const before = p.breath;
+      p.breath = Math.min(p.breathMax, p.breath + SWIM.refill * dt);
+      // One bubble-burst per gasp, at the moment the lungs actually fill,
+      // rather than a stream the whole time a player idles in a hole.
+      if (before < p.breathMax * 0.999 && p.breath >= p.breathMax * 0.999) {
+        this.particles.puff(p.centerX, p.y, 8);
+        this.audio.pickup?.();
+      }
+      return;
+    }
+    p.breath -= dt;
+    if (p.breath <= 0) {
+      p.breath = 0;
+      this.die('breath');
+    }
   }
 
   _touchFloe(floe) {
@@ -503,7 +597,10 @@ export class World {
       // Stomping a seal from above is a jump, not a death — it rewards nerve.
       // The window is deliberately wide: "jump on it" is the intended answer,
       // so it must work when the player commits, not only when they're precise.
-      if (h.kind === 'seal' && this.player.vy > 20 && this.player.y + this.player.h < h.y + h.h * 0.85) {
+      // Not under the ice. A leopard seal in its own element is not something
+      // you land on — it is the fastest predator in the Southern Ocean and the
+      // penguin is the small one. Down here the only answer is not to be there.
+      if (!this.diving && h.kind === 'seal' && this.player.vy > 20 && this.player.y + this.player.h < h.y + h.h * 0.85) {
         this.player.vy = this.player.jumpVelocity * 0.8;
         this.particles.puff(h.x + h.w / 2, h.y, 10);
         this.audio.land();
@@ -531,6 +628,12 @@ export class World {
     // the summit ledge is unambiguously the top.
     if (this.axis === 'up') {
       if (this.player.onGround && this.player.y + this.player.h <= this.goal.y + 6) this.win();
+    } else if (this.diving) {
+      // Under the ice there is no "standing past it": the way out is a hole,
+      // and swimming up through it is the whole finish. Being level with the
+      // surface anywhere beyond the hole counts too, so overshooting the exit
+      // by a body's width is not a death sentence with empty lungs.
+      if (this.player.centerX > this.goal.x && this.player.y <= this.goal.y - 10) this.win();
     } else if (this.player.onGround && this.player.centerX > this.goal.x + 52) {
       this.win();
     }
@@ -546,7 +649,7 @@ export class World {
     if (this.shields > 0) {
       this.shields--;
       this.shieldFlash = 1;
-      this.player.reset(this.respawn.x, this.respawn.y);
+      this._submerge();
       this.particles.sparkle(this.player.centerX, this.player.y, '#9b8cff');
       this.audio.checkpoint();
       this.shake(4);
@@ -559,7 +662,12 @@ export class World {
     this.deaths++;
     this.flash = 0.8;
     this.shake(7);
-    if (cause === 'water') {
+    if (cause === 'breath') {
+      // Not a splash and not a shatter. Drowning is quiet — a last string of
+      // bubbles going up while the penguin does not.
+      this.particles.puff(this.player.centerX, this.player.y, 18);
+      this.audio.splash();
+    } else if (cause === 'water') {
       this.particles.splash(this.player.centerX, this.waterY);
       this.audio.splash();
     } else {
@@ -583,7 +691,7 @@ export class World {
     this.status = 'playing';
     this.shields = this.maxShields;
     this.player.alive = true;
-    this.player.reset(this.respawn.x, this.respawn.y);
+    this._submerge();
     // Floes reset so a broken path never soft-locks the player after a death.
     for (const f of this.floes) f.reset();
     for (const h of this.hazards) h.reset();
@@ -616,7 +724,8 @@ export class World {
     const xr = this._camXRange;
     const yr = this._camYRange;
     const targetX = clamp(this.player.centerX + lead - VIEW.w * (up ? 0.5 : 0.42), xr.min, xr.max);
-    const targetY = clamp(this.player.y - VIEW.h * (up ? 0.64 : 0.55), yr.min, yr.max);
+    const frame = up ? 0.64 : this.diving ? 0.5 : 0.55;
+    const targetY = clamp(this.player.y - VIEW.h * frame, yr.min, yr.max);
     this.camera.x = damp(this.camera.x, targetX, 7, dt);
     this.camera.y = damp(this.camera.y, targetY, 5, dt);
     this.camera.shake = damp(this.camera.shake, 0, 9, dt);

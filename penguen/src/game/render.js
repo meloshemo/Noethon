@@ -170,13 +170,18 @@ export class Renderer {
     const camX = world.camera.x + (shake ? (Math.random() - 0.5) * shake : 0);
     const camY = world.camera.y + (shake ? (Math.random() - 0.5) * shake : 0);
 
-    this._sky(ctx, world, camX, camY, time);
-    this._parallax(ctx, world, camX, camY, time);
-    this._water(ctx, world, camX, camY, time);
+    if (world.diving) {
+      this._sea(ctx, world, camX, camY, time);
+    } else {
+      this._sky(ctx, world, camX, camY, time);
+      this._parallax(ctx, world, camX, camY, time);
+      this._water(ctx, world, camX, camY, time);
+    }
 
     ctx.save();
     ctx.translate(-camX, -camY);
     this._terrain(ctx, world, time);
+    if (world.diving) this._airHoles(ctx, world, time);
     this._zonesBack(ctx, world, time);
     this._signs(ctx, world);
     this._floes(ctx, world, time);
@@ -204,6 +209,94 @@ export class Renderer {
   }
 
   /* ---------------------------------------------------------------- */
+
+  /**
+   * Under the ice.
+   *
+   * No sky, no horizon, no mountains — the chapter's whole argument is that
+   * you are somewhere else, and half of that argument is made before a single
+   * obstacle appears. What replaces them: a column of water that darkens with
+   * depth, shafts of daylight coming down through the ice, and motes drifting
+   * in them. The light is anchored to the world rather than the screen, so
+   * diving really does take you away from it.
+   */
+  _sea(ctx, world, camX, camY, time) {
+    const top = -camY;
+    const bottom = world.worldH - camY;
+    const g = ctx.createLinearGradient(0, top, 0, bottom);
+    g.addColorStop(0, '#2e6f96');
+    g.addColorStop(0.28, '#1b4b74');
+    g.addColorStop(0.68, '#0e2c50');
+    g.addColorStop(1, '#061a35');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, VIEW.w, VIEW.h);
+
+    // Daylight down the holes. Drawn from the world's holes so the light is
+    // always where the air is — which makes the backdrop a map.
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (const hole of world.airHoles ?? []) {
+      const x = hole.x + hole.w / 2 - camX;
+      if (x < -320 || x > VIEW.w + 320) continue;
+      const y0 = hole.y + hole.h - camY;
+      const beam = ctx.createLinearGradient(0, y0, 0, y0 + 460);
+      beam.addColorStop(0, 'rgba(190,235,255,0.30)');
+      beam.addColorStop(0.5, 'rgba(150,210,245,0.10)');
+      beam.addColorStop(1, 'rgba(120,180,230,0)');
+      ctx.fillStyle = beam;
+      ctx.beginPath();
+      ctx.moveTo(x - hole.w * 0.4, y0);
+      ctx.lineTo(x + hole.w * 0.4, y0);
+      ctx.lineTo(x + hole.w * 1.5, y0 + 460);
+      ctx.lineTo(x - hole.w * 1.5, y0 + 460);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // Motes: plankton and ice crumb, rising slowly. The only thing on screen
+    // that moves when the penguin does not, so the water is never still.
+    if (this.reducedMotion) return;
+    ctx.fillStyle = 'rgba(198,232,255,0.30)';
+    for (const st of this.stars) {
+      const x = (st.x - camX * 0.55) % (VIEW.w * 1.4);
+      const y = (st.y * 2.1 - camY * 0.55 - time * 14) % (VIEW.h * 1.5);
+      ctx.globalAlpha = 0.18 + 0.22 * Math.sin(time * 0.9 + st.tw);
+      ctx.beginPath();
+      ctx.arc(x < 0 ? x + VIEW.w * 1.4 : x, y < 0 ? y + VIEW.h * 1.5 : y, st.r * 0.8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  /**
+   * The holes themselves, seen from below: bright water and a ragged rim.
+   *
+   * They have to be legible from a long way off, because finding the next one
+   * *is* the level. So they are the brightest thing under the ice and they
+   * pulse gently — and they flare when the penguin is actually breathing in
+   * one, which is the only feedback the mechanic needs.
+   */
+  _airHoles(ctx, world, time) {
+    const view = this._viewBounds(world);
+    for (const hole of world.airHoles ?? []) {
+      if (hole.x + hole.w < view.left || hole.x > view.right) continue;
+      const y = hole.y + hole.h;
+      const pulse = this.reducedMotion ? 0.5 : 0.5 + 0.5 * Math.sin(time * 2.2 + hole.x * 0.01);
+      const glow = Math.max(pulse * 0.4, hole.glow ?? 0);
+      const g = ctx.createLinearGradient(0, y - 90, 0, y + 26);
+      g.addColorStop(0, 'rgba(226,248,255,0.92)');
+      g.addColorStop(0.72, `rgba(160,222,255,${0.35 + glow * 0.4})`);
+      g.addColorStop(1, 'rgba(140,206,246,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(hole.x, y - 90, hole.w, 116);
+
+      // The rim: the cut edge of the ice on both sides of the hole.
+      ctx.fillStyle = 'rgba(236,252,255,0.85)';
+      ctx.fillRect(hole.x - 10, y - 6, 12, 8);
+      ctx.fillRect(hole.x + hole.w - 2, y - 6, 12, 8);
+    }
+  }
 
   _sky(ctx, world, camX, camY, time) {
     // The gradient belongs to the world, not to the screen: climbing a cliff
@@ -354,8 +447,13 @@ export class Renderer {
       if (raw.x + raw.w < view.left || raw.x > view.right) continue;
       // Ice stops at the waterline. Painting rock over the sea makes a cliff
       // look like it is standing in a hole cut through the water.
+      // Under the ice the whole level is below the waterline, so the clamp is
+      // not a correction there — it would flatten every slab in the chapter to
+      // six pixels and leave the sea with no shape at all.
       const b =
-        raw.y + raw.h > world.waterY ? { ...raw, h: Math.max(6, world.waterY - raw.y) } : raw;
+        !world.diving && raw.y + raw.h > world.waterY
+          ? { ...raw, h: Math.max(6, world.waterY - raw.y) }
+          : raw;
 
       // A climbable wall has to be unmistakable. Everything else in this game
       // is a shade of the same blue-grey, and if the one surface the penguin
@@ -389,7 +487,11 @@ export class Renderer {
       ctx.clip();
       ctx.strokeStyle = 'rgba(160,205,236,0.09)';
       ctx.lineWidth = 1;
-      const seed = ((b.x * 31 + b.y * 17) % 40) + 22;
+      // Absolute, and it matters: the sea-ice roofs of the dive chapter sit at
+      // negative y, JS `%` keeps the sign, and a negative step turns this into
+      // a loop that never ends. The game hung on the first underwater level
+      // for exactly that one missing call.
+      const seed = (Math.abs(b.x * 31 + b.y * 17) % 40) + 22;
       for (let y = b.y + seed * 0.5; y < b.y + b.h; y += seed) {
         ctx.beginPath();
         ctx.moveTo(b.x, y);
@@ -455,7 +557,7 @@ export class Renderer {
     // time it is drawn rather than shimmering.
     ctx.strokeStyle = 'rgba(72,120,164,0.5)';
     ctx.lineWidth = 1.6;
-    const step = 30 + ((b.x * 13) % 22);
+    const step = 30 + (Math.abs(b.x * 13) % 22);
     for (let y = b.y + step * 0.6; y < b.y + b.h; y += step) {
       const skew = ((y * 7) % 11) - 5;
       ctx.beginPath();
@@ -1619,6 +1721,59 @@ export class Renderer {
     ctx.restore();
   }
 
+  /**
+   * The lungs, above the penguin's head.
+   *
+   * Same place and same shape as the climbing bar, because it is the same
+   * question in a different chapter — how much of the thing that keeps you
+   * alive is left — and a player who learned to read one on the mountain
+   * should not have to learn a second one in the sea. It goes red and beats
+   * faster as it empties, and it is always on: unlike a grip, breath is never
+   * something you have plenty of down here.
+   */
+  _breath(ctx, p, time) {
+    const frac = clamp(p.breathFrac, 0, 1);
+    const w = p.w * 1.6;
+    const x = p.x + p.w / 2 - w / 2;
+    const y = p.y - p.h * 0.5;
+    ctx.save();
+    ctx.fillStyle = 'rgba(6,26,44,0.6)';
+    ctx.fillRect(x - 1, y - 1, w + 2, 6);
+    const low = frac < 0.28;
+    ctx.fillStyle = low ? '#ff8a94' : '#8ff0d8';
+    ctx.fillRect(x, y, w * frac, 4);
+    if (low && !this.reducedMotion) {
+      ctx.globalAlpha = 0.3 + 0.4 * Math.sin(time * (10 + (1 - frac) * 22));
+      ctx.fillStyle = '#ffe3e7';
+      ctx.fillRect(x, y, w * frac, 4);
+      ctx.globalAlpha = 1;
+    }
+    ctx.restore();
+
+    // Bubbles. They only come out while the penguin is working — diving — so
+    // they read as effort rather than as decoration, and they go *up*, which
+    // is the one thing on screen that always tells you which way the surface
+    // is when the ceiling is out of frame.
+    if (this.reducedMotion || !p.diving) return;
+    ctx.save();
+    ctx.fillStyle = 'rgba(214,244,255,0.5)';
+    for (let i = 0; i < 3; i++) {
+      const t = (time * 1.6 + i * 0.33) % 1;
+      const r = 1.4 + (i % 2) * 1.1;
+      ctx.globalAlpha = 0.55 * (1 - t);
+      ctx.beginPath();
+      ctx.arc(
+        p.x + p.w * (0.5 - p.facing * 0.34) + Math.sin(time * 5 + i) * 3,
+        p.y + p.h * 0.4 - t * p.h * 1.8,
+        r,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
   _penguin(ctx, world, time) {
     const p = world.player;
 
@@ -1679,9 +1834,28 @@ export class Renderer {
     }
 
     ctx.save();
-    ctx.translate(cx, by);
+    // Under the ice the bird tips into its heading.
+    //
+    // It noses down as it dives and levels out as it cruises, pivoting around
+    // the middle of its body rather than its feet — swung around the feet a
+    // standing pose travels a body-length sideways, which reads as being
+    // thrown rather than as swimming.
+    //
+    // Not a full quarter turn onto its belly, which is what a real penguin
+    // does and what this wanted to be. The sprite is drawn for standing: the
+    // beak points sideways out of the head, so laid flat it points at the
+    // seabed, and every version of the ninety-degree pose put the white belly
+    // up or the eyes underneath. A tilt is honest about what the drawing can
+    // do, and with the water, the bubbles and the ceiling overhead nobody is
+    // in any doubt about what is happening.
+    const py = p.submerged ? p.y + p.h * 0.5 : by;
+    ctx.translate(cx, py);
     ctx.scale(sx, sy);
-    ctx.translate(-cx, -by);
+    if (p.submerged) {
+      const pitch = clamp(Math.atan2(p.vy, Math.max(Math.abs(p.vx), 190)), -0.9, 0.9);
+      ctx.rotate(p.facing * pitch * 0.85);
+    }
+    ctx.translate(-cx, -py);
 
     const bodyH = p.h * 0.82;
     const headY = by - bodyH - p.h * 0.06;
@@ -1849,6 +2023,7 @@ export class Renderer {
     ctx.restore();
 
     this._grip(ctx, p, body, time);
+    if (p.submerged) this._breath(ctx, p, time);
 
     // A skin's own glow — always on, unlike the speed boost's.
     if (skin.aura && !this.reducedMotion) {
