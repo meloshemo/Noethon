@@ -190,6 +190,20 @@ function tryWall(def, solids, a, b, { from, delay, mode, first }, probe = {}) {
   // shaft — the whole attempt then looks like an unclimbable chimney when it
   // is really just a button released too early.
   let holdUntil = 0;
+  // Rest ledges inside the shaft, lowest first.
+  //
+  // A nub is not scenery, it is a floor: it cuts one long hold into two short
+  // ones, and that is the only reason a four-hundred-pixel shaft is fair. But
+  // a chain of kicks aimed at the top of the shaft flies straight past it —
+  // or, more often, into its underside, because a nub juts from the same face
+  // the penguin is climbing. So the ascent is staged. The goal is the next
+  // nub up until the penguin is standing on it, and only then the exit.
+  const nubs = solids
+    .filter((o) => o.nub && o.y < a.y - 20 && o.y > topY + 20)
+    .sort((m, n) => n.y - m.y);
+  // Where the current stage is aiming, kept out here so the airborne branch
+  // steers at the same thing the cling branch decided on.
+  let goalX = targetX;
 
   for (let i = 0; i < 16000; i++) {
     let axis = seek;
@@ -208,11 +222,14 @@ function tryWall(def, solids, a, b, { from, delay, mode, first }, probe = {}) {
     } else if (p.clinging) {
       gripped = true;
       const feet = p.y + p.h;
+      const stage = nubs.find((n) => n.y < feet - 24);
+      const goalY = stage ? stage.y : topY;
+      goalX = stage ? stage.x + stage.w / 2 : targetX;
       // How close to the exit the policy stops bouncing and starts creeping.
       // Wide, because the last kick has to *arrive* at cornice height: taken
       // from a body length too low it lands under the cornice's lip and the
       // whole ascent is thrown away.
-      const nearTop = feet <= topY + 150;
+      const nearTop = feet <= goalY + 150;
       // Is there anything to kick *to*? Columns in a shaft do not always start
       // at the same height — the one the corridor below crosses begins higher —
       // so the bottom of a chimney is often a single face, and kicking off it
@@ -225,12 +242,18 @@ function tryWall(def, solids, a, b, { from, delay, mode, first }, probe = {}) {
           (p.wallSide > 0 ? o.x + o.w < p.x + 8 : o.x > p.x + p.w - 8) &&
           Math.abs(o.x + o.w / 2 - (p.x + p.w / 2)) < 260,
       );
-      if (chimney && opposite && !(nearTop && mode === 'creep')) {
+      // Already on the column you are topping out on, with the head in
+      // sight: kicking off it now throws away the one hold that ends the
+      // climb. Pull over instead. Without this the search happily bounced two
+      // hundred pixels above the exit and reported the shaft impossible —
+      // it had been *at* the exit, on the right wall, and let go of it.
+      const onHead = chimney && !stage && p.wallSide === headSide;
+      if (chimney && opposite && !(nearTop && (mode === 'creep' || onHead))) {
         // Kick. Off it goes toward the other wall, so that is where to steer —
         // unless the cornice is now the thing within reach.
         jumpPressed = true;
         seek = -p.wallSide;
-        finishing = feet <= topY + 110;
+        finishing = feet <= goalY + 110;
       } else {
         jumpHeld = true; // creep, or pull over the top of a single face
       }
@@ -274,7 +297,7 @@ function tryWall(def, solids, a, b, { from, delay, mode, first }, probe = {}) {
       // for, the whole way. Steering back toward the exit halfway across the
       // shaft is how you miss the far wall and fall down the middle of it.
       const cx = p.x + p.w / 2;
-      axis = finishing ? Math.sign(targetX - cx) || seek : seek;
+      axis = finishing ? Math.sign(goalX - cx) || seek : seek;
       jumpHeld = t < holdUntil;
     }
 

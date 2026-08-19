@@ -18,10 +18,10 @@ Toplam yük tek dosyada ~385 KB ve çevrimdışı çalışıyor.
 
 | | |
 |---|---|
-| **İki bölüm (chapter)** | Buz Sahanlığı 1–31 · Zirve 32–41 — ikisi ayrı fiil |
-| **41 elle yazılmış bölüm** | 31 sahanlık parkuru + 10 dikey tırmanış |
+| **İki bölüm (chapter)** | Buz Sahanlığı 1–31 · Zirve 32–46 — ikisi ayrı fiil |
+| **46 elle yazılmış bölüm** | 31 sahanlık parkuru + 15 dikey tırmanış |
 | **Tutunma** | Buz duvarına asıl, tırman, tekmele — ve kollarında sınırlı güç var |
-| **Sonsuz mod** | Bölüm numarasıyla tohumlanmış — 42. bölüm herkeste aynı |
+| **Sonsuz mod** | Bölüm numarasıyla tohumlanmış — 47. bölüm herkeste aynı |
 | **10 buz türü** | sağlam · çatlak · cilalı · eriyen · sürüklenen · düşen · tuzak · **sahte** · kaçan · gayzer |
 | **4 tehlike** | sarkıt · fok · fırtına kuşağı · orka |
 | **2 pusu** | Bölümün planlamadığı anda dalan kutup kuşu · bayrağa 100 px kala kopan buzul |
@@ -768,8 +768,10 @@ yavaş, hızlı olan riskli. Bir tırmanışın olması gereken şey tam olarak 
 ### Baca
 
 İki karşılıklı duvar ve aralarında basacak hiçbir şey yok. Zıplayarak geçilmiyor;
-tek yol tutunmak, ve tutunma tükeniyor. Uzun bacalarda duvara yapışık küçük
-**mola çıkıntıları** var — barı orada doldurup ikinci nefese başlıyorsun.
+tek yol tutunmak, ve tutunma tükeniyor. Uzun bacalarda **duvarın kendisi
+kırılıyor**: sütun bir yerde bitiyor, başı sağlam zemin oluyor, ve bir boy hava
+sonra buz yeniden başlıyor. Barı orada doldurup ikinci nefese başlıyorsun — ve
+o rafa çıkma hareketi, bacadan çıkma hareketinin aynısı.
 
 Tepede baca öylece bitiyor: **duvarın başı sağlam zemin**, üstüne çekilip
 çıkıyorsun. Bu, ilk denediğim tasarım değildi — şaftın içine asılı bir saçak
@@ -790,22 +792,42 @@ ve orada yeterince doğru; dağda değil — bu yüzden ikisi birlikte hesaplan�
 
 ### Yayına giren ve girmeyen
 
-`climb.js` içinde on beş tırmanış planı var. Onu hem geometri doğrulayıcısını
-hem de fizik çözücüsünü geçiyor ve oyunda: **32–41**. Diğer beşinde çözücünün
-bir yol bulamadığı en az bir adım var, ve *kimsenin çıkabildiğini kanıtlayamadığım
-bir bölümü oyuna koymam*. Dosyada `ship: false` ile duruyorlar; besteci düzeldikçe
-açılacaklar — `node tests/climb-run.mjs --all` hepsini birden dener ve
-yayındakiler dışındakilerin hatalarını raporlar ama derlemeyi düşürmez.
+`climb.js` içinde on beş tırmanış planı var ve **on beşi de** hem geometri
+doğrulayıcısını hem de fizik çözücüsünü geçiyor: **32–46**. Kural değişmedi —
+*kimsenin çıkabildiğini kanıtlayamadığım bir bölümü oyuna koymam*. Geçemeyen bir
+plan dosyada `ship: false` ile durur, oyuna girmez, ve `node tests/climb-run.mjs
+--all` onu yine de dener: hatasını raporlar, derlemeyi düşürmez. Şu an o listede
+kimse yok.
 
-Bu sayı ölçümle büyüyor, tahminle değil. Bir turda beşten ona çıktı ve çıkaran
-şey tek bir geometri değişikliğiydi: **bir duvarın çıkış buzu artık o duvarın
-tepesinin üstünü örtüyor.** Eskiden bitişikti, ve tepeye yeni çekilmiş bir
-penguen tam o dikişte duruyordu — teknik olarak duvarda, teknik olarak buzda
-değil, ikisinden de bir piksel uzakta. Örtüşünce "tepeye çıkmak" ile "varmak"
-aynı şey oldu ve beş bölüm birden açıldı.
+Bu sayı ölçümle büyüdü, tahminle değil: beşten ona, ondan on beşe. Ve her
+sıçramayı getiren şey yeni bir bölüm yazmak değil, **çözücünün gösterdiği bir
+tasarım hatasını düzeltmek** oldu.
+
+Son turda üç taneydi:
+
+1. **Baca, penguenin durduğu buzun üstünde değildi.** Besteci şaftı imlecin o
+   anki yerine sabitliyor, sonra ağzı fazla yüksekse yukarı doğru basamak
+   ekliyordu — ve o basamaklar imleci kaydırıyordu. Sonuçta oyuncunun kalktığı
+   buz, bacanın *yanında* kalıyordu, bazen iki yüz piksel yanında. Altında
+   durmadığın bacaya giremezsin. Artık şaft ile kalkış buzu birlikte
+   kararlaştırılıyor, her basamakta yeniden.
+
+2. **Mola rafları tırmanılan yüzü kapatıyordu.** Duvara yapıştırılmış bir raf
+   çizimde iyi durur; oyunda tırmanışın karşılaştığı ilk şey rafın *altı*
+   olur. Ölçüm nettir: raflı her baca tam rafın hizasında ölüyordu, dört ayrı
+   bölümde, yirmi piksel içinde. Artık **duvarın kendisi kırılıyor** — sütunun
+   alt parçası rafta bitiyor, penguen oraya bacadan çıktığı gibi çıkıyor
+   (tutun, kendini çek, doğrul, nefeslen), üstünde bir boy hava var ve buz
+   yeniden başlıyor. Aynı fiil, bacada üç kez, öğrenilecek yeni bir şey yok.
+
+3. **Çözücü, tepeye çıkacağı duvarı tekmeleyip bırakıyordu.** Çıkışın olduğu
+   sütuna tutunmuş, hedefi görüyor — ve tekmeleyip karşıya atlıyordu. Şaftın
+   iki yüz piksel üstüne kadar zıplayıp "bu baca çıkılmaz" diyordu, oysa
+   çıkıştaydı ve elini bırakmıştı.
 
 Bu, bir eksiği saklamak yerine ölçmenin sonucu. Kolay olanı yapıp on beşini de
-göndermek, oyuncuyu geçilemeyen bir duvara çarptırmak olurdu.
+körlemesine göndermek, oyuncuyu geçilemeyen bir duvara çarptırmak olurdu; onun
+yerine duvarın kendisi düzeldi.
 
 ---
 

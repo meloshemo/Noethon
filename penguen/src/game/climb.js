@@ -120,7 +120,6 @@ const CLIMB_PLANS = [
   },
   {
     name: 'Çıkıntı',
-    ship: false,
     subtitle: 'Gökyüzü kapandı',
     target: 66,
     build: (t) => {
@@ -217,7 +216,6 @@ const CLIMB_PLANS = [
   },
   {
     name: 'Yüksek Şaft',
-    ship: false,
     subtitle: 'İki mola, bir nefes',
     target: 86,
     build: (t) => {
@@ -258,7 +256,6 @@ const CLIMB_PLANS = [
   },
   {
     name: 'Kuzey Duvarı',
-    ship: false,
     subtitle: 'Buzul burada dikleşiyor',
     target: 96,
     build: (t) => {
@@ -277,7 +274,6 @@ const CLIMB_PLANS = [
   },
   {
     name: 'Buz Kulesi',
-    ship: false,
     subtitle: 'Aşağı bakma',
     target: 104,
     build: (t) => {
@@ -299,7 +295,6 @@ const CLIMB_PLANS = [
   },
   {
     name: 'Zirve',
-    ship: false,
     subtitle: 'Antarktika ayaklarının altında',
     target: 116,
     build: (t) => {

@@ -482,9 +482,22 @@ export class Tower {
     // The shaft has to fit inside the mountain, walls included, so the centre
     // is pulled in rather than letting a wall hang off the edge of the world.
     const half = inner / 2 + WALL_T;
-    const cx = Math.max(half, Math.min(this.width - half, this.cx));
-    const leftFace = cx - inner / 2;
-    const rightFace = cx + inner / 2;
+    // Shaft and launch ledge are decided *together*, and re-decided every time
+    // the approach adds a step.
+    //
+    // This used to fix the shaft over wherever the cursor happened to be, then
+    // climb toward the mouth if the mouth was too high — and the climbing moved
+    // the cursor. So the ledge the player actually leaves from ended up beside
+    // the shaft instead of under it, sometimes two hundred pixels beside it,
+    // and the route cheerfully declared a wall step from a ledge with no shaft
+    // above it. You cannot enter a chimney you are not standing under. The
+    // shaft follows the ledge now, one pass per step, the same way `face` has
+    // always placed its own launch ledge before committing to a column.
+    const comfortable = 30;
+    let cx = 0;
+    let leftFace = 0;
+    let rightFace = 0;
+    let cols = [];
     // Wall bottoms stop just above the ledge the climb starts from. A column
     // that reaches down to the ledge's own height overlaps it, and a ledge
     // buried in a wall is a ledge the player falls through the side of.
@@ -492,15 +505,19 @@ export class Tower {
     // only one of them, and making both start as high as the worst case pushes
     // the mouth of the shaft out of reach for no reason — the penguin only
     // needs *one* hand-hold to get in.
-    const cols = [
-      { x: leftFace - WALL_T, w: WALL_T },
-      { x: rightFace, w: WALL_T },
-    ];
-    let feet = cols.map((c) => this._wallFoot([c], this.y - 6, true));
-    const comfortable = 30;
-    for (let tries = 0; tries < 4 && this.y - Math.max(...feet) > comfortable; tries++) {
-      this._step(this.cx > this.width / 2 ? -1 : 1, 140, Math.round(this.maxRise), 'solid');
+    let feet = [];
+    for (let tries = 0; tries < 5; tries++) {
+      cx = Math.max(half, Math.min(this.width - half, this.cx));
+      leftFace = cx - inner / 2;
+      rightFace = cx + inner / 2;
+      cols = [
+        { x: leftFace - WALL_T, w: WALL_T },
+        { x: rightFace, w: WALL_T },
+      ];
       feet = cols.map((c) => this._wallFoot([c], this.y - 6, true));
+      if (this.y - Math.max(...feet) <= comfortable) break;
+      if (tries === 4) break;
+      this._step(this.cx > this.width / 2 ? -1 : 1, 140, Math.round(this.maxRise), 'solid');
     }
     const lowest = Math.max(...feet);
     if (this.y - lowest > this.grabCeiling) {
@@ -523,36 +540,54 @@ export class Tower {
     // Raised even a ledge's thickness, its underside becomes a lip exactly
     // where the last kick passes, and the climb dies five pixels from the top.
     const yTop = wallTop;
-    this.wall(leftFace - WALL_T, wallTop, feet[0] - wallTop);
-    this.wall(rightFace, wallTop, feet[1] - wallTop);
     this.zone(wallTop, wallBottom - wallTop, 'chimney');
 
-
-    // Nubs: somewhere to stand and get the bar back, which turns one long hold
-    // into two short ones. The only way a tall chimney is fair.
-    // Rest ledges, alternating walls.
+    // Rest ledges: a break in one wall, with a shelf standing on it.
     //
-    // Where they go is not obvious and was worth measuring rather than
-    // reasoning about. Floating them in the middle of the shaft keeps the
-    // climbing line clear but makes them hard to land on; putting every one on
-    // the wall *opposite* the exit keeps them easy to hit but stacks them in a
-    // column. Alternating turned out to solve more shafts than either — so
-    // that is what they do, on the evidence of the solver rather than on taste.
-    const restW = Math.round(this.penguinW * 1.5);
+    // A shelf bolted flat onto a wall face reads well in a drawing and does
+    // not work. The face it hangs off is the same face the penguin climbs, so
+    // the first thing the climb meets is the shelf's *underside* — and a rest
+    // you cannot get onto is worse than no rest at all. That is not a theory:
+    // every shaft with one died at exactly the shelf's height, in four
+    // different levels, within twenty pixels.
+    //
+    // So the wall itself breaks. The lower stretch of the column ends at the
+    // shelf, which is its head, and the penguin tops out onto it exactly the
+    // way it tops out of the shaft: cling, pull over, stand up, breathe.
+    // Above the shelf there is a body's worth of air and then the ice resumes,
+    // close enough to jump straight back onto. Same verb three times a shaft,
+    // nothing new to learn, and the rest is somewhere you arrive rather than
+    // somewhere you hope to clip.
+    const restGap = Math.round(PENGUIN.h * this.scale * 1.3);
     const restYs = [];
     const restSides = [];
+    /** Where each column is cut, lowest first. Index 0 is the left column. */
+    const cuts = [[], []];
     for (let i = 1; i <= rests; i++) {
       const y = Math.round(wallBottom - ((wallBottom - wallTop) * i) / (rests + 1));
       const side = i % 2 ? -1 : 1;
-      this.floes.push({
-        x: Math.round(side < 0 ? leftFace + 2 : rightFace - restW - 2),
-        y,
-        w: restW,
-        type: 'solid',
-        nub: true,
-      });
+      cuts[side < 0 ? 0 : 1].push(y);
       restYs.push(y);
       restSides.push(side);
+    }
+    for (let k = 0; k < 2; k++) {
+      const x = k === 0 ? leftFace - WALL_T : rightFace;
+      let bottom = feet[k];
+      for (const y of cuts[k].slice().sort((m, n) => n - m)) {
+        if (y >= bottom - 40) continue;
+        this.wall(x, y, bottom - y);
+        this.floes.push({
+          x: Math.round(x),
+          y,
+          w: WALL_T,
+          type: 'solid',
+          nub: true,
+          rim: true,
+          head: true,
+        });
+        bottom = y - restGap;
+      }
+      if (bottom - wallTop > 40) this.wall(x, wallTop, bottom - wallTop);
     }
 
     // A lip: rock jutting from a wall partway up, so one kick in the shaft has
@@ -569,9 +604,19 @@ export class Tower {
         throw new Error(`baca dudağı geçilmiyor: ${Math.round(inner - depth)}px kalıyor`);
       }
       let ly = Math.round(this.y - height * lip);
-      ly = Math.max(wallTop + 48, Math.min(wallBottom - 48, ly));
-      // The rest nearest that height decides the side; with no rests the lip
-      // goes opposite the cornice, so the exit kick is not the one under rock.
+      // A shaft with rest shelves in it is really several short climbs stacked
+      // up, and only the first of them starts from a full bar with the whole
+      // shaft still ahead. That is the stretch that can afford an obstacle.
+      // Above a shelf the penguin is committed — no ground under it, one
+      // hold's worth of arm left and the exit to reach — and rock in *that*
+      // stretch is not a hard move, it is a lid. Measured: a lip in the last
+      // stretch was the single thing keeping the tallest climb in the chapter
+      // out of the game.
+      const floor = restYs.length ? Math.max(...restYs) : wallTop;
+      ly = Math.max(floor + 70, Math.min(wallBottom - 48, ly));
+      // Which wall: never the one the nearest shelf is on. Rock hanging over
+      // the one place in a shaft where you can stand up and get your breath
+      // back is not a hard obstacle either.
       let side = rim > 0 ? -1 : 1;
       if (restYs.length) {
         const near = restYs.reduce((best, y) => (Math.abs(y - ly) < Math.abs(best - ly) ? y : best));
