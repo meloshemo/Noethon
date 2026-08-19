@@ -18,8 +18,8 @@ Toplam yük tek dosyada ~385 KB ve çevrimdışı çalışıyor.
 
 | | |
 |---|---|
-| **İki bölüm (chapter)** | Buz Sahanlığı 1–31 · Zirve 32–36 — ikisi ayrı fiil |
-| **36 elle yazılmış bölüm** | 31 sahanlık parkuru + 5 dikey tırmanış |
+| **İki bölüm (chapter)** | Buz Sahanlığı 1–31 · Zirve 32–41 — ikisi ayrı fiil |
+| **41 elle yazılmış bölüm** | 31 sahanlık parkuru + 10 dikey tırmanış |
 | **Tutunma** | Buz duvarına asıl, tırman, tekmele — ve kollarında sınırlı güç var |
 | **Sonsuz mod** | Bölüm numarasıyla tohumlanmış — 42. bölüm herkeste aynı |
 | **10 buz türü** | sağlam · çatlak · cilalı · eriyen · sürüklenen · düşen · tuzak · **sahte** · kaçan · gayzer |
@@ -790,12 +790,19 @@ ve orada yeterince doğru; dağda değil — bu yüzden ikisi birlikte hesaplan�
 
 ### Yayına giren ve girmeyen
 
-`climb.js` içinde on beş tırmanış planı var. Beşi hem geometri doğrulayıcısını
-hem de fizik çözücüsünü geçiyor ve oyunda: **32–36**. Diğer onunda çözücünün
+`climb.js` içinde on beş tırmanış planı var. Onu hem geometri doğrulayıcısını
+hem de fizik çözücüsünü geçiyor ve oyunda: **32–41**. Diğer beşinde çözücünün
 bir yol bulamadığı en az bir adım var, ve *kimsenin çıkabildiğini kanıtlayamadığım
 bir bölümü oyuna koymam*. Dosyada `ship: false` ile duruyorlar; besteci düzeldikçe
 açılacaklar — `node tests/climb-run.mjs --all` hepsini birden dener ve
 yayındakiler dışındakilerin hatalarını raporlar ama derlemeyi düşürmez.
+
+Bu sayı ölçümle büyüyor, tahminle değil. Bir turda beşten ona çıktı ve çıkaran
+şey tek bir geometri değişikliğiydi: **bir duvarın çıkış buzu artık o duvarın
+tepesinin üstünü örtüyor.** Eskiden bitişikti, ve tepeye yeni çekilmiş bir
+penguen tam o dikişte duruyordu — teknik olarak duvarda, teknik olarak buzda
+değil, ikisinden de bir piksel uzakta. Örtüşünce "tepeye çıkmak" ile "varmak"
+aynı şey oldu ve beş bölüm birden açıldı.
 
 Bu, bir eksiği saklamak yerine ölçmenin sonucu. Kolay olanı yapıp on beşini de
 göndermek, oyuncuyu geçilemeyen bir duvara çarptırmak olurdu.

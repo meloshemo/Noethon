@@ -85,6 +85,9 @@ function drowned(p, def) {
 function tryJump(def, solids, a, b, { from, delay, hold }) {
   const p = makePlayer(def, a.x + a.w * from, a.y);
   const targetX = b.x + b.w / 2;
+  // The top of the shaft is the exit ledge's own height: the route's node for a
+  // chimney *is* a column head.
+  const topY = b.y;
   let t = 0;
   let jumpedAt = null;
   let held = false;
@@ -143,6 +146,9 @@ function tryWall(def, solids, a, b, { from, delay, mode, first }, probe = {}) {
   const p = makePlayer(def, a.x + a.w * from, a.y);
   const chimney = Boolean(b.chimney);
   const targetX = b.x + b.w / 2;
+  // The top of the shaft is the exit ledge's own height: the route's node for a
+  // chimney *is* a column head.
+  const topY = b.y;
   // Which wall to reach for first: for a face it is the wall's own side, for a
   // chimney it is whichever one the cornice is not resting on.
   // Reach for the column you are going to top out on. Its inner face is right
@@ -157,8 +163,10 @@ function tryWall(def, solids, a, b, { from, delay, mode, first }, probe = {}) {
   // and you hit the bottom of it, which is exactly as solid as the rest.
   // The shaft is entered from underneath its middle. The exit is the head of
   // one of its columns, so the middle sits one column-width inside the target.
+  // The exit is now the shoulder, out beyond the columns, so the shaft has to
+  // be located from the column itself rather than from the target.
   const shaftX = b.chimney
-    ? (headSide > 0 ? b.x - 30 : b.x + b.w + 30)
+    ? (headSide > 0 ? b.chimney.headX - 30 : b.chimney.headX + 44 + 30)
     : null;
   // For a single face the wall stands just past the edge of the launch ledge,
   // so the take-off point is that edge — not the exit, which is on the far
@@ -183,7 +191,7 @@ function tryWall(def, solids, a, b, { from, delay, mode, first }, probe = {}) {
   // is really just a button released too early.
   let holdUntil = 0;
 
-  for (let i = 0; i < 7000; i++) {
+  for (let i = 0; i < 16000; i++) {
     let axis = seek;
     let jumpHeld = false;
     let jumpPressed = false;
@@ -204,7 +212,7 @@ function tryWall(def, solids, a, b, { from, delay, mode, first }, probe = {}) {
       // Wide, because the last kick has to *arrive* at cornice height: taken
       // from a body length too low it lands under the cornice's lip and the
       // whole ascent is thrown away.
-      const nearTop = feet <= b.y + 150;
+      const nearTop = feet <= topY + 150;
       // Is there anything to kick *to*? Columns in a shaft do not always start
       // at the same height — the one the corridor below crosses begins higher —
       // so the bottom of a chimney is often a single face, and kicking off it
@@ -222,7 +230,7 @@ function tryWall(def, solids, a, b, { from, delay, mode, first }, probe = {}) {
         // unless the cornice is now the thing within reach.
         jumpPressed = true;
         seek = -p.wallSide;
-        finishing = feet <= b.y + 110;
+        finishing = feet <= topY + 110;
       } else {
         jumpHeld = true; // creep, or pull over the top of a single face
       }
@@ -241,7 +249,7 @@ function tryWall(def, solids, a, b, { from, delay, mode, first }, probe = {}) {
       // the same height — but with the mouth of the shaft in between, so this
       // is a jump across, not a stroll. Walking is only right when already
       // over the thing being aimed at.
-      if (p.y + p.h <= b.y + 4) {
+      if (p.y + p.h <= topY + 4) {
         axis = Math.sign(targetX - (p.x + p.w / 2)) || seek;
         const over = p.x + p.w > b.x - 4 && p.x < b.x + b.w + 4;
         if (!over) {
@@ -274,15 +282,23 @@ function tryWall(def, solids, a, b, { from, delay, mode, first }, probe = {}) {
     t += STEP;
 
     if (p.y < (probe.best ?? Infinity)) probe.best = Math.round(p.y);
-    if (probe.trace && i % 8 === 0) {
+    if (probe.trace && i % 4 === 0) {
       probe.log.push(
         `${t.toFixed(2)} cx${Math.round(p.x + p.w / 2)} y${Math.round(p.y)} vy${Math.round(p.vy)} ` +
-          `g${p.onGround ? 1 : 0} c${p.clinging ? p.wallSide : 0} m${p.mantling ? 1 : 0} s${p.stamina.toFixed(1)}`,
+          `g${p.onGround ? 1 : 0} c${p.clinging ? p.wallSide : 0} m${p.mantling ? 1 : 0} s${p.stamina.toFixed(1)} ` +
+          `on${p.groundFloe ? Math.round(p.groundFloe.x) + '..' + Math.round(p.groundFloe.x + p.groundFloe.w) : '-'}`,
       );
     }
     if (drowned(p, def)) return false;
     if (landedOn(p, b)) return true;
-    if (t > 50) return false;
+    // Generous, because an attempt is a whole session on one wall: fall, land,
+    // get the bar back, go again. Simulated seconds are almost free — the whole
+    // suite runs in a few real ones — and a cap that cuts a climb two pixels
+    // from the top reports a passable route as impossible.
+    // Generous: an attempt is a whole session on one wall — fall, land, get the
+    // bar back, go again — and a cap that cuts a climb two pixels from the top
+    // reports a passable route as impossible.
+    if (t > 60) return false;
   }
   return gripped && landedOn(p, b);
 }

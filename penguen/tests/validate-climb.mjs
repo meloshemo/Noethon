@@ -116,8 +116,6 @@ function validate(def) {
       }
       // The way out is the head of a column, so it has to *be* a head: a ledge
       // exactly as wide as the column, flush with its top.
-      const head = walls.find((w) => Math.abs(w.y - b.y) < 3 && Math.abs(w.x + w.w / 2 - (b.x + b.w / 2)) < 6);
-      if (!head) fail(`${i}. bacanın çıkışı bir duvarın tepesinde değil`);
       // And there really is ice on both sides for the whole shaft.
       //
       // The foot of a shaft is allowed to hang above the ledge it starts from —
@@ -130,8 +128,21 @@ function validate(def) {
       // at different heights — a jump corridor below usually crosses only one
       // of them — but at least one has to hang low enough to be caught from
       // the ledge the climb starts on.
-      const columns = walls.filter((w) => w.y <= b.y + 6 && w.y + w.h > b.y + 40);
+      // The shaft's columns: everything standing between the ledge the climb
+      // starts from and the shoulder it ends on. The exit is no longer a wall
+      // top — it is open mountain above them — so they cannot be found by
+      // looking level with it.
+      const columns = walls.filter((w) => w.y + w.h <= a.y + 12 && w.y >= b.y - 12);
       if (columns.length < 2) fail(`${i}. bacanın iki duvarı yok (${columns.length})`);
+      // The exit has to be a column head: a ledge flush with the top of one of
+      // the shaft's columns, wide enough to stand on.
+      const head = def.floes.some(
+        (f) =>
+          f.head &&
+          Math.abs(f.y - b.y) < 3 &&
+          columns.some((w) => Math.abs(f.x + f.w / 2 - (w.x + w.w / 2)) < 8),
+      );
+      if (!head) fail(`${i}. bacanın çıkışı bir duvarın tepesinde değil`);
       const reachable = columns.some((w) => a.y - (w.y + w.h) <= grabHeight);
       if (columns.length && !reachable) {
         const best = Math.min(...columns.map((w) => a.y - (w.y + w.h)));
@@ -186,9 +197,11 @@ function validate(def) {
     for (const w of walls) {
       // A ledge resting exactly on a wall top is a cornice, which is fine. A
       // ledge inside one is a bug you cannot see and cannot land on.
-      // The head of a column *is* a ledge — that is the whole top-out — so it
-      // is allowed to sit in the column's own footprint.
-      if (f.head) continue;
+      // A ledge marked as resting on a wall head — the top-out of a chimney,
+      // or the exit of a single face reaching out over the column it climbed —
+      // is *meant* to sit in that column's footprint. That is what makes
+      // topping out the same thing as arriving.
+      if (f.head || f.rim) continue;
       if (rects({ ...fb, y: fb.y + 2, h: fb.h - 4 }, w)) {
         fail(`buz ${Math.round(f.x)},${Math.round(f.y)} duvarın içinde`);
       }

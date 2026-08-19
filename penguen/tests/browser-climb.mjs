@@ -103,7 +103,7 @@ console.log('\n2) Duvara tutunma');
 // The mechanics need room to be measured in, so this runs on the tallest wall
 // in the game rather than on the tutorial's 96px one — on a short wall the
 // penguin simply slides off the bottom before a drain rate can be read.
-await start(36);
+await start(41);
 const wall = await p.evaluate(() => {
   const w = window.__pengu.world;
   const walls = w.terrain.filter((t) => t.climb);
@@ -194,7 +194,7 @@ console.log('\n6) Bar bitince tutunma bitiyor');
 // Watched frame by frame rather than sampled after a fixed wait: the penguin
 // slips, falls, lands and starts refilling in well under a second, so a single
 // late reading shows a healthy bar and proves nothing.
-await start(36); // the kick above left the penguin falling; start clean
+await start(41); // the kick above left the penguin falling; start clean
 const slip = await p.evaluate(async (wl) => {
   const w = window.__pengu.world;
   const pl = w.player;
@@ -271,7 +271,7 @@ ok('bölüm 30 hâlâ yatay', shelfGrip.axis === 'across');
 // every step of every shipped route. What is checked here is that the level
 // still runs, which the browser is the only place that can answer.
 console.log('\n9) Bölüm gerçekten oynanıyor');
-await start(36);
+await start(41);
 await p.evaluate(() => {
   window.__ctl.hold('right', true);
   window.__ctl.press('jump');
@@ -284,7 +284,7 @@ ok('tırmanış metresi sayılıyor', typeof alive.metres === 'number', `${alive
 
 /* ------------------------------------------------ 10 · no explosions */
 console.log('\n10) Konsol');
-await start(36);
+await start(41);
 await p.evaluate(() => {
   window.__ctl.hold('right', true);
   window.__ctl.hold('jump', true);

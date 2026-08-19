@@ -31,7 +31,7 @@ const CLIMB_PLANS = [
   /* ------------------------------------------------ 32–34 · the grip */
   {
     name: 'Buzulun Eteği',
-    ship: false,
+    signs: [{ dx: 92, dy: -104, text: 'Duvara doğru bas: tutun  •  Tutunurken BOŞLUK: tırman' }],
     subtitle: 'Yukarısı çok uzak',
     target: 40,
     build: (t) => {
@@ -48,7 +48,6 @@ const CLIMB_PLANS = [
   },
   {
     name: 'Tutunma',
-    ship: false,
     subtitle: 'Kollarında ne kadar var',
     target: 46,
     build: (t) => {
@@ -66,7 +65,6 @@ const CLIMB_PLANS = [
   },
   {
     name: 'Dar Yarık',
-    signs: [{ dx: 92, dy: -104, text: 'Duvara doğru bas: tutun  •  Tutunurken BOŞLUK: tırman' }],
     subtitle: 'İki duvar arası',
     target: 52,
     build: (t) => {
@@ -142,7 +140,6 @@ const CLIMB_PLANS = [
   },
   {
     name: 'Kırılgan Basamaklar',
-    ship: false,
     subtitle: 'Dinlenecek yer güvenli değil',
     target: 70,
     build: (t) => {
@@ -183,7 +180,6 @@ const CLIMB_PLANS = [
   },
   {
     name: 'Bacadaki Rüzgâr',
-    ship: false,
     subtitle: 'Şaft bir borudur',
     target: 78,
     build: (t) => {
@@ -241,7 +237,6 @@ const CLIMB_PLANS = [
   /* ---------------------------------------------- 43–46 · the summit */
   {
     name: 'Yalan Buz',
-    ship: false,
     subtitle: 'Dinlenmek isteyeceksin',
     target: 90,
     build: (t) => {

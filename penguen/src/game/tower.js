@@ -205,10 +205,14 @@ export class Tower {
    * segment adds the steps it needs.
    */
   _approach(columns) {
-    // Aim well inside the limit rather than at it. A mouth hanging at the very
-    // top of the penguin's reach is grabbable for about two frames at the apex
-    // of a perfect jump, which is a different thing from being reachable.
-    const comfortable = this.grabCeiling * 0.55;
+    // Aim for a foot that all but touches the ledge below it.
+    //
+    // "Within reach" is not the bar. A mouth eighty pixels up is reachable and
+    // still awful: the penguin has to travel sideways to the face *and* rise to
+    // the foot in the same arc, and if it arrives early it hits the underside,
+    // late it has already passed. A foot at the ledge is simply a wall you step
+    // onto.
+    const comfortable = 30;
     for (let tries = 0; tries < 3; tries++) {
       const foot = this._wallFoot(columns, this.y - 6, true);
       if (this.y - foot <= comfortable) return foot;
@@ -493,8 +497,8 @@ export class Tower {
       { x: rightFace, w: WALL_T },
     ];
     let feet = cols.map((c) => this._wallFoot([c], this.y - 6, true));
-    const comfortable = this.grabCeiling * 0.55;
-    for (let tries = 0; tries < 3 && this.y - Math.max(...feet) > comfortable; tries++) {
+    const comfortable = 30;
+    for (let tries = 0; tries < 4 && this.y - Math.max(...feet) > comfortable; tries++) {
       this._step(this.cx > this.width / 2 ? -1 : 1, 140, Math.round(this.maxRise), 'solid');
       feet = cols.map((c) => this._wallFoot([c], this.y - 6, true));
     }
@@ -526,18 +530,27 @@ export class Tower {
 
     // Nubs: somewhere to stand and get the bar back, which turns one long hold
     // into two short ones. The only way a tall chimney is fair.
+    // Rest ledges, alternating walls.
+    //
+    // Where they go is not obvious and was worth measuring rather than
+    // reasoning about. Floating them in the middle of the shaft keeps the
+    // climbing line clear but makes them hard to land on; putting every one on
+    // the wall *opposite* the exit keeps them easy to hit but stacks them in a
+    // column. Alternating turned out to solve more shafts than either — so
+    // that is what they do, on the evidence of the solver rather than on taste.
     const restW = Math.round(this.penguinW * 1.5);
     const restYs = [];
     const restSides = [];
     for (let i = 1; i <= rests; i++) {
-      // Spaced along the shaft itself, not measured down from the ledge below
-      // it: once the foot has been lifted clear of a corridor those are two
-      // different spans, and a nub placed by the second one ends up above the
-      // cornice with nothing around it.
       const y = Math.round(wallBottom - ((wallBottom - wallTop) * i) / (rests + 1));
       const side = i % 2 ? -1 : 1;
-      const x = side < 0 ? leftFace + 2 : rightFace - restW - 2;
-      this.floes.push({ x: Math.round(x), y, w: restW, type: 'solid', nub: true });
+      this.floes.push({
+        x: Math.round(side < 0 ? leftFace + 2 : rightFace - restW - 2),
+        y,
+        w: restW,
+        type: 'solid',
+        nub: true,
+      });
       restYs.push(y);
       restSides.push(side);
     }
@@ -595,6 +608,10 @@ export class Tower {
     // So the shaft simply ends. The heads of the columns are solid ground —
     // that is what you pull over onto, the way you top out of a real chimney —
     // and the route continues from there. Nothing to thread, nothing to clip.
+    // The head is exactly the width of the column, and stays that way. A wider
+    // landing looks like an obvious kindness and measurably is not: every extra
+    // pixel pushes the steps above it around, and shafts that worked stop
+    // working. Measured, not guessed — a seventy-pixel shelf cost two levels.
     const headX = rim > 0 ? rightFace : leftFace - WALL_T;
     this._place(headX + WALL_T / 2, wallTop, WALL_T, 'solid', 'kick', {
       minW: WALL_T,
@@ -602,8 +619,9 @@ export class Tower {
       head: true,
     });
     Object.assign(this.route[this.route.length - 1], {
-      chimney: { inner, height, rests, climbSide: rim > 0 ? -1 : 1, head: WALL_T },
+      chimney: { inner, height, rests, climbSide: rim > 0 ? -1 : 1, headX },
     });
+
     // A shoulder: the step off the column head onto open mountain, placed by
     // the segment rather than left to whatever the plan writes next. It goes
     // *away* from the shaft, so nothing after a chimney has to work around the
@@ -645,8 +663,8 @@ export class Tower {
     let ledge = null;
     let wallX = null;
     let foot = null;
-    const comfortable = this.grabCeiling * 0.55;
-    for (let tries = 0; tries < 4; tries++) {
+    const comfortable = 30;
+    for (let tries = 0; tries < 5; tries++) {
       this._step(dir, 132, tries === 0 ? dy : Math.round(this.maxRise), 'solid');
       ledge = this.floes[this.floes.length - 1];
       const fits = (d) => {
@@ -687,9 +705,15 @@ export class Tower {
     // the very column the penguin is climbing, and the climb dead-ends against
     // its underside about a body length from the top. So the wall ends where
     // the ground begins, and the last move is pulling over the edge.
+    // The exit covers the head of the column rather than butting up against
+    // it. Flush is a seam, and a penguin that has just pulled over the top
+    // stands astride that seam — technically on the wall, technically not on
+    // the ledge, and one pixel from either. Overlapping the two means topping
+    // out *is* arriving.
     const room = dir > 0 ? this.width - (wallX + WALL_T) : wallX;
-    const w = Math.max(this.minWidth, Math.min(exit, room - 8));
-    this._place(dir > 0 ? wallX + WALL_T + w / 2 : wallX - w / 2, yTop, w, 'solid', 'creep');
+    const w = Math.max(this.minWidth, Math.min(exit, room - 8)) + WALL_T;
+    const cx = dir > 0 ? wallX + w / 2 : wallX + WALL_T - w / 2;
+    this._place(cx, yTop, w, 'solid', 'creep', { rim: true });
     Object.assign(this.route[this.route.length - 1], { climbHeight: height, wallSide: dir });
     return this;
   }
