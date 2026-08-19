@@ -116,6 +116,8 @@ export class Player {
     this.kickGrace = 0;
     /** The block currently being gripped, so the climb knows where its top is. */
     this.wallBlock = null;
+    /** The block being pulled over, kept until the penguin is standing on it. */
+    this.mantleBlock = null;
   }
 
   /**
@@ -283,11 +285,24 @@ export class Player {
     const wall = this.onGround ? 0 : this._probeWall(floes);
     const holdingInto = wall !== 0 && Math.sign(intent.axis) === wall;
     const barred = this.noGrab > 0 && this.noGrabSide === wall;
-    this.clinging = holdingInto && !barred && this.stamina > 0;
+    // Once the pull-over has started, the grip is latched. The probe loses the
+    // face the moment the body moves in over the top — which is exactly the
+    // moment the penguin must not be dropped.
+    const topping =
+      this.mantleBlock &&
+      !this.onGround &&
+      this.y + this.h <= this.mantleBlock.y + 8 &&
+      this.centerX > this.mantleBlock.x - this.w &&
+      this.centerX < this.mantleBlock.x + this.mantleBlock.w + this.w;
+    if (topping) this.wallBlock = this.mantleBlock;
+    this.clinging = (holdingInto || topping) && !barred && this.stamina > 0;
     this.climbing = false;
     if (!this.clinging) {
       this.wallSide = 0;
       this.mantling = false;
+      this.mantleBlock = null;
+    } else if (topping && wall === 0) {
+      this.wallSide = this.centerX < this.mantleBlock.x ? 1 : -1;
     }
     else {
       this.wallSide = wall;
@@ -393,11 +408,43 @@ export class Player {
       // this a wall is a dead end: you can reach its top and never get onto it.
       const head = this.wallBlock ? this.wallBlock.y : -Infinity;
       if (this.y + this.h <= head + 6) {
-        this.vx = this.wallSide * this.moveSpeed * 0.85;
-        this.vy = -CLIMB.climbSpeed * 0.35;
-        this.stamina -= CLIMB.drainClimb * dt;
-        this.climbing = true;
-        this.mantling = true;
+        this.mantleBlock = this.wallBlock;
+        const block = this.wallBlock;
+        // The pull-over ends when the penguin is over the thing it climbed.
+        // Left running, it sails straight across a narrow wall head and off
+        // the far side — you would top out and immediately fall, which is the
+        // opposite of what topping out means.
+        const over =
+          block && this.centerX > block.x + 6 && this.centerX < block.x + block.w - 6;
+        if (over) {
+          // Standing on it now, not hanging off it.
+          //
+          // The pull-over *finishes* here rather than handing back to gravity
+          // and hoping: the penguin is set down on the thing it climbed. Left
+          // to drift it hovers a few pixels above ground it has already
+          // reached, burning the rest of the bar, and a climb that succeeded
+          // reads as one that did not.
+          this.clinging = false;
+          this.wallSide = 0;
+          this.mantling = false;
+          this.mantleBlock = null;
+          this.vx = 0;
+          // A pixel into the block and a whisker of downward speed, so the
+          // ordinary landing code picks it up this frame — setting `onGround`
+          // here would only be overwritten by the collision pass below.
+          this.vy = 20;
+          this.y = block.y - this.h + 1;
+        } else {
+          // Aimed at the middle of what is being climbed rather than shoved
+          // blindly sideways. The head of a column is barely wider than the
+          // penguin, and a constant push sails straight over it.
+          const to = block.x + block.w / 2 - this.centerX;
+          this.vx = clamp(to * 6, -this.moveSpeed * 0.9, this.moveSpeed * 0.9);
+          this.vy = -CLIMB.climbSpeed * 0.35;
+          this.stamina -= CLIMB.drainClimb * dt;
+          this.climbing = true;
+          this.mantling = true;
+        }
       } else if (intent.jumpHeld) {
         this.mantling = false;
         this.vy = -CLIMB.climbSpeed;

@@ -114,15 +114,10 @@ function validate(def) {
             `bir barın sınırı ${Math.round(perBreath)}px`,
         );
       }
-      // The way out. The opening beside the climbing wall has to admit the
-      // penguin, and the cornice has to be inside one kick of that wall.
-      if (c.openW < penguinW + 18) {
-        fail(`${i}. bacanın çıkış aralığı ${Math.round(c.openW)}px, penguen ${Math.round(penguinW)}px`);
-      }
-      const throwOut = kickThrow(scale, 24) * BUDGET.jump;
-      if (c.openW > throwOut) {
-        fail(`${i}. baca çıkışı tekmeyle geçilmiyor: ${Math.round(c.openW)}px > ${Math.round(throwOut)}px`);
-      }
+      // The way out is the head of a column, so it has to *be* a head: a ledge
+      // exactly as wide as the column, flush with its top.
+      const head = walls.find((w) => Math.abs(w.y - b.y) < 3 && Math.abs(w.x + w.w / 2 - (b.x + b.w / 2)) < 6);
+      if (!head) fail(`${i}. bacanın çıkışı bir duvarın tepesinde değil`);
       // And there really is ice on both sides for the whole shaft.
       //
       // The foot of a shaft is allowed to hang above the ledge it starts from —
@@ -131,13 +126,16 @@ function validate(def) {
       // higher than a jump plus a reach, because then nobody can get a hand on
       // it in the first place.
       const grabHeight = reach.height + penguinH * 0.8;
-      const covering = walls.filter((w) => w.y <= b.y + 40 && w.y + w.h >= a.y - grabHeight);
-      if (covering.length < 2) fail(`${i}. bacanın iki duvarı yok (${covering.length})`);
-      for (const w of covering) {
-        const mouth = a.y - (w.y + w.h);
-        if (mouth > grabHeight) {
-          fail(`${i}. baca ağzı ${Math.round(mouth)}px yukarıda, tutunma sınırı ${Math.round(grabHeight)}px`);
-        }
+      // Both columns have to reach the top of the shaft. Their *feet* may sit
+      // at different heights — a jump corridor below usually crosses only one
+      // of them — but at least one has to hang low enough to be caught from
+      // the ledge the climb starts on.
+      const columns = walls.filter((w) => w.y <= b.y + 6 && w.y + w.h > b.y + 40);
+      if (columns.length < 2) fail(`${i}. bacanın iki duvarı yok (${columns.length})`);
+      const reachable = columns.some((w) => a.y - (w.y + w.h) <= grabHeight);
+      if (columns.length && !reachable) {
+        const best = Math.min(...columns.map((w) => a.y - (w.y + w.h)));
+        fail(`${i}. baca ağzı ${Math.round(best)}px yukarıda, tutunma sınırı ${Math.round(grabHeight)}px`);
       }
       continue;
     }
@@ -188,6 +186,9 @@ function validate(def) {
     for (const w of walls) {
       // A ledge resting exactly on a wall top is a cornice, which is fine. A
       // ledge inside one is a bug you cannot see and cannot land on.
+      // The head of a column *is* a ledge — that is the whole top-out — so it
+      // is allowed to sit in the column's own footprint.
+      if (f.head) continue;
       if (rects({ ...fb, y: fb.y + 2, h: fb.h - 4 }, w)) {
         fail(`buz ${Math.round(f.x)},${Math.round(f.y)} duvarın içinde`);
       }

@@ -389,7 +389,7 @@ export const ASSIST = {
  * ever disagree, which is the only way a number in one file and a list of
  * plans in another stay honest.
  */
-export const CRAFTED_LEVELS = 38;
+export const CRAFTED_LEVELS = 36;
 
 /** Growth curve: how big the penguin is on a given level. */
 export function scaleForLevel(level) {

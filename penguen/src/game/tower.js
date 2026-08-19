@@ -136,24 +136,28 @@ export class Tower {
    * above the top of that jump, and the shaft gets a mouth you leap into
    * rather than a base you step into.
    */
-  _wallFoot(columns, floor) {
+  _wallFoot(columns, floor, soft = false) {
     // Two different clearances, because two different things happen under a
     // column. Over a ledge the penguin is *standing*, and it only needs room
     // for its head — pushing the column a full jump higher there just puts the
     // mouth of the shaft out of reach. Over the gap between two ledges it is
     // *flying*, and the column has to clear the top of that arc.
     const standing = PENGUIN.h * this.scale * 1.5;
-    const flying = this.reach.height + 10;
+    // The apex of the jump plus the penguin *itself*: what has to clear the
+    // column is the top of its head, not the soles of its feet, and forgetting
+    // the body is a fifty-five pixel error that puts a column exactly where
+    // the penguin's head goes.
+    const flying = this.reach.height + PENGUIN.h * this.scale + 10;
     let foot = floor;
     const blocking = this.floes.map((f) => ({ ...f, need: standing }));
-    // The last jump taken to get here is airspace too. Its corridor runs from
-    // the ledge before last to the one the penguin is standing on, and a column
-    // dropped into the middle of it is something the player flies into — or,
-    // worse, grabs by accident halfway across a traverse.
-    const n = this.route.length;
-    if (n >= 2) {
-      const a = this.route[n - 2];
-      const b = this.route[n - 1];
+    // Every jump on the route so far is airspace too, not just the last one.
+    // A column dropped into the middle of any of their corridors is something
+    // the player flies into — or, worse, grabs by accident halfway across a
+    // traverse — and only the most recent one used to be checked, which let a
+    // wall sit squarely in the arc of the jump two steps back.
+    for (let i = 1; i < this.route.length; i++) {
+      const a = this.route[i - 1];
+      const b = this.route[i];
       // Only the gap between them: over the ledges themselves the airspace is
       // already accounted for by the ledges, and taking the full span would
       // reserve half the mountain every time.
@@ -163,6 +167,7 @@ export class Tower {
         blocking.push({ x: left, w: right - left, y: Math.max(a.y, b.y), need: flying });
       }
     }
+
     for (const col of columns) {
       for (const f of blocking) {
         if (f.x + f.w <= col.x || f.x >= col.x + col.w) continue;
@@ -173,27 +178,96 @@ export class Tower {
     // The mouth still has to be grabbable from the ledge below it: the apex of
     // a jump plus most of a body length is as high as a grip can start.
     const lift = this.y - foot;
-    const ceiling = this.reach.height + PENGUIN.h * this.scale * 0.8;
-    if (lift > ceiling) {
+    if (lift > this.grabCeiling && !soft) {
       throw new Error(
-        `baca ağzı ${Math.round(lift)}px yukarıda, tutunma sınırı ${Math.round(ceiling)}px`,
+        `baca ağzı ${Math.round(lift)}px yukarıda, tutunma sınırı ${Math.round(this.grabCeiling)}px`,
       );
     }
     return Math.round(foot);
   }
 
-  _stepSlot(dir, want, w, dy) {
-    const MIN_GAP = 12;
+  /**
+   * How far above a ledge the foot of a wall may hang and still be caught.
+   *
+   * At the top of a jump the penguin's feet are a jump-height up and its body
+   * is above that, so the grip can start higher than the feet ever reach.
+   */
+  get grabCeiling() {
+    return this.reach.height + PENGUIN.h * this.scale * 0.8;
+  }
+
+  /**
+   * Climb until the mouth of the shaft is within reach.
+   *
+   * Lifting a column clear of the jumps beneath it can put its foot further up
+   * than anybody can jump to. The answer is not to drop the column back into
+   * the flight path — it is to start the shaft from higher ground, so the
+   * segment adds the steps it needs.
+   */
+  _approach(columns) {
+    // Aim well inside the limit rather than at it. A mouth hanging at the very
+    // top of the penguin's reach is grabbable for about two frames at the apex
+    // of a perfect jump, which is a different thing from being reachable.
+    const comfortable = this.grabCeiling * 0.55;
+    for (let tries = 0; tries < 3; tries++) {
+      const foot = this._wallFoot(columns, this.y - 6, true);
+      if (this.y - foot <= comfortable) return foot;
+      this._step(this.cx > this.width / 2 ? -1 : 1, 140, Math.round(this.maxRise), 'solid');
+    }
+    return this._wallFoot(columns, this.y - 6);
+  }
+
+  /**
+   * Place one step, sized for the rise it actually ends up taking.
+   *
+   * The order matters and used to be wrong. The horizontal span was worked out
+   * from the rise the plan asked for, and only then did the clearance rule push
+   * the step higher to clear whatever was under it — leaving a jump sized for a
+   * flat hop that now has to climb ninety pixels. A jump cannot do both, so the
+   * span is re-derived once the real rise is known.
+   */
+  _step(dir, w, dy, type, via = 'jump') {
+    let rise = dy;
+    let slot = null;
+    // Iterate until the two agree: the span is derived from the rise, and the
+    // rise can be pushed up by whatever the step has to clear, which then makes
+    // the span wrong again. Two passes was not always enough — the last one
+    // could place a ledge sized for a rise it no longer had.
+    for (let pass = 0; pass < 5; pass++) {
+      slot = this._stepSlot(dir, this.reachRising(rise) * 0.9, w, rise);
+      const needed = this._clearRise(slot.cx, slot.w, slot.dy ?? rise);
+      if (needed <= rise + 0.5) break;
+      rise = needed;
+    }
+    this._place(slot.cx, this.y - rise, slot.w, type, via);
+    return slot.dir;
+  }
+
+  _stepSlot(dir, across, w, dy) {
+    // A gap has to be at least a body wide.
+    //
+    // Twelve pixels is the worst possible spacing: too far apart to be a step
+    // up, too close together for the penguin to stand clear of the upper
+    // ledge's edge — so the only take-off point is directly underneath it, and
+    // the jump ends against its underside. A body's width means there is
+    // always somewhere to leave from.
+    const MIN_GAP = 14;
     const prev = this.floes[this.floes.length - 1];
     for (const d of [dir, -dir]) {
       let width = w;
       for (let attempt = 0; attempt < 2; attempt++) {
+        // The span is re-derived per candidate width. Narrowing a ledge without
+        // re-deriving it leaves the gap sized for the ledge that did not fit,
+        // which is how a summit ends up a hundred and sixty pixels away.
+        const want = this.cx + d * (across + (prev ? prev.w * FOOTING : 0) / 2 + width / 2);
         const pad = width / 2 + 8;
-        let cx = d > 0 ? Math.max(want, prev.x + prev.w + MIN_GAP + width / 2)
-                       : Math.min(want, prev.x - MIN_GAP - width / 2);
+        let cx = d > 0
+          ? Math.max(want, prev.x + prev.w + MIN_GAP + width / 2)
+          : Math.min(want, prev.x - MIN_GAP - width / 2);
         cx = Math.max(pad, Math.min(this.width - pad, cx));
-        const clears = d > 0 ? cx - width / 2 >= prev.x + prev.w + MIN_GAP - 0.5
-                             : cx + width / 2 <= prev.x - MIN_GAP + 0.5;
+        const clears = d > 0
+          ? cx - width / 2 >= prev.x + prev.w + MIN_GAP - 0.5
+          : cx + width / 2 <= prev.x - MIN_GAP + 0.5;
         if (clears) return { cx, w: width, dir: d, dy };
         width = this.minWidth;
         if (width >= w) break;
@@ -201,21 +275,40 @@ export class Tower {
     }
     // Nowhere on this level: the only honest answer left is to climb straight
     // up, which needs the roof clearance the stacking rule asks for.
-    return { cx: Math.max(w / 2 + 8, Math.min(this.width - w / 2 - 8, want)), w, dir, dy: null };
+    return { cx: Math.max(w / 2 + 8, Math.min(this.width - w / 2 - 8, this.cx)), w, dir, dy: null };
   }
 
+  /**
+   * The rise a step needs so it does not become a roof.
+   *
+   * A shaft is narrow, and once a wide ledge is clamped away from the wall the
+   * next one often sits partly over it. That is fine — ledges overlap on a real
+   * mountain — as long as there is a penguin's worth of air in between. When
+   * there is not, the step climbs higher instead, and if the jump cannot climb
+   * that high the plan is wrong and says so.
+   */
   _clearRise(cx, w, dy) {
-    const clearance = PENGUIN.h * this.scale * 1.25 + 20;
+    // Head-room, not a squeeze. A quarter of a body over the penguin's head
+    // sounds like clearance and is not: the arc of the jump *onto* a ledge
+    // rises far above the ledge itself, so anything within about two thirds of
+    // a jump above it gets clipped on the way in.
+    const clearance = PENGUIN.h * this.scale * 1.45 + 20;
     const left = cx - w / 2;
     const right = cx + w / 2;
     let need = dy;
-    // Wall heads count as ground here. Pulling over the top of a column and
-    // finding a platform a hand's width above it is the same trap as two
-    // stacked ledges, and it is the one that ends a climb rather than a walk.
     for (const other of [...this.floes, ...this.walls]) {
       if (other.x + other.w <= left || other.x >= right) continue;
+      // Negative means the two boxes actually intersect — the same clash, and
+      // the one that used to slip through: "is something too close above me"
+      // has nothing to say about "am I inside something".
       const gapTo = other.y - (this.y - dy) - 20;
-      if (gapTo > 0 && gapTo < clearance - 20) {
+      // A column head is not something you can stand under at all: the ledge
+      // has to clear it outright, not merely leave headroom over it.
+      if (other.climb && gapTo > -34 && gapTo < clearance - 20) {
+        need = Math.max(need, this.y - other.y + clearance);
+        continue;
+      }
+      if (gapTo > -34 && gapTo < clearance - 20) {
         need = Math.max(need, this.y - other.y + clearance);
       }
     }
@@ -228,7 +321,12 @@ export class Tower {
   }
 
   _place(cx, y, w, type = 'solid', via = 'jump', extra = {}) {
-    w = Math.max(this.minWidth, w);
+    // A cornice is allowed to be narrower than a general ledge: it is a landing
+    // pinned to a wall, not somewhere to walk about, and widening it to the
+    // usual minimum pushes it into the column it is resting against.
+    const { minW, ...rest } = extra;
+    extra = rest;
+    w = Math.max(minW ?? this.minWidth, w);
     const floe = {
       x: Math.round(cx - w / 2),
       y: Math.round(y),
@@ -240,12 +338,20 @@ export class Tower {
     // on: the one above is a ceiling. Easy to write by accident — a gentle
     // rise plus a wide platform is enough — and impossible to see in a plan,
     // so it fails the build here rather than trapping a player later.
-    const clearance = PENGUIN.h * this.scale * 1.25;
+    const clearance = PENGUIN.h * this.scale * 1.45;
     for (const other of [...this.floes, ...this.walls]) {
       if (other.x + other.w <= floe.x || other.x >= floe.x + floe.w) continue;
-      // The ledge a wall's own climb ends on is allowed to be flush with it.
-      if (other.climb && Math.abs(other.y - floe.y) < 4) continue;
+      // A cornice is *meant* to sit level with the head of the column it rests
+      // against — that is what makes the last kick out of a shaft a flat one.
+      // Nothing else is: a ledge placed at wall-top height anywhere else is a
+      // ledge with a column running through it.
+      if (other.climb && extra.rim) continue;
       const head = other.y - (floe.y + 20);
+      if (head <= 0 && other.y + 20 > floe.y) {
+        throw new Error(
+          `buz ${Math.round(floe.x)},${Math.round(floe.y)} bir başkasının içinde`,
+        );
+      }
       if (head > 0 && head < clearance) {
         throw new Error(
           `buzun üstünde ${Math.round(head)}px kalıyor, penguen ${Math.round(clearance)}px istiyor`,
@@ -330,18 +436,7 @@ export class Tower {
     let dir = start;
     for (let i = 0; i < n; i++) {
       const dy = Math.round(Math.min(this.maxRise, this.reach.height * rise));
-      const across = this.reachRising(dy) * sway;
-      const prev = this.floes[this.floes.length - 1];
-      // Edge to edge is what has to be crossed; the halves of the two ledges
-      // are ground, not gap.
-      const span = across + (prev ? prev.w * FOOTING : 0) / 2 + w / 2;
-      const slot = this._stepSlot(dir, this.cx + dir * span, w, dy);
-      // Clearance is re-checked against every ledge, not just the last one:
-      // a rest nub inside a chimney below is still something you can be trapped
-      // under.
-      const step = this._clearRise(slot.cx, slot.w, slot.dy ?? dy);
-      this._place(slot.cx, this.y - step, slot.w, type, 'jump');
-      dir = -slot.dir;
+      dir = -this._step(dir, w, dy, type);
     }
     return this;
   }
@@ -354,7 +449,8 @@ export class Tower {
    * refuses any shaft a full stamina bar cannot clear with margin, and refuses
    * any shaft so wide that a kick would lose height crossing it.
    */
-  chimney({ height = 380, span = null, rests = 0, hazard = null, rim = 1, lip = 0 } = {}) {
+  chimney({ height = 380, span = null, rests = 0, hazard = null, lip = 0 } = {}) {
+    let rim = 1;
     const inner = span ?? Math.round(this.reach.distance * 0.9);
     const gain = kickGain(this.scale, inner);
     const budget = climbBudget(this.scale, inner);
@@ -379,12 +475,6 @@ export class Tower {
     // So the last move out of a chimney is the same move as every other move
     // in it — hold the far wall, kick, land. No special case, nothing to
     // learn twice, and nothing that depends on pixel-perfect mantling.
-    const openW = Math.max(this.penguinW + 26, inner * 0.44);
-    const rimW = inner - openW;
-    if (rimW < this.penguinW * 1.4) {
-      throw new Error(`baca çok dar: ${inner}px, çıkış çıkıntısına yer kalmıyor`);
-    }
-
     // The shaft has to fit inside the mountain, walls included, so the centre
     // is pulled in rather than letting a wall hang off the edge of the world.
     const half = inner / 2 + WALL_T;
@@ -394,21 +484,43 @@ export class Tower {
     // Wall bottoms stop just above the ledge the climb starts from. A column
     // that reaches down to the ledge's own height overlaps it, and a ledge
     // buried in a wall is a ledge the player falls through the side of.
-    const wallBottom = this._wallFoot(
-      [
-        { x: leftFace - WALL_T, w: WALL_T },
-        { x: rightFace, w: WALL_T },
-      ],
-      this.y - 6,
-    );
+    // Each column gets its own foot. A jump corridor almost always crosses
+    // only one of them, and making both start as high as the worst case pushes
+    // the mouth of the shaft out of reach for no reason — the penguin only
+    // needs *one* hand-hold to get in.
+    const cols = [
+      { x: leftFace - WALL_T, w: WALL_T },
+      { x: rightFace, w: WALL_T },
+    ];
+    let feet = cols.map((c) => this._wallFoot([c], this.y - 6, true));
+    const comfortable = this.grabCeiling * 0.55;
+    for (let tries = 0; tries < 3 && this.y - Math.max(...feet) > comfortable; tries++) {
+      this._step(this.cx > this.width / 2 ? -1 : 1, 140, Math.round(this.maxRise), 'solid');
+      feet = cols.map((c) => this._wallFoot([c], this.y - 6, true));
+    }
+    const lowest = Math.max(...feet);
+    if (this.y - lowest > this.grabCeiling) {
+      throw new Error(
+        `baca ağzı ${Math.round(this.y - lowest)}px yukarıda, ` +
+          `tutunma sınırı ${Math.round(this.grabCeiling)}px`,
+      );
+    }
+    // Top out on whichever column reaches lower: that is the one the penguin
+    // can get onto in the first place.
+    if (feet[0] > feet[1]) rim = -1;
+    else if (feet[1] > feet[0]) rim = 1;
+    const wallBottom = lowest;
     // Same rule as a single face: `height` is how much shaft gets climbed, so
     // it is measured from the foot of the columns. When the foot has been
     // lifted clear of a corridor below, the shaft starts higher — it does not
     // silently become a shorter climb than the budget was checked against.
     const wallTop = wallBottom - height;
-    const yTop = wallTop - 20;
-    this.wall(leftFace - WALL_T, wallTop, wallBottom - wallTop);
-    this.wall(rightFace, wallTop, wallBottom - wallTop);
+    // The cornice sits *level* with the heads of the columns, not above them.
+    // Raised even a ledge's thickness, its underside becomes a lip exactly
+    // where the last kick passes, and the climb dies five pixels from the top.
+    const yTop = wallTop;
+    this.wall(leftFace - WALL_T, wallTop, feet[0] - wallTop);
+    this.wall(rightFace, wallTop, feet[1] - wallTop);
     this.zone(wallTop, wallBottom - wallTop, 'chimney');
 
 
@@ -418,9 +530,13 @@ export class Tower {
     const restYs = [];
     const restSides = [];
     for (let i = 1; i <= rests; i++) {
-      const y = Math.round(this.y - (height * i) / (rests + 1));
+      // Spaced along the shaft itself, not measured down from the ledge below
+      // it: once the foot has been lifted clear of a corridor those are two
+      // different spans, and a nub placed by the second one ends up above the
+      // cornice with nothing around it.
+      const y = Math.round(wallBottom - ((wallBottom - wallTop) * i) / (rests + 1));
       const side = i % 2 ? -1 : 1;
-      const x = side < 0 ? leftFace : rightFace - restW;
+      const x = side < 0 ? leftFace + 2 : rightFace - restW - 2;
       this.floes.push({ x: Math.round(x), y, w: restW, type: 'solid', nub: true });
       restYs.push(y);
       restSides.push(side);
@@ -468,15 +584,31 @@ export class Tower {
       });
     }
 
-    // The cornice. Its surface is the exit, it rests on one wall top, and the
-    // opening is against the other — which is the wall you climb.
-    const rimX = rim > 0 ? rightFace - rimW : leftFace;
-    this._place(rimX + rimW / 2, yTop, rimW, 'solid', 'kick');
-    Object.assign(this.route[this.route.length - 1], {
-      chimney: { inner, height, rests, openW, rimW, climbSide: rim > 0 ? -1 : 1 },
+    // Topping out.
+    //
+    // There used to be a cornice hanging inside the shaft, and the last kick
+    // had to thread the gap beside it and land on a seventy-pixel shelf with a
+    // column at each end. It worked on paper and missed by five pixels in
+    // practice, over and over, because the one move in the chapter with no
+    // margin was the one every chimney ended with.
+    //
+    // So the shaft simply ends. The heads of the columns are solid ground —
+    // that is what you pull over onto, the way you top out of a real chimney —
+    // and the route continues from there. Nothing to thread, nothing to clip.
+    const headX = rim > 0 ? rightFace : leftFace - WALL_T;
+    this._place(headX + WALL_T / 2, wallTop, WALL_T, 'solid', 'kick', {
+      minW: WALL_T,
+      rim: true,
+      head: true,
     });
-    // Leaving the cornice, the cursor sits on it — but the shaft walls are
-    // gone above this point, so whatever comes next is open-air platforming.
+    Object.assign(this.route[this.route.length - 1], {
+      chimney: { inner, height, rests, climbSide: rim > 0 ? -1 : 1, head: WALL_T },
+    });
+    // A shoulder: the step off the column head onto open mountain, placed by
+    // the segment rather than left to whatever the plan writes next. It goes
+    // *away* from the shaft, so nothing after a chimney has to work around the
+    // hole the chimney just left behind.
+    this._step(rim > 0 ? 1 : -1, 150, Math.round(this.reach.height * 0.62), 'solid');
     return this;
   }
 
@@ -505,25 +637,41 @@ export class Tower {
     }
     const dy = Math.round(this.reach.height * 0.5);
     const wantCx = dir > 0 ? this.width - need - 60 : need + 60;
-    const slot = this._stepSlot(dir, wantCx, 132, dy);
-    const ledge = this._place(
-      slot.cx,
-      this.y - this._clearRise(slot.cx, slot.w, slot.dy ?? dy),
-      slot.w,
-      'solid',
-      'jump',
-    );
-
-    // The column may not be pushed so far out that there is no mountain left
-    // beyond it to land on.
-    const wallX = Math.max(
-      this.minWidth + 8,
-      Math.min(
-        this.width - WALL_T - this.minWidth - 8,
-        dir > 0 ? ledge.x + ledge.w + 6 : ledge.x - 6 - WALL_T,
-      ),
-    );
-    const foot = this._wallFoot([{ x: wallX, w: WALL_T }], this.y - 6);
+    // Launch ledge, column and mouth are decided together, and re-decided if
+    // the mouth ends up too high. Placing the ledge once and then letting the
+    // approach add more steps underneath it left the column pinned beside a
+    // ledge the penguin had already climbed past — two hundred pixels from
+    // where it was actually standing.
+    let ledge = null;
+    let wallX = null;
+    let foot = null;
+    const comfortable = this.grabCeiling * 0.55;
+    for (let tries = 0; tries < 4; tries++) {
+      this._step(dir, 132, tries === 0 ? dy : Math.round(this.maxRise), 'solid');
+      ledge = this.floes[this.floes.length - 1];
+      const fits = (d) => {
+        const wx = d > 0 ? ledge.x + ledge.w + 6 : ledge.x - 6 - WALL_T;
+        if (wx < 0 || wx + WALL_T > this.width) return null;
+        const room = d > 0 ? this.width - (wx + WALL_T) : wx;
+        return room >= this.minWidth + 8 ? wx : null;
+      };
+      wallX = fits(dir);
+      if (wallX === null) {
+        dir = -dir;
+        wallX = fits(dir);
+      }
+      if (wallX === null) {
+        throw new Error('duvara ve çıkışına yer yok — kalkış buzu kenara çok yakın');
+      }
+      foot = this._wallFoot([{ x: wallX, w: WALL_T }], this.y - 6, true);
+      if (this.y - foot <= comfortable) break;
+    }
+    if (this.y - foot > this.grabCeiling) {
+      throw new Error(
+        `duvarın eteği ${Math.round(this.y - foot)}px yukarıda, ` +
+          `tutunma sınırı ${Math.round(this.grabCeiling)}px`,
+      );
+    }
     // `height` is how much wall gets climbed, so it is measured from the foot.
     // Measuring it from the ledge instead quietly hands back every pixel the
     // foot was lifted by — and a 120px climb turns into a 49px stub with a
@@ -555,18 +703,9 @@ export class Tower {
    */
   traverse({ n = 3, w = 110, drift = 0.06, types = null } = {}) {
     for (let i = 0; i < n; i++) {
-      const dy = Math.round(this.reach.height * drift * (i % 2 ? -1 : 1));
-      const across = this.reachRising(Math.max(0, dy)) * 0.86;
-      const prev = this.floes[this.floes.length - 1];
-      const span = across + (prev ? prev.w * FOOTING : 0) / 2 + w / 2;
+      const dy = Math.max(0, Math.round(this.reach.height * drift * (i % 2 ? -1 : 1)));
       const t = types ? types[i % types.length] : 'solid';
-      const dir = this.cx + span > this.width - w / 2 - 10 ? -1 : 1;
-      const slot = this._stepSlot(dir, this.cx + dir * span, w, dy);
-      // Clearance is re-checked against every ledge, not just the last one:
-      // a rest nub inside a chimney below is still something you can be trapped
-      // under.
-      const step = this._clearRise(slot.cx, slot.w, slot.dy ?? dy);
-      this._place(slot.cx, this.y - step, slot.w, t, 'jump');
+      this._step(this.cx > this.width / 2 ? -1 : 1, w, dy, t);
     }
     return this;
   }
@@ -616,8 +755,7 @@ export class Tower {
     // A wide platform directly overhead cannot be climbed onto at all: there
     // is room to stand under it and no room to jump, because the jump starts
     // by putting your head where the platform is.
-    const slot = this._stepSlot(this.cx > this.width / 2 ? -1 : 1, this.cx, w, dy);
-    this._place(slot.cx, this.y - this._clearRise(slot.cx, slot.w, slot.dy ?? dy), slot.w, 'solid', 'jump');
+    this._step(this.cx > this.width / 2 ? -1 : 1, w, dy, 'solid');
     return this;
   }
 

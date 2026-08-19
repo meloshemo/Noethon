@@ -31,9 +31,9 @@ const CLIMB_PLANS = [
   /* ------------------------------------------------ 32–34 · the grip */
   {
     name: 'Buzulun Eteği',
+    ship: false,
     subtitle: 'Yukarısı çok uzak',
     target: 40,
-    signs: [{ dx: 92, dy: -104, text: 'Duvara doğru bas: tutun  •  Tutunurken BOŞLUK: tırman' }],
     build: (t) => {
       t.base({ w: 300 });
       t.steps({ n: 3, rise: 0.6, w: 150 });
@@ -66,6 +66,7 @@ const CLIMB_PLANS = [
   },
   {
     name: 'Dar Yarık',
+    signs: [{ dx: 92, dy: -104, text: 'Duvara doğru bas: tutun  •  Tutunurken BOŞLUK: tırman' }],
     subtitle: 'İki duvar arası',
     target: 52,
     build: (t) => {
@@ -103,7 +104,6 @@ const CLIMB_PLANS = [
   },
   {
     name: 'Uzun Baca',
-    ship: false,
     subtitle: 'Yarı yolda bir çıkıntı',
     target: 64,
     build: (t) => {
@@ -122,6 +122,7 @@ const CLIMB_PLANS = [
   },
   {
     name: 'Çıkıntı',
+    ship: false,
     subtitle: 'Gökyüzü kapandı',
     target: 66,
     build: (t) => {
@@ -129,7 +130,7 @@ const CLIMB_PLANS = [
       t.steps({ n: 2, rise: 0.6, w: 140 });
       t.chimney({ height: 250, lip: 0.55 });
       t.traverse({ n: 3, w: 120 });
-      t.chimney({ height: 270, rim: -1, lip: 0.45 });
+      t.chimney({ height: 270, lip: 0.45 });
       t.traverse({ n: 2, w: 125 });
       t.steps({ n: 2, rise: 0.58, w: 140 });
       t.crown({ w: 250 });
@@ -220,6 +221,7 @@ const CLIMB_PLANS = [
   },
   {
     name: 'Yüksek Şaft',
+    ship: false,
     subtitle: 'İki mola, bir nefes',
     target: 86,
     build: (t) => {
@@ -269,7 +271,7 @@ const CLIMB_PLANS = [
       t.gale({ height: 560, power: 175, period: 3 });
       t.chimney({ height: 340, hazard: 'shards' });
       t.traverse({ n: 3, w: 120, types: ['solid', 'crack'] });
-      t.chimney({ height: 400, rests: 1, hazard: 'shards', rim: -1, lip: 0.6 });
+      t.chimney({ height: 400, rests: 1, hazard: 'shards', lip: 0.6 });
       t.traverse({ n: 2, w: 125 });
       t.crown({ w: 240 });
       t.scatterFish(3, 58);
@@ -338,8 +340,8 @@ export const CLIMB_FROM = 32;
  * stay in this file because the plans are good and the composer is what needs
  * more work — but they are not in the game until the solver says they are.
  */
-export const CLIMB_LEVELS = CLIMB_PLANS.filter((p) => p.ship !== false).map((plan, i) => {
-  const id = CLIMB_FROM + i;
+/** Compose one plan into a level definition at the given number. */
+function compose(plan, id) {
   const tower = new Tower({ scale: scaleForLevel(id), width: 660 });
   plan.build(tower);
   const def = tower.build({
@@ -355,5 +357,18 @@ export const CLIMB_LEVELS = CLIMB_PLANS.filter((p) => p.ship !== false).map((pla
     y: def.spawn.y + (s.dy ?? -96),
     text: s.text,
   }));
+  def.ship = plan.ship !== false;
   return def;
-});
+}
+
+export const CLIMB_LEVELS = CLIMB_PLANS.filter((p) => p.ship !== false).map((plan, i) =>
+  compose(plan, CLIMB_FROM + i),
+);
+
+/**
+ * Every plan, shipped or not, numbered as if they all were.
+ *
+ * Only the solver reads this: it is how a held-back plan gets worked on without
+ * being in the game, and how the day it starts passing is noticed.
+ */
+export const CLIMB_DRAFTS = CLIMB_PLANS.map((plan, i) => compose(plan, CLIMB_FROM + i));

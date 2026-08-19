@@ -18,8 +18,8 @@ Toplam yük tek dosyada ~385 KB ve çevrimdışı çalışıyor.
 
 | | |
 |---|---|
-| **İki bölüm (chapter)** | Buz Sahanlığı 1–31 · Zirve 32–38 — ikisi ayrı fiil |
-| **38 elle yazılmış bölüm** | 31 sahanlık parkuru + 7 dikey tırmanış |
+| **İki bölüm (chapter)** | Buz Sahanlığı 1–31 · Zirve 32–36 — ikisi ayrı fiil |
+| **36 elle yazılmış bölüm** | 31 sahanlık parkuru + 5 dikey tırmanış |
 | **Tutunma** | Buz duvarına asıl, tırman, tekmele — ve kollarında sınırlı güç var |
 | **Sonsuz mod** | Bölüm numarasıyla tohumlanmış — 42. bölüm herkeste aynı |
 | **10 buz türü** | sağlam · çatlak · cilalı · eriyen · sürüklenen · düşen · tuzak · **sahte** · kaçan · gayzer |
@@ -769,10 +769,13 @@ yavaş, hızlı olan riskli. Bir tırmanışın olması gereken şey tam olarak 
 
 İki karşılıklı duvar ve aralarında basacak hiçbir şey yok. Zıplayarak geçilmiyor;
 tek yol tutunmak, ve tutunma tükeniyor. Uzun bacalarda duvara yapışık küçük
-**mola çıkıntıları** var — barı orada doldurup ikinci nefese başlıyorsun. Tepede
-bir **saçak** duvarlardan birine yaslanıyor; diğer duvarın yanındaki açıklık
-çıkış yolu. Yani bacadan çıkış da bacadaki her hareketle aynı hareket: tutun,
-tekmele, kon.
+**mola çıkıntıları** var — barı orada doldurup ikinci nefese başlıyorsun.
+
+Tepede baca öylece bitiyor: **duvarın başı sağlam zemin**, üstüne çekilip
+çıkıyorsun. Bu, ilk denediğim tasarım değildi — şaftın içine asılı bir saçak
+koymuştum ve son tekme onu sıyırıp yetmiş piksellik bir rafa konmak zorundaydı.
+Kâğıtta çalışıyordu, pratikte defalarca beş pikselle ıskalıyordu. Çözücü bunu
+gördü, ben de bölümün payı en dar hareketini tamamen kaldırdım.
 
 ### Bunun matematiği tahmin değil
 
@@ -787,11 +790,12 @@ ve orada yeterince doğru; dağda değil — bu yüzden ikisi birlikte hesaplan�
 
 ### Yayına giren ve girmeyen
 
-`climb.js` içinde on beş tırmanış planı var. Yedisi hem geometri doğrulayıcısını
-hem de fizik çözücüsünü geçiyor ve oyunda: **32–38**. Diğer sekizinde çözücünün
+`climb.js` içinde on beş tırmanış planı var. Beşi hem geometri doğrulayıcısını
+hem de fizik çözücüsünü geçiyor ve oyunda: **32–36**. Diğer onunda çözücünün
 bir yol bulamadığı en az bir adım var, ve *kimsenin çıkabildiğini kanıtlayamadığım
 bir bölümü oyuna koymam*. Dosyada `ship: false` ile duruyorlar; besteci düzeldikçe
-açılacaklar.
+açılacaklar — `node tests/climb-run.mjs --all` hepsini birden dener ve
+yayındakiler dışındakilerin hatalarını raporlar ama derlemeyi düşürmez.
 
 Bu, bir eksiği saklamak yerine ölçmenin sonucu. Kolay olanı yapıp on beşini de
 göndermek, oyuncuyu geçilemeyen bir duvara çarptırmak olurdu.

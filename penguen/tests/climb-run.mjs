@@ -21,7 +21,7 @@
 
 import { Player } from '../src/game/player.js';
 import { scaleForLevel } from '../src/game/config.js';
-import { CLIMB_LEVELS } from '../src/game/climb.js';
+import { CLIMB_LEVELS, CLIMB_DRAFTS } from '../src/game/climb.js';
 
 const STEP = 1 / 120;
 const TUNING = { coyote: 1 };
@@ -62,7 +62,12 @@ function landedOn(p, target) {
   if (!p.onGround) return false;
   const feet = p.y + p.h;
   if (Math.abs(feet - target.y) > 3) return false;
-  return p.x + p.w > target.x + 2 && p.x < target.x + target.w - 2;
+  // Real overlap, not containment. A penguin that has just pulled over the
+  // head of a column stands with one foot on the ledge and one on the column,
+  // and demanding its whole body be inside the ledge fails that by a pixel.
+  const overlap =
+    Math.min(p.x + p.w, target.x + target.w) - Math.max(p.x, target.x);
+  return overlap > 2;
 }
 
 function drowned(p, def) {
@@ -80,13 +85,21 @@ function drowned(p, def) {
 function tryJump(def, solids, a, b, { from, delay, hold }) {
   const p = makePlayer(def, a.x + a.w * from, a.y);
   const targetX = b.x + b.w / 2;
-  const dir = Math.sign(targetX - (p.x + p.w / 2)) || 1;
   let t = 0;
   let jumpedAt = null;
   let held = false;
+  let hops = 0;
+  // Landing somewhere that is not the target is not a failed attempt. The head
+  // of an ice column is solid ground and a player will happily stand on one on
+  // the way past; a solver that gives up the moment it touches down anywhere
+  // else reports a perfectly walkable route as impossible. So it hops on — up
+  // to three times, and only while it is not losing height.
+  const MAX_HOPS = 3;
+  let floor = a.y;
 
-  for (let i = 0; i < 480; i++) {
+  for (let i = 0; i < 1000; i++) {
     const cx = p.x + p.w / 2;
+    const dir = Math.sign(targetX - cx) || 1;
     const wantJump = jumpedAt === null && t >= delay;
     const pressed = wantJump;
     if (wantJump) {
@@ -95,15 +108,22 @@ function tryJump(def, solids, a, b, { from, delay, hold }) {
     }
     if (held && jumpedAt !== null && t - jumpedAt > hold) held = false;
 
-    // Steer toward the target once airborne; run toward it on the ground.
     const axis = p.onGround ? dir : Math.sign(targetX - cx) || 0;
     p.update(STEP, { axis, jumpHeld: held, jumpPressed: pressed, push: 0 }, solids, TUNING);
     t += STEP;
 
     if (drowned(p, def)) return false;
-    if (jumpedAt !== null && landedOn(p, b)) return true;
-    // Fell back onto something lower and settled: this attempt is over.
-    if (jumpedAt !== null && t - jumpedAt > 0.3 && p.onGround && !landedOn(p, b)) return false;
+    if (landedOn(p, b)) return true;
+
+    if (jumpedAt !== null && t - jumpedAt > 0.3 && p.onGround) {
+      const feet = p.y + p.h;
+      if (feet > floor + 4 || hops >= MAX_HOPS) return false;
+      floor = feet;
+      hops++;
+      jumpedAt = null;
+      held = false;
+    }
+    if (t > 6) return false;
   }
   return false;
 }
@@ -119,26 +139,35 @@ function tryJump(def, solids, a, b, { from, delay, hold }) {
  * A single face has no second wall to bounce off, so it is creeping all the way
  * and then pulling over the top.
  */
-function tryWall(def, solids, a, b, { from, delay, mode, first }) {
+function tryWall(def, solids, a, b, { from, delay, mode, first }, probe = {}) {
   const p = makePlayer(def, a.x + a.w * from, a.y);
   const chimney = Boolean(b.chimney);
   const targetX = b.x + b.w / 2;
   // Which wall to reach for first: for a face it is the wall's own side, for a
   // chimney it is whichever one the cornice is not resting on.
-  const firstSide = b.wallSide ?? (b.chimney ? first * b.chimney.climbSide : 1);
+  // Reach for the column you are going to top out on. Its inner face is right
+  // beside the exit, so the whole ascent can happen on one wall — and when the
+  // mouth of the shaft hangs high, entering beside a face is the only way to
+  // get a hand on it at all: from the middle of the shaft the grip is 85px
+  // away and the apex has passed long before you drift that far.
+  const headSide = b.chimney ? (b.chimney.climbSide < 0 ? 1 : -1) : 1;
+  const firstSide = b.wallSide ?? (b.chimney ? (first > 0 ? headSide : -headSide) : 1);
   // Where to be standing when you leave the ground. A shaft is entered from
   // underneath its *opening*, not from beside a wall: jump up next to a column
   // and you hit the bottom of it, which is exactly as solid as the rest.
+  // The shaft is entered from underneath its middle. The exit is the head of
+  // one of its columns, so the middle sits one column-width inside the target.
   const shaftX = b.chimney
-    ? (b.chimney.climbSide < 0
-        ? b.x + b.w - b.chimney.inner / 2
-        : b.x + b.chimney.inner / 2)
+    ? (headSide > 0 ? b.x - 30 : b.x + b.w + 30)
     : null;
   // For a single face the wall stands just past the edge of the launch ledge,
   // so the take-off point is that edge — not the exit, which is on the far
   // side of the wall and walking toward it means walking off into the sea.
+  // Far enough back that the whole body clears the column's footprint on the
+  // way up: a wall whose foot hangs above the ledge still has an underside,
+  // and launching from directly beneath it is a head-bump, not a climb.
   const approachX =
-    shaftX ?? (firstSide > 0 ? a.x + a.w - 24 : a.x + 24);
+    shaftX ?? (firstSide > 0 ? a.x + a.w - (p.w + 18) : a.x + p.w + 18);
   let t = 0;
   let launched = false;
   let seek = firstSide;
@@ -154,7 +183,7 @@ function tryWall(def, solids, a, b, { from, delay, mode, first }) {
   // is really just a button released too early.
   let holdUntil = 0;
 
-  for (let i = 0; i < 1400; i++) {
+  for (let i = 0; i < 7000; i++) {
     let axis = seek;
     let jumpHeld = false;
     let jumpPressed = false;
@@ -171,8 +200,24 @@ function tryWall(def, solids, a, b, { from, delay, mode, first }) {
     } else if (p.clinging) {
       gripped = true;
       const feet = p.y + p.h;
-      const nearTop = feet <= b.y + 60;
-      if (chimney && !(nearTop && mode === 'creep')) {
+      // How close to the exit the policy stops bouncing and starts creeping.
+      // Wide, because the last kick has to *arrive* at cornice height: taken
+      // from a body length too low it lands under the cornice's lip and the
+      // whole ascent is thrown away.
+      const nearTop = feet <= b.y + 150;
+      // Is there anything to kick *to*? Columns in a shaft do not always start
+      // at the same height — the one the corridor below crosses begins higher —
+      // so the bottom of a chimney is often a single face, and kicking off it
+      // there just throws the penguin into the void.
+      const opposite = solids.some(
+        (o) =>
+          o.climb &&
+          o.y < feet - 10 &&
+          o.y + o.h > feet - p.h &&
+          (p.wallSide > 0 ? o.x + o.w < p.x + 8 : o.x > p.x + p.w - 8) &&
+          Math.abs(o.x + o.w / 2 - (p.x + p.w / 2)) < 260,
+      );
+      if (chimney && opposite && !(nearTop && mode === 'creep')) {
         // Kick. Off it goes toward the other wall, so that is where to steer —
         // unless the cornice is now the thing within reach.
         jumpPressed = true;
@@ -183,15 +228,38 @@ function tryWall(def, solids, a, b, { from, delay, mode, first }) {
       }
     } else if (p.onGround) {
       if (landedOn(p, b)) return true;
-      // Standing on the head of the wall it just pulled over: the exit is
-      // beside it at the same height, so walk, do not jump.
+      // Breathe first. Standing on ice refills the bar, and setting off again
+      // half-charged is how a climb that is comfortably inside the budget
+      // fails: the wall is reachable, the arms are not.
+      if (p.stamina < p.staminaMax * 0.92) {
+        axis = 0;
+        p.update(STEP, { axis: 0, jumpHeld: false, jumpPressed: false, push: 0 }, solids, TUNING);
+        t += STEP;
+        continue;
+      }
+      // Standing on the head of the wall it just pulled over. The exit is at
+      // the same height — but with the mouth of the shaft in between, so this
+      // is a jump across, not a stroll. Walking is only right when already
+      // over the thing being aimed at.
       if (p.y + p.h <= b.y + 4) {
         axis = Math.sign(targetX - (p.x + p.w / 2)) || seek;
+        const over = p.x + p.w > b.x - 4 && p.x < b.x + b.w + 4;
+        if (!over) {
+          jumpPressed = true;
+          holdUntil = t + 0.4;
+        }
       } else {
-        // A rest ledge inside the shaft: breathe, then go again.
-        jumpPressed = true;
-        holdUntil = t + 0.5;
-        axis = seek;
+        // A rest ledge inside the shaft: breathe, then go again — but leave
+        // from under the opening, the way the shaft was entered in the first
+        // place. Launching straight up beside a column just bumps its face.
+        const cx = p.x + p.w / 2;
+        if (Math.abs(approachX - cx) > 14) {
+          axis = Math.sign(approachX - cx);
+        } else {
+          jumpPressed = true;
+          holdUntil = t + 0.5;
+          axis = seek;
+        }
       }
     } else {
       // Airborne between two walls: keep holding toward the one being reached
@@ -205,19 +273,28 @@ function tryWall(def, solids, a, b, { from, delay, mode, first }) {
     p.update(STEP, { axis, jumpHeld, jumpPressed, push: 0 }, solids, TUNING);
     t += STEP;
 
+    if (p.y < (probe.best ?? Infinity)) probe.best = Math.round(p.y);
+    if (probe.trace && i % 8 === 0) {
+      probe.log.push(
+        `${t.toFixed(2)} cx${Math.round(p.x + p.w / 2)} y${Math.round(p.y)} vy${Math.round(p.vy)} ` +
+          `g${p.onGround ? 1 : 0} c${p.clinging ? p.wallSide : 0} m${p.mantling ? 1 : 0} s${p.stamina.toFixed(1)}`,
+      );
+    }
     if (drowned(p, def)) return false;
     if (landedOn(p, b)) return true;
-    if (t > 11) return false;
+    if (t > 50) return false;
   }
   return gripped && landedOn(p, b);
 }
 
 const FROMS = [0.15, 0.3, 0.5, 0.7, 0.85];
 const DELAYS = [0, 0.06, 0.12, 0.2, 0.3, 0.42, 0.6, 0.8];
-const HOLDS = [0.5, 0.34, 0.22];
+// Including some very short ones: a clipped jump has a much lower arc, and
+// under a ledge that is the only jump that fits.
+const HOLDS = [0.5, 0.34, 0.22, 0.15, 0.1];
 const MODES = ['kick', 'creep'];
 
-function solveStep(def, solids, a, b) {
+function solveStep(def, solids, a, b, probe = {}) {
   if (b.via === 'jump') {
     for (const from of FROMS) {
       for (const delay of DELAYS) {
@@ -234,7 +311,7 @@ function solveStep(def, solids, a, b) {
     for (const delay of DELAYS) {
       for (const mode of MODES) {
         for (const first of [1, -1]) {
-          if (tryWall(def, solids, a, b, { from, delay, mode, first })) {
+          if (tryWall(def, solids, a, b, { from, delay, mode, first }, probe)) {
             return { from, delay, mode, first };
           }
         }
@@ -251,26 +328,44 @@ console.log('(Sadece yayındaki bölümler. climb.js\'te ship:false olanlar,');
 console.log(' bu çözücü bir yol bulana kadar oyuna girmiyor.)\n');
 
 let failed = 0;
+let held = 0;
 let steps = 0;
 const t0 = Date.now();
 
-for (const def of CLIMB_LEVELS) {
+// `--all` also runs the plans that are still held back, so they can be worked
+// on. Their failures are reported but do not fail the build: they are not in
+// the game, and the whole point of holding them back is that they are known to
+// be unfinished.
+const draft = process.argv.includes('--all');
+const suite = draft ? CLIMB_DRAFTS : CLIMB_LEVELS;
+
+for (const def of suite) {
   const solids = solidsOf(def);
   const route = def.route;
   const bad = [];
   for (let i = 1; i < route.length; i++) {
     steps++;
-    const found = solveStep(def, solids, route[i - 1], route[i]);
-    if (!found) bad.push(`${i}. adım (${route[i].via}) yapılamıyor: y ${route[i - 1].y} → ${route[i].y}`);
+    const probe = {};
+    const trace = process.argv.find((a) => a.startsWith('--trace='));
+    if (trace && trace.slice(8) === `${def.id},${i}`) {
+      probe.trace = true;
+      probe.log = [];
+    }
+    const found = solveStep(def, solids, route[i - 1], route[i], probe);
+    if (probe.trace) console.log(probe.log.slice(-60).join('\n'));
+    if (!found) bad.push(`${i}. adım (${route[i].via}) yapılamıyor: y ${route[i - 1].y} → ${route[i].y} (en yüksek ${probe.best ?? '-'})`);
   }
+  if (!bad.length && process.argv.includes('--list')) console.log(`GECTI ${def.id} ${def.name}`);
   if (bad.length) {
-    failed += bad.length;
-    console.log(`✗ ${def.id}. ${def.name}`);
+    if (def.ship !== false) failed += bad.length;
+    else held += bad.length;
+    console.log(`${def.ship === false ? '·' : '✗'} ${def.id}. ${def.name}${def.ship === false ? ' (yayında değil)' : ''}`);
     for (const line of bad) console.log(`    ${line}`);
   }
 }
 
 console.log(`\n${steps} adım denendi, ${((Date.now() - t0) / 1000).toFixed(1)} sn`);
+if (held) console.log(`${held} adım, henüz yayına girmemiş planlarda.`);
 if (failed) {
   console.log(`✗ ${failed} adım geçilemedi.`);
   process.exit(1);
