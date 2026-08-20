@@ -14,6 +14,7 @@
  */
 
 import { CRAFTED_LEVELS } from './config.js';
+import { t, loc, getLang } from '../core/i18n.js';
 
 const NAME_MAX = 14;
 const NAME_MIN = 2;
@@ -41,24 +42,42 @@ export function cleanName(raw) {
 /** Is this good enough to save? Returns null when it is, a reason when not. */
 export function nameProblem(raw) {
   const name = cleanName(raw);
-  if (name.length < NAME_MIN) return `En az ${NAME_MIN} karakter`;
-  if (!/[\p{L}\p{N}]/u.test(name)) return 'En az bir harf ya da rakam';
+  if (name.length < NAME_MIN) return t('name.tooShort', { n: NAME_MIN });
+  if (!/[\p{L}\p{N}]/u.test(name)) return t('name.noLetter');
   return null;
 }
 
-const FIRST = [
-  'Buz', 'Kar', 'Fırtına', 'Kuzey', 'Gece', 'Tuz', 'Rüzgâr', 'Ay',
-  'Çelik', 'Sisli', 'Hızlı', 'Sessiz', 'Cesur', 'Yıldız', 'Derin', 'Zirve',
-];
-const SECOND = [
-  'kanat', 'ayak', 'gaga', 'tüy', 'kalp', 'pati', 'yürek', 'göz',
-  'adım', 'kuyruk', 'nefes', 'iz', 'burun', 'tepe', 'dalga', 'çığ',
-];
+const PARTS = {
+  tr: {
+    first: [
+      'Buz', 'Kar', 'Fırtına', 'Kuzey', 'Gece', 'Tuz', 'Rüzgâr', 'Ay',
+      'Çelik', 'Sisli', 'Hızlı', 'Sessiz', 'Cesur', 'Yıldız', 'Derin', 'Zirve',
+    ],
+    second: [
+      'kanat', 'ayak', 'gaga', 'tüy', 'kalp', 'pati', 'yürek', 'göz',
+      'adım', 'kuyruk', 'nefes', 'iz', 'burun', 'tepe', 'dalga', 'çığ',
+    ],
+  },
+  // Built the same way rather than translated word for word: a suggested name
+  // has to sound like a name in the language it is offered in, and "Icewing"
+  // does that where a literal rendering of the Turkish would not.
+  en: {
+    first: [
+      'Ice', 'Snow', 'Storm', 'North', 'Night', 'Salt', 'Wind', 'Moon',
+      'Steel', 'Misty', 'Swift', 'Silent', 'Brave', 'Star', 'Deep', 'Summit',
+    ],
+    second: [
+      'wing', 'foot', 'beak', 'feather', 'heart', 'paw', 'soul', 'eye',
+      'step', 'tail', 'breath', 'trail', 'nose', 'peak', 'wave', 'drift',
+    ],
+  },
+};
 
 /** A name for somebody who does not want to think of one. */
 export function suggestName(rng = Math.random) {
-  const a = FIRST[Math.floor(rng() * FIRST.length)];
-  const b = SECOND[Math.floor(rng() * SECOND.length)];
+  const pool = PARTS[getLang()] ?? PARTS.tr;
+  const a = pool.first[Math.floor(rng() * pool.first.length)];
+  const b = pool.second[Math.floor(rng() * pool.second.length)];
   return `${a}${b}`;
 }
 
@@ -84,13 +103,48 @@ export function makeId(rng = Math.random) {
  * where you have been.
  */
 const TITLES = [
-  { at: 0, name: 'Yeni Yumurta', note: 'Buz daha çok yeni' },
-  { at: 5, name: 'Buz Çırağı', note: 'Kırılan buzu tanıdın' },
-  { at: 16, name: 'Sahanlık Kaşifi', note: 'Kıyıyı boydan boya yürüdün' },
-  { at: 31, name: 'Duvar Tırmanıcısı', note: 'Dağ başladı' },
-  { at: 46, name: 'Zirve Sahibi', note: 'Buzulun tepesini gördün' },
-  { at: 61, name: 'Derin Dalgıç', note: 'Buzun altını da bilirsin' },
-  { at: 76, name: 'Koloni Efsanesi', note: 'Yolunu kesen kalmadı' },
+  {
+    at: 0,
+    name: 'Yeni Yumurta',
+    note: 'Buz daha çok yeni',
+    en: { name: 'Fresh Egg', note: 'The ice is all new' },
+  },
+  {
+    at: 5,
+    name: 'Buz Çırağı',
+    note: 'Kırılan buzu tanıdın',
+    en: { name: 'Ice Apprentice', note: 'You know which ice breaks' },
+  },
+  {
+    at: 16,
+    name: 'Sahanlık Kaşifi',
+    note: 'Kıyıyı boydan boya yürüdün',
+    en: { name: 'Shelf Explorer', note: 'You walked the whole coast' },
+  },
+  {
+    at: 31,
+    name: 'Duvar Tırmanıcısı',
+    note: 'Dağ başladı',
+    en: { name: 'Wall Climber', note: 'The mountain has begun' },
+  },
+  {
+    at: 46,
+    name: 'Zirve Sahibi',
+    note: 'Buzulun tepesini gördün',
+    en: { name: 'Summit Holder', note: 'You saw the top of the glacier' },
+  },
+  {
+    at: 61,
+    name: 'Derin Dalgıç',
+    note: 'Buzun altını da bilirsin',
+    en: { name: 'Deep Diver', note: 'You know what is under the ice too' },
+  },
+  {
+    at: 76,
+    name: 'Koloni Efsanesi',
+    note: 'Yolunu kesen kalmadı',
+    en: { name: 'Colony Legend', note: 'Nobody stands in your way now' },
+  },
 ];
 
 /** How many levels the last title asks for — the lint keeps this honest. */
@@ -100,8 +154,8 @@ export const LAST_TITLE_AT = TITLES[TITLES.length - 1].at;
 export function titleFor(save) {
   const done = Object.values(save?.levels ?? {}).filter((l) => (l.stars ?? 0) > 0).length;
   let best = TITLES[0];
-  for (const t of TITLES) if (done >= t.at) best = t;
-  const next = TITLES.find((t) => t.at > done) ?? null;
+  for (const title of TITLES) if (done >= title.at) best = title;
+  const next = TITLES.find((title) => title.at > done) ?? null;
   return { ...best, done, next };
 }
 
@@ -130,6 +184,8 @@ export function ensureProfile(save) {
 
 /** A one-line summary for the title screen chip. */
 export function profileLine(save) {
-  const t = titleFor(save);
-  return save.name ? `${t.name} · ${t.done}/${CRAFTED_LEVELS} bölüm` : 'Kimliğini oluştur';
+  const rank = titleFor(save);
+  return save.name
+    ? `${loc(rank)} · ${t('ui.progress', { done: rank.done, total: CRAFTED_LEVELS })}`
+    : t('ui.createId');
 }

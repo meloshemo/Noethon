@@ -18,6 +18,8 @@
  * under whoever set it.
  */
 
+import { t } from '../core/i18n.js';
+
 /** Seconds between samples. 20/s is smooth enough to read as a real penguin. */
 export const SAMPLE_RATE = 0.05;
 
@@ -271,12 +273,14 @@ export function withName(code, name) {
 
 /** Human-readable summary line for sharing alongside the code. */
 export function shareText({ level, time, deaths, fish, code, daily, name }) {
-  const t = `${String(Math.floor(time / 60)).padStart(2, '0')}:${String(Math.floor(time % 60)).padStart(2, '0')}.${String(Math.floor((time * 100) % 100)).padStart(2, '0')}`;
-  const title = daily ? 'Pengu · Günün Bölümü' : `Pengu · Bölüm ${level}`;
-  const lines = [`${title} — ${t}${name ? ` (${name})` : ''}`];
+  const clock = `${String(Math.floor(time / 60)).padStart(2, '0')}:${String(Math.floor(time % 60)).padStart(2, '0')}.${String(Math.floor((time * 100) % 100)).padStart(2, '0')}`;
+  const where = daily ? t('title.daily') : t('ui.levelN', { n: level });
+  const lines = [`Pengu · ${where} · ${clock}${name ? ` (${name})` : ''}`];
   // The stats line is skipped when sharing an old run off the board, where
   // only the time was kept.
-  if (Number.isFinite(deaths) && Number.isFinite(fish)) lines.push(`🐧 ${deaths} ölüm · 🐟 ${fish}`);
-  lines.push('', 'Beni geçebilir misin? Kodu oyunda Sıralama ekranına yapıştır:', code);
+  if (Number.isFinite(deaths) && Number.isFinite(fish)) {
+    lines.push(t('share.stats', { deaths, fish }));
+  }
+  lines.push('', t('share.challenge'), code);
   return lines.join('\n');
 }

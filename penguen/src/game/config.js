@@ -288,11 +288,11 @@ export const BOOST = {
  */
 export const ROT = {
   /** Lead in the belly: heavier, shorter jump. */
-  heavy: { duration: 5, jump: -0.22, speed: -0.18, label: 'Ağırlaştın!' },
+  heavy: { duration: 5, jump: -0.22, speed: -0.18, label: 'Ağırlaştın!', en: { label: 'You got heavy!' } },
   /** Left is right. Short, because it is the nastiest. */
-  dizzy: { duration: 3.2, label: 'Kontroller ters!' },
+  dizzy: { duration: 3.2, label: 'Kontroller ters!', en: { label: 'Controls reversed!' } },
   /** Frost on the eyes: the view closes in. */
-  blind: { duration: 4, label: 'Göremiyorsun!' },
+  blind: { duration: 4, label: 'Göremiyorsun!', en: { label: 'You cannot see!' } },
 };
 
 /**
@@ -676,6 +676,12 @@ export const MONUMENT = {
     'Buz Parçası', 'Kar Yığını', 'Buz Sütunu', 'Sarkıt', 'Buz Kemeri',
     'Donmuş Şelale', 'Buzul Dili', 'Buz Kalesi', 'Kutup Kulesi', 'Ebedi Buzul',
   ],
+  en: {
+    ranks: [
+      'Ice Chip', 'Snow Heap', 'Ice Pillar', 'Icicle', 'Ice Arch',
+      'Frozen Falls', 'Glacier Tongue', 'Ice Keep', 'Polar Tower', 'Eternal Glacier',
+    ],
+  },
 };
 
 /** What the next monument block costs at a given size. */
@@ -746,9 +752,24 @@ export const REWARDS = {
  * move better, survive longer, then the two things that add a button.
  */
 export const SHOP_GROUPS = [
-  { id: 'hareket', name: 'Hareket', note: 'Daha hızlı, daha uzağa, daha sağlam bas' },
-  { id: 'dayanma', name: 'Dayanma', note: 'Hata payı ve balık toplama' },
-  { id: 'ekipman', name: 'Ekipman', note: 'Havadayken bir şansın daha olsun' },
+  {
+    id: 'hareket',
+    name: 'Hareket',
+    note: 'Daha hızlı, daha uzağa, daha sağlam bas',
+    en: { name: 'Movement', note: 'Faster, further, surer underfoot' },
+  },
+  {
+    id: 'dayanma',
+    name: 'Dayanma',
+    note: 'Hata payı ve balık toplama',
+    en: { name: 'Endurance', note: 'Room for a mistake, and reach for the fish' },
+  },
+  {
+    id: 'ekipman',
+    name: 'Ekipman',
+    note: 'Havadayken bir şansın daha olsun',
+    en: { name: 'Gear', note: 'One more chance while you are still in the air' },
+  },
 ];
 
 export const UPGRADES = [
@@ -757,11 +778,12 @@ export const UPGRADES = [
     group: 'hareket',
     name: 'Kar Botu',
     blurb: 'Daha yükseğe ve daha uzağa zıpla.',
+    en: { name: 'Snow Boots', blurb: 'Jump higher and further.' },
     icon: 'boot',
     levels: [
-      { cost: 90, effect: 0.05, label: '+%5 zıplama' },
-      { cost: 320, effect: 0.1, label: '+%10 zıplama' },
-      { cost: 850, effect: 0.16, label: '+%16 zıplama' },
+      { cost: 90, effect: 0.05, label: '+%5 zıplama', en: { label: '+5% jump' } },
+      { cost: 320, effect: 0.1, label: '+%10 zıplama', en: { label: '+10% jump' } },
+      { cost: 850, effect: 0.16, label: '+%16 zıplama', en: { label: '+16% jump' } },
     ],
   },
   {
@@ -769,11 +791,12 @@ export const UPGRADES = [
     group: 'hareket',
     name: 'Hızlı Ayak',
     blurb: 'Buz üstünde daha çevik koş.',
+    en: { name: 'Quick Feet', blurb: 'Run nimbler on the ice.' },
     icon: 'bolt',
     levels: [
-      { cost: 85, effect: 0.05, label: '+%5 hız' },
-      { cost: 300, effect: 0.1, label: '+%10 hız' },
-      { cost: 800, effect: 0.15, label: '+%15 hız' },
+      { cost: 85, effect: 0.05, label: '+%5 hız', en: { label: '+5% speed' } },
+      { cost: 300, effect: 0.1, label: '+%10 hız', en: { label: '+10% speed' } },
+      { cost: 800, effect: 0.15, label: '+%15 hız', en: { label: '+15% speed' } },
     ],
   },
   {
@@ -781,10 +804,11 @@ export const UPGRADES = [
     group: 'hareket',
     name: 'Krampon',
     blurb: 'Cilalı buzda kayma azalır.',
+    en: { name: 'Crampons', blurb: 'Less sliding on polished ice.' },
     icon: 'spike',
     levels: [
-      { cost: 220, effect: 0.45, label: 'Kayma %45 az' },
-      { cost: 620, effect: 0.75, label: 'Kayma %75 az' },
+      { cost: 220, effect: 0.45, label: 'Kayma %45 az', en: { label: '45% less slide' } },
+      { cost: 620, effect: 0.75, label: 'Kayma %75 az', en: { label: '75% less slide' } },
     ],
   },
   {
@@ -792,49 +816,60 @@ export const UPGRADES = [
     group: 'dayanma',
     name: 'Kalın Tüy',
     blurb: 'Her denemede bir kez ölümden kurtarır.',
+    en: { name: 'Thick Down', blurb: 'Saves you from death once per attempt.' },
     icon: 'shield',
-    levels: [{ cost: 900, effect: 1, label: 'Denemede 1 can' }],
+    levels: [{ cost: 900, effect: 1, label: 'Denemede 1 can', en: { label: '1 life per attempt' } }],
   },
   {
     id: 'magnet',
     group: 'dayanma',
     name: 'Balık Mıknatısı',
     blurb: 'Balıklar sana doğru gelir.',
+    en: { name: 'Fish Magnet', blurb: 'Fish come to you.' },
     icon: 'magnet',
     levels: [
-      { cost: 260, effect: 90, label: '90px çekim' },
-      { cost: 780, effect: 165, label: '165px çekim' },
+      { cost: 260, effect: 90, label: '90px çekim', en: { label: '90px pull' } },
+      { cost: 780, effect: 165, label: '165px çekim', en: { label: '165px pull' } },
     ],
   },
   {
     id: 'vest',
     group: 'dayanma',
-    name: 'Rüzgar Yeleği',
-    blurb: 'Kutup rüzgarı seni daha az savurur.',
+    name: 'Rüzgâr Yeleği',
+    blurb: 'Kutup rüzgârı seni daha az savurur. Kuyruk rüzgârının itişi de azalır.',
+    en: {
+      name: 'Wind Vest',
+      blurb: 'The polar wind shoves you around less. It also pushes you less from behind.',
+    },
     icon: 'wind',
-    levels: [{ cost: 560, effect: 0.55, label: 'Rüzgar %55 az' }],
+    levels: [{ cost: 560, effect: 0.55, label: 'Rüzgâr %55 az', en: { label: '55% less wind' } }],
   },
   {
     id: 'wings',
     group: 'ekipman',
     name: 'Planör Kanat',
-    blurb: 'Havada zıplamayı basılı tut — kanatlar açılır, düşüş yavaşlar.',
+    blurb: 'Havada zıplamayı basılı tut, kanatlar açılır ve düşüş yavaşlar.',
+    en: {
+      name: 'Glider Wings',
+      blurb: 'Hold jump in the air: the wings open and the fall slows down.',
+    },
     icon: 'wings',
     levels: [
-      { cost: 2400, effect: 1, label: '1.1 sn süzülme' },
-      { cost: 5200, effect: 1.7, label: '1.9 sn süzülme' },
-      { cost: 9500, effect: 2.6, label: '2.9 sn süzülme' },
+      { cost: 2400, effect: 1, label: '1.1 sn süzülme', en: { label: '1.1 s glide' } },
+      { cost: 5200, effect: 1.7, label: '1.9 sn süzülme', en: { label: '1.9 s glide' } },
+      { cost: 9500, effect: 2.6, label: '2.9 sn süzülme', en: { label: '2.9 s glide' } },
     ],
   },
   {
     id: 'rocket',
     group: 'ekipman',
     name: 'Sırt Motoru',
-    blurb: 'Havadayken zıplamaya bas — motor bir kez ateşler.',
+    blurb: 'Havadayken zıplamaya bas, motor bir kez ateşler.',
+    en: { name: 'Back Motor', blurb: 'Press jump while airborne and the motor fires once.' },
     icon: 'rocket',
     levels: [
-      { cost: 3400, effect: 1, label: 'Havada 1 ateşleme' },
-      { cost: 7000, effect: 2, label: 'Havada 2 ateşleme' },
+      { cost: 3400, effect: 1, label: 'Havada 1 ateşleme', en: { label: '1 burst in the air' } },
+      { cost: 7000, effect: 2, label: 'Havada 2 ateşleme', en: { label: '2 bursts in the air' } },
     ],
   },
   {
@@ -842,10 +877,11 @@ export const UPGRADES = [
     group: 'dayanma',
     name: 'Kuş Radarı',
     blurb: 'Kuş dalışa geçmeden önce daha uzun uyarı verir.',
+    en: { name: 'Bird Radar', blurb: 'Longer warning before a bird starts its dive.' },
     icon: 'radar',
     levels: [
-      { cost: 1400, effect: 0.35, label: '+0.35 sn uyarı' },
-      { cost: 3200, effect: 0.7, label: '+0.7 sn uyarı' },
+      { cost: 1400, effect: 0.35, label: '+0.35 sn uyarı', en: { label: '+0.35 s warning' } },
+      { cost: 3200, effect: 0.7, label: '+0.7 sn uyarı', en: { label: '+0.7 s warning' } },
     ],
   },
 ];

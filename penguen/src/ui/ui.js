@@ -7,6 +7,7 @@
  */
 
 import { formatTime, formatRecord } from '../core/util.js';
+import { t, loc, LANGS, getLang, setLang } from '../core/i18n.js';
 import { CRAFTED_LEVELS, UPGRADES, SHOP_GROUPS, MONUMENT, monumentCost, scaleForLevel } from '../game/config.js';
 import { getLevel } from '../game/game.js';
 import { ALL_LEVELS as LEVELS, CHAPTERS, chapterOf, startsChapter } from '../game/chapters.js';
@@ -20,16 +21,7 @@ import { dailyObjectives } from '../game/daily.js';
 import { generateDailyLevel } from '../game/generator.js';
 import { dailyOffer, offerSecondsLeft, formatCountdown } from '../game/store.js';
 
-const ICE_LEGEND = [
-  ['crack', 'Çatlak buz', 'Basınca çatlar, kısa süre sonra kırılır'],
-  ['trap', 'Sahte buz', 'Kızıl damarlı — neredeyse anında kırılır'],
-  ['melt', 'Eriyen buz', 'Kendi kendine erir, sonra geri donar'],
-  ['slip', 'Cilalı buz', 'Kaygan: fren mesafesi uzun'],
-  ['move', 'Sürüklenen buz', 'Akıntıyla gider gelir, seni de taşır'],
-  ['fall', 'Düşen buz', 'Bastığın an aşağı doğru kaçar'],
-  ['burst', 'Gayzer buzu', 'Basınca tıslar, yarım saniye sonra seni fırlatır'],
-  ['snap', 'Kaçan buz', 'Alçak ve cazip — tam inerken kayboluyor'],
-];
+const ICE_LEGEND = ['crack', 'trap', 'melt', 'slip', 'move', 'fall', 'burst', 'snap'];
 
 /** Tiny inline glyphs for the shop cards. */
 const SHOP_ICONS = {
@@ -220,19 +212,19 @@ export class UI {
     const session = this.game?.pendingSession ?? null;
     this._session = session;
     if (session) {
-      const where = session.daily ? 'Günün Bölümü' : `Bölüm ${session.level}`;
-      this.el.playLabel.textContent = 'Devam et';
+      const where = session.daily ? t('title.daily') : t('ui.levelN', { n: session.level });
+      this.el.playLabel.textContent = t('pause.resume');
       this.el.playSub.textContent = `${where} · ${formatRecord(session.elapsed ?? 0)}`;
     } else {
-      this.el.playLabel.textContent = isNew ? 'Başla' : 'Devam et';
-      this.el.playSub.textContent = `Bölüm ${next}`;
+      this.el.playLabel.textContent = isNew ? t('id.start') : t('pause.resume');
+      this.el.playSub.textContent = t('ui.levelN', { n: next });
     }
 
     const stars = Object.values(this.save.levels).reduce((s, l) => s + (l.stars ?? 0), 0);
     const done = Object.keys(this.save.levels).length;
     this.el.titleStats.textContent = done
-      ? `${done} bölüm tamamlandı · ${stars} yıldız · ${this.save.stats.totalFish} balık`
-      : 'Kontroller: ← → yürü, Boşluk zıpla';
+      ? t('ui.titleStats', { done, stars, fish: this.save.stats.totalFish })
+      : t('ui.titleHint');
 
     this.refreshWho();
     this.refreshWallet();
@@ -254,12 +246,10 @@ export class UI {
    */
   refreshWho() {
     ensureProfile(this.save);
-    const t = titleFor(this.save);
-    this.el.whoName.textContent = this.save.name || 'Kimliğini oluştur';
-    this.el.whoTitle.textContent = this.save.name ? profileLine(this.save) : 'Adını ve penguenini seç';
+    this.el.whoName.textContent = this.save.name || t('ui.createId');
+    this.el.whoTitle.textContent = this.save.name ? profileLine(this.save) : t('ui.pickName');
     this.el.whoId.textContent = this.save.name ? this.save.profile.id : '';
     this._portrait(this.el.whoArt);
-    void t;
   }
 
   /** The worn penguin, drawn into one of the small identity canvases. */
@@ -285,7 +275,7 @@ export class UI {
   openIdentity() {
     ensureProfile(this.save);
     this.el.idName.value = this.save.name || suggestName();
-    this.el.idHint.textContent = '2–14 karakter';
+    this.el.idHint.textContent = t('ui.nameHint');
     this.el.idHint.classList.remove('field__hint--bad');
     this._portrait(this.el.idArt);
     this.showScreen('identity');
@@ -316,23 +306,23 @@ export class UI {
 
   buildProfile() {
     ensureProfile(this.save);
-    const t = titleFor(this.save);
+    const rank = titleFor(this.save);
     const levels = Object.values(this.save.levels ?? {});
     const stars = levels.reduce((n, l) => n + (l.stars ?? 0), 0);
     const skins = Object.keys(this.save.skins ?? {}).length + 1;
 
-    this.el.profName.textContent = this.save.name || 'Adsız Penguen';
-    this.el.profTitle.textContent = `${t.name} — ${t.note}`;
+    this.el.profName.textContent = this.save.name || t('ui.noName');
+    this.el.profTitle.textContent = `${loc(rank)} · ${loc(rank, 'note')}`;
     this.el.profId.textContent = this.save.profile.id;
-    this.el.profNext.textContent = t.next
-      ? `Sıradaki unvan: ${t.next.name} — ${t.next.at} bölüm bitince.`
-      : 'Kazanılacak unvan kalmadı.';
-    this.el.profLevels.textContent = `${t.done} / ${CRAFTED_LEVELS}`;
+    this.el.profNext.textContent = rank.next
+      ? t('ui.nextTitle', { name: loc(rank.next), at: rank.next.at })
+      : t('ui.noTitles');
+    this.el.profLevels.textContent = `${rank.done} / ${CRAFTED_LEVELS}`;
     this.el.profStars.textContent = `${stars} / ${CRAFTED_LEVELS * 3}`;
     this.el.profFish.textContent = String(this.save.stats?.totalFish ?? 0);
     this.el.profDeaths.textContent = String(this.save.stats?.totalDeaths ?? 0);
     this.el.profSkins.textContent = `${skins} / ${SKINS.length}`;
-    this.el.profSince.textContent = new Date(this.save.profile.created).toLocaleDateString('tr-TR');
+    this.el.profSince.textContent = new Date(this.save.profile.created).toLocaleDateString(dateLocale());
     this.el.profNameInput.value = this.save.name ?? '';
     this.el.profHint.textContent = '2–14 karakter';
     this.el.profHint.classList.remove('field__hint--bad');
@@ -355,10 +345,10 @@ export class UI {
     this._offer = offer;
 
     this.el.offerCard.classList.toggle('is-owned', owned);
-    this.el.offerName.textContent = offer.item.name;
-    this.el.offerBlurb.textContent = owned ? 'Bu zaten sende.' : offer.item.blurb;
+    this.el.offerName.textContent = loc(offer.item);
+    this.el.offerBlurb.textContent = owned ? t('ui.owned') : loc(offer.item, 'blurb');
     this.el.offerWas.textContent = `${offer.was}`;
-    this.el.offerNow.textContent = owned ? '—' : `${offer.price} balık`;
+    this.el.offerNow.textContent = owned ? '·' : t('ui.priceFish', { n: offer.price });
     this.el.offerOff.textContent = `%${Math.round(offer.off * 100)}`;
     this.el.offerClock.textContent = formatCountdown(offerSecondsLeft());
     this.el.offerCard.style.setProperty('--offer-color', offer.rarity.color);
@@ -377,14 +367,14 @@ export class UI {
   refreshLeague() {
     const league = Storage.touchLeague(this.save, weekKey());
     const st = standing(league);
-    this.el.leagueName.textContent = `${st.tier.name} Lig`;
-    this.el.leaguePoints.textContent = `${st.points} puan`;
+    this.el.leagueName.textContent = t('ui.leagueName', { tier: loc(st.tier) });
+    this.el.leaguePoints.textContent = t('ui.points', { n: st.points });
     this.el.leagueFill.style.width = `${Math.round(st.pct * 100)}%`;
     this.el.leagueFill.style.background = st.tier.color;
     this.el.leagueBadge.style.color = st.tier.color;
     this.el.leagueNext.textContent = st.next
-      ? `${st.tier.name} → ${st.next.name} için ${st.toNext} puan`
-      : 'En üst lig — bu hafta zirvedesin';
+      ? t('ui.leagueNext', { tier: loc(st.tier), next: loc(st.next), n: st.toNext })
+      : t('ui.leagueTop');
   }
 
   /** Badge the collection when something is claimable or affordable. */
@@ -441,10 +431,10 @@ export class UI {
     const got = list.filter((o) => done.includes(o.id)).length;
 
     this.el.dailyState.textContent = d.done
-      ? `${got}/${list.length} hedef · en iyi ${formatRecord(d.bestTime)}`
-      : `${list.length} hedef · herkes için aynı bölüm`;
+      ? t('ui.dailyDone', { got, total: list.length, time: formatRecord(d.bestTime) })
+      : t('ui.dailyOpen', { n: list.length });
     this.el.dailyStreak.hidden = !d.streak;
-    this.el.dailyStreak.textContent = d.streak ? `${d.streak} gün` : '';
+    this.el.dailyStreak.textContent = d.streak ? t('ui.streakDays', { n: d.streak }) : '';
     document.getElementById('dailyBtn').classList.toggle('daily--done', got === list.length && list.length > 0);
 
     this.el.dailyGoals.innerHTML = list
@@ -452,7 +442,7 @@ export class UI {
         (o) => `
         <li class="goal${done.includes(o.id) ? ' goal--done' : ''}">
           <span class="goal__tick" aria-hidden="true">${done.includes(o.id) ? '✓' : ''}</span>
-          <span>${o.text}</span>
+          <span>${loc(o, 'text')}</span>
         </li>`,
       )
       .join('');
@@ -520,13 +510,13 @@ export class UI {
       body.className = 'skin__body';
       const perks = perkText(item);
       body.innerHTML = `
-        <span class="skin__rarity" style="color:${rarity.color}">${rarity.name}</span>
-        <strong class="skin__name">${item.name}</strong>
-        <small class="skin__blurb">${item.blurb}</small>
+        <span class="skin__rarity" style="color:${rarity.color}">${loc(rarity)}</span>
+        <strong class="skin__name">${loc(item)}</strong>
+        <small class="skin__blurb">${loc(item, 'blurb')}</small>
         ${perks ? `<span class="skin__perk">${perks}</span>` : ''}
         ${
           st.owned
-            ? '<span class="skin__state">Açıldı</span>'
+            ? `<span class="skin__state">${t('ui.unlockedState')}</span>`
             : `<span class="skin__bar"><i style="width:${Math.round(st.pct * 100)}%;background:${rarity.color}"></i></span>
                <span class="skin__state">${st.label}</span>`
         }`;
@@ -537,7 +527,7 @@ export class UI {
         // broken; a label reads as a state, which is what it is.
         const tag = document.createElement('span');
         tag.className = 'skin__worn';
-        tag.textContent = trails ? 'Kullanılıyor' : 'Giyili';
+        tag.textContent = trails ? t('ui.inUse') : t('ui.worn');
         card.append(canvas, body, tag);
         grid.append(card);
         continue;
@@ -547,7 +537,7 @@ export class UI {
       btn.className = 'btn skin__btn';
       btn.type = 'button';
       if (st.owned) {
-        btn.textContent = 'Giy';
+        btn.textContent = t('ui.wear');
         btn.disabled = false;
         btn.classList.add('btn--primary');
         btn.addEventListener('click', () => {
@@ -564,7 +554,10 @@ export class UI {
         const can = (this.save.coins ?? 0) >= st.cost;
         btn.disabled = !can;
         if (can) btn.classList.add('btn--primary');
-        btn.innerHTML = st.cost === 0 ? 'Al' : `<span>Al</span><small class="btn__sub">${st.cost} balık</small>`;
+        btn.innerHTML =
+          st.cost === 0
+            ? t('ui.buy')
+            : `<span>${t('ui.buy')}</span><small class="btn__sub">${t('ui.priceFish', { n: st.cost })}</small>`;
         btn.addEventListener('click', () => {
           if (!Storage.buySkin(this.save, item.id, st.cost, bag)) return;
           this.audio.fish();
@@ -625,7 +618,7 @@ export class UI {
           <li class="mission${m.done ? ' mission--done' : ''}">
             <span class="mission__check" aria-hidden="true">${m.done ? '✓' : ''}</span>
             <span class="mission__body">
-              <span class="mission__text">${m.text}</span>
+              <span class="mission__text">${loc(m, 'text')}</span>
               <span class="mission__bar"><i style="width:${pct}%"></i></span>
             </span>
             <span class="mission__reward">+${m.reward}</span>
@@ -644,13 +637,14 @@ export class UI {
   refreshMonument() {
     const blocks = this.save.monument ?? 0;
     const cost = monumentCost(blocks);
+    const names = MONUMENT[getLang()]?.ranks ?? MONUMENT.ranks;
     const rank =
-      blocks < MONUMENT.ranks.length
-        ? MONUMENT.ranks[blocks]
-        : `${MONUMENT.ranks[MONUMENT.ranks.length - 1]} +${blocks - MONUMENT.ranks.length + 1}`;
+      blocks < names.length
+        ? names[blocks]
+        : `${names[names.length - 1]} +${blocks - names.length + 1}`;
     this.el.monumentRank.textContent = rank;
-    this.el.monumentCost.textContent = `${cost.toLocaleString('tr-TR')} balık`;
-    this.el.monumentBlocks.textContent = `${blocks} blok`;
+    this.el.monumentCost.textContent = t('ui.priceFish', { n: cost.toLocaleString(dateLocale()) });
+    this.el.monumentBlocks.textContent = t('ui.blocks', { n: blocks });
     this.el.monumentCard.classList.toggle('is-affordable', (this.save.coins ?? 0) >= cost);
     this._monumentCost = cost;
   }
@@ -685,9 +679,9 @@ export class UI {
       const head = document.createElement('h3');
       head.className = 'shop__group';
       head.innerHTML =
-        `<span class="shop__groupName">${group.name}</span>` +
-        `<span class="shop__groupNote">${group.note}</span>` +
-        `<span class="shop__groupCount">${have}/${all} seviye</span>`;
+        `<span class="shop__groupName">${loc(group)}</span>` +
+        `<span class="shop__groupNote">${loc(group, 'note')}</span>` +
+        `<span class="shop__groupCount">${t('ui.levelsOf', { have, all })}</span>`;
       grid.append(head);
 
       for (const spec of items) grid.append(this._shopCard(spec, coins));
@@ -706,12 +700,14 @@ export class UI {
     card.innerHTML = `
       <span class="item__icon" aria-hidden="true"><svg viewBox="0 0 24 24">${SHOP_ICONS[spec.icon] ?? ''}</svg></span>
       <span class="item__head">
-        <strong class="item__name">${spec.name}</strong>
-        <span class="item__level">${maxed ? 'Tam' : `${owned}/${spec.levels.length}`}</span>
+        <strong class="item__name">${loc(spec)}</strong>
+        <span class="item__level">${maxed ? t('ui.full') : `${owned}/${spec.levels.length}`}</span>
       </span>
-      <span class="item__blurb">${spec.blurb}</span>
+      <span class="item__blurb">${loc(spec, 'blurb')}</span>
       <span class="item__meta">
-        <span class="item__effect">${maxed ? spec.levels[spec.levels.length - 1].label : next.label}</span>
+        <span class="item__effect">${
+          maxed ? loc(spec.levels[spec.levels.length - 1], 'label') : loc(next, 'label')
+        }</span>
         <span class="item__pips" aria-hidden="true">${spec.levels
           .map((_, i) => `<i class="${i < owned ? 'on' : ''}"></i>`)
           .join('')}</span>
@@ -721,18 +717,18 @@ export class UI {
     foot.className = 'item__foot';
 
     if (maxed) {
-      foot.innerHTML = '<span class="item__done">Tamamlandı</span>';
+      foot.innerHTML = `<span class="item__done">${t('ui.completed')}</span>`;
     } else {
       const btn = document.createElement('button');
       btn.className = `btn btn--buy${affordable ? ' btn--primary' : ''}`;
       btn.type = 'button';
       btn.disabled = !affordable;
-      btn.innerHTML = `<span class="btn__price"><b>${next.cost}</b> balık</span>`;
+      btn.innerHTML = `<span class="btn__price"><b>${next.cost}</b> ${t('ui.fish')}</span>`;
       btn.setAttribute(
         'aria-label',
         affordable
-          ? `${spec.name} al — ${next.cost} balık`
-          : `${spec.name} için ${short} balık daha lazım`,
+          ? t('ui.buyAria', { name: loc(spec), n: next.cost })
+          : t('ui.needAria', { name: loc(spec), n: short }),
       );
       btn.addEventListener('click', () => {
         if (!Storage.buyUpgrade(this.save, spec)) return;
@@ -748,7 +744,7 @@ export class UI {
         // feelings and the player should get to have the right one.
         const gap = document.createElement('span');
         gap.className = 'item__short';
-        gap.textContent = `${short} balık daha`;
+        gap.textContent = t('ui.short', { n: short });
         foot.append(gap);
       }
     }
@@ -770,11 +766,12 @@ export class UI {
 
   /** Label for a board key: "Bölüm 7", "Sonsuz 3" or "Günün Bölümü". */
   static boardLabel(key) {
-    if (key === 'daily') return 'Günün Bölümü';
+    if (key === 'daily') return t('title.daily');
     const id = Number(key);
     if (!Number.isFinite(id)) return String(key);
-    if (id > CRAFTED_LEVELS) return `Sonsuz ${id - CRAFTED_LEVELS}`;
-    return `Bölüm ${id}${LEVELS[id - 1] ? ` · ${LEVELS[id - 1].name}` : ''}`;
+    if (id > CRAFTED_LEVELS) return t('ui.endlessN', { n: id - CRAFTED_LEVELS });
+    const def = LEVELS[id - 1];
+    return t('ui.levelN', { n: id }) + (def ? ` · ${loc(def)}` : '');
   }
 
   /**
@@ -785,7 +782,7 @@ export class UI {
    * server, which is the only way to have one with no backend at all.
    */
   buildBoard() {
-    this.el.boardWho.textContent = this.save.name || 'Adsız Penguen';
+    this.el.boardWho.textContent = this.save.name || t('ui.noName');
     const keys = Storage.boardKeys(this.save);
     const list = this.el.boardList;
     list.innerHTML = '';
@@ -799,8 +796,8 @@ export class UI {
           <span class="empty__mark" aria-hidden="true">
             <svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 19h16v2H4v-2Zm2-4h3v3H6v-3Zm4.5-6h3v9h-3V9ZM15 3h3v15h-3V3Z"/></svg>
           </span>
-          <p class="empty__text">Henüz kayıtlı süre yok.<br />Bir bölümü bitir — süren buraya düşsün.</p>
-          <button class="btn btn--primary" id="boardGo" type="button">Bölüm seç</button>
+          <p class="empty__text">${t('ui.boardEmpty')}</p>
+          <button class="btn btn--primary" id="boardGo" type="button">${t('ui.boardGo')}</button>
         </div>`;
       list.querySelector('#boardGo')?.addEventListener('click', () => {
         this.audio.ui();
@@ -821,7 +818,7 @@ export class UI {
       card.innerHTML = `
         <header class="board__head">
           <h3 class="board__title">${UI.boardLabel(key)}</h3>
-          <button class="btn btn--tiny" type="button" data-share="${key}">Paylaş</button>
+          <button class="btn btn--tiny" type="button" data-share="${key}">${t('ui.shareShort')}</button>
         </header>
         <ol class="board__rows">
           ${rows
@@ -833,8 +830,8 @@ export class UI {
               <span class="board__time">${formatRecord(r.time)}</span>
               ${
                 r.you
-                  ? '<span class="board__tag">sen</span>'
-                  : `<button class="board__drop" type="button" data-drop="${key}" data-name="${escapeHtml(r.name)}" aria-label="${escapeHtml(r.name)} kaydını sil">×</button>`
+                  ? `<span class="board__tag">${t('ui.youTag')}</span>`
+                  : `<button class="board__drop" type="button" data-drop="${key}" data-name="${escapeHtml(r.name)}" aria-label="${escapeHtml(t('ui.dropAria', { name: r.name }))}">×</button>`
               }
             </li>`,
             )
@@ -844,8 +841,8 @@ export class UI {
     }
 
     this.el.boardMeta.textContent = rivals
-      ? `${keys.length} bölüm · ${rivals} rakip`
-      : `${keys.length} bölüm`;
+      ? t('ui.boardMeta2', { n: keys.length, r: rivals })
+      : t('ui.boardMeta1', { n: keys.length });
   }
 
   _boardMessage(text, ok) {
@@ -891,8 +888,8 @@ export class UI {
         head.className = 'levels__chapter';
         head.id = `chapter-${chapter.id}`;
         head.innerHTML =
-          `<span class="levels__chapterName">${chapter.name}</span>` +
-          `<span class="levels__chapterVerb">${chapter.verb}</span>` +
+          `<span class="levels__chapterName">${loc(chapter)}</span>` +
+          `<span class="levels__chapterVerb">${loc(chapter, 'verb')}</span>` +
           `<span class="levels__chapterDone">${done}/${chapter.levels.length}</span>`;
         grid.appendChild(head);
       }
@@ -901,8 +898,8 @@ export class UI {
         head.className = 'levels__chapter';
         head.id = 'chapter-endless';
         head.innerHTML =
-          '<span class="levels__chapterName">Sonsuz</span>' +
-          '<span class="levels__chapterVerb">Bölüm numarasıyla üretilir — herkeste aynı</span>';
+          `<span class="levels__chapterName">${t('ui.endless')}</span>` +
+          `<span class="levels__chapterVerb">${t('ui.endlessDesc')}</span>`;
         grid.appendChild(head);
       }
 
@@ -916,11 +913,12 @@ export class UI {
 
       const num = document.createElement('span');
       num.className = 'level__num';
-      num.textContent = id > CRAFTED_LEVELS ? `Sonsuz ${id - CRAFTED_LEVELS}` : `Bölüm ${id}`;
+      num.textContent =
+        id > CRAFTED_LEVELS ? t('ui.endlessN', { n: id - CRAFTED_LEVELS }) : t('ui.levelN', { n: id });
 
       const name = document.createElement('span');
       name.className = 'level__name';
-      name.textContent = open ? (def?.name ?? `Bölüm ${id}`) : 'Kilitli';
+      name.textContent = open ? (loc(def) || t('ui.levelN', { n: id })) : t('ui.locked');
 
       const stars = document.createElement('span');
       stars.className = 'level__stars';
@@ -934,10 +932,10 @@ export class UI {
       const foot = document.createElement('span');
       foot.className = 'level__foot';
       if (rec?.bestTime && Number.isFinite(rec.bestTime)) {
-        const t = document.createElement('span');
-        t.className = 'level__time';
-        t.textContent = formatRecord(rec.bestTime);
-        foot.append(t);
+        const best = document.createElement('span');
+        best.className = 'level__time';
+        best.textContent = formatRecord(rec.bestTime);
+        foot.append(best);
       }
       // The one card that answers "where was I". A ring alone is not enough on
       // a list this long: it needs the word the player just read on the button
@@ -945,7 +943,7 @@ export class UI {
       if (id === unlocked) {
         const tag = document.createElement('em');
         tag.className = 'level__next';
-        tag.textContent = 'Sıradaki';
+        tag.textContent = t('ui.next');
         foot.append(tag);
       }
 
@@ -954,10 +952,9 @@ export class UI {
       btn.setAttribute(
         'aria-label',
         open
-          ? `${num.textContent}: ${name.textContent}, ${rec?.stars ?? 0} yıldız${
-              id === unlocked ? ', sıradaki bölüm' : ''
-            }`
-          : `${num.textContent} kilitli`,
+          ? t('ui.levelAria', { num: num.textContent, name: name.textContent, stars: rec?.stars ?? 0 }) +
+            (id === unlocked ? t('ui.levelAriaNext') : '')
+          : t('ui.lockedAria', { num: num.textContent }),
       );
 
       if (open) {
@@ -970,7 +967,7 @@ export class UI {
     }
 
     const totalStars = Object.values(this.save.levels).reduce((s2, l) => s2 + (l.stars ?? 0), 0);
-    this.el.levelsMeta.textContent = `${totalStars} / ${CRAFTED_LEVELS * 3} yıldız`;
+    this.el.levelsMeta.textContent = t('ui.starsMeta', { n: totalStars, total: CRAFTED_LEVELS * 3 });
   }
 
   /**
@@ -996,8 +993,10 @@ export class UI {
         (k) => Number(k) >= chapter.from && Number(k) <= chapter.to,
       ).length;
       chip.innerHTML =
-        `<span class="chip__name">${chapter.name}</span>` +
-        `<span class="chip__meta">${open ? `${done}/${chapter.levels.length}` : `${chapter.from}. bölümde`}</span>`;
+        `<span class="chip__name">${loc(chapter)}</span>` +
+        `<span class="chip__meta">${
+          open ? `${done}/${chapter.levels.length}` : t('ui.chapterAt', { n: chapter.from })
+        }</span>`;
       chip.addEventListener('click', () => {
         this.audio.ui();
         document
@@ -1011,7 +1010,7 @@ export class UI {
       chip.type = 'button';
       chip.className = 'chip';
       chip.innerHTML =
-        '<span class="chip__name">Sonsuz</span><span class="chip__meta">üretilen</span>';
+        `<span class="chip__name">${t('ui.endless')}</span><span class="chip__meta">${t('ui.generated')}</span>`;
       chip.addEventListener('click', () => {
         this.audio.ui();
         document.getElementById('chapter-endless')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1024,8 +1023,11 @@ export class UI {
 
   updateHud(world, levelId, runDeaths) {
     if (this.el.hud.hidden) return;
-    this.el.hudLevel.textContent = levelId > CRAFTED_LEVELS ? `Sonsuz ${levelId - CRAFTED_LEVELS}` : `Bölüm ${levelId}`;
-    this.el.hudName.textContent = world.def.name;
+    this.el.hudLevel.textContent =
+      levelId > CRAFTED_LEVELS
+        ? t('ui.endlessN', { n: levelId - CRAFTED_LEVELS })
+        : t('ui.levelN', { n: levelId });
+    this.el.hudName.textContent = loc(world.def);
     this.el.hudFish.textContent = `${world.fishTaken}/${world.fish.length}`;
     this.el.hudDeaths.textContent = String(world.deaths + runDeaths);
     this.el.hudTime.textContent = formatTime(world.elapsed);
@@ -1103,7 +1105,11 @@ export class UI {
     chip.classList.toggle('is-behind', !ahead);
     chip.setAttribute(
       'aria-label',
-      `${world.ghost.name} rekoruna göre ${Math.abs(lead).toFixed(2)} saniye ${ahead ? 'öndesin' : 'geridesin'}`,
+      t('ui.ghostAria', {
+        name: world.ghost.name,
+        n: Math.abs(lead).toFixed(2),
+        dir: ahead ? t('ui.ahead') : t('ui.behind'),
+      }),
     );
   }
 
@@ -1138,9 +1144,11 @@ export class UI {
     }
 
     this.el.introKicker.textContent =
-      def.id > CRAFTED_LEVELS ? `Sonsuz ${def.id - CRAFTED_LEVELS}` : `Bölüm ${def.id} · ${def.subtitle ?? ''}`;
-    this.el.introTitle.textContent = def.name;
-    this.el.introText.textContent = def.intro;
+      def.id > CRAFTED_LEVELS
+        ? t('ui.endlessN', { n: def.id - CRAFTED_LEVELS })
+        : `${t('ui.levelN', { n: def.id })} · ${loc(def, 'subtitle')}`;
+    this.el.introTitle.textContent = loc(def);
+    this.el.introText.textContent = loc(def, 'intro');
     this.el.introCard.classList.remove('is-out');
     this.showScreen('intro');
 
@@ -1159,13 +1167,13 @@ export class UI {
 
     this.el.winKicker.textContent = result.daily
       ? result.firstToday
-        ? `Günün bölümü · ${result.streak} günlük seri`
-        : 'Günün bölümü — daha hızlı'
+        ? t('ui.dailyStreakKicker', { n: result.streak })
+        : t('ui.dailyFaster')
       : result.stars === 3
-        ? 'Kusursuz!'
+        ? t('ui.perfect')
         : result.deaths === 0
-          ? 'Tek seferde!'
-          : 'Bölüm tamam';
+          ? t('ui.oneGo')
+          : t('ui.levelDone');
     this.el.winTitle.textContent = result.name;
     this.el.winTime.textContent = formatRecord(result.time);
     this.el.winFish.textContent = `${result.fish}/${result.totalFish}`;
@@ -1179,17 +1187,17 @@ export class UI {
     });
 
     const missing = [];
-    if (result.fish < result.totalFish) missing.push('tüm balıkları topla');
-    if (result.time > result.target) missing.push(`${result.target} sn altında bitir`);
+    if (result.fish < result.totalFish) missing.push(t('ui.missAllFish'));
+    if (result.time > result.target) missing.push(t('ui.missTime', { n: result.target }));
     this.el.winHint.textContent =
       result.stars === 3
         ? isRecord && Number.isFinite(prevBest)
-          ? 'Yeni rekor!'
+          ? t('ui.newRecord')
           : ''
-        : `3 yıldız için: ${missing.join(' · ')}`;
+        : t('ui.forThree', { list: missing.join(' · ') });
 
     this.el.nextBtn.textContent =
-      result.level === CRAFTED_LEVELS ? 'Sonsuz moda geç' : 'Sıradaki bölüm';
+      result.level === CRAFTED_LEVELS ? t('ui.toEndless') : t('win.next');
     // There is no "next" daily — tomorrow's is tomorrow's.
     this.el.nextBtn.hidden = Boolean(result.daily);
 
@@ -1212,15 +1220,15 @@ export class UI {
     const lines = [];
     if (result.beatGhost === true) {
       const gap = (result.ghostTime - result.time).toFixed(2);
-      lines.push(`<strong>${result.ghostName} geçildi</strong> — ${gap} sn farkla`);
+      lines.push(t('ui.beatGhost', { name: escapeHtml(result.ghostName), gap }));
     } else if (result.beatGhost === false) {
       const gap = (result.time - result.ghostTime).toFixed(2);
-      lines.push(`${result.ghostName} hâlâ önde — ${gap} sn`);
+      lines.push(t('ui.ghostAhead', { name: escapeHtml(result.ghostName), gap }));
     } else if (result.isPB) {
-      lines.push('<strong>İlk rekorun</strong> — artık kendinle yarışıyorsun');
+      lines.push(t('ui.firstRecord'));
     }
     if (result.rivals > 1 && result.rank) {
-      lines.push(`${result.rivals} kişilik sıralamada <strong>${result.rank}.</strong>`);
+      lines.push(t('ui.rankOf', { n: result.rivals, rank: result.rank }));
     }
     this.el.winRank.innerHTML = lines.join(' · ');
     this.el.winRank.hidden = lines.length === 0;
@@ -1264,7 +1272,7 @@ export class UI {
       /* dismissed or unsupported — fall through to the clipboard */
     }
     const copied = await this._copy(text);
-    this._flashButton(this.el.shareBtn, copied ? 'Kopyalandı ✓' : 'Kopyalanamadı');
+    this._flashButton(this.el.shareBtn, copied ? t('ui.copied') : t('ui.copyFail'));
     if (!copied) this._showCodeFallback(text);
   }
 
@@ -1333,7 +1341,7 @@ export class UI {
       box.id = 'dataFallback';
       box.className = 'share__fallback';
       box.setAttribute('readonly', '');
-      box.setAttribute('aria-label', 'Kaydının tamamı');
+      box.setAttribute('aria-label', t('ui.saveAll'));
       document.querySelector('.legal__data').after(box);
     }
     box.value = text;
@@ -1366,11 +1374,11 @@ export class UI {
       parts.push(`
         <div class="reward reward--league${result.league.promoted ? ' is-promoted' : ''}">
           <div class="reward__head">
-            <span>Lig puanı</span>
+            <span>${t('ui.leaguePointsHead')}</span>
             <strong>+${result.league.points}</strong>
           </div>
           <ul class="reward__rows">${rows}</ul>
-          ${result.league.promoted ? '<p class="reward__note">Lig atladın!</p>' : ''}
+          ${result.league.promoted ? `<p class="reward__note">${t('ui.promoted')}</p>` : ''}
         </div>`);
     }
 
@@ -1378,19 +1386,23 @@ export class UI {
       const items = result.objectives
         .map(
           (o) => `<li class="goal${o.done ? ' goal--done' : ''}${o.fresh ? ' goal--fresh' : ''}">
-            <span class="goal__tick" aria-hidden="true">${o.done ? '✓' : ''}</span><span>${o.text}</span></li>`,
+            <span class="goal__tick" aria-hidden="true">${o.done ? '✓' : ''}</span><span>${loc(o, 'text')}</span></li>`,
         )
         .join('');
-      parts.push(`<div class="reward"><div class="reward__head"><span>Günün hedefleri</span></div><ul class="goals">${items}</ul></div>`);
+      parts.push(
+        `<div class="reward"><div class="reward__head"><span>${t('ui.dailyGoalsHead')}</span></div><ul class="goals">${items}</ul></div>`,
+      );
     }
 
     if (result.unlockedSkins?.length) {
       parts.push(`
         <div class="reward reward--unlock">
           <div class="reward__head"><span>${
-            result.unlockedSkins.some((s) => s.bag === 'skins') ? 'Yeni penguen!' : 'Yeni iz!'
+            result.unlockedSkins.some((s) => s.bag === 'skins') ? t('ui.newSkin') : t('ui.newTrail')
           }</span></div>
-          <p class="reward__note">${result.unlockedSkins.map((s) => s.name).join(' · ')} açıldı — Koleksiyon'dan giyebilirsin.</p>
+          <p class="reward__note">${t('ui.unlockedNote', {
+            list: result.unlockedSkins.map((sk) => loc(sk)).join(' · '),
+          })}</p>
         </div>`);
     }
 
@@ -1413,7 +1425,7 @@ export class UI {
       </ul>
       ${
         result.missionsDone?.length
-          ? `<p class="payout__missions">Görev tamam: ${result.missionsDone.join(' · ')}</p>`
+          ? `<p class="payout__missions">${t('ui.missionsDone', { list: result.missionsDone.join(' · ') })}</p>`
           : ''
       }`;
 
@@ -1431,7 +1443,7 @@ export class UI {
       go.className = 'btn btn--ghost payout__shop';
       go.type = 'button';
       go.innerHTML =
-        `<span>Markete git</span><small class="btn__sub">${buyable.length} şey alabilirsin</small>`;
+        `<span>${t('ui.goShop')}</span><small class="btn__sub">${t('ui.canBuy', { n: buyable.length })}</small>`;
       go.addEventListener('click', () => {
         this.audio.ui();
         this.buildShop();
@@ -1454,10 +1466,10 @@ export class UI {
     box.id = 'fatal';
     box.className = 'fatal';
     box.innerHTML = `
-      <h2>Oyun bir hataya takıldı</h2>
-      <p>Bunu olduğu gibi gönderirsen sebebini bulabilirim.</p>
+      <h2>${t('ui.fatalTitle')}</h2>
+      <p>${t('ui.fatalBody')}</p>
       <pre></pre>
-      <button class="btn btn--primary" type="button">Yeniden dene</button>`;
+      <button class="btn btn--primary" type="button">${t('ui.retry')}</button>`;
     box.querySelector('pre').textContent =
       `${err?.name ?? 'Error'}: ${err?.message ?? err}\n\n` +
       `${(err?.stack ?? '').split('\n').slice(1, 5).join('\n')}\n\n` +
@@ -1477,10 +1489,10 @@ export class UI {
 
   _buildLegend() {
     this.el.iceLegend.innerHTML = ICE_LEGEND.map(
-      ([type, title, desc]) => `
+      (type) => `
         <li>
           <span class="legend__swatch" data-type="${type}" aria-hidden="true"></span>
-          <span class="legend__text"><strong>${title}</strong><small>${desc}</small></span>
+          <span class="legend__text"><strong>${t(`ice.${type}`)}</strong><small>${t(`ice.${type}D`)}</small></span>
         </li>`,
     ).join('');
   }
@@ -1552,13 +1564,13 @@ export class UI {
     $('idDice').addEventListener('click', () => {
       this.audio.ui();
       this.el.idName.value = suggestName();
-      this.el.idHint.textContent = '2–14 karakter';
+      this.el.idHint.textContent = t('ui.nameHint');
       this.el.idHint.classList.remove('field__hint--bad');
     });
     $('idSave').addEventListener('click', () => {
       if (this._commitName(this.el.idName, this.el.idHint)) {
         this.showScreen('title');
-        this._toastOnce(`Hoş geldin, ${this.save.name}`);
+        this._toastOnce(t('ui.welcome', { name: this.save.name }));
       }
     });
     this.el.idName.addEventListener('keydown', (e) => {
@@ -1568,7 +1580,7 @@ export class UI {
     $('profDice').addEventListener('click', () => {
       this.audio.ui();
       this.el.profNameInput.value = suggestName();
-      this.el.profHint.textContent = '2–14 karakter';
+      this.el.profHint.textContent = t('ui.nameHint');
       this.el.profHint.classList.remove('field__hint--bad');
     });
     $('profSave').addEventListener('click', () => {
@@ -1616,14 +1628,14 @@ export class UI {
           a.download = `pengu-kayit-${todayKey()}.json`;
           a.click();
           setTimeout(() => URL.revokeObjectURL(url), 4000);
-          this._toastOnce('Kaydın indirildi');
+          this._toastOnce(t('ui.saved'));
           return;
         } catch {
           /* fall through to the copyable box */
         }
       }
       this._showDataFallback(json);
-      this._toastOnce('İndirme kapalı — metni kopyalayabilirsin');
+      this._toastOnce(t('ui.downloadOff'));
     });
     $('legalWipe').addEventListener('click', () => {
       this.audio.ui('back');
@@ -1641,7 +1653,7 @@ export class UI {
       }
       if (!Storage.buySkin(this.save, offer.item.id, offer.price, bag)) {
         this.audio.ui('back');
-        this._toastOnce(`${offer.price - (this.save.coins ?? 0)} balık daha lazım`);
+        this._toastOnce(t('ui.needMore', { n: offer.price - (this.save.coins ?? 0) }));
         return;
       }
       this.audio.fish();
@@ -1703,8 +1715,10 @@ export class UI {
       if (this.game.world) this.game.world.assist = this.save.settings.assist;
     });
 
+    this._buildLangPicker();
+
     $('resetBtn').addEventListener('click', () => {
-      if (!confirm('Tüm ilerleme silinecek. Emin misin?')) return;
+      if (!confirm(t('ui.confirmReset'))) return;
       this._onReset?.();
     });
 
@@ -1756,7 +1770,7 @@ export class UI {
       const shareKey = e.target.closest('[data-share]')?.dataset.share;
       if (shareKey) {
         const row = Storage.board(this.save, shareKey).find((r) => r.you);
-        if (!row) return this._boardMessage('Bu bölümde paylaşacak bir süren yok.', false);
+        if (!row) return this._boardMessage(t('ui.noTime'), false);
         const text = shareText({
           level: shareKey,
           time: row.time,
@@ -1773,7 +1787,7 @@ export class UI {
           /* dismissed — fall through */
         }
         const ok = await this._copy(text);
-        this._boardMessage(ok ? 'Kod kopyalandı — arkadaşına gönder.' : 'Kopyalanamadı.', ok);
+        this._boardMessage(ok ? t('ui.codeCopied') : t('ui.copyFail'), ok);
         return undefined;
       }
 
@@ -1785,6 +1799,58 @@ export class UI {
       }
       return undefined;
     });
+  }
+
+  /**
+   * The language picker.
+   *
+   * Two buttons rather than a select, because a select on a phone opens a
+   * sheet and this is a choice with two answers. Each button carries its own
+   * language's name in its own language, so a player who cannot read the
+   * interface can still find the way out of it.
+   */
+  _buildLangPicker() {
+    const box = $('langPicker');
+    if (!box) return;
+    box.innerHTML = '';
+    for (const lang of LANGS) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'lang';
+      btn.dataset.lang = lang.id;
+      btn.innerHTML = `<b>${lang.short}</b><span>${lang.label}</span>`;
+      btn.setAttribute('aria-pressed', String(getLang() === lang.id));
+      btn.classList.toggle('is-on', getLang() === lang.id);
+      btn.addEventListener('click', () => {
+        if (getLang() === lang.id) return;
+        this.save.settings.lang = lang.id;
+        this._persist();
+        this.audio.ui();
+        this.applyLang(lang.id);
+      });
+      box.append(btn);
+    }
+  }
+
+  /**
+   * Switch language and repaint everything that was built in the old one.
+   *
+   * The static markup repaints itself from the data attributes; the screens
+   * that build their own DOM have to be told, and forgetting one leaves a
+   * player looking at half a translation.
+   */
+  applyLang(id) {
+    setLang(id);
+    this._buildLangPicker();
+    this._buildLegend();
+    this.refreshTitle();
+    this.buildLevelGrid();
+    this.buildShop();
+    this.buildSkins(this._skinTab ?? 'skins');
+    this.buildBoard();
+    this.buildProfile();
+    this.refreshMonument();
+    if (this.lastResult) this._renderPayout(this.lastResult);
   }
 
   _syncSettings() {
@@ -1868,10 +1934,10 @@ export class UI {
   /** Preview of the penguin's size for the given level (used by the intro). */
   static growthLabel(level) {
     const s = scaleForLevel(level);
-    if (s < 1.1) return 'yavru';
-    if (s < 1.3) return 'büyüyor';
-    if (s < 1.5) return 'genç';
-    return 'yetişkin';
+    if (s < 1.1) return t('ui.chick');
+    if (s < 1.3) return t('ui.growing');
+    if (s < 1.5) return t('ui.young');
+    return t('ui.adult');
   }
 }
 
@@ -1882,5 +1948,11 @@ function escapeHtml(s) {
 
 /** Convenience used by the level grid to look up generated level names. */
 export function levelName(id) {
-  return getLevel(id)?.name ?? `Bölüm ${id}`;
+  const def = getLevel(id);
+  return (def && loc(def)) || t('ui.levelN', { n: id });
+}
+
+/** Number and date formatting follows the chosen language, not the browser. */
+function dateLocale() {
+  return getLang() === 'en' ? 'en-GB' : 'tr-TR';
 }

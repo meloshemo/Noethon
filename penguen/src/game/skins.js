@@ -15,6 +15,8 @@
  * where cx/by are the centre and the feet, and headY is the eye line.
  */
 
+import { t } from '../core/i18n.js';
+
 /**
  * Rarity.
  *
@@ -23,11 +25,11 @@
  * it is a starting item or the thing somebody played all week for.
  */
 export const RARITY = {
-  common: { name: 'Yaygın', color: '#8fc4e2', order: 0 },
-  rare: { name: 'Nadir', color: '#4fd7ff', order: 1 },
-  epic: { name: 'Efsanevi', color: '#9b8cff', order: 2 },
-  mythic: { name: 'Mitik', color: '#ffd23f', order: 3 },
-  diamond: { name: 'Elmas', color: '#7ce8ff', order: 4 },
+  common: { name: 'Yaygın', color: '#8fc4e2', order: 0, en: { name: 'Common' } },
+  rare: { name: 'Nadir', color: '#4fd7ff', order: 1, en: { name: 'Rare' } },
+  epic: { name: 'Efsanevi', color: '#9b8cff', order: 2, en: { name: 'Epic' } },
+  mythic: { name: 'Mitik', color: '#ffd23f', order: 3, en: { name: 'Mythic' } },
+  diamond: { name: 'Elmas', color: '#7ce8ff', order: 4, en: { name: 'Diamond' } },
 };
 
 /**
@@ -47,12 +49,12 @@ export const RARITY = {
  * balance: the perk and the look are the same slot.
  */
 export const PERKS = {
-  jump: { label: 'zıplama', fmt: (v) => `+%${Math.round(v * 100)} zıplama` },
-  speed: { label: 'hız', fmt: (v) => `+%${Math.round(v * 100)} hız` },
-  glide: { label: 'süzülme', fmt: (v) => `+${v.toFixed(1)} sn süzülme` },
-  grip: { label: 'tutuş', fmt: (v) => `kaymayı %${Math.round(v * 100)} azaltır` },
-  magnet: { label: 'mıknatıs', fmt: (v) => `${v}px balık çekimi` },
-  radar: { label: 'radar', fmt: (v) => `+${v.toFixed(2)} sn kuş uyarısı` },
+  jump: { fmt: (v) => t('perk.jump', { n: Math.round(v * 100) }) },
+  speed: { fmt: (v) => t('perk.speed', { n: Math.round(v * 100) }) },
+  glide: { fmt: (v) => t('perk.glide', { n: v.toFixed(1) }) },
+  grip: { fmt: (v) => t('perk.grip', { n: Math.round(v * 100) }) },
+  magnet: { fmt: (v) => t('perk.magnet', { n: v }) },
+  radar: { fmt: (v) => t('perk.radar', { n: v.toFixed(2) }) },
 };
 
 /** Human-readable perk list for a card. */
@@ -66,21 +68,21 @@ export function perkText(skin) {
 
 /** Where an unlock's progress is read from. Kept here so the UI can show it. */
 export const FEATS = {
-  flawless: { label: 'ölmeden bitirilen bölüm', read: (s) => s.stats.flawless ?? 0 },
-  fish: { label: 'toplanan balık', read: (s) => s.stats.totalFish ?? 0 },
-  meters: { label: 'sonsuz modda metre', read: (s) => Math.floor(s.stats.endlessMeters ?? 0) },
-  streak: { label: 'gün üst üste günün bölümü', read: (s) => s.daily?.bestStreak ?? 0 },
-  perfect: { label: '3 yıldızlı bölüm', read: (s) => Object.values(s.levels).filter((l) => l.stars >= 3).length },
-  boosts: { label: 'hız balığı', read: (s) => s.stats.boosts ?? 0 },
-  diamond: { label: 'Elmas lige çıkış', read: (s) => ((s.league?.bestTier ?? 0) >= 3 ? 1 : 0) },
-  skua: { label: 'boşa çıkarılan kuş dalışı', read: (s) => s.stats.skuaDodges ?? 0 },
-  glide: { label: 'saniye süzülme', read: (s) => Math.floor(s.stats.glideSeconds ?? 0) },
-  rockets: { label: 'motor ateşlemesi', read: (s) => s.stats.rocketFires ?? 0 },
-  spent: { label: 'markette harcanan balık', read: (s) => s.stats.spent ?? 0 },
-  deaths: { label: 'ölüm', read: (s) => s.stats.totalDeaths ?? 0 },
-  plays: { label: 'oynanan bölüm', read: (s) => s.stats.totalPlays ?? 0 },
-  night: { label: 'gece yarısı turu', read: (s) => s.stats.nightRuns ?? 0 },
-  wardrobe: { label: 'penguen topla', read: (s) => Object.keys(s.skins ?? {}).length },
+  flawless: { read: (s) => s.stats.flawless ?? 0 },
+  fish: { read: (s) => s.stats.totalFish ?? 0 },
+  meters: { read: (s) => Math.floor(s.stats.endlessMeters ?? 0) },
+  streak: { read: (s) => s.daily?.bestStreak ?? 0 },
+  perfect: { read: (s) => Object.values(s.levels).filter((l) => l.stars >= 3).length },
+  boosts: { read: (s) => s.stats.boosts ?? 0 },
+  diamond: { read: (s) => ((s.league?.bestTier ?? 0) >= 3 ? 1 : 0) },
+  skua: { read: (s) => s.stats.skuaDodges ?? 0 },
+  glide: { read: (s) => Math.floor(s.stats.glideSeconds ?? 0) },
+  rockets: { read: (s) => s.stats.rocketFires ?? 0 },
+  spent: { read: (s) => s.stats.spent ?? 0 },
+  deaths: { read: (s) => s.stats.totalDeaths ?? 0 },
+  plays: { read: (s) => s.stats.totalPlays ?? 0 },
+  night: { read: (s) => s.stats.nightRuns ?? 0 },
+  wardrobe: { read: (s) => Object.keys(s.skins ?? {}).length },
 };
 
 /* ------------------------------------------------------------------ */
@@ -474,6 +476,7 @@ export const SKINS = [
     rarity: 'common',
     name: 'Penguen',
     blurb: 'Yeni yumurtadan çıkmış hâli. Büyüdükçe tüyleri koyulaşır.',
+    en: { name: 'Penguin', blurb: 'Fresh out of the egg. The feathers darken as it grows.' },
     tint: '#4a5a72',
     grows: true,
     belly: '#f6fbff',
@@ -486,6 +489,7 @@ export const SKINS = [
     rarity: 'rare',
     name: 'Ninja Penguen',
     blurb: 'Ölmeden geçmeyi bilenlere.',
+    en: { name: 'Ninja Penguin', blurb: 'For the ones who get through without dying.' },
     tint: '#1d2330',
     belly: '#39404f',
     beak: '#d9a441',
@@ -499,6 +503,7 @@ export const SKINS = [
     rarity: 'epic',
     name: 'Kral Penguen',
     blurb: 'Buzulun tacı senindir.',
+    en: { name: 'King Penguin', blurb: 'The crown of the glacier is yours.' },
     tint: '#2a3550',
     belly: '#fff4d6',
     beak: '#ffb43f',
@@ -522,6 +527,7 @@ export const SKINS = [
     rarity: 'epic',
     name: 'Astronot Penguen',
     blurb: 'Sonsuz modda çok uzağa gidenlere.',
+    en: { name: 'Astronaut Penguin', blurb: 'For going a very long way in endless mode.' },
     tint: '#dfe7f2',
     belly: '#ffffff',
     beak: '#ffb43f',
@@ -539,6 +545,7 @@ export const SKINS = [
     rarity: 'mythic',
     name: 'Altın Penguen',
     blurb: 'Yedi gün üst üste günün bölümünü bitirenlere.',
+    en: { name: 'Golden Penguin', blurb: 'For seven days of the daily level in a row.' },
     tint: '#c9922b',
     belly: '#ffe9a8',
     beak: '#fff2c4',
@@ -553,6 +560,7 @@ export const SKINS = [
     rarity: 'rare',
     name: 'Korsan Penguen',
     blurb: 'Üç yıldızı toplamayı huy edinenlere.',
+    en: { name: 'Pirate Penguin', blurb: 'For making a habit of three stars.' },
     tint: '#33405a',
     belly: '#e8eef7',
     beak: '#ff9c3f',
@@ -565,6 +573,7 @@ export const SKINS = [
     rarity: 'epic',
     name: 'Ateş Penguen',
     blurb: 'Hız balığını huy edinenlere.',
+    en: { name: 'Fire Penguin', blurb: 'For making a habit of the speed fish.' },
     tint: '#5a1c1c',
     belly: '#ffd9a0',
     beak: '#ffcf3f',
@@ -579,6 +588,7 @@ export const SKINS = [
     rarity: 'mythic',
     name: 'Siber Penguen',
     blurb: 'Elmas lige çıkanlara.',
+    en: { name: 'Cyber Penguin', blurb: 'For reaching the Diamond league.' },
     tint: '#1a2140',
     belly: '#2b3a6b',
     beak: '#38f2d0',
@@ -607,6 +617,7 @@ export const SKINS = [
     rarity: 'rare',
     name: 'Yılbaşı Penguen',
     blurb: 'Aralık ayında bedava, diğer aylarda balıkla.',
+    en: { name: 'Winter Penguin', blurb: 'Free through December, fish the rest of the year.' },
     tint: '#1f4030',
     belly: '#f4fff8',
     beak: '#ff9c3f',
@@ -634,6 +645,7 @@ export const SKINS = [
     rarity: 'rare',
     name: 'Frak Penguen',
     blurb: 'Zaten smokin giyiyordu. Şimdi ciddiye alıyor.',
+    en: { name: 'Tailcoat Penguin', blurb: 'It was already wearing a tuxedo. Now it means it.' },
     tint: '#12161f',
     belly: '#ffffff',
     beak: '#ffb43f',
@@ -649,6 +661,7 @@ export const SKINS = [
     rarity: 'rare',
     name: 'Kâşif Penguen',
     blurb: 'Kıtayı haritalayanlara.',
+    en: { name: 'Explorer Penguin', blurb: 'For mapping the continent.' },
     tint: '#4a3f33',
     belly: '#e8dcc6',
     beak: '#ff9c3f',
@@ -664,6 +677,7 @@ export const SKINS = [
     rarity: 'rare',
     name: 'Dalgıç Penguen',
     blurb: 'Suya düşmekten korkmayanlara.',
+    en: { name: 'Diver Penguin', blurb: 'For not minding the water.' },
     tint: '#123a4a',
     belly: '#bfe8ff',
     beak: '#ffb43f',
@@ -692,6 +706,7 @@ export const SKINS = [
     rarity: 'rare',
     name: 'Aşçı Penguen',
     blurb: 'Bütün o balıkla bir şey yapması lazımdı.',
+    en: { name: 'Chef Penguin', blurb: 'Something had to be done with all that fish.' },
     tint: '#2e3542',
     belly: '#fdfdfa',
     beak: '#ff9c3f',
@@ -725,6 +740,7 @@ export const SKINS = [
     rarity: 'epic',
     name: 'Rock Penguen',
     blurb: 'Buzulun tek gitaristi.',
+    en: { name: 'Rock Penguin', blurb: 'The only guitarist on the glacier.' },
     tint: '#1a1622',
     belly: '#f0e6ff',
     beak: '#ff5f6d',
@@ -756,6 +772,7 @@ export const SKINS = [
     rarity: 'epic',
     name: 'Uzaylı Penguen',
     blurb: 'Buraya nasıl geldiği belli değil.',
+    en: { name: 'Alien Penguin', blurb: 'Nobody knows how it got here.' },
     tint: '#4a8f4d',
     belly: '#d8ffcf',
     beak: '#8ad86a',
@@ -770,6 +787,7 @@ export const SKINS = [
     rarity: 'epic',
     name: 'Hayalet Penguen',
     blurb: 'Buzda çok fazla kaybolanlara.',
+    en: { name: 'Ghost Penguin', blurb: 'For getting lost on the ice a great many times.' },
     tint: '#7d90b8',
     belly: '#e6efff',
     beak: '#b9c8e6',
@@ -800,6 +818,7 @@ export const SKINS = [
     rarity: 'epic',
     name: 'Şövalye Penguen',
     blurb: 'Kuşlara karşı zırh giyenlere.',
+    en: { name: 'Knight Penguin', blurb: 'For wearing armour against the birds.' },
     tint: '#5b6577',
     belly: '#c3ced9',
     beak: '#ffb43f',
@@ -812,6 +831,7 @@ export const SKINS = [
     rarity: 'mythic',
     name: 'Kutup Işığı Penguen',
     blurb: 'Gökyüzünü sırtında taşıyanlara.',
+    en: { name: 'Aurora Penguin', blurb: 'For carrying the sky on your back.' },
     tint: '#1b2a52',
     belly: '#c9f5ff',
     beak: '#7ce8ff',
@@ -827,6 +847,7 @@ export const SKINS = [
     rarity: 'mythic',
     name: 'Buz Kraliçesi',
     blurb: 'Kıtanın kendisi kadar soğuk olanlara.',
+    en: { name: 'Ice Queen', blurb: 'For being as cold as the continent itself.' },
     tint: '#8fd8ef',
     belly: '#ffffff',
     beak: '#dff6ff',
@@ -844,6 +865,7 @@ export const SKINS = [
     rarity: 'mythic',
     name: 'Gölge Penguen',
     blurb: 'Bütün gardırobu toplayanlara.',
+    en: { name: 'Shadow Penguin', blurb: 'For collecting the entire wardrobe.' },
     tint: '#0b0d14',
     belly: '#1a1f2e',
     beak: '#6b4dff',
@@ -880,6 +902,7 @@ export const SKINS = [
     rarity: 'diamond',
     name: 'Elmas Penguen',
     blurb: 'Buzun kendisinden yontulmuş. Daha yükseğe zıplar.',
+    en: { name: 'Diamond Penguin', blurb: 'Carved from the ice itself. Jumps higher.' },
     tint: '#5fd3f5',
     belly: '#eafcff',
     beak: '#ffffff',
@@ -911,6 +934,7 @@ export const SKINS = [
     rarity: 'diamond',
     name: 'Jet Penguen',
     blurb: 'Sırtındaki türbin hiç susmaz. Daha hızlı koşar.',
+    en: { name: 'Jet Penguin', blurb: 'The turbine on its back never stops. Runs faster.' },
     tint: '#26304a',
     belly: '#dfe9ff',
     beak: '#ff7a2f',
@@ -933,6 +957,7 @@ export const SKINS = [
     rarity: 'diamond',
     name: 'Albatros Penguen',
     blurb: 'Yanlış kuşun kanatlarını ödünç almış. Daha uzun süzülür.',
+    en: { name: 'Albatross Penguin', blurb: 'Borrowed the wrong bird’s wings. Glides longer.' },
     tint: '#e8eef7',
     belly: '#ffffff',
     beak: '#ffb43f',
@@ -972,6 +997,7 @@ export const SKINS = [
     rarity: 'diamond',
     name: 'İmparator Penguen',
     blurb: 'Türün en büyüğü. Balıklar ona gelir.',
+    en: { name: 'Emperor Penguin', blurb: 'The largest of the species. The fish come to it.' },
     tint: '#232c3d',
     belly: '#fff6dc',
     beak: '#ffcf3f',
@@ -1020,6 +1046,7 @@ export const TRAILS = [
     rarity: 'common',
     name: 'Yok',
     blurb: 'Arkanda hiçbir şey bırakma.',
+    en: { name: 'None', blurb: 'Leave nothing behind you.' },
     unlock: { kind: 'default' },
     paint: null,
   },
@@ -1028,6 +1055,7 @@ export const TRAILS = [
     rarity: 'common',
     name: 'Kar Tozu',
     blurb: 'Ayağının kaldırdığı ince kar.',
+    en: { name: 'Snow Dust', blurb: 'The fine snow your feet kick up.' },
     color: '#e8f6ff',
     unlock: { kind: 'coins', cost: 120 },
     paint: (ctx, hist, g) => {
@@ -1045,6 +1073,7 @@ export const TRAILS = [
     rarity: 'common',
     name: 'Kabarcık',
     blurb: 'Denizden çıkmış gibi.',
+    en: { name: 'Bubbles', blurb: 'As if you just came out of the sea.' },
     color: '#7ce8ff',
     unlock: { kind: 'coins', cost: 190 },
     paint: (ctx, hist, g, time) => {
@@ -1064,6 +1093,7 @@ export const TRAILS = [
     rarity: 'rare',
     name: 'Kıvılcım',
     blurb: 'Buzu yakarak geç.',
+    en: { name: 'Sparks', blurb: 'Burn the ice as you pass.' },
     color: '#ffd23f',
     unlock: { kind: 'coins', cost: 560 },
     paint: (ctx, hist, g, time) => {
@@ -1083,6 +1113,7 @@ export const TRAILS = [
     rarity: 'rare',
     name: 'Buz Kırığı',
     blurb: 'Havada kalan kristaller.',
+    en: { name: 'Ice Shards', blurb: 'Crystals left hanging in the air.' },
     color: '#bfe8ff',
     unlock: { kind: 'feat', feat: 'flawless', goal: 20 },
     paint: (ctx, hist, g) => {
@@ -1105,6 +1136,7 @@ export const TRAILS = [
     rarity: 'rare',
     name: 'Kalp',
     blurb: 'Kimse sormadı ama işte.',
+    en: { name: 'Hearts', blurb: 'Nobody asked, but here they are.' },
     color: '#ff5f8d',
     unlock: { kind: 'coins', cost: 640 },
     paint: (ctx, hist, g, time) => {
@@ -1127,6 +1159,7 @@ export const TRAILS = [
     rarity: 'rare',
     name: 'Nota',
     blurb: 'Rock penguene yakışır.',
+    en: { name: 'Notes', blurb: 'Suits the rock penguin.' },
     color: '#c9b6ff',
     unlock: { kind: 'feat', feat: 'plays', goal: 60 },
     paint: (ctx, hist, g, time) => {
@@ -1153,6 +1186,7 @@ export const TRAILS = [
     rarity: 'epic',
     name: 'Alev İzi',
     blurb: 'Arkanda yanan bir çizgi.',
+    en: { name: 'Flame Trail', blurb: 'A burning line behind you.' },
     color: '#ff7a2f',
     unlock: { kind: 'feat', feat: 'boosts', goal: 40 },
     paint: (ctx, hist, g, time) => {
@@ -1177,6 +1211,7 @@ export const TRAILS = [
     rarity: 'epic',
     name: 'Kutup Işığı',
     blurb: 'Gökyüzünü peşinden sürükle.',
+    en: { name: 'Aurora', blurb: 'Drag the sky along behind you.' },
     color: '#5ce1a6',
     unlock: { kind: 'feat', feat: 'streak', goal: 14 },
     paint: (ctx, hist, g, time) => {
@@ -1202,6 +1237,7 @@ export const TRAILS = [
     rarity: 'mythic',
     name: 'Boşluk',
     blurb: 'Geçtiğin yerde ışık kalmasın.',
+    en: { name: 'Void', blurb: 'Let no light stay where you passed.' },
     color: '#6b4dff',
     unlock: { kind: 'feat', feat: 'diamond', goal: 1 },
     paint: (ctx, hist, g, time) => {
@@ -1315,7 +1351,7 @@ export function getSkin(id) {
 export function skinStatus(save, skin, now = new Date(), bag = 'skins') {
   const owned = skin.unlock.kind === 'default' || Boolean(save[bag]?.[skin.id]);
   if (skin.unlock.kind === 'default') {
-    return { owned: true, kind: 'default', have: 1, goal: 1, pct: 1, cost: null, label: 'Başlangıç' };
+    return { owned: true, kind: 'default', have: 1, goal: 1, pct: 1, cost: null, label: t('skin.start') };
   }
   if (skin.unlock.kind === 'coins') {
     const free = skin.unlock.freeInDecember && now.getMonth() === 11;
@@ -1326,12 +1362,13 @@ export function skinStatus(save, skin, now = new Date(), bag = 'skins') {
       goal: free ? 0 : skin.unlock.cost,
       pct: free ? 1 : Math.min(1, (save.coins ?? 0) / skin.unlock.cost),
       cost: free ? 0 : skin.unlock.cost,
-      label: free ? 'Aralık hediyesi' : `${skin.unlock.cost} balık`,
+      label: free ? t('skin.december') : t('ui.priceFish', { n: skin.unlock.cost }),
     };
   }
   const feat = FEATS[skin.unlock.feat];
   const have = feat.read(save);
   const goal = skin.unlock.goal;
+  const what = t(`feat.${skin.unlock.feat}`);
   return {
     owned,
     kind: 'feat',
@@ -1339,7 +1376,7 @@ export function skinStatus(save, skin, now = new Date(), bag = 'skins') {
     goal,
     pct: Math.min(1, have / goal),
     cost: null,
-    label: goal > 1 ? `${have} / ${goal} ${feat.label}` : feat.label,
+    label: goal > 1 ? `${have} / ${goal} ${what}` : what,
   };
 }
 

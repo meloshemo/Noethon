@@ -6,6 +6,7 @@
  * is pure simulation so it stays easy to reason about.
  */
 
+import { t } from '../core/i18n.js';
 import { Floe, Hazard, Fish, Checkpoint, Rival, Snowball } from './entities.js';
 import { Player } from './player.js';
 import { GhostRecorder, Ghost } from './ghost.js';
@@ -431,7 +432,7 @@ export class World {
         this.particles.burstIce(f.x + f.w / 2, f.y, 20, f.w / 2);
         this.audio.shatter();
         this.shake(6);
-        this.showHint('Buz kaçtı!', 1.2);
+        this.showHint(t('world.iceGone'), 1.2);
       }
     }
 
@@ -463,7 +464,7 @@ export class World {
         // second while it falls.
         this.audio.crack();
         this.particles.puff(this.player.centerX, this.player.y + this.player.h * 0.4, 8);
-        this.showHint('Tutunamıyorsun!', 1.1);
+        this.showHint(t('world.noGrip'), 1.1);
       },
     });
     this._trackGear(dt);
@@ -530,7 +531,7 @@ export class World {
           this.audio.shatter();
           this.shake(4);
           if (this.rivals.every((o) => !o.guard || o.out)) {
-            this.showHint('Yol açıldı!', 1.6);
+            this.showHint(t('world.wayOpen'), 1.6);
             this.audio.checkpoint();
           }
           stopped = true;
@@ -680,7 +681,7 @@ export class World {
       this.audio.rot();
       this.particles.sparkle(f.x + f.w / 2, f.y + f.h / 2, '#7fbf4d');
       this.shake(3);
-      this.showHint(ROT[f.kind]?.label ?? 'Fena bir şey yedin', 1.6);
+      this.showHint(ROT[f.kind]?.label ?? t('world.badFish'), 1.6);
     }
 
     for (const f of this.boosts) {
@@ -693,7 +694,7 @@ export class World {
       this.particles.sparkle(f.x + f.w / 2, f.y + f.h / 2, '#ff3b48');
       this.particles.sparkle(f.x + f.w / 2, f.y + f.h / 2, '#ffd23f');
       this.shake(4);
-      this.showHint('Hız enerjisi!', 1.4);
+      this.showHint(t('world.boost'), 1.4);
     }
     for (const c of this.checkpoints) {
       if (c.active || !rectsOverlap(this.player.box, c.box)) continue;
@@ -702,7 +703,7 @@ export class World {
       this.respawn = { x: c.x + c.w / 2, y: c.y };
       this.audio.checkpoint();
       this.particles.sparkle(c.x + c.w / 2, c.y - 20, '#7fe7ff');
-      this.showHint('Kontrol noktası', 1.4);
+      this.showHint(t('world.checkpoint'), 1.4);
       // A checkpoint is exactly the position worth keeping if the phone dies.
       this.onCheckpoint?.();
     }
@@ -788,7 +789,7 @@ export class World {
       this.particles.sparkle(this.player.centerX, this.player.y, '#9b8cff');
       this.audio.checkpoint();
       this.shake(4);
-      this.showHint('Kalın tüy seni kurtardı', 1.6);
+      this.showHint(t('world.downSaved'), 1.6);
       return;
     }
 

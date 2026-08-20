@@ -32,6 +32,11 @@ export const CHAPTERS = [
     subtitle: 'Kıyı boyunca kuzeye',
     /** What the player is actually doing here, in one line, for the menu. */
     verb: 'Koş, zıpla, buzun ne olduğunu öğren',
+    en: {
+      name: 'The Ice Shelf',
+      subtitle: 'North along the coast',
+      verb: 'Run, jump, learn what ice does',
+    },
     levels: LEVELS,
   },
   {
@@ -39,6 +44,11 @@ export const CHAPTERS = [
     name: 'Zirve',
     subtitle: 'Buzul yükseliyor',
     verb: 'Tırman: duvara tutun, tekmele, kolların dayandığı kadar',
+    en: {
+      name: 'The Summit',
+      subtitle: 'The glacier rises',
+      verb: 'Climb: hold the wall, kick off, for as long as your arms last',
+    },
     levels: CLIMB_LEVELS,
   },
   {
@@ -46,13 +56,23 @@ export const CHAPTERS = [
     name: 'Buz Altı',
     subtitle: 'Deniz buzun altında',
     verb: 'Dal: bas ve in, bırak ve yüksel, nefesin bitmeden deliği bul',
+    en: {
+      name: 'Under the Ice',
+      subtitle: 'The sea beneath the floe',
+      verb: 'Dive: press to go down, let go to rise, find the hole before the air runs out',
+    },
     levels: DIVE_LEVELS,
   },
   {
     id: 4,
     name: 'Kar Topu',
     subtitle: 'Koloni yolunu kesti',
-    verb: 'Nişan alma — hizala: kapıdakini atıcıyla arana koy, sonra oradan çekil',
+    verb: 'Nişan alma, hizala: kapıdakini atıcıyla arana koy, sonra oradan çekil',
+    en: {
+      name: 'Snowball',
+      subtitle: 'The colony blocked the way',
+      verb: 'Do not aim, line up: put the one in the doorway between you and the thrower, then step aside',
+    },
     levels: BRAWL_LEVELS,
   },
 ];

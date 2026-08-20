@@ -170,6 +170,63 @@ console.log('Proje kuralları denetleniyor...\n');
   }
 }
 
+/* 6 — both languages say all the same things ---------------------------- */
+{
+  const { KEYS } = await import(new URL('../src/core/i18n.js', import.meta.url));
+  const base = KEYS.tr;
+  let clean = true;
+  for (const [id, keys] of Object.entries(KEYS)) {
+    if (id === 'tr') continue;
+    const missing = base.filter((k) => !keys.includes(k));
+    const extra = keys.filter((k) => !base.includes(k));
+    if (missing.length) {
+      bad(`${id} sözlüğünde eksik: ${missing.slice(0, 6).join(', ')}${missing.length > 6 ? '…' : ''}`);
+      clean = false;
+    }
+    if (extra.length) {
+      bad(`${id} sözlüğünde fazla: ${extra.slice(0, 6).join(', ')}${extra.length > 6 ? '…' : ''}`);
+      clean = false;
+    }
+  }
+  if (clean) ok(`sözlükler eşit — ${Object.keys(KEYS).length} dil, ${base.length} metin`);
+}
+
+/* 7 — every key the code asks for actually exists ------------------------ */
+{
+  const { KEYS } = await import(new URL('../src/core/i18n.js', import.meta.url));
+  const known = new Set(KEYS.tr);
+  const unknown = new Set();
+  for (const file of await walk(resolve(root, 'src'))) {
+    const text = await readFile(file, 'utf8');
+    // Only the literal calls. A key built at runtime (`ice.${type}`) cannot be
+    // checked here, so those have a template-literal form the regex skips.
+    for (const m of text.matchAll(/\bt\('([a-zA-Z][\w.]*)'/g)) {
+      if (!known.has(m[1])) unknown.add(`${relative(root, file)}: ${m[1]}`);
+    }
+  }
+  if (unknown.size) bad(`sözlükte olmayan anahtar: ${[...unknown].slice(0, 6).join(', ')}`);
+  else ok('kullanılan bütün anahtarlar sözlükte');
+}
+
+/* 8 — user-facing text has no em dashes --------------------------------- */
+{
+  // The em dash reads as machine writing in both languages here, and it had
+  // spread through every screen. Sentences say what they mean with a comma, a
+  // colon or a full stop; code comments are free to do as they like.
+  const files = ['index.html', 'src/core/i18n.js'];
+  const found = [];
+  for (const file of files) {
+    const text = await readFile(resolve(root, file), 'utf8');
+    for (const line of text.split('\n')) {
+      if (line.includes('—') && !line.trimStart().startsWith('*') && !line.trimStart().startsWith('//')) {
+        found.push(`${file}: ${line.trim().slice(0, 50)}`);
+      }
+    }
+  }
+  if (found.length) bad(`arayüz metninde uzun tire: ${found.slice(0, 4).join(' | ')}`);
+  else ok('arayüz metninde uzun tire yok');
+}
+
 if (fails) {
   console.log(`\n✗ ${fails} sorun.`);
   process.exit(1);

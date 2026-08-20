@@ -17,33 +17,33 @@ import { todayKey } from '../core/storage.js';
  */
 const POOL = [
   /* --- the everyday ones: always achievable on the way to somewhere else -- */
-  { id: 'clear3', text: '3 bölüm bitir', goal: 3, reward: 30, event: 'clear', tier: 'easy' },
-  { id: 'fish12', text: '12 balık topla', goal: 12, reward: 30, event: 'fish', tier: 'easy' },
-  { id: 'stars4', text: '4 yıldız kazan', goal: 4, reward: 35, event: 'star', tier: 'easy' },
-  { id: 'daily', text: 'Günün bölümünü bitir', goal: 1, reward: 40, event: 'daily', tier: 'easy' },
+  { id: 'clear3', text: '3 bölüm bitir', goal: 3, reward: 30, event: 'clear', tier: 'easy', en: { text: 'Finish 3 levels' } },
+  { id: 'fish12', text: '12 balık topla', goal: 12, reward: 30, event: 'fish', tier: 'easy', en: { text: 'Collect 12 fish' } },
+  { id: 'stars4', text: '4 yıldız kazan', goal: 4, reward: 35, event: 'star', tier: 'easy', en: { text: 'Earn 4 stars' } },
+  { id: 'daily', text: 'Günün bölümünü bitir', goal: 1, reward: 40, event: 'daily', tier: 'easy', en: { text: 'Finish the level of the day' } },
 
   /* --- the ones that ask for a clean run -------------------------------- */
-  { id: 'flawless1', text: 'Bir bölümü hiç ölmeden bitir', goal: 1, reward: 35, event: 'flawless', tier: 'mid' },
-  { id: 'flawless3', text: 'Üç bölümü üst üste ölmeden bitir', goal: 3, reward: 80, event: 'flawless', tier: 'hard' },
-  { id: 'perfect', text: 'Bir bölümden 3 yıldız al', goal: 1, reward: 50, event: 'threeStars', tier: 'mid' },
-  { id: 'clear5', text: '5 bölüm bitir', goal: 5, reward: 45, event: 'clear', tier: 'mid' },
-  { id: 'fish20', text: '20 balık topla', goal: 20, reward: 45, event: 'fish', tier: 'mid' },
+  { id: 'flawless1', text: 'Bir bölümü hiç ölmeden bitir', goal: 1, reward: 35, event: 'flawless', tier: 'mid', en: { text: 'Finish a level without dying' } },
+  { id: 'flawless3', text: 'Üç bölümü üst üste ölmeden bitir', goal: 3, reward: 80, event: 'flawless', tier: 'hard', en: { text: 'Finish three levels in a row without dying' } },
+  { id: 'perfect', text: 'Bir bölümden 3 yıldız al', goal: 1, reward: 50, event: 'threeStars', tier: 'mid', en: { text: 'Get 3 stars on a level' } },
+  { id: 'clear5', text: '5 bölüm bitir', goal: 5, reward: 45, event: 'clear', tier: 'mid', en: { text: 'Finish 5 levels' } },
+  { id: 'fish20', text: '20 balık topla', goal: 20, reward: 45, event: 'fish', tier: 'mid', en: { text: 'Collect 20 fish' } },
 
   /* --- the ones about surviving something ------------------------------- */
-  { id: 'burst', text: 'Bir gayzerin fırlatışından sıyrıl', goal: 1, reward: 25, event: 'burstDodge', tier: 'mid' },
-  { id: 'burst3', text: 'Üç gayzerden sağ çık', goal: 3, reward: 60, event: 'burstDodge', tier: 'hard' },
-  { id: 'orca', text: 'Orkanın burnunun dibinden geç', goal: 1, reward: 25, event: 'orcaPass', tier: 'mid' },
-  { id: 'skua', text: 'Bir kuşun pençesinden kıl payı kurtul', goal: 1, reward: 55, event: 'skuaDodge', tier: 'mid' },
-  { id: 'skua3', text: 'Üç kuş dalışını boşa çıkar', goal: 3, reward: 110, event: 'skuaDodge', tier: 'hard' },
-  { id: 'tunnel', text: 'Bir tüneli hiç ölmeden geç', goal: 1, reward: 60, event: 'tunnelClean', tier: 'hard' },
+  { id: 'burst', text: 'Bir gayzerin fırlatışından sıyrıl', goal: 1, reward: 25, event: 'burstDodge', tier: 'mid', en: { text: 'Get clear of one geyser' } },
+  { id: 'burst3', text: 'Üç gayzerden sağ çık', goal: 3, reward: 60, event: 'burstDodge', tier: 'hard', en: { text: 'Survive three geysers' } },
+  { id: 'orca', text: 'Orkanın burnunun dibinden geç', goal: 1, reward: 25, event: 'orcaPass', tier: 'mid', en: { text: 'Slip past an orca' } },
+  { id: 'skua', text: 'Bir kuşun pençesinden kıl payı kurtul', goal: 1, reward: 55, event: 'skuaDodge', tier: 'mid', en: { text: 'Escape a bird by a hair' } },
+  { id: 'skua3', text: 'Üç kuş dalışını boşa çıkar', goal: 3, reward: 110, event: 'skuaDodge', tier: 'hard', en: { text: 'Waste three bird dives' } },
+  { id: 'tunnel', text: 'Bir tüneli hiç ölmeden geç', goal: 1, reward: 60, event: 'tunnelClean', tier: 'hard', en: { text: 'Cross a tunnel without dying' } },
 
   /* --- the ones about how you play, not what you survive ---------------- */
-  { id: 'glide', text: 'Kanatlarınla 6 saniye süzül', goal: 6, reward: 50, event: 'glide', tier: 'mid', needs: 'wings' },
-  { id: 'rocket', text: 'Sırt motorunu 5 kez ateşle', goal: 5, reward: 50, event: 'rocket', tier: 'mid', needs: 'rocket' },
-  { id: 'boost2', text: 'İki hız balığı yut', goal: 2, reward: 45, event: 'boost', tier: 'mid' },
-  { id: 'clean', text: 'Bir bölümü çürük balığa dokunmadan bitir', goal: 1, reward: 40, event: 'cleanRun', tier: 'mid' },
-  { id: 'sprintFinish', text: 'Hız balığı etkisi üstündeyken bir bölüm bitir', goal: 1, reward: 65, event: 'sprintFinish', tier: 'hard' },
-  { id: 'noStop', text: 'Bir bölümü hiç durmadan bitir', goal: 1, reward: 70, event: 'noStop', tier: 'hard' },
+  { id: 'glide', text: 'Kanatlarınla 6 saniye süzül', goal: 6, reward: 50, event: 'glide', tier: 'mid', needs: 'wings', en: { text: 'Glide 6 seconds on your wings' } },
+  { id: 'rocket', text: 'Sırt motorunu 5 kez ateşle', goal: 5, reward: 50, event: 'rocket', tier: 'mid', needs: 'rocket', en: { text: 'Fire the back motor 5 times' } },
+  { id: 'boost2', text: 'İki hız balığı yut', goal: 2, reward: 45, event: 'boost', tier: 'mid', en: { text: 'Swallow two speed fish' } },
+  { id: 'clean', text: 'Bir bölümü çürük balığa dokunmadan bitir', goal: 1, reward: 40, event: 'cleanRun', tier: 'mid', en: { text: 'Finish a level without touching a rotten fish' } },
+  { id: 'sprintFinish', text: 'Hız balığı etkisi üstündeyken bir bölüm bitir', goal: 1, reward: 65, event: 'sprintFinish', tier: 'hard', en: { text: 'Finish a level while the speed fish is still on you' } },
+  { id: 'noStop', text: 'Bir bölümü hiç durmadan bitir', goal: 1, reward: 70, event: 'noStop', tier: 'hard', en: { text: 'Finish a level without ever stopping' } },
 ];
 
 /**

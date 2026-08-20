@@ -5,6 +5,7 @@
  */
 
 import { Input } from './core/input.js';
+import { setLang, detectLang, t } from './core/i18n.js';
 import { Audio } from './core/audio.js';
 import { Storage } from './core/storage.js';
 import { Game } from './game/game.js';
@@ -17,7 +18,7 @@ function boot() {
     // Nothing is wired up yet at this point, so paint the error by hand.
     const box = document.createElement('div');
     box.className = 'fatal';
-    box.innerHTML = '<h2>Oyun başlatılamadı</h2><pre></pre>';
+    box.innerHTML = `<h2>${t('boot.failed')}</h2><pre></pre>`;
     box.querySelector('pre').textContent =
       `${err?.name}: ${err?.message}\n\n${(err?.stack ?? '').split('\n').slice(1, 5).join('\n')}` +
       `\n\n${navigator.userAgent}\n${window.innerWidth}x${window.innerHeight} @${window.devicePixelRatio}`;
@@ -29,6 +30,11 @@ function boot() {
 function start() {
   const canvas = document.getElementById('game');
   let save = Storage.load();
+
+  // Language before anything else draws. A stored choice wins; otherwise the
+  // browser decides, so somebody opening this in Berlin gets English without
+  // having to find a settings screen written in Turkish first.
+  setLang(save.settings.lang ?? detectLang());
 
   const input = new Input();
   const audio = new Audio();
@@ -52,6 +58,7 @@ function start() {
     game.save = save;
     ui.save = save;
     game.applySettings();
+    setLang(save.settings.lang ?? detectLang());
     ui.refreshTitle();
     ui.buildLevelGrid();
     ui._syncSettings();

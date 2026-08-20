@@ -17,6 +17,7 @@
  * deliberately shut.
  */
 
+import { t } from '../core/i18n.js';
 import { SKINS, TRAILS, RARITY } from './skins.js';
 
 /* ------------------------------------------------------------------ */
@@ -77,7 +78,7 @@ export function offerSecondsLeft(now = new Date()) {
 export function formatCountdown(seconds) {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
-  return h > 0 ? `${h} sa ${m} dk` : `${m} dk`;
+  return h > 0 ? t('store.hm', { h, m }) : t('store.m', { m });
 }
 
 /* ------------------------------------------------------------------ */

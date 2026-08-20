@@ -85,7 +85,7 @@ console.log('\n5) Kimlik ekranı');
   await p.click('#whoChip');
   await p.waitForTimeout(200);
   ok('profil açılıyor', (await screen()) === 'profile', await screen());
-  ok('unvan var', (await p.textContent('#profTitle')).includes('—'), await p.textContent('#profTitle'));
+  ok('unvan var', (await p.textContent('#profTitle')).includes('·'), await p.textContent('#profTitle'));
   ok('ilerleme var', (await p.textContent('#profLevels')).includes('/'), await p.textContent('#profLevels'));
 
   await p.fill('#profNameInput', 'Karayak');

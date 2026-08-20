@@ -23,7 +23,10 @@ function defaults() {
     version: VERSION,
     unlocked: 1,
     levels: {}, // { [id]: { stars, bestTime, deaths, fish } }
-    settings: { sfx: true, music: true, reducedMotion: false, assist: false },
+    // `lang: null` means "whatever the browser asks for". It only becomes a
+    // fixed value once somebody picks one by hand, so a player who never opens
+    // settings keeps following their phone.
+    settings: { sfx: true, music: true, reducedMotion: false, assist: false, lang: null },
     stats: {
       totalDeaths: 0,
       totalPlays: 0,

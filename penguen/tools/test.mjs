@@ -40,6 +40,7 @@ const BROWSER_SUITES = [
   ['tests/browser-climb.mjs', 'tırmanma mekaniği'],
   ['tests/browser-dive.mjs', 'yüzme mekaniği'],
   ['tests/browser-brawl.mjs', 'kar topu mekaniği'],
+  ['tests/browser-lang.mjs', 'diller'],
 ];
 
 const args = process.argv.slice(2);

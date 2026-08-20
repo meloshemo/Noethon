@@ -3,6 +3,7 @@
  * the simulation (World) and the DOM UI.
  */
 
+import { t, loc } from '../core/i18n.js';
 import { World } from './world.js';
 import { Renderer } from './render.js';
 import { Particles } from '../core/particles.js';
@@ -154,7 +155,7 @@ export class Game {
     w.deaths = s.deaths ?? 0;
     w.fishTaken = 0;
     w._centerCamera();
-    w.showHint('Kaldığın yerden', 1.8);
+    w.showHint(t('game.resumed'), 1.8);
     return true;
   }
 
@@ -400,27 +401,27 @@ export class Game {
     const prevStars = prev?.stars ?? 0;
 
     let coins = w.fishTaken * REWARDS.perFish;
-    const breakdown = [{ label: 'Balık', value: coins }];
+    const breakdown = [{ label: t('stat.fish'), value: coins }];
 
     if (w.boostsTaken > 0) {
       const v = w.boostsTaken * REWARDS.perBoost;
       coins += v;
-      breakdown.push({ label: 'Hız enerjisi', value: v });
+      breakdown.push({ label: t('game.boostEnergy'), value: v });
     }
 
     if (!prev) {
       coins += REWARDS.firstClear;
-      breakdown.push({ label: 'İlk geçiş', value: REWARDS.firstClear });
+      breakdown.push({ label: t('game.firstClear'), value: REWARDS.firstClear });
     }
     const newStars = Math.max(0, stars - prevStars);
     if (newStars > 0) {
       const v = newStars * REWARDS.perStar;
       coins += v;
-      breakdown.push({ label: `${newStars} yeni yıldız`, value: v });
+      breakdown.push({ label: t('game.newStars', { n: newStars }), value: v });
     }
     if (deaths === 0) {
       coins += REWARDS.flawless;
-      breakdown.push({ label: 'Ölümsüz', value: REWARDS.flawless });
+      breakdown.push({ label: t('game.flawless'), value: REWARDS.flawless });
     }
 
     Storage.recordLevel(this.save, this.levelId, {
@@ -454,19 +455,19 @@ export class Game {
     const { first, streak } = Storage.completeDaily(this.save, w.elapsed);
 
     let coins = w.fishTaken * REWARDS.perFish;
-    const breakdown = [{ label: 'Balık', value: coins }];
+    const breakdown = [{ label: t('stat.fish'), value: coins }];
     if (w.boostsTaken > 0) {
       const v = w.boostsTaken * REWARDS.perBoost;
       coins += v;
-      breakdown.push({ label: 'Hız enerjisi', value: v });
+      breakdown.push({ label: t('game.boostEnergy'), value: v });
     }
     if (first) {
       coins += REWARDS.daily;
-      breakdown.push({ label: 'Günün bölümü', value: REWARDS.daily });
+      breakdown.push({ label: t('title.daily'), value: REWARDS.daily });
       const bonus = Math.min(REWARDS.streakCap, streak * REWARDS.streakStep);
       if (bonus > 0) {
         coins += bonus;
-        breakdown.push({ label: `${streak} günlük seri`, value: bonus });
+        breakdown.push({ label: t('game.streak', { n: streak }), value: bonus });
       }
     }
     Storage.addCoins(this.save, coins);
@@ -480,7 +481,7 @@ export class Game {
       fish: w.fishTaken,
       totalFish: w.fish.length,
       target: w.def.target,
-      name: 'Günün Bölümü',
+      name: t('title.daily'),
       prevBest,
       coins,
       breakdown,
@@ -521,17 +522,17 @@ export class Game {
   /** Take a friend's code onto the board. Returns a message for the UI. */
   importRival(code) {
     const run = decodeRun(code);
-    if (!run) return { ok: false, message: 'Bu kod okunamadı. Tamamını kopyaladığından emin ol.' };
+    if (!run) return { ok: false, message: t('game.badCode') };
     const key = run.level;
-    const name = run.name ?? 'Rakip';
+    const name = run.name ?? t('game.rival');
     if (name === Storage.displayName(this.save)) {
-      return { ok: false, message: 'Bu senin kendi kodun — rakip olarak eklenemez.' };
+      return { ok: false, message: t('game.ownCode') };
     }
     const added = Storage.addRival(this.save, key, { code, time: run.time, name });
-    const where = key === 'daily' ? 'Günün Bölümü' : `Bölüm ${key}`;
+    const where = key === 'daily' ? t('title.daily') : t('ui.levelN', { n: key });
     return added
-      ? { ok: true, key, message: `${name} ${where} sıralamasına eklendi.` }
-      : { ok: false, key, message: `${name} için daha hızlı bir süre zaten kayıtlı.` };
+      ? { ok: true, key, message: t('game.rivalAdded', { name, where }) }
+      : { ok: false, key, message: t('game.rivalSlower', { name }) };
   }
 
   /**
@@ -584,7 +585,7 @@ export class Game {
       const pay = newly.length * REWARDS.dailyObjective;
       Storage.addCoins(this.save, pay);
       result.coins += pay;
-      result.breakdown.push({ label: `${newly.length} günlük hedef`, value: pay });
+      result.breakdown.push({ label: t('game.dailyGoals', { n: newly.length }), value: pay });
     }
   }
 
@@ -644,8 +645,8 @@ export class Game {
       const total = done.reduce((n, m) => n + m.reward, 0);
       Storage.addCoins(this.save, total);
       result.coins += total;
-      result.breakdown.push({ label: `${done.length} görev`, value: total });
-      result.missionsDone = done.map((m) => m.text);
+      result.breakdown.push({ label: t('game.missions', { n: done.length }), value: total });
+      result.missionsDone = done.map((m) => loc(m, 'text'));
     }
   }
 

@@ -14,10 +14,10 @@
  */
 
 export const TIERS = [
-  { id: 'bronze', name: 'Bronz', at: 0, color: '#c98a52' },
-  { id: 'silver', name: 'Gümüş', at: 500, color: '#c3ced9' },
-  { id: 'gold', name: 'Altın', at: 2000, color: '#ffd23f' },
-  { id: 'diamond', name: 'Elmas', at: 5000, color: '#7ce8ff' },
+  { id: 'bronze', name: 'Bronz', at: 0, color: '#c98a52', en: { name: 'Bronze' } },
+  { id: 'silver', name: 'Gümüş', at: 500, color: '#c3ced9', en: { name: 'Silver' } },
+  { id: 'gold', name: 'Altın', at: 2000, color: '#ffd23f', en: { name: 'Gold' } },
+  { id: 'diamond', name: 'Elmas', at: 5000, color: '#7ce8ff', en: { name: 'Diamond' } },
 ];
 
 /** Points awarded for one finished run. */

@@ -17,6 +17,15 @@ import { chromium } from 'playwright';
 
 export const URL = process.env.PENGU_URL ?? 'http://localhost:8123';
 
+/**
+ * The language every suite runs in unless it asks for another.
+ *
+ * Pinned rather than inherited from the machine: the game now follows the
+ * browser's language, and a suite that asserts on Turkish text passes or fails
+ * depending on where the laptop running it happens to be. That is not a test.
+ */
+export const LANG = 'tr';
+
 /** Launch a browser on whatever Chromium this machine has. */
 export function launch() {
   const executablePath = process.env.PENGU_CHROMIUM || undefined;
@@ -32,13 +41,17 @@ export function launch() {
  * touch source tests the thing the game actually reads, on the same code path
  * a phone uses.
  */
-export async function openGame(browser, { width = 1280, height = 720, fresh = false } = {}) {
+export async function openGame(
+  browser,
+  { width = 1280, height = 720, fresh = false, lang = LANG } = {},
+) {
   // Service workers off. The game registers one so it can be played with no
   // signal, and a test that is quietly served yesterday's modules out of a
   // cache is worse than no test: it passes.
   const context = await browser.newContext({
     viewport: { width, height },
     serviceWorkers: 'block',
+    locale: lang === 'tr' ? 'tr-TR' : 'en-GB',
   });
   const page = await context.newPage();
   const errors = [];
@@ -51,7 +64,9 @@ export async function openGame(browser, { width = 1280, height = 720, fresh = fa
 
   await page.goto(`${URL}/index.html`, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => Boolean(window.__pengu), null, { timeout: 15000 });
-  await page.evaluate((keepIntro) => {
+  await page.evaluate(([keepIntro, want]) => {
+    window.__pengu.ui.applyLang(want);
+    window.__pengu.save.settings.lang = want;
     window.__pengu.save.unlocked = 999;
     // Get the first-run introduction out of the way, unless the suite under
     // test is the introduction. Every other suite drives levels directly and
@@ -89,7 +104,7 @@ export async function openGame(browser, { width = 1280, height = 720, fresh = fa
         inp._sync();
       },
     };
-  }, fresh);
+  }, [fresh, lang]);
   return { page, errors };
 }
 

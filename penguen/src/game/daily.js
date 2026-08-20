@@ -17,36 +17,42 @@ const ROTATING = [
   {
     id: 'nodeath',
     text: 'Hiç ölmeden bitir',
+    en: { text: 'Finish without dying' },
     icon: 'skull',
     test: (r) => r.deaths === 0,
   },
   {
     id: 'allfish',
     text: 'Bütün balıkları topla',
+    en: { text: 'Collect every fish' },
     icon: 'fish',
     test: (r) => r.totalFish > 0 && r.fish >= r.totalFish,
   },
   {
     id: 'boost',
     text: 'Hız balığını kullan',
+    en: { text: 'Use the speed fish' },
     icon: 'bolt',
     test: (r) => (r.boosts ?? 0) > 0,
   },
   {
     id: 'stars',
     text: '3 yıldız al',
+    en: { text: 'Get 3 stars' },
     icon: 'star',
     test: (r) => r.stars >= 3,
   },
   {
     id: 'clean',
     text: 'Çürük balığa dokunma',
+    en: { text: 'Touch no rotten fish' },
     icon: 'shield',
     test: (r) => (r.rotten ?? 0) === 0,
   },
   {
     id: 'fast90',
     text: 'Hedef sürenin %90\'ında bitir',
+    en: { text: 'Finish in 90% of the target time' },
     icon: 'clock',
     test: (r) => r.time <= r.target * 0.9,
   },
@@ -68,10 +74,11 @@ export function dailyObjectives(dateKey, target) {
     picks.push(pool.splice((seed >> (i * 5)) % pool.length, 1)[0]);
   }
   return [
-    { id: 'finish', text: 'Bölümü bitir', icon: 'flag', test: () => true },
+    { id: 'finish', text: 'Bölümü bitir', en: { text: 'Finish the level' }, icon: 'flag', test: () => true },
     {
       id: 'target',
       text: `${Math.round(target)} saniyenin altında bitir`,
+      en: { text: `Finish under ${Math.round(target)} seconds` },
       icon: 'clock',
       test: (r) => r.time <= r.target,
     },

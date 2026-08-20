@@ -20,6 +20,7 @@ const DIVE_PLANS = [
   {
     name: 'İlk Nefes',
     subtitle: 'Buzun altı sessiz',
+    en: { name: 'First Breath', subtitle: 'It is quiet under the ice' },
     target: 34,
     depth: 500,
     build: (d) => {
@@ -39,6 +40,7 @@ const DIVE_PLANS = [
   {
     name: 'Aşağı Bas',
     subtitle: 'Yukarısı bedava, aşağısı değil',
+    en: { name: 'Press Down', subtitle: 'Going up is free, going down is not' },
     target: 38,
     depth: 540,
     build: (d) => {
@@ -59,6 +61,7 @@ const DIVE_PLANS = [
   {
     name: 'Dar Geçit',
     subtitle: 'Buz sarkıyor',
+    en: { name: 'Narrow Passage', subtitle: 'The ice hangs low' },
     target: 42,
     depth: 560,
     build: (d) => {
@@ -78,6 +81,7 @@ const DIVE_PLANS = [
   {
     name: 'Uzun Soluk',
     subtitle: 'Bir sonraki delik uzakta',
+    en: { name: 'Long Breath', subtitle: 'The next hole is far' },
     target: 46,
     depth: 560,
     build: (d) => {
@@ -100,6 +104,7 @@ const DIVE_PLANS = [
   {
     name: 'Deniz Leoparı',
     subtitle: 'Yalnız değilsin',
+    en: { name: 'Leopard Seal', subtitle: 'You are not alone' },
     target: 48,
     depth: 560,
     build: (d) => {
@@ -121,6 +126,7 @@ const DIVE_PLANS = [
   {
     name: 'Akıntı',
     subtitle: 'Su seni taşıyor',
+    en: { name: 'The Current', subtitle: 'The water carries you' },
     target: 50,
     depth: 580,
     build: (d) => {
@@ -143,6 +149,7 @@ const DIVE_PLANS = [
   {
     name: 'Testere Dişi',
     subtitle: 'Yukarı, aşağı, yukarı',
+    en: { name: 'Sawtooth', subtitle: 'Up, down, up' },
     target: 52,
     depth: 580,
     build: (d) => {
@@ -163,6 +170,7 @@ const DIVE_PLANS = [
   {
     name: 'Buzul Karnı',
     subtitle: 'Tavan alçalıyor',
+    en: { name: 'The Glacier\'s Belly', subtitle: 'The ceiling comes down' },
     target: 54,
     depth: 600,
     build: (d) => {
@@ -184,6 +192,7 @@ const DIVE_PLANS = [
   {
     name: 'Sürü',
     subtitle: 'İki leopar, tek koridor',
+    en: { name: 'The Pack', subtitle: 'Two leopards, one corridor' },
     target: 56,
     depth: 600,
     build: (d) => {
@@ -204,6 +213,7 @@ const DIVE_PLANS = [
   {
     name: 'Kara Su',
     subtitle: 'Akıntı ve dar geçit birlikte',
+    en: { name: 'Black Water', subtitle: 'A current and a squeeze at once' },
     target: 58,
     depth: 600,
     build: (d) => {
@@ -225,6 +235,7 @@ const DIVE_PLANS = [
   {
     name: 'İki Ciğer',
     subtitle: 'Delikler seyrek',
+    en: { name: 'Two Lungs', subtitle: 'The holes are far apart' },
     target: 62,
     depth: 600,
     build: (d) => {
@@ -247,6 +258,7 @@ const DIVE_PLANS = [
   {
     name: 'Kılçık',
     subtitle: 'Sarkıtlar sıklaşıyor',
+    en: { name: 'Fishbone', subtitle: 'The icicles crowd in' },
     target: 64,
     depth: 620,
     build: (d) => {
@@ -268,6 +280,7 @@ const DIVE_PLANS = [
   {
     name: 'Leopar ve Akıntı',
     subtitle: 'Kaçarken sürükleniyorsun',
+    en: { name: 'Leopard and Current', subtitle: 'You drift while you flee' },
     target: 66,
     depth: 620,
     build: (d) => {
@@ -289,6 +302,7 @@ const DIVE_PLANS = [
   {
     name: 'Dipteki Yol',
     subtitle: 'Tavan tamamen kapandı',
+    en: { name: 'The Road on the Bottom', subtitle: 'The ceiling has closed entirely' },
     target: 68,
     depth: 640,
     build: (d) => {
@@ -309,6 +323,7 @@ const DIVE_PLANS = [
   {
     name: 'Açık Deniz',
     subtitle: 'Buzun bittiği yer',
+    en: { name: 'Open Sea', subtitle: 'Where the ice ends' },
     target: 74,
     depth: 640,
     build: (d) => {
@@ -346,6 +361,7 @@ function composeDive(plan, id) {
     id,
     name: plan.name,
     subtitle: plan.subtitle,
+    en: plan.en,
     target: plan.target,
     ship: plan.ship,
   });

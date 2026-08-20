@@ -33,6 +33,7 @@ const CLIMB_PLANS = [
     name: 'Buzulun Eteği',
     signs: [{ dx: 92, dy: -104, text: 'Duvara doğru bas: tutun  •  Tutunurken BOŞLUK: tırman' }],
     subtitle: 'Yukarısı çok uzak',
+    en: { name: "The Glacier's Foot", subtitle: 'The top is a long way up' },
     target: 40,
     build: (t) => {
       t.base({ w: 300 });
@@ -49,6 +50,7 @@ const CLIMB_PLANS = [
   {
     name: 'Tutunma',
     subtitle: 'Kollarında ne kadar var',
+    en: { name: 'Holding On', subtitle: 'How much your arms have left' },
     target: 46,
     build: (t) => {
       t.base({ w: 260 });
@@ -66,6 +68,7 @@ const CLIMB_PLANS = [
   {
     name: 'Dar Yarık',
     subtitle: 'İki duvar arası',
+    en: { name: 'Narrow Cleft', subtitle: 'Between two walls' },
     target: 52,
     build: (t) => {
       t.base({ w: 250 });
@@ -85,6 +88,7 @@ const CLIMB_PLANS = [
   {
     name: 'Çifte Baca',
     subtitle: 'Nefes alacak yer yok',
+    en: { name: 'Twin Chimneys', subtitle: 'Nowhere to catch your breath' },
     target: 58,
     build: (t) => {
       t.base({ w: 240 });
@@ -103,6 +107,7 @@ const CLIMB_PLANS = [
   {
     name: 'Uzun Baca',
     subtitle: 'Yarı yolda bir çıkıntı',
+    en: { name: 'Long Chimney', subtitle: 'One ledge halfway up' },
     target: 64,
     build: (t) => {
       t.base({ w: 240 });
@@ -121,6 +126,7 @@ const CLIMB_PLANS = [
   {
     name: 'Çıkıntı',
     subtitle: 'Gökyüzü kapandı',
+    en: { name: 'The Overhang', subtitle: 'The sky is gone' },
     target: 66,
     build: (t) => {
       t.base({ w: 240 });
@@ -140,6 +146,7 @@ const CLIMB_PLANS = [
   {
     name: 'Kırılgan Basamaklar',
     subtitle: 'Dinlenecek yer güvenli değil',
+    en: { name: 'Brittle Steps', subtitle: 'The place to rest is not safe' },
     target: 70,
     build: (t) => {
       t.base({ w: 230 });
@@ -163,6 +170,7 @@ const CLIMB_PLANS = [
   {
     name: 'Serak',
     subtitle: 'Yukarıdan gelen',
+    en: { name: 'Serac', subtitle: 'Coming down from above' },
     target: 74,
     build: (t) => {
       t.base({ w: 230 });
@@ -180,6 +188,7 @@ const CLIMB_PLANS = [
   {
     name: 'Bacadaki Rüzgâr',
     subtitle: 'Şaft bir borudur',
+    en: { name: 'Wind in the Chimney', subtitle: 'A shaft is a pipe' },
     target: 78,
     build: (t) => {
       t.base({ w: 230 });
@@ -199,6 +208,7 @@ const CLIMB_PLANS = [
   {
     name: 'Cilalı Sırt',
     subtitle: 'Ayak tutmuyor',
+    en: { name: 'Polished Ridge', subtitle: 'Your feet find nothing' },
     target: 80,
     build: (t) => {
       t.base({ w: 225 });
@@ -217,6 +227,7 @@ const CLIMB_PLANS = [
   {
     name: 'Yüksek Şaft',
     subtitle: 'İki mola, bir nefes',
+    en: { name: 'High Shaft', subtitle: 'Two rests, one breath' },
     target: 86,
     build: (t) => {
       t.base({ w: 225 });
@@ -236,6 +247,7 @@ const CLIMB_PLANS = [
   {
     name: 'Yalan Buz',
     subtitle: 'Dinlenmek isteyeceksin',
+    en: { name: 'Lying Ice', subtitle: 'You will want to rest' },
     target: 90,
     build: (t) => {
       t.base({ w: 220 });
@@ -257,6 +269,7 @@ const CLIMB_PLANS = [
   {
     name: 'Kuzey Duvarı',
     subtitle: 'Buzul burada dikleşiyor',
+    en: { name: 'The North Wall', subtitle: 'This is where it goes vertical' },
     target: 96,
     build: (t) => {
       t.base({ w: 220 });
@@ -275,6 +288,7 @@ const CLIMB_PLANS = [
   {
     name: 'Buz Kulesi',
     subtitle: 'Aşağı bakma',
+    en: { name: 'Ice Tower', subtitle: 'Do not look down' },
     target: 104,
     build: (t) => {
       t.base({ w: 215 });
@@ -296,6 +310,7 @@ const CLIMB_PLANS = [
   {
     name: 'Zirve',
     subtitle: 'Antarktika ayaklarının altında',
+    en: { name: 'The Summit', subtitle: 'Antarctica under your feet' },
     target: 116,
     build: (t) => {
       t.base({ w: 210 });
@@ -338,6 +353,7 @@ function compose(plan, id) {
     id,
     name: plan.name,
     subtitle: plan.subtitle,
+    en: plan.en,
     intro: null,
     target: plan.target,
     chapter: 2,

@@ -43,6 +43,7 @@ const PLANS = [
   {
     name: 'İlk Adımlar',
     subtitle: 'Buzul kıyısı',
+    en: { name: 'First Steps', subtitle: 'The edge of the glacier' },
     target: 30,
     signs: [{ dx: 90, dy: -96, text: 'Yürü: ← →  •  Zıpla: BOŞLUK' }],
     build: (c) => {
@@ -54,6 +55,7 @@ const PLANS = [
   {
     name: 'Açık Sular',
     subtitle: 'Buzlar seyreliyor',
+    en: { name: 'Open Water', subtitle: 'The floes are thinning' },
     target: 36,
     build: (c) => {
       c.shelf({ n: 3, gap: 0.46, w: 180, wave: 22 });
@@ -66,6 +68,7 @@ const PLANS = [
   {
     name: 'Basamaklar',
     subtitle: 'Yukarı, aşağı',
+    en: { name: 'Steps', subtitle: 'Up, then down' },
     target: 42,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 190 });
@@ -81,6 +84,7 @@ const PLANS = [
   {
     name: 'Çatlak',
     subtitle: 'Ayağının altında',
+    en: { name: 'The Crack', subtitle: 'Right under your feet' },
     target: 46,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 180 });
@@ -94,6 +98,7 @@ const PLANS = [
   {
     name: 'Cilalı Buz',
     subtitle: 'Fren yok',
+    en: { name: 'Polished Ice', subtitle: 'No brakes' },
     target: 50,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 175 });
@@ -107,6 +112,7 @@ const PLANS = [
   {
     name: 'Eriyen Zemin',
     subtitle: 'Bekle, sonra geç',
+    en: { name: 'Melting Ground', subtitle: 'Wait, then cross' },
     target: 54,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.42, w: 180 });
@@ -123,6 +129,7 @@ const PLANS = [
   {
     name: 'Akıntı',
     subtitle: 'Buz da yolculuk eder',
+    en: { name: 'The Current', subtitle: 'Ice travels too' },
     target: 56,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 180 });
@@ -138,6 +145,7 @@ const PLANS = [
   {
     name: 'Düşen Buz',
     subtitle: 'Bastığın an kaçar',
+    en: { name: 'Falling Ice', subtitle: 'Gone the moment you land' },
     target: 58,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 175 });
@@ -155,6 +163,7 @@ const PLANS = [
   {
     name: 'Yamaç',
     subtitle: 'Kıta yükseliyor',
+    en: { name: 'The Slope', subtitle: 'The continent rises' },
     target: 62,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.42, w: 175 });
@@ -169,6 +178,7 @@ const PLANS = [
   {
     name: 'Yarık',
     subtitle: 'Altında dip yok',
+    en: { name: 'The Rift', subtitle: 'There is no bottom to it' },
     target: 64,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.42, w: 175 });
@@ -185,6 +195,7 @@ const PLANS = [
   {
     name: 'Buz Tüneli',
     subtitle: 'Tavan alçak',
+    en: { name: 'Ice Tunnel', subtitle: 'The ceiling is low' },
     target: 66,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 175 });
@@ -200,6 +211,7 @@ const PLANS = [
   {
     name: 'Sarkıtlar',
     subtitle: 'Yukarıdan düşen',
+    en: { name: 'Icicles', subtitle: 'Coming down from above' },
     target: 68,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 175 });
@@ -214,6 +226,7 @@ const PLANS = [
   {
     name: 'Foklar',
     subtitle: 'Yolun üstünde',
+    en: { name: 'Seals', subtitle: 'Right on the route' },
     target: 68,
     build: (c) => {
       c.shelf({ n: 3, gap: 0.44, w: 180 });
@@ -233,6 +246,7 @@ const PLANS = [
   {
     name: 'Sahte Zemin',
     subtitle: 'Göründüğü gibi değil',
+    en: { name: 'False Ground', subtitle: 'Not what it looks like' },
     target: 68,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 170 });
@@ -252,6 +266,7 @@ const PLANS = [
   {
     name: 'Fırtına Kıyısı',
     subtitle: 'Rüzgâr geri itiyor',
+    en: { name: 'Storm Coast', subtitle: 'The wind pushes you back' },
     target: 72,
     build: (c) => {
       c.shelf({ n: 3, gap: 0.42, w: 175 });
@@ -272,6 +287,7 @@ const PLANS = [
   {
     name: 'Çürük Yem',
     subtitle: 'Her balık iyi balık değil',
+    en: { name: 'Rotten Bait', subtitle: 'Not every fish is a good fish' },
     target: 70,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.44, w: 170 });
@@ -290,6 +306,7 @@ const PLANS = [
   {
     name: 'Uçurum Yolu',
     subtitle: 'Aşağısı çok aşağı',
+    en: { name: 'Cliff Road', subtitle: 'A very long way down' },
     target: 74,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 170 });
@@ -306,6 +323,7 @@ const PLANS = [
   {
     name: 'Kaçan Buz',
     subtitle: 'Tam inerken',
+    en: { name: 'Vanishing Ice', subtitle: 'Just as you land' },
     target: 72,
     build: (c) => {
       c.shelf({ n: 3, gap: 0.44, w: 170 });
@@ -329,6 +347,7 @@ const PLANS = [
   {
     name: 'Gayzer',
     subtitle: 'Buz tıslamaya başlarsa',
+    en: { name: 'Geyser', subtitle: 'If the ice starts hissing' },
     target: 76,
     build: (c) => {
       c.shelf({ n: 3, gap: 0.42, w: 170 });
@@ -345,6 +364,7 @@ const PLANS = [
   {
     name: 'Katil Balina',
     subtitle: 'Boşluklara dikkat',
+    en: { name: 'Killer Whale', subtitle: 'Mind the gaps' },
     target: 78,
     build: (c) => {
       c.shelf({ n: 3, gap: 0.44, w: 170 });
@@ -371,6 +391,7 @@ const PLANS = [
   {
     name: 'Zirve',
     subtitle: 'Kıtanın tepesi',
+    en: { name: 'The Peak', subtitle: 'The top of the continent' },
     target: 84,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 170 });
@@ -387,6 +408,7 @@ const PLANS = [
   {
     name: 'Derin Tünel',
     subtitle: 'Işık yok',
+    en: { name: 'Deep Tunnel', subtitle: 'No light' },
     target: 82,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 170 });
@@ -405,6 +427,7 @@ const PLANS = [
   {
     name: 'Tuzak Tüneli',
     subtitle: 'Alçak ve kötü niyetli',
+    en: { name: 'Trap Tunnel', subtitle: 'Low, and out to get you' },
     target: 84,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.42, w: 165 });
@@ -422,6 +445,7 @@ const PLANS = [
   {
     name: 'Gayzer Zinciri',
     subtitle: 'Biri diğerini tetikler',
+    en: { name: 'Geyser Chain', subtitle: 'One sets off the next' },
     target: 86,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.42, w: 165 });
@@ -440,6 +464,7 @@ const PLANS = [
   {
     name: 'Rüzgârlı Yamaç',
     subtitle: 'Yokuş yukarı, rüzgâra karşı',
+    en: { name: 'Windward Slope', subtitle: 'Uphill, into the wind' },
     target: 88,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 165 });
@@ -461,6 +486,7 @@ const PLANS = [
   {
     name: 'Yeraltı Nehri',
     subtitle: 'Tünelin altında su',
+    en: { name: 'Underground River', subtitle: 'Water beneath the tunnel' },
     target: 90,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 160 });
@@ -477,6 +503,7 @@ const PLANS = [
   {
     name: 'Kırılgan Zirve',
     subtitle: 'Yukarısı da güvenli değil',
+    en: { name: 'Brittle Summit', subtitle: 'The top is no safer' },
     target: 92,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 160 });
@@ -493,6 +520,7 @@ const PLANS = [
   {
     name: 'Buzul Labirenti',
     subtitle: 'İn, çık, in',
+    en: { name: 'Glacier Maze', subtitle: 'Down, up, down' },
     target: 96,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 160 });
@@ -511,6 +539,7 @@ const PLANS = [
   {
     name: 'Avcılar',
     subtitle: 'Sudan ve buzdan',
+    en: { name: 'Hunters', subtitle: 'From the water and the ice' },
     target: 98,
     build: (c) => {
       c.shelf({ n: 3, gap: 0.44, w: 160 });
@@ -531,6 +560,7 @@ const PLANS = [
   {
     name: 'Son Fırtına',
     subtitle: 'Her şey aynı anda',
+    en: { name: 'The Last Storm', subtitle: 'Everything at once' },
     target: 102,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 155 });
@@ -554,6 +584,7 @@ const PLANS = [
   {
     name: 'Kuzeye Açılan Yol',
     subtitle: 'Salı görüyorsun',
+    en: { name: 'The Road North', subtitle: 'You can see the raft' },
     target: 108,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 155 });
@@ -586,6 +617,7 @@ export const LEVELS = PLANS.map((plan, i) => {
     id,
     name: plan.name,
     subtitle: plan.subtitle,
+    en: plan.en,
     intro: null,
     target: plan.target,
   });
