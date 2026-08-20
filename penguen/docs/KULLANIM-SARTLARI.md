@@ -1,7 +1,7 @@
 # Kullanım Şartları
 
 **Son güncelleme:** 19 Ağustos 2026
-**Ürün:** Pengu — Antarktika'dan Kaçış
+**Ürün:** Pengu: Antarktika'dan Kaçış
 
 ## 1. Kabul
 
@@ -31,7 +31,7 @@ kendi cihazında duruyor. Bu şu demek:
 - Ad alanına başkasını rahatsız edecek, yanıltıcı ya da başkasının kimliğine
   bürünen bir şey yazma. Ad yalnızca senin cihazında ve paylaştığın kodlarda
   görünür; onu paylaşmanın sorumluluğu sende.
-- Oyunu tersine çevirip incelemekte serbestsin — zaten kaynak kodu açık.
+- Oyunu tersine çevirip incelemekte serbestsin. Kaynak kodu zaten açık.
 
 ## 5. Kaynak kod ve içerik
 
@@ -71,5 +71,5 @@ Türkiye Cumhuriyeti hukuku uygulanır.
 > **Not:** Bu metinler oyunun gerçekte ne yaptığını anlatmak için yazıldı ve
 > hukuk danışmanlığı değil. Oyun ticari hâle gelirse (satın alma, reklam,
 > hesap sistemi) bu belgelerin bir avukat tarafından gözden geçirilmesi
-> gerekir — o durumda toplanan veri de değişeceği için gizlilik metni baştan
+> gerekir. O durumda toplanan veri de değişeceği için gizlilik metni baştan
 > yazılmalıdır.

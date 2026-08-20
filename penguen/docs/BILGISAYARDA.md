@@ -4,7 +4,7 @@ Bu dosya, **uzaktaki oturumun yapamadığı** işlerin listesi. Her biri için n
 yapıldı, sana ne kaldı ve nasıl yapılacağı yazıyor. Sıra önemli: 1 ve 2 on
 dakika sürüyor ve gerisinin çoğunu açıyor.
 
-Kod tarafında hazırlanabilecek her şey hazırlandı — komutlar, CI dosyaları,
+Kod tarafında hazırlanabilecek her şey hazırlandı: komutlar, CI dosyaları,
 servis çalışanı, test koşucusu. Aşağıdakiler yalnızca **senin hesabında,
 senin cihazında ya da senin kararınla** olabilecek şeyler.
 
@@ -21,7 +21,7 @@ node tools/test.mjs --no-browser     # hiçbir kurulum gerektirmez, ~7 sn
 npm start                            # http://localhost:8123
 ```
 
-`npm start` bağımlılık istemiyor — sunucu da bu depoda, tek dosya
+`npm start` bağımlılık istemiyor, çünkü sunucu da bu depoda, tek dosya
 (`tools/serve.mjs`). Python ya da başka bir şey kurmana gerek yok.
 
 Tarayıcı testlerini de koşmak istersen (bir kere ~200 MB Chromium indirir):
@@ -34,7 +34,7 @@ npm test                             # her şey: lint + node + paket + tarayıc�
 
 ---
 
-## 1. GitHub Pages'i aç — `meloshemo/cld` (2 dk)
+## 1. GitHub Pages'i aç: `meloshemo/cld` (2 dk)
 
 **Neden bu sende kaldı:** repo ayarlarını API'den değil, ancak sen açabilirsin.
 
@@ -73,7 +73,7 @@ giremiyor.
 ## 3. Dalı birleştir (senin kararın)
 
 Şu an bütün iş `claude/penguen-game-dev-6ym6pg` dalında. **Pull request
-açılmadı** — açmamı istemedin.
+açılmadı**, çünkü açmamı istemedin.
 
 İstersen:
 
@@ -90,7 +90,7 @@ git checkout main && git merge claude/penguen-game-dev-6ym6pg && git push
 
 ---
 
-## 4. Gerçek cihazda oyna (30 dk — bunu atlama)
+## 4. Gerçek cihazda oyna (30 dk, bunu atlama)
 
 Testler mekaniği kanıtlıyor, **hissi** kanıtlamıyor. Otomatik testin
 göremediği tek şey bu.
@@ -107,17 +107,17 @@ Windows `ipconfig`.
 
 Bakılacaklar, sırayla:
 
-- [ ] **Dikey ve yatay** — telefonu çevir, oyun kesilmesin
-- [ ] **Dokunmatik butonlar** — başparmak nereye düşüyor, çok küçük mü
-- [ ] **Bölüm 32–46 (tırmanış)** — duvara tutunmak parmakla nasıl
-- [ ] **Bölüm 47–61 (dalış)** — basılı tutmak yorucu mu
-- [ ] **Bölüm 62–76 (kar topu)** — noktalı hat küçük ekranda okunuyor mu
-- [ ] **Sekmeyi kapatıp aç** — kaldığın yer geri geliyor mu
-- [ ] **Uçak moduna al** — bir kere online açtıysan offline çalışmalı (§5)
-- [ ] **Oyun kolu** — varsa bağla, USB/Bluetooth
-- [ ] **Müzik** — kulaklıkla dinle: dört bölümün dördü ayrı duyuluyor mu,
+- [ ] **Dikey ve yatay**: telefonu çevir, oyun kesilmesin
+- [ ] **Dokunmatik butonlar**: başparmak nereye düşüyor, çok küçük mü
+- [ ] **Bölüm 32-46 (tırmanış)**: duvara tutunmak parmakla nasıl
+- [ ] **Bölüm 47-61 (dalış)**: basılı tutmak yorucu mu
+- [ ] **Bölüm 62-76 (kar topu)**: noktalı hat küçük ekranda okunuyor mu
+- [ ] **Sekmeyi kapatıp aç**: kaldığın yer geri geliyor mu
+- [ ] **Uçak moduna al**: bir kere online açtıysan offline çalışmalı (§5)
+- [ ] **Oyun kolu**: varsa bağla, USB/Bluetooth
+- [ ] **Müzik**: kulaklıkla dinle, dört bölümün dördü ayrı duyuluyor mu,
       dalışta nefes azalınca gerginleşiyor mu, efektler müziği bastırıyor mu
-- [ ] **Kimlik** — ilk açılışta ad sorma ekranı çıkıyor mu, klavye kapatıyor mu
+- [ ] **Kimlik**: ilk açılışta ad sorma ekranı çıkıyor mu, klavye kapatıyor mu
 
 Bir şey kötü hissettiriyorsa not al ve söyle; ayar değerlerinin hepsi
 `src/game/config.js` içinde tek yerde.
@@ -165,6 +165,10 @@ Ana depoda zaten bir `CNAME` var. Oyuna ayrı bir adres istersen:
 ne yaptığını** anlatıyor: sunucu yok, hesap yok, toplanan veri yok. Metinler
 kısa, çünkü liste boş.
 
+İngilizceleri de var: `docs/PRIVACY.md` ve `docs/TERMS.md`. Oyun İngilizceye
+alındığında yasal ekran bu ikisini gösteriyor. İçerikleri Türkçeleriyle birebir
+aynı; birini değiştirirsen diğerini de değiştir.
+
 Şu hâliyle yeterli. Ama şunlardan biri olursa **avukata göster**:
 
 - Gerçek parayla satın alma eklenirse
@@ -177,7 +181,7 @@ Bu dördünün hiçbiri yoksa metinleri olduğu gibi bırakabilirsin; oyunun iç
 
 ---
 
-## 8. Yapılmayanlar — ve neden
+## 8. Yapılmayanlar ve nedenleri
 
 Bunlar teknik olarak eksik değil; **hesap, anahtar ve para** gerektiriyor.
 Uzaktaki bir oturumun bunları yapması mümkün değil ve senin adına hesap
@@ -187,11 +191,11 @@ açması da doğru olmaz.
 Oyun içi market tamamen yerel: balık topluyorsun, harcıyorsun, hepsi
 `localStorage`'da. Gerçek para almak için gereken üç şey:
 
-1. **Sunucu** — makbuzu doğrulayacak bir uç nokta (Stripe Checkout + webhook
+1. **Sunucu**: makbuzu doğrulayacak bir uç nokta (Stripe Checkout + webhook
    en hızlısı). Sunucusuz doğrulama yapılamaz; tarayıcıdaki her şey
    değiştirilebilir.
-2. **Hesap** — Stripe hesabı, vergi bilgisi, banka hesabı.
-3. **Kimlik** — kimin ne aldığını bilmek için giriş sistemi. Şu an oyunun
+2. **Hesap**: Stripe hesabı, vergi bilgisi, banka hesabı.
+3. **Kimlik**: kimin ne aldığını bilmek için giriş sistemi. Şu an oyunun
    kullanıcı kavramı yok.
 
 **Tavsiyem:** şimdilik yapma. Oyun ücretsiz ve tek seferlik; oynayan sayısı
@@ -218,7 +222,7 @@ Sen "online kar topu savaşı" demiştin; Bölüm IV yerel yapay zekâ rakiplerl
 yapıldı ve bunu baştan söyledim. Gerçek online için gerekenler: WebSocket
 sunucusu, eşleştirme, gecikme telafisi (rollback), hile koruması. Bu, oyunun
 geri kalanı kadar iş demek. Hayalet yarışı (`ghost.js`) zaten paylaşım koduyla
-asenkron bir "başkasına karşı oynama" veriyor — çoğu oyuncu için farkı bu.
+asenkron bir "başkasına karşı oynama" veriyor, çoğu oyuncu için farkı bu.
 
 ---
 

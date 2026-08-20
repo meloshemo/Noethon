@@ -5,6 +5,58 @@ değiştiği yeterli. En yeni en üstte.
 
 ---
 
+## İki dil ve makine gibi yazmayı bırakma
+
+Oyun artık İngilizce de konuşuyor. Türkçe bir oyunun üstüne geçirilmiş bir
+katman değil: her metin iki kere yazıldı ve Türkçesi asıl. Arayüz metinleri tek
+bir sözlükte, içeriğe ait olanlar (bölüm adı, penguen tanıtımı, market etiketi,
+görev, lig kademesi, unvan) girdilerin kendi `en` bloğunda.
+
+Dil ilk açılışta tarayıcıya uyuyor, sonra oyuncunun seçimi geçiyor. Seçici her
+dilin adını kendi dilinde yazıyor, tam da okuyamadığı bir arayüzde kalmış olan
+oyuncu için.
+
+Yazının kendisi de elden geçti. Arayüz uzun tirelerle doluydu, cümle üstüne
+cümle bir tirenin üstünde dönüyordu. Makine yazısı gibi okunuyordu, çünkü
+öyleydi. Oyuncunun gördüğü her cümle virgülle, iki noktayla ya da noktayla
+yeniden yazıldı ve `tools/lint.mjs` geri gelmesine izin vermiyor.
+
+Üç denetim eksik metni görünmez olmaktan çıkarıyor: sözlüklerin anahtarları
+birebir aynı olmalı, kodun istediği her anahtar sözlükte olmalı ve
+`tests/browser-lang.mjs` dili değiştirip her ekranda Türkçe harf arıyor.
+Sonuncusu ilk koşuşunda dört gerçek boşluk buldu.
+
+---
+
+## Rüzgâra bir iş verildi, sahanlık sertleşti
+
+Rüzgâr havaydı. Esiyordu, kar yatıyordu ve bölümde hiçbir şey değişmiyordu,
+çünkü doğrulayıcı fırtınanın gücünü "rüzgâr erişimi asla değiştirmemeli"
+kuralıyla kısıtlıyordu. O cümle "rüzgâr asla okunmaya değmemeli" ile aynı
+cümle.
+
+Kural tersine çevrildi. Rüzgâr artık dört vuruşluk bir eğri (karşı, dinginlik,
+arkadan, dinginlik) ve fizik, çizim, ibre ve kanıt aynı eğriyi okuyor. Duran
+penguen sürüklenmiyor, yani beklemek gerçek bir cevap ve bedeli zaman.
+
+İki parça bunun üstüne kuruldu. `windGap` zıplamanın yetmediği, kuyruk
+rüzgârının rahatça yetiştirdiği bir boşluk; `updraft` zıplamanın yetmediği
+yükseklikte bir raf ve altında yükselen hava sütunu. İkisi de varsayılmıyor,
+kanıtlanıyor: rüzgârsız gerçekten geçilemiyor, rüzgârla payı var, üstünü
+gerçekten bir fırtına örtüyor ve kuyruk rüzgârı sıçrayıştan uzun sürüyor.
+
+İbre pengueni takip ediyor, köşede durmuyor: bir iğne hangi yöne ne kadar
+estiğini, altındaki vuruş şeridi de bir sonraki kuyruk rüzgârının ne zaman
+geleceğini gösteriyor. "İyi rüzgârı bekle" ancak geldiğini görebiliyorsan bir
+karardır.
+
+İlk otuz bir bölüm baştan sona sertleşti: boşluklar genişledi, buzlar daraldı,
+tüneller uzadı ve tavandan daha çok şey düşüyor, yem arttı, foklar hızlandı,
+orkalar çoğaldı, kontrol noktaları geriye alındı. 15. bölüm kuyruk rüzgârını,
+25. bölüm sütunu öğretiyor; 30 ve 31 ikisini de bildiğini varsayıyor.
+
+---
+
 ## Arayüz elden geçti
 
 Her ekran telefon dik / telefon yatık / masaüstü olarak ekran görüntüsü alınıp
@@ -15,11 +67,11 @@ duran kart düğmeleri, kırpılan rozetler, parmakla tutulamayan bağlantılar.
 
 **Market** yeniden kuruldu: üç başlık, slab yerine fiyat çipi, yetmediğinde
 kartın üstünde "820 balık daha", telefonda kart yerine satır (ekranda 1,5
-yerine 4 tane), ve üç nokta yerine `2/3`.
+yerine 4 tane) ve üç nokta yerine `2/3`.
 
 **Markete üç kapı**: ana ekran düğmesi, cüzdana dokunmak (parana dokunmak
-paranın gittiği yere götürsün — insanların ilk denediği hareketti ve hiçbir şey
-yapmıyordu), ve bölüm sonunda balığı yeni kazandığın an — yalnızca gerçekten
+paranın gittiği yere götürsün, insanların ilk denediği hareketti ve hiçbir şey
+yapmıyordu) ve bölüm sonunda balığı yeni kazandığın an, yalnızca gerçekten
 bir şey alabiliyorsan.
 
 **Bölüm listesi**: chapter çipleri, yapışık başlıklar, "Sıradaki" işareti, ve
@@ -38,7 +90,7 @@ penguen kimliği (`PNG-XXXXX`) ve başlangıç tarihi bir kimlik kartında; kart
 ekranda, giydiğin penguenin portresiyle. Unvanlar chapter sonlarında kazanılıyor
 (*Yeni Yumurta* → *Koloni Efsanesi*) ve `tools/lint.mjs` son unvanın gerçekten
 ulaşılabilir olduğunu kontrol ediyor. Ad sanitize ediliyor: kontrol karakterleri,
-görünmez yön işaretleri ve açılı parantezler siliniyor — ad hem DOM'a hem
+görünmez yön işaretleri ve açılı parantezler siliniyor, ad hem DOM'a hem
 paylaşım koduna gidiyor.
 
 **Yasal.** Oyun içinde *Ayarlar → Yasal ve veri*: ne saklanıyor, paylaşınca ne
@@ -47,7 +99,7 @@ ve `docs/KULLANIM-SARTLARI.md`. Kaydını JSON olarak indirme ve her şeyi silme
 tuşları aynı ekranda.
 
 **Google Fonts kaldırıldı.** Kimlik testi yakaladı: oyun her açılışta, tek
-piksel çizilmeden önce iki başka şirketin sunucusuna bağlanıyordu — gizlilik
+piksel çizilmeden önce iki başka şirketin sunucusuna bağlanıyordu, gizlilik
 ekranının "hiçbir şey cihazdan çıkmıyor" dediği bir sayfada. Artık cihazın kendi
 yazı tipleri kullanılıyor; hem söz doğru oldu hem açılış hızlandı. `lint` ve
 tarayıcı testi bunun böyle kalmasını sağlıyor.
@@ -55,17 +107,17 @@ tarayıcı testi bunun böyle kalmasını sağlıyor.
 **Müzik baştan yazıldı.** Yerini aldığı şey `setInterval` üstünde dönen tek bir
 dört akorluk arpejdi. Şimdi: beş notalık tek bir tema dört bölümde dört ayrı
 kostümle (majör / minör / yarı hız + gecikme / staccato), ped-bas-arpej-perküsyon-tema
-olarak beş katman, ve katmanlar **olan bitene göre** geliyor gidiyor — dalışta
+olarak beş katman ve katmanlar **olan bitene göre** geliyor gidiyor, dalışta
 nefes, tırmanışta kol gücü, arenada havadaki kar topu. Ses saatinde 25 ms'lik
 ileri-bakış zamanlayıcısıyla planlanıyor, efektler müziği kısıyor.
 `tests/music.mjs` Web Audio'yu sayaçlarla taklit edip ızgarayı, katmanları,
 sahne geçişini ve temayı ölçüyor.
 
-## Bölüm IV — Kar Topu · 62–76
+## Bölüm IV, Kar Topu · 62–76
 
-Oyunun dördüncü fiili, ve penguenin *yapmadığı* ilk fiil. Atma tuşu yok, kar
+Oyunun dördüncü fiili ve penguenin *yapmadığı* ilk fiil. Atma tuşu yok, kar
 topu toplamak yok, yeni tuş yok. Rakipler nişan aldıkları anda durduğun yere
-atıyor ve bir kar topu değdiği ilk şeyde duruyor — gerisi tek fikir: **yolu
+atıyor ve bir kar topu değdiği ilk şeyde duruyor, gerisi tek fikir: **yolu
 kapatan pengueni atıcıyla arana koy, sonra oradan çekil.**
 
 - `Arena` bestecisi, `brawl.js` içinde 15 plan
@@ -78,7 +130,7 @@ kapatan pengueni atıcıyla arana koy, sonra oradan çekil.**
 **yukarıdan sarkıyor** (zeminden çıkan sütun, cevabın iki parçası arasına duvar
 koyuyordu).
 
-## Bölüm III — Buz Altı · 47–61
+## Bölüm III, Buz Altı · 47–61
 
 Tersine çevirme: buzun üstünde penguen komedyen, suda çevrenin en hızlı şeyi.
 Bölüm penguene daha çok iş yaptırarak değil **bırakarak** zorlaşıyor; elinden
@@ -91,9 +143,9 @@ buzdaki deliklerde doluyor.
 - Beş hata testlerden çıktı; en kötüsü negatif modulo yüzünden geriye sayan
   bir çizim döngüsüydü ve ilk su altı bölümü oyunu donduruyordu
 
-## Bölüm II — Zirve · 32–46
+## Bölüm II, Zirve · 32–46
 
-Tutunma: duvara asıl, tırman, tekmele — ve kollarındaki güç sadece sağlam
+Tutunma: duvara asıl, tırman, tekmele ve kollarındaki güç sadece sağlam
 zeminde doluyor. On beş tırmanışın hepsi hem geometri doğrulayıcısını hem fizik
 çözücüsünü geçiyor.
 
@@ -104,7 +156,7 @@ zeminde doluyor. On beş tırmanışın hepsi hem geometri doğrulayıcısını 
 
 ## Altyapı
 
-- `npm start` · `npm test` · `npm run build` — bağımlılıksız sunucu ve tek
+- `npm start` · `npm test` · `npm run build`, bağımlılıksız sunucu ve tek
   komutluk test koşucusu (`tools/serve.mjs`, `tools/test.mjs`)
 - `tools/lint.mjs`: paketleyici listesi, bölüm sayısı tutarlılığı, debug artığı,
   paket boyutu

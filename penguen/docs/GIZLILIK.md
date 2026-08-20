@@ -1,7 +1,7 @@
 # Gizlilik Politikası
 
 **Son güncelleme:** 19 Ağustos 2026
-**Ürün:** Pengu — Antarktika'dan Kaçış (web oyunu)
+**Ürün:** Pengu: Antarktika'dan Kaçış (web oyunu)
 
 ## Kısası
 
@@ -18,7 +18,7 @@ ayrı kontrol bunun böyle kalmasını sağlıyor:
   kayıtlarına bakıyor: kendi dosyaları dışında **tek bir istek** olmamalı.
 
 Bu kontroller boşuna değil. İlk hâlinde oyun yazı tipini Google Fonts'tan
-çekiyordu — yani her açılışta, tek piksel çizilmeden önce, iki başka şirketin
+çekiyordu. Yani her açılışta, tek piksel çizilmeden önce, iki başka şirketin
 sunucusuna bağlanıyordu. Test bunu yakaladı; yazı tipi kaldırıldı ve yerine
 cihazın kendi yazı tipleri kullanılıyor.
 
@@ -44,17 +44,17 @@ Bunların hiçbiri cihazından çıkmıyor.
 
 ## Kişisel veri
 
-Adı **sen** yazıyorsun ve gerçek adın olmak zorunda değil — "Şaşırt beni" tuşu
+Adı **sen** yazıyorsun ve gerçek adın olmak zorunda değil. "Şaşırt beni" tuşu
 bir tane uyduruyor. Oyun IP adresi, konum, cihaz kimliği, kişi listesi,
 fotoğraf ya da benzeri hiçbir şeye erişmiyor; tarayıcıdan böyle bir izin
 istemiyor.
 
 Oyunun eriştiği tek tarayıcı yeteneği:
 
-- **localStorage** — kaydın için
-- **Web Audio** — sesler için (mikrofon değil; yalnızca ses üretiyor)
-- **Gamepad API** — oyun kolu bağlıysa (yalnızca tuşlarını okur)
-- **Tam ekran ve ekran yönü** — istediğinde
+- **localStorage**, kaydın için
+- **Web Audio**, sesler için (mikrofon değil, yalnızca ses üretiyor)
+- **Gamepad API**, oyun kolu bağlıysa (yalnızca tuşlarını okur)
+- **Tam ekran ve ekran yönü**, istediğinde
 
 ## Paylaştığında ne gidiyor
 
@@ -66,7 +66,7 @@ Bir bölümü bitirince "Kodunu paylaş" diyebilirsin. O kodun içinde şunlar v
 
 Kod bir metin dizisi; nereye yapıştıracağına sen karar veriyorsun. Oyun bu
 kodu kendiliğinden **hiçbir yere göndermiyor** ve senden kimseye ait bir kod
-istemiyor — birinin kodunu yapıştırırsan onun hayaletiyle yarışırsın, o kadar.
+istemiyor. Birinin kodunu yapıştırırsan onun hayaletiyle yarışırsın, o kadar.
 
 ## Barındırma
 
@@ -94,7 +94,7 @@ anlamda bir işleme yapılmıyor. Yine de aynı sonuçları veren tuşlar var:
 | Hakkın | Karşılığı |
 |---|---|
 | Erişim / taşınabilirlik | **Ayarlar → Yasal ve veri → Kaydımı dosyaya aktar** (JSON indirir) |
-| Silme | **Ayarlar → İlerlemeyi sıfırla** — kaydın tamamen silinir, geri alınamaz |
+| Silme | **Ayarlar → İlerlemeyi sıfırla**. Kaydın tamamen silinir, geri alınamaz |
 | Düzeltme | Adını **Kimlik** ekranından istediğin zaman değiştirirsin |
 | İtiraz | İşleme yok; oyunu kapatmak yeterli |
 

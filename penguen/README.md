@@ -1,4 +1,4 @@
-# Pengu — Antarktika'dan Kaçış
+# Pengu, Antarktika'dan Kaçış
 
 Yeni doğmuş bir penguen, eriyen buzlar arasında Antarktika'dan kaçmaya çalışıyor.
 Buzlar üstüne basınca çatlıyor, bazıları eriyip yok oluyor, bazıları tuzak,
@@ -19,13 +19,13 @@ Toplam yük tek dosyada ~385 KB ve çevrimdışı çalışıyor.
 | | |
 |---|---|
 | **Dört bölüm (chapter)** | Buz Sahanlığı 1–31 · Zirve 32–46 · Buz Altı 47–61 · Kar Topu 62–76 |
-| **76 elle yazılmış bölüm** | 31 parkur + 15 tırmanış + 15 dalış + 15 arena — dördü ayrı fiil |
-| **Tutunma** | Buz duvarına asıl, tırman, tekmele — ve kollarında sınırlı güç var |
-| **Sonsuz mod** | Bölüm numarasıyla tohumlanmış — 77. bölüm herkeste aynı |
-| **Kimlik** | Ad, unvan ve penguen kimliği — hepsi cihazda, hesap yok |
+| **76 elle yazılmış bölüm** | 31 parkur + 15 tırmanış + 15 dalış + 15 arena, dördü ayrı fiil |
+| **Tutunma** | Buz duvarına asıl, tırman, tekmele ve kollarında sınırlı güç var |
+| **Sonsuz mod** | Bölüm numarasıyla tohumlanmış, 77. bölüm herkeste aynı |
+| **Kimlik** | Ad, unvan ve penguen kimliği, hepsi cihazda, hesap yok |
 | **Uyarlanan müzik** | Tek tema, dört kostüm; katmanlar olan bitene göre geliyor |
 | **10 buz türü** | sağlam · çatlak · cilalı · eriyen · sürüklenen · düşen · tuzak · **sahte** · kaçan · gayzer |
-| **4 tehlike** | sarkıt · fok · fırtına kuşağı · orka |
+| **5 tehlike** | sarkıt · fok · fırtına kuşağı · yükselen hava · orka |
 | **2 pusu** | Bölümün planlamadığı anda dalan kutup kuşu · bayrağa 100 px kala kopan buzul |
 | **3 çürük balık etkisi** | ağırlaşma · ters kontrol · körlük |
 | **24 penguen + 10 iz** | 5 nadirlik seviyesi, 240 kombin |
@@ -37,76 +37,77 @@ Toplam yük tek dosyada ~385 KB ve çevrimdışı çalışıyor.
 | **Günün Teklifi** | 24 saatlik indirimli kozmetik, geri sayımlı |
 | **Hayalet yarışı** | Rekorun yanında koşuyor; kodunu paylaşınca arkadaşın da |
 | **Kaldığın yerden** | Sekmeyi kapatsan da son kontrol noktasından devam ediyorsun |
+| **İki dil** | Türkçe ve İngilizce; ilk açılışta tarayıcıya uyuyor, sonra senin seçimin |
 
 ---
 
 ## Öne çıkan özellikler
 
-### 🧗 Zirve — oyunun ikinci fiili
+### 🧗 Zirve, oyunun ikinci fiili
 32. bölümden itibaren dağ başlıyor ve soru değişiyor. Sahanlıkta soru "oraya
 yetişir miyim?"di; dağda "ne kadar tutunabilirim?". Penguen buz duvarına
-gömülüp asılı kalıyor, yavaşça tırmanıyor, ya da tekmeleyip karşı duvara
+gömülüp asılı kalıyor, yavaşça tırmanıyor ya da tekmeleyip karşı duvara
 atlıyor. Asılmak azar azar, tırmanmak iki katından fazla, tekme bir çırpıda
-tüketiyor — ve bar **sadece sağlam zeminde** doluyor. Yeni tuş yok: duvara
+tüketiyor ve bar **sadece sağlam zeminde** doluyor. Yeni tuş yok: duvara
 doğru bas (tutun), BOŞLUK'u basılı tut (tırman), BOŞLUK'a dokun (tekmele).
-→ [ayrıntı](#zirve--tırmanış)
+→ [ayrıntı](#zirve-tırmanış)
 
-### 🌊 Buz Altı — oyunun üçüncü fiili
+### 🌊 Buz Altı, oyunun üçüncü fiili
 47. bölümde buzun *altına* geçiyorsun ve oyun tersine dönüyor. Buzun üstünde
 penguen bir komedyendir: kısa bacaklı, tutunamayan, her hareketi zahmetli. Suda
-yüz mil çevrenin en hızlı şeyidir — ve bölüm penguene daha çok iş yaptırarak
+yüz mil çevrenin en hızlı şeyidir ve bölüm penguene daha çok iş yaptırarak
 değil, **bırakarak** zorlaşıyor. Karşılığında elinden alınan tek şey var: hava.
 Bırakırsan yükselirsin (penguen yüzer, yukarı bedava), basarsan dalarsın. Bir
 ciğer dokuz buçuk saniye ve sadece buzdaki deliklerde doluyor. Yeni tuş yok.
-→ [ayrıntı](#buz-altı--dalış)
+→ [ayrıntı](#buz-altı-dalış)
 
-### ❄️ Kar Topu — hiç yapmadığın bir fiil
+### ❄️ Kar Topu, hiç yapmadığın bir fiil
 62. bölümde koloni yolunu kesiyor ve oyun sana **hiçbir şey vermiyor**. Atma
 tuşu yok, kar topu toplamak yok, yeni tuş yok. Rakip pengueler atıyor; hem de
 tam **nişan aldıkları anda durduğun yere**. Bir kar topu değdiği ilk şeyde
 duruyor. Gerisi tek bir fikir: *birinin arkasına geç.* Devirmek istediğin
 penguen ile atıcının arasına gir, sonra top gelmeden oradan çekil.
-→ [ayrıntı](#kar-topu--hizalama)
+→ [ayrıntı](#kar-topu-hizalama)
 
 ### 🎼 Tek tema, dört kostüm
 Ses dosyası yok: müzik de bölümler gibi kural olarak yazılıyor. Beş notalık bir
-tema penguene ait ve dört bölümün dördünde de var — ana ekranda majörde, dağda
+tema penguene ait ve dört bölümün dördünde de var, ana ekranda majörde, dağda
 minörde, buzun altında yarı hızda, arenada staccato. Ped, bas, arpej, perküsyon
 ve tema ayrı katmanlar ve **olan bitene göre** geliyor gidiyor: iyi giden bir
 bölümle neredeyse kaybedilmiş bir bölüm aynı duyulmuyor.
 → [ayrıntı](#müzik)
 
-### 🪽 Aktif ekipman — tek tuşta iki yetenek
+### 🪽 Aktif ekipman, tek tuşta iki yetenek
 Markette **Planör Kanat** ve **Sırt Motoru** var. Havada zıplamayı *basılı tutmak*
 kanatları açıyor ve düşüşü terminal hızın beşte birine indiriyor; *tek dokunuş*
-motoru ateşliyor. İkisi de sadece yere değince doluyor — bu uçmak değil, zaten
+motoru ateşliyor. İkisi de sadece yere değince doluyor, bu uçmak değil, zaten
 verdiğin bir zıplama kararını havada tartışma hakkı.
 → [ayrıntı](#aktif-ekipman)
 
-### 🦅 Kutup kuşu — bölümün planlamadığı tehlike
+### 🦅 Kutup kuşu, bölümün planlamadığı tehlike
 Bir skua tepeden dalıp pengueni kapıyor. Bölümün parçası değil, **yönetmen
 olayı**: ezberlediğin parkurun dokuzuncu turda hâlâ seni korkutabilmesinin tek
 yolu. Buzun üstünde bir gölge beliriyor ve yaklaştıkça daha hızlı atıyor.
 → [ayrıntı](#pusu-kutup-kuşu)
 
-### 🐧 Gardırop — 24 penguen, 10 iz
+### 🐧 Gardırop, 24 penguen, 10 iz
 Ninja, Kral, Astronot, Altın, Korsan, Ateş, Siber, Yılbaşı, Frak, Kâşif, Dalgıç,
 Aşçı, Rock, Uzaylı, Hayalet, Şövalye, Kutup Işığı, Buz Kraliçesi, Gölge.
 Çoğu satın alınmıyor, **kazanılıyor**. Seçtiğin penguen buzun üstünde gerçekten
-o penguen — aksesuarlar canlı çiziliyor, jet havada ateşliyor, bant koşarken
+o penguen, aksesuarlar canlı çiziliyor, jet havada ateşliyor, bant koşarken
 savruluyor.
 → [ayrıntı](#koleksiyon)
 
-### 💎 Elmas penguenler — yeteneği olan tek tür
+### 💎 Elmas penguenler, yeteneği olan tek tür
 Elmas *daha yükseğe zıplıyor ve buzda daha az kayıyor*, Jet *daha hızlı koşup
 kuşu daha erken görüyor*, Albatros *daha uzun süzülüyor*, İmparator *balıkları
-kendine çekiyor*. Etkiler küçük — kabaca bir market kademesi. Ve bir tanesi
+kendine çekiyor*. Etkiler küçük, kabaca bir market kademesi. Ve bir tanesi
 kasten kendi başına işe yaramıyor: Albatros'un süzülme yeteneği, **Planör Kanat
 yoksa sıfır**. Yetenek sahip olduğun bir şeyi iyileştiriyor, sana yeni bir şey
 vermiyor.
 → [ayrıntı](#elmas-penguenler)
 
-### 🏔️ Kıta — yamaç, uçurum, yarık, tünel
+### 🏔️ Kıta, yamaç, uçurum, yarık, tünel
 Bölümler koordinat değil **plan** olarak yazılıyor; geometri o bölümdeki gerçek
 zıplama erişiminden hesaplanıyor. Tünel tavanı gerçekten katı ve zıplamayı
 kısaltıyor, o yüzden tüneldeki boşluklar *tavan altındaki* erişime göre ölçülüyor.
@@ -115,13 +116,13 @@ kısaltıyor, o yüzden tüneldeki boşluklar *tavan altındaki* erişime göre 
 ### 👻 Hayalet yarışı ve sıralama
 Her deneme kaydediliyor. En iyi koşun bir dahaki oynayışında yanında saydam bir
 penguen olarak koşuyor; HUD'daki `−0.42` o an rekordan ne kadar önde olduğunu
-gösteriyor. 30 saniyelik bir koşu ~370 karakterlik bir koda dönüşüyor — mesajla
+gösteriyor. 30 saniyelik bir koşu ~370 karakterlik bir koda dönüşüyor, mesajla
 gönderilecek kadar kısa.
 → [ayrıntı](#hayalet-yarışı-ve-sıralama)
 
 ### 🏆 Haftalık lig ve Günün Pengu'su
 Pazartesi puanlar sıfırlanıyor, çıktığın kademe kalıyor. Günün bölümünde dört
-hedef var ve **gün boyunca birikiyorlar** — tek turda hepsini yapman gerekmiyor.
+hedef var ve **gün boyunca birikiyorlar**: tek turda hepsini yapman gerekmiyor.
 → [ayrıntı](#haftalık-lig)
 
 ---
@@ -132,9 +133,9 @@ hedef var ve **gün boyunca birikiyorlar** — tek turda hepsini yapman gerekmiy
 |-------|--------------|
 | [Çalıştırma](#çalıştırma) · [Testler](#testler) | Nasıl açılır, nasıl doğrulanır |
 | [Mimari](#mimari) | Dosya düzeni ve neden böyle |
-| [Zirve](#zirve--tırmanış) | Tutunma, tekme, baca — ikinci bölümün fiili |
-| [Buz Altı](#buz-altı--dalış) | Dalış, nefes, akıntı — üçüncü bölümün fiili |
-| [Kar Topu](#kar-topu--hizalama) | Hizalama, nişan kilidi, kaçış — dördüncü bölümün fiili |
+| [Zirve](#zirve-tırmanış) | Tutunma, tekme, baca, ikinci bölümün fiili |
+| [Buz Altı](#buz-altı-dalış) | Dalış, nefes, akıntı, üçüncü bölümün fiili |
+| [Kar Topu](#kar-topu-hizalama) | Hizalama, nişan kilidi, kaçış, dördüncü bölümün fiili |
 | [Zorluk eğrisi](#zorluk-eğrisi) | Rampa tasarımı |
 | [Buz türleri](#buz-türleri) · [Tehlikeler](#tehlikeler) | Oyun içi her mekanik |
 | [Pusu mekanikleri](#pusu-mekanikleri-buzun-tuzakları) · [Kutup kuşu](#pusu-kutup-kuşu) | Ani ölüm olayları |
@@ -145,6 +146,7 @@ hedef var ve **gün boyunca birikiyorlar** — tek turda hepsini yapman gerekmiy
 | [Kontroller](#kontroller) | Tuşlar |
 | [Arayüz](#arayüz) | Market, bölüm listesi, düzen testi |
 | [Kimlik ve müzik](#kimlik) | Oyuncu profili, unvanlar, uyarlanan müzik |
+| [Diller](#diller) | Türkçe ve İngilizce, sözlük ve denetimler |
 | [Belgeler](docs/) | Gizlilik, kullanım şartları, bilgisayarda yapılacaklar |
 
 ---
@@ -159,28 +161,30 @@ Bu oyunun en çok emek verilen kısmı zorluğun *adil* olması. Üç katman:
    uyarı süresinden, fırtınanın gücü yürüme ivmesinden hesaplanıyor. Bir plan
    "160 piksellik gayzer" isteyemez.
 3. **Doğrulayıcı** (`tests/validate-levels.mjs`) 31 elle yazılmış + 80 üretilmiş
-   bölümü, 3.172 buzu analitik olarak kontrol ediyor. Geçilemez tek bir zıplama
-   varsa derleme düşüyor.
+   bölümü, 3.271 buzu analitik olarak kontrol ediyor. Geçilemez tek bir zıplama
+   varsa derleme düşüyor. Rüzgârla geçilen boşluklar bu kuralın dışında değil,
+   tersine iki yönlü kanıtlanıyor: rüzgârsız geçilemediği *ve* rüzgârla rahatça
+   geçildiği. İkisinden biri yanlışsa ya fırtına dekordur ya bölüm duvardır.
 4. **Çözücü** (`tests/climb-run.mjs`) tırmanış bölümlerinde bir adım daha ileri
    gidiyor: *gerçek* `Player` sınıfını gerçek bölüm verisine karşı çalıştırıp
    her adım için işe yarayan bir tuş dizisi **arıyor**. Kalkış yerini, zamanını
    ve tuşu ne kadar basılı tuttuğunu tarıyor; hiçbir deneme tutmuyorsa o adımı
    kimse yapamıyordur ve bölüm yayına girmiyor. Bu kural üç gerçek oyun hatası
-   yakaladı — duvar tekmesinin sessizce kesilmesi, tepeye çıkarken pengueni
-   duvarın dibine ışınlayan çarpışma, ve oyuncu daha yerinden kıpırdamadan
+   yakaladı, duvar tekmesinin sessizce kesilmesi, tepeye çıkarken pengueni
+   duvarın dibine ışınlayan çarpışma ve oyuncu daha yerinden kıpırdamadan
    düşen serak.
 
 5. **Dalış çözücüsü** (`tests/dive-run.mjs`) bir adım daha ileri gidiyor ve
    sadece `Player`'ı değil **`World`'ün kendisini** çalıştırıyor: akıntı, deniz
    leoparı, nefes sayacı, ölüm kuralları ve bitiş kontrolü oyundaki halleriyle.
    Buzun altında bunlar bölümün *çevresindeki* şeyler değil, bölümün kendisi.
-   Kumandası kasten aptal — düz git, bir sonraki geçit aşağıdaysa tuşa bas,
+   Kumandası kasten aptal, düz git, bir sonraki geçit aşağıdaysa tuşa bas,
    leopar yaklaşınca üstünden ya da altından geç. Tek bir ileri-bakış sayısıyla
    çalışan bu şey geçebiliyorsa, gözü olan bir insan da geçebilir.
 
 6. **Arena çözücüsü** (`tests/brawl-run.mjs`) kar topu bölümlerini gerçek
    `World` ile oynuyor: nişan kilidi, uçuş, kapalı çıkış, ölüm kuralları.
-   Sürdüğü oyuncu kasten aptal — bölümün işaret ettiği yere yürü, biri sana
+   Sürdüğü oyuncu kasten aptal, bölümün işaret ettiği yere yürü, biri sana
    nişan alana kadar bekle, hattan çık, kapıdakinin düşmesini izle. Nişan
    almıyor, arenayı okumuyor, doğaçlama yapmıyor. Bu kadarı yetiyorsa, noktalı
    çizgiyi görebilen bir insan da yapabilir.
@@ -193,7 +197,7 @@ sadece kolaylaştırır.
 
 ## Çalıştırma
 
-ES modülleri `file://` üzerinden çalışmaz, bu yüzden bir sunucu gerekiyor — ve
+ES modülleri `file://` üzerinden çalışmaz, bu yüzden bir sunucu gerekiyor, ve
 o da bu depoda, tek dosya, bağımlılıksız:
 
 ```bash
@@ -213,7 +217,7 @@ yayınlıyor.
 `sw.js` bir servis çalışanı: sayfanın kendisi **ağ öncelikli** (yeni sürüm
 kaçmasın), geri kalan her şey **önbellek öncelikli, arkada tazelenen**. İlk
 açılış online olmalı; sonrası uçakta da çalışır. Tek dosya sürümü kasten
-kaydetmiyor — yanında `sw.js` olmayan bir sayfanın onu araması, kusursuz çalışan
+kaydetmiyor, yanında `sw.js` olmayan bir sayfanın onu araması, kusursuz çalışan
 bir sayfanın konsoluna hata yazmaktan başka bir işe yaramaz.
 
 ### Tek dosyalık sürüm
@@ -222,7 +226,7 @@ bir sayfanın konsoluna hata yazmaktan başka bir işe yaramaz.
 node tools/bundle.mjs dist/pengu.html
 ```
 
-Bütün modülleri, stilleri ve işaretlemeyi tek bir HTML dosyasına düzleştirir —
+Bütün modülleri, stilleri ve işaretlemeyi tek bir HTML dosyasına düzleştirir
 sunucu gerektirmez, `file://` üzerinden bile açılır, tek belge kabul eden yerlere
 yüklenebilir. Gerçek bir paketleyici değil, sırayla birleştirici: modülleri
 bağımlılık sırasına göre ekler ve import/export sözdizimini temizler. Bu yüzden
@@ -235,7 +239,7 @@ Tek komut, on beş paket, kendi sunucusunu kurup kapatıyor:
 
 ```bash
 npm test               # lint + node testleri + paketleme + tarayıcı testleri
-npm run test:node      # hiçbir kurulum gerektirmez — ~7 sn
+npm run test:node      # hiçbir kurulum gerektirmez, ~7 sn
 npm run test:browser   # sadece tarayıcı (bir kere: npm run setup:browser)
 ```
 
@@ -258,7 +262,7 @@ node tools/bundle.mjs            # tek dosyaya paketle (isim çakışmasını da
 
 ### Proje kuralları (`tools/lint.mjs`)
 
-Biçim denetleyicisi değil — bu kod zaten tutarlı yazılıyor ve noktalı virgül
+Biçim denetleyicisi değil, bu kod zaten tutarlı yazılıyor ve noktalı virgül
 tartışan bir araç burada hiçbir şey satın almıyor. Denetlenen şey, **gerçekten
 başa gelmiş** ve her seferinde sessizce bozulmuş dört kural:
 
@@ -275,16 +279,16 @@ Her `push`'ta iki iş: **Bölümler ve kurallar** (kurulumsuz, ~15 sn) ve
 **Mekanikler** (Chromium indirip üç tarayıcı testi, ~2 dk). `main`'e giden
 yol yeşil olmadan yayına çıkmıyor.
 
-Bilgisayarda yapılması gerekenler — Pages'i açmak, gerçek cihazda oynamak,
-mağaza ve ödeme kararları — ayrı bir dosyada:
+Bilgisayarda yapılması gerekenler, Pages'i açmak, gerçek cihazda oynamak,
+mağaza ve ödeme kararları, ayrı bir dosyada:
 **[`docs/BILGISAYARDA.md`](docs/BILGISAYARDA.md)**.
 
-**Doğrulayıcı** oynamadan — analitik olarak — her bölümdeki her sıçramanın
+**Doğrulayıcı** oynamadan, analitik olarak, her bölümdeki her sıçramanın
 penguenin o bölümdeki gerçek erişim mesafesi içinde olduğunu doğrular. 31 elle
 yazılmış bölümü ve üretilen bölümlerden 80'lik bir örneklemi kapsar: **3.188
 buz**. Ayrıca kaya-buz çakışması, tavan yüksekliği, fok devriyesinin kalkış
 kenarını kapatması, orkanın buzun altında kalması, fırtınanın havada savurması,
-dikey çeşitlilik ve parkur uzunluğu gibi kuralları da kontrol eder — biri
+dikey çeşitlilik ve parkur uzunluğu gibi kuralları da kontrol eder, biri
 tutmazsa derleme düşer.
 
 **Hayalet testi** 30 saniyelik bir koşuyu örnek örnek gidip geliyor mu, on bir
@@ -296,11 +300,11 @@ ekipman fiziği ölçülüyor, kuş uyarı→dalış→çekiliş döngüsü izle
 ve 10 iz önizlemesinin gerçekten piksel bastığı doğrulanıyor.
 
 Ayrıca **dayanıklılık** testi: sanal bir gamepad takılıyor (yön, zıplama, ölü
-bölge, ve `getGamepads()` hata attığında karenin hayatta kalması), sekme arkaya
+bölge ve `getGamepads()` hata attığında karenin hayatta kalması), sekme arkaya
 alınıp kronometrenin kaymadığı ölçülüyor, odak kaybında tuşların bırakıldığı
 görülüyor, sayfa kapatılıp yeniden açılıyor ve pengueninin **aynı kontrol
 noktasında, aynı süreyle** başladığı piksel piksel doğrulanıyor. Elmas
-penguenlerin yetenekleri de burada fiziğe ulaştıkları yerden ölçülüyor —
+penguenlerin yetenekleri de burada fiziğe ulaştıkları yerden ölçülüyor
 Albatros'un kanatsızken 0 kazandırdığı dahil.
 
 ---
@@ -311,7 +315,7 @@ Albatros'un kanatsızken 0 kazandırdığı dahil.
 index.html                 tek sayfa, tüm ekranlar gerçek HTML olarak
 manifest.webmanifest       telefona "uygulama" olarak eklenebilsin diye
 styles/
-  tokens.css               renk, tipografi, boşluk, hareket — tek kaynak
+  tokens.css               renk, tipografi, boşluk, hareket, tek kaynak
   base.css                 reset + sayfa iskeleti
   ui.css                   bileşenler (HUD, ekranlar, düğmeler, kartlar)
 src/
@@ -368,14 +372,14 @@ hesaplanıyor. Bir plan "160 piksellik gayzer" isteyemez, çünkü fitil onu ta�
 
 ### Kıta: buz kütleleri ve rota ayrı
 
-İki tür katı var. **Buzlar** rotadır — inilen her şey. **Arazi** (`terrain`)
+İki tür katı var. **Buzlar** rotadır, inilen her şey. **Arazi** (`terrain`)
 kıtadır: uçurum yüzleri, tünel tavanları, sütunlar. Fizik ikisini de katı görür
 (çarpışma zaten yandan itiyor ve tavana kafa vurduruyor), ama doğrulayıcının
 yürüdüğü yol yalnızca buzlardan geçer. Böylece bir tünel tavanı gerçekten tavan
 oluyor, bölüm yolunu ise bulandırmıyor.
 
 Tavan alçaldığında zıplama da kısalıyor: `reachFor(scale, maxHeight)` tepe
-noktası sınırlı bir zıplayışın ne kadar uzağa gittiğini veriyor, ve tüneldeki her
+noktası sınırlı bir zıplayışın ne kadar uzağa gittiğini veriyor ve tüneldeki her
 boşluk o sayıya göre ölçülüyor.
 
 ### Neden bu yapı
@@ -407,13 +411,13 @@ Oyunun en çok emek verilen kısmı bu. Kural:
 
 Ayrıca oyuncunun tarafında olan şeyler:
 
-- **Coyote time (0.13 s)** — kenardan düştükten sonra hâlâ zıplayabilirsin.
-- **Zıplama tamponu (0.15 s)** — yere değmeden basılan tuş unutulmaz.
-- **Değişken yükseklik** — tuşu bırakınca alçak, basılı tutunca yüksek zıplar.
-- **Kolay mod** — aynı bölümde 4 kez ölünce kendiliğinden teklif edilir; buzlar
+- **Coyote time (0.13 s)**: kenardan düştükten sonra hâlâ zıplayabilirsin.
+- **Zıplama tamponu (0.15 s)**: yere değmeden basılan tuş unutulmaz.
+- **Değişken yükseklik**: tuşu bırakınca alçak, basılı tutunca yüksek zıplar.
+- **Kolay mod**: aynı bölümde 4 kez ölünce kendiliğinden teklif edilir; buzlar
   daha geç kırılır, tuzaklar yavaşlar. İstendiği an ayarlardan açılıp kapanır.
-- **Kontrol noktaları** — uzun bölümlerde ölünce en baştan başlamazsın.
-- **Ölünce bütün buzlar sıfırlanır** — kırık bir yol yüzünden bölüm kilitlenmez.
+- **Kontrol noktaları**: uzun bölümlerde ölünce en baştan başlamazsın.
+- **Ölünce bütün buzlar sıfırlanır**: kırık bir yol yüzünden bölüm kilitlenmez.
 
 ### Adaletin kodla korunması
 
@@ -426,13 +430,13 @@ Zorluk elle ayarlanınca kolayca haksız hale gelir, o yüzden kurallar
   gerekmemeli, indiğin yerden zıplamak yetmeli.
 - Zamanlama isteyen buzlardan (eriyen buz, yana kayan buz) önce **beklenebilir**
   bir buz olmalı. Çatlayan buzda beklemek yazı tura demektir; kaygan buzda ise
-  yerinde durulamaz — ikisi de sayılmaz.
+  yerinde durulamaz, ikisi de sayılmaz.
 - Fok, üstünde olduğu buzun sağ şeridini kapatmamalı; orası bir sonraki sıçrama
   için nişan alınan yer.
 - Hiçbir buz penguenden dar olamaz, hiçbiri suyun içinde olamaz, sal her zaman
   son buzun üstünde olmalı.
 
-Bu doğrulayıcı geliştirme sırasında dokuz gerçek adaletsizlik yakaladı — geçilmesi
+Bu doğrulayıcı geliştirme sırasında dokuz gerçek adaletsizlik yakaladı, geçilmesi
 matematiksel olarak imkânsız üç sıçrama dahil.
 
 ---
@@ -443,7 +447,7 @@ matematiksel olarak imkânsız üç sıçrama dahil.
 |-----|---------|----------|
 | Sağlam | Düz beyaz | Hiç kırılmaz |
 | Çatlak | Mavi çatlak çizgileri | Basınca çatlar, kısa süre sonra kırılır, sonra geri gelir |
-| Sahte (tuzak) | Kızıl damar | Neredeyse anında kırılır — bas ve geç |
+| Sahte (tuzak) | Kızıl damar | Neredeyse anında kırılır, bas ve geç |
 | Eriyen | Soluk, damlayan | Kendi döngüsünde erir ve geri donar |
 | Cilalı | Üstünde parlama çizgileri | Kaygan, fren mesafesi uzun |
 | Sürüklenen | Ok işaretleri | Bir yol boyunca gider gelir, üstündekini taşır |
@@ -454,26 +458,42 @@ matematiksel olarak imkânsız üç sıçrama dahil.
 ## Hız balığı
 
 Bölüm başına bir tane: kırmızı gövde, altın şimşek, göz kırpan bir hale. Yuttuğun
-an penguen kızıla dönüyor, arkasında iz bırakıyor ve **%50 daha hızlı** koşuyor —
+an penguen kızıla dönüyor, arkasında iz bırakıyor ve **%50 daha hızlı** koşuyor
 4,5 saniye boyunca. Son bir saniyede yanıp sönerek bitmek üzere olduğunu söylüyor.
 
 Hep ana hattın dışında duruyor, yani almak bir bahis: sapmanın maliyeti var ama
-kazandığı süre çok daha fazla — eğer bir buçuk kat hızda inişlerini
+kazandığı süre çok daha fazla, eğer bir buçuk kat hızda inişlerini
 tutturabilirsen. Doğrulayıcı hem erişilebilir olduğunu hem de yol üstünde
 durmadığını kontrol ediyor.
 
 ## Tehlikeler
 
-- **Buz sarkıtı** — altından geçince titrer, sonra düşer.
-- **Fok** — buzda devriye gezer. Yanından değil, **üstünden** atla; üstüne
+- **Buz sarkıtı**: altından geçince titrer, sonra düşer.
+- **Fok**: buzda devriye gezer. Yanından değil, **üstünden** atla; üstüne
   basarsan seni yukarı fırlatır.
-- **Orka** — boşluktan sıçrar. Önce yüzgeci suyu yarar, sonra kendisi çıkar.
+- **Orka**: boşluktan sıçrar. Önce yüzgeci suyu yarar, sonra kendisi çıkar.
   Suyun altındayken zararsız, havadayken ölümcül.
-- **Rüzgar** — öldürmez ama havada seni iter.
-- **Fırtına** — dar bir sütun değil, geniş bir kuşak. Rüzgar sürekli sana karşı
-  ve dalgalar hâlinde geliyor: sertken yürürken bile geri püskürtüyor, dinince
-  yol veriyor. Sabit essin isteseydik sadece yavaş bir yürüyüş olurdu; dalgalı
-  olunca karar hâline geliyor — dinginlikte koş, sertlikte sağlam buzda bekle.
+- **Fırtına**: dar bir sütun değil, geniş bir kuşak, ve dört vuruşluk bir
+  soluk: önce sana karşı, sonra dinginlik, sonra arkandan, sonra yine
+  dinginlik. Dördü de `windAt` içinde tek bir eğri, çünkü oyuncunun *gördüğü*
+  rüzgârla *hissettiği* rüzgârın bir onda saniye ayrışması, ibre olmamasından
+  daha kötü. Başının üstündeki ibre hangi vuruşta olduğunu ve bir sonraki
+  kuyruk rüzgârının ne zaman geleceğini gösteriyor. Duran penguen
+  sürüklenmiyor: rüzgâra karşı verilen cevap durup beklemek, bedeli de oyunun
+  her yerde aldığı şey, zaman.
+- **Yükselen hava**: sütun hâlinde çizilen ve yukarı taşıyan bir akım.
+  Kasten sabit: fırtına zamanladığın şey, bu kullandığın şey ve havadayken
+  gücü değişen bir alet alet değildir.
+
+Rüzgârın işi var, dekor değil. İki parça bunun üstüne kurulu:
+
+- **`windGap`**: zıplamanın yetmediği, kuyruk rüzgârının rahatça yetiştirdiği
+  bir boşluk. Doğrulayıcı dördünü birden kanıtlıyor: rüzgârsız gerçekten
+  geçilmiyor, rüzgârla payı var, üstünü gerçekten bir fırtına örtüyor ve
+  kuyruk rüzgârı sıçrayışın süresinden uzun. Beklenecek yer geniş ve sağlam.
+- **`updraft`**: zıplamanın yetmediği yükseklikteki bir raf ve altında yükselen
+  hava sütunu. Aynı kanıt yukarı doğru, artı bir sınır: akım yerçekiminin
+  %60'ını geçemiyor, yoksa penguen uçmaya başlar.
 
 ---
 
@@ -482,7 +502,7 @@ durmadığını kontrol ediyor.
 İki tane bilerek "haksız hisseden" mekanik var. İkisi de aynı sözleşmeye tabi:
 **ilk sefer şok, öğrendikten sonra kaçılabilir.**
 
-**Sahte buz (`fake`).** Sağlam buzdan hiçbir farkı yok — ne kızıl damar, ne
+**Sahte buz (`fake`).** Sağlam buzdan hiçbir farkı yok, ne kızıl damar, ne
 renk, ne çatlak. Bastığında 0.46 saniye sonra gidiyor. Fitil, besteci
 tarafından *koşarak geçilebilecek* genişliği garantiliyor: durup etrafına
 bakan ölür, koşmaya devam eden geçer. Bilmemeyi değil, tereddüt etmeyi
@@ -494,7 +514,7 @@ dikkatin düştüğü yerdir, seni orada da alabilen bir bölüm uykuda oynanmaz
 
 Coin-flip olmasını engelleyen üç şey: her yaklaşımda değil, yarısında
 tetikleniyor; düşmeden önce buza gölge düşürüyor; ve **salın kendisine değil,
-salın önündeki buza** iniyor — smashladığı şey hâlâ geçmen gereken zemin.
+salın önündeki buza** iniyor, smashladığı şey hâlâ geçmen gereken zemin.
 Varlığını bilen her seferinde geçer. Bilmeyen öğrenir. 8. bölümden itibaren,
 kolay modda hem daha seyrek hem daha uzun uyarılı.
 
@@ -508,12 +528,12 @@ var: **oyuncu bir kez öğrendikten sonra bir daha aynı şekilde ölmemeli.**
 
 **Gayzer buzu.** Üstüne bastığın an buz tıslamaya, kabarcıklar büyümeye ve buz
 titremeye başlar. Yarım saniye sonra su sütunu patlar ve pengueni havaya
-fırlatır — genellikle denize. Yarım saniye, o hızda bir buçuk buz boyu demek:
+fırlatır, genellikle denize. Yarım saniye, o hızda bir buçuk buz boyu demek:
 tepki verirsen kurtulursun, oyalanırsan uçarsın. Bazı gayzerler ise sen
 basmadan, kendi saatlerine göre patlar; onların ritmini saymak gerekir.
 
 **Kaçan buz.** Alçakta duran, tam ihtiyacın olan yerde beliren küçük bir buz.
-Üstüne inmeye başladığın anda — ayağın değmeden hemen önce — kayboluyor.
+Üstüne inmeye başladığın anda, ayağın değmeden hemen önce, kayboluyor.
 Adaleti şuradan geliyor: **hiçbir zaman zorunlu değil.** Doğrulayıcı, her kaçan
 buzun bulunduğu boşluğun o buz olmadan da geçilebildiğini kontrol ediyor. Yani
 o buz bir yol değil, bir yem. Ayrıca denemede yalnızca bir kez kaçar; geri
@@ -536,7 +556,7 @@ tek kaynak olsaydı market kısa sürede anlamını yitirirdi:
 | Günlük görevler | 25–110 |
 | Günün Pengu'su hedefleri | her biri 30 |
 
-Bölümü tekrar oynamak yalnızca *yeni* ilerleme için ödeme yapar — ilk bölümü
+Bölümü tekrar oynamak yalnızca *yeni* ilerleme için ödeme yapar, ilk bölümü
 sonsuza kadar tekrarlayarak para basmak mümkün değil.
 
 Markette dokuz eşya var. Altısı sayı büyütüyor:
@@ -550,7 +570,7 @@ Markette dokuz eşya var. Altısı sayı büyütüyor:
 | Balık Mıknatısı | 90 → 165 px çekim | 2 |
 | Rüzgâr Yeleği | fırtına savurması %55 az | 1 |
 
-Üçü penguenin **ne yapabildiğini** değiştiriyor — [Aktif ekipman](#aktif-ekipman):
+Üçü penguenin **ne yapabildiğini** değiştiriyor, [Aktif ekipman](#aktif-ekipman):
 
 | Eşya | Etkisi | Seviye |
 |------|--------|--------|
@@ -566,7 +586,7 @@ erişim değil.
 
 Bir para biriminin tek önemli sorusu şu: **istenecek bir şey kalmayana kadar ne
 kadar sürüyor?** Çeyrek saatte marketi bitiren bir ekonomi cömert değil,
-bitmiştir — o andan sonra topladığın her balık değersizdir.
+bitmiştir, o andan sonra topladığın her balık değersizdir.
 
 `tests/economy.mjs` oyunu kâğıt üstünde oynuyor: simüle edilmiş bir oyuncuyu
 kampanyadan sonsuz moda kadar dakika dakika yürütüyor, gerçek ödül tablosunun
@@ -588,18 +608,18 @@ dakika uzakta olmalı, marketin tamamı en az 20 saat ve 40 gün sürmeli.
 ### Ama asıl mesele: ekonomi bitmemeli
 
 Fiyat yükseltmek her şeyi sahiplenme gününü sadece **erteler**. O gün yine
-gelir ve geldiğinde para birimi ölür — bir daha balık toplamanın anlamı kalmaz.
+gelir ve geldiğinde para birimi ölür, bir daha balık toplamanın anlamı kalmaz.
 
 Bu yüzden hiç bitmeyen tek bir şey var: **Buzul Anıtı**. Blok blok fonladığın
 bir buz yığını; her blok bir öncekinden %35 pahalı, karşılığında sadece bir
-rütbe ve daha yüksek bir anıt alıyorsun. Hiçbir işe yaramıyor — sonsuz
+rütbe ve daha yüksek bir anıt alıyorsun. Hiçbir işe yaramıyor, sonsuz
 olabilmesinin ve oyunu bozmamasının sebebi tam olarak bu.
 
 İlk 40 blok **233 milyon balık** eder. Pratikte bitmez; her zaman balığı
 koyacak bir yer var.
 
 Bu ölçüm ilk çalıştırıldığında Planör Kanat'ın **9 dakikada** alınabildiğini
-gösterdi — oyunun en ilginç eşyası, oyuncu daha kuşla tanışmadan. Fiyatlar buna
+gösterdi, oyunun en ilginç eşyası, oyuncu daha kuşla tanışmadan. Fiyatlar buna
 göre yeniden yazıldı.
 
 ---
@@ -609,7 +629,7 @@ göre yeniden yazıldı.
 Her gün bir kozmetik, indirimli, 24 saatliğine. Tarihe göre seçiliyor, yani o
 gün herkes aynı teklifi görüyor. Kartın üstünde geri sayım var.
 
-Normalde **kazanılan** kozmetikler de teklife giriyor — teklifin asıl anlamı bu:
+Normalde **kazanılan** kozmetikler de teklife giriyor, teklifin asıl anlamı bu:
 belki hiç sağlayamayacağın bir şartın kısayolu. Ama nadirliğe göre fiyatlanıyor,
 yani kısayol hiçbir zaman ucuz değil (Yaygın 260, Nadir 620, Efsanevi 1400,
 Mitik 2600 balık; indirim %25–40).
@@ -635,29 +655,29 @@ Fiyat basamakları `src/game/store.js` içinde **veri olarak** duruyor:
 > **Hiçbiri şu an para almıyor ve alamaz.** Tarayıcı bir ödemeyi güvenle
 > doğrulayamaz: oyuncu ile bedava alım arasındaki tek engel kendi
 > localStorage'ındaki bir bayrak olurdu. `canPurchase()` bu yüzden tek kapı ve
-> bilerek kapalı — yalan söyleyen bir düğme göstermek yerine dürüst bir cümle
+> bilerek kapalı, yalan söyleyen bir düğme göstermek yerine dürüst bir cümle
 > döndürüyor.
 >
 > Arka uç geldiğinde bu fonksiyon şuna dönüşür: SKU'yu POST et, imzalı makbuzu
 > al, sunucuda doğrula, eşyayı sunucu versin. Oyunda başka hiçbir şey
-> değişmiyor — kozmetikler zaten tek bir fonksiyondan veriliyor.
+> değişmiyor, kozmetikler zaten tek bir fonksiyondan veriliyor.
 
 ### Reklamlar
 
 Ödüllü reklam (`CONTINUE`, `DOUBLE FISH`, `LUCKY START`) doğru fikir: banner
 değil, oyuncunun kendi seçtiği reklam. Ama bir reklam SDK'sı (AdMob, IronSource)
-gerçek bir uygulama kimliği ve ağ bağlantısı ister — bu yüzden **henüz
+gerçek bir uygulama kimliği ve ağ bağlantısı ister, bu yüzden **henüz
 bağlanmadı**. Bağlandığında mekanikler hazır olacak şekilde tasarlandı:
 ödül kaynağı tek bir adaptör.
 
 ### İnternet gerekiyor mu
 
-**Bugün: hayır.** Oyun bir kere yüklendikten sonra tamamen çevrimdışı çalışıyor —
+**Bugün: hayır.** Oyun bir kere yüklendikten sonra tamamen çevrimdışı çalışıyor
 bölümler, kayıt, hayalet, lig, görevler, gardırop, hepsi cihazda.
 
 **Gerçek para ve ödüllü reklam devreye girdiğinde: evet**, ama sadece o iki iş
 için. Doğru mimari şu: oyun çevrimdışı oynanabilir kalır, ağ sadece iki noktada
-gerekir — ödeme doğrulaması (`canPurchase`) ve reklam gösterimi. Ağ yoksa o iki
+gerekir, ödeme doğrulaması (`canPurchase`) ve reklam gösterimi. Ağ yoksa o iki
 düğme kapanır, oyunun geri kalanı hiç etkilenmez. İkisi de bilerek tek
 fonksiyonun arkasına toplandı ki bağlantı kontrolü tek yerde yaşasın.
 
@@ -667,19 +687,19 @@ fonksiyonun arkasına toplandı ki bağlantı kontrolü tek yerde yaşasın.
 
 Oyunun kendisi bir sebep, ama tek sebep olmamalı. Beş katman:
 
-- **Günün Pengu'su** — tarihe göre tohumlanır, o gün herkes aynı bölümü oynar.
+- **Günün Pengu'su**: tarihe göre tohumlanır, o gün herkes aynı bölümü oynar.
   Dört hedefi var ve **gün boyunca birikirler**: hızlı bitir, balıkları topla,
-  ölmeden geç, çürük balığa dokunma. Tek turda hepsini yapmak gerekmez — beşinci
+  ölmeden geç, çürük balığa dokunma. Tek turda hepsini yapmak gerekmez, beşinci
   denemeyi başlatmaya değer kılan da bu.
-- **Seri** — arka arkaya gün oynadıkça büyür, bir gün atlayınca sıfırlanır.
+- **Seri**: arka arkaya gün oynadıkça büyür, bir gün atlayınca sıfırlanır.
   Yedi günlük seri Altın Penguen'i açar.
-- **Günlük görevler** — 21 görevlik havuzdan tarihe göre çekilen üç görev: bir
+- **Günlük görevler**: 21 görevlik havuzdan tarihe göre çekilen üç görev: bir
   kolay, bir orta, bir zor. Üç kolay görev hedefsiz bir gün demek; üç zor görev
   insanların atladığı gün demek. Aynı olayı izleyen iki görev seçilmez.
   Almadığın ekipmanı isteyen görevler listeye hiç girmez.
-- **Haftalık lig** — puanlar pazartesi sıfırlanır, çıktığın kademe kalır. Pazar
+- **Haftalık lig**: puanlar pazartesi sıfırlanır, çıktığın kademe kalır. Pazar
   gecesi son bir hamle yapmaya değer olmasının sebebi bu.
-- **Koleksiyon** — 20 penguen ve 10 iz, çoğu kazanılıyor. "Bir bölüm daha
+- **Koleksiyon**: 20 penguen ve 10 iz, çoğu kazanılıyor. "Bir bölüm daha
   oynayayım" cümlesinin en somut karşılığı: 50. ölümsüz bölüm Ninja'yı,
   1000. balık Kral'ı, 5000. metre Astronot'u açıyor.
 
@@ -699,19 +719,19 @@ Oyunun kendisi bir sebep, ama tek sebep olmamalı. Beş katman:
 ## Aktif ekipman
 
 Marketin geri kalanı sayıları büyütüyor. Bu ikisi penguenin *ne yapabildiğini*
-değiştiriyor — hem de aynı zıplama tuşuyla:
+değiştiriyor, hem de aynı zıplama tuşuyla:
 
-- **Planör Kanat** — havada zıplamayı **basılı tut**: kanatlar açılır, düşüş
+- **Planör Kanat**: havada zıplamayı **basılı tut**: kanatlar açılır, düşüş
   yavaşlar, biraz da ileri süzülürsün.
-- **Sırt Motoru** — havada zıplamaya **bas**: motor bir kez yukarı ateşler.
-- **Kuş Radarı** — kuş dalışa geçmeden önce sana daha uzun uyarı verir.
+- **Sırt Motoru**: havada zıplamaya **bas**: motor bir kez yukarı ateşler.
+- **Kuş Radarı**: kuş dalışa geçmeden önce sana daha uzun uyarı verir.
 
 Basmak ile basılı tutmak arasındaki fark, ikisinin de tek tuşa sığmasının
 sebebi: dokunmatikte üçüncü bir düğme yok ve olmamalı.
 
 İkisi de yalnızca **yere değince** doluyor. Yani bunlar uçmak değil: zaten
 verdiğin bir zıplama kararını havada tartışma hakkı. HUD'daki çubuk kararın
-kendisi — bu boşluk için mi harcayacaksın, sonraki için mi sakla?
+kendisi, bu boşluk için mi harcayacaksın, sonraki için mi sakla?
 
 Bütün bölümler **hiçbir ekipmanı olmayan** bir penguene göre doğrulanıyor, yani
 ekipman bir parkuru asla açamaz, sadece kolaylaştırır.
@@ -719,7 +739,7 @@ ekipman bir parkuru asla açamaz, sadece kolaylaştırır.
 ## Pusu: kutup kuşu
 
 Bir skua, gerçekten yavru penguen kapan iri bir kutup martısı. Bölümün parçası
-değil — **yönetmen olayı**: bölümün seçmediği bir anda geliyor. Ezberlediğin bir
+değil, **yönetmen olayı**: bölümün seçmediği bir anda geliyor. Ezberlediğin bir
 parkurun dokuzuncu turda hâlâ seni korkutabilmesinin tek yolu bu.
 
 Buzun üstünde bir gölge beliriyor ve **yaklaştıkça daha hızlı atıyor**. Bu
@@ -728,27 +748,27 @@ kasıtlı. Uyarısız anlık ölüm yazı-turadır ve insanlar oyunu bırakır; 
 dedirtir. Pencere gerçekten dar.
 
 Adaleti koruyan kurallar:
-- vuruş noktası gölge çıktığı an kilitleniyor — kaçmak işe yarıyor;
+- vuruş noktası gölge çıktığı an kilitleniyor, kaçmak işe yarıyor;
 - doğuştan/checkpoint'ten sonra `grace` süresi boyunca asla gelmiyor;
 - iki dalış arasında bekleme süresi var;
 - kapılırsan bölümü değil, kontrol noktasını kaybediyorsun;
-- kolay modda sıklığı yarıya iniyor, uyarı uzuyor — kapatılmıyor.
+- kolay modda sıklığı yarıya iniyor, uyarı uzuyor, kapatılmıyor.
 
 12. bölümden önce hiç görünmüyor: oyuncu önce oyunu öğrenmeli.
 
 ## Koleksiyon
 
-Penguen her karede sıfırdan çiziliyor, yani bir "skin" görsel dosyası değil —
+Penguen her karede sıfırdan çiziliyor, yani bir "skin" görsel dosyası değil
 bir palet artı küçük bir aksesuar çizeri. Bu yüzden her penguen birkaç yüz bayt,
 her büyüme ölçeğinde çalışıyor ve gövdenin ezilip uzamasına kendiliğinden uyuyor.
 
-**İki slot var**, ve mesele bu: **24 penguen × 10 iz = 240 kombin**. Bir gardırobu
+**İki slot var** ve mesele bu: **24 penguen × 10 iz = 240 kombin**. Bir gardırobu
 liste olmaktan çıkarıp gardırop yapan şey, ikisinin birden *senin seçimin*
 olması.
 
 ### Penguenler
 
-Nadirlik bir güç seviyesi değil — her şey kozmetik ve öyle kalacak. Nadirlik
+Nadirlik bir güç seviyesi değil, her şey kozmetik ve öyle kalacak. Nadirlik
 "bunu elde etmek ne kadar zordu"nun dilbilgisi:
 
 | | Penguen | Şart |
@@ -766,7 +786,7 @@ Kraliçesi'nin omuzlarından çıkan kristaller.
 
 ### Elmas penguenler
 
-Yirmi penguen kozmetik. Dördü değil — ve fark **kasten** dördüyle sınırlı, çünkü
+Yirmi penguen kozmetik. Dördü değil ve fark **kasten** dördüyle sınırlı, çünkü
 "en pahalı penguen en güçlü penguendir" kuralı bir gardırobu bir güç merdivenine
 çevirir.
 
@@ -781,10 +801,10 @@ Yirmi penguen kozmetik. Dördü değil — ve fark **kasten** dördüyle sınır
 
 1. **Etki bir market kademesi kadar.** Elmas'ın zıplaması, Zıplama Botu'nun ilk
    kademesiyle aynı büyüklükte. Bölüm doğrulayıcısı erişimi *yeteneksiz* penguene
-   göre hesaplıyor — yani elmas penguen hiçbir bölümü açmıyor, sadece açık olanı
+   göre hesaplıyor, yani elmas penguen hiçbir bölümü açmıyor, sadece açık olanı
    biraz rahatlatıyor.
 2. **Yetenek sahip olduğun şeyi iyileştiriyor.** Albatros'un +0.7 saniyesi
-   `glideMax`'e ekleniyor, ama `glideMax` kanat yoksa zaten 0 — yani Albatros'u
+   `glideMax`'e ekleniyor, ama `glideMax` kanat yoksa zaten 0, yani Albatros'u
    giyip Planör Kanat'ı almadıysan hiçbir şey kazanmıyorsun. Test bunu ayrıca
    doğruluyor.
 3. **Fiyatlar ekonominin en üstünde.** En ucuz elmas, marketin tamamından pahalı.
@@ -796,7 +816,7 @@ kayma azaltma 0.92'de tavanlanıyor ki hiçbir kombinasyon buzu asfalta çevirme
 ### İzler
 
 Ayrı bir slot: penguenin arkasında ne bıraktığı. Oyuncunun son konumlarından
-çiziliyor — yani bir izin maliyeti on sekiz nesnelik bir halka tampon, o kadar.
+çiziliyor, yani bir izin maliyeti on sekiz nesnelik bir halka tampon, o kadar.
 
 Kar tozu, kabarcık, kıvılcım, buz kırığı, kalp, nota, alev izi, kutup ışığı ve
 Boşluk (geçtiğin yerde ışık bırakmayan mitik iz).
@@ -817,15 +837,15 @@ gerekmeden gerçek bir tabloyu besler.
 ## Günün Pengu'su
 
 Günün bölümü tek parkur ve tek kronometreydi; bir kez yapılan bir şey. Artık aynı
-parkurun üstünde bir hedef listesi var — hızlı bitir, balıkları topla, ölmeden
-geç, çürük balığa dokunma — ve hedefler **gün boyunca birikiyor**, tek turda
+parkurun üstünde bir hedef listesi var, hızlı bitir, balıkları topla, ölmeden
+geç, çürük balığa dokunma ve hedefler **gün boyunca birikiyor**, tek turda
 hepsini yapmak gerekmiyor. Beşinci denemeyi başlatmaya değer kılan da bu.
 
 Hedefler tarihten seçiliyor, yani aynı gün herkeste aynı liste çıkıyor.
 
 ## Hayalet yarışı ve sıralama
 
-Sunucusuz bir oyunda gerçek bir küresel liderlik tablosu olamaz — o bir arka uç
+Sunucusuz bir oyunda gerçek bir küresel liderlik tablosu olamaz, o bir arka uç
 ister. Ama *yarışmak* istemez.
 
 Her deneme kaydediliyor: penguenin konumu saniyede 20 kez örnekleniyor. Bir
@@ -833,7 +853,7 @@ bölümü bitirdiğinde en iyi koşun saklanıyor ve bir dahaki oynayışında y
 saydam bir penguen olarak koşuyor. HUD'daki `−0.42` / `+1.08` o an bulunduğun
 noktada rekordan ne kadar önde ya da geride olduğunu gösteriyor.
 
-Koşular taşınabiliyor. Bir koşu kısa bir koda dönüşüyor — her örnek bir öncekinden
+Koşular taşınabiliyor. Bir koşu kısa bir koda dönüşüyor, her örnek bir öncekinden
 farkı kadar, çoğu fark tek bayta sığıyor, başlıkta bölüm, süre ve koşan kişinin adı
 var. 30 saniyelik bir koşu ~370 karakter: mesajla gönderilecek kadar kısa. Gelen
 kodu **Sıralama** ekranına yapıştırınca o kişi tabloya giriyor ve hayaleti buzun
@@ -841,7 +861,7 @@ kodu **Sıralama** ekranına yapıştırınca o kişi tabloya giriyor ve hayalet
 
 Sıralama gerçek bir sıralama; sadece sunucu yerine paylaşım koduyla dolaşıyor.
 
-## Zirve — tırmanış
+## Zirve, tırmanış
 
 Otuz bir bölüm boyunca oyun tek bir soru sordu: **oraya yetişir miyim?** Yeni buz
 türü eklemek o soruyu değiştirmiyor, sadece süslüyor. 32. bölümde soru değişiyor:
@@ -854,26 +874,26 @@ Penguen buz duvarına gömülüp asılı kalabiliyor. Asılmak bir bar tüketiyo
 
 | | |
 |---|---|
-| Duvara doğru bas | Tutun — yavaşça kayarsın, bar azar azar iner |
-| Tutunurken BOŞLUK'u **basılı tut** | Tırman — 96 px/sn yukarı, bar iki katından hızlı iner |
-| Tutunurken BOŞLUK'a **dokun** | Tekmele — duvardan itip karşıya fırla |
+| Duvara doğru bas | Tutun, yavaşça kayarsın, bar azar azar iner |
+| Tutunurken BOŞLUK'u **basılı tut** | Tırman, 96 px/sn yukarı, bar iki katından hızlı iner |
+| Tutunurken BOŞLUK'a **dokun** | Tekmele, duvardan itip karşıya fırla |
 | Tepeye varınca | Kendiliğinden kenardan yukarı çekiliyorsun |
 
 Ve asıl karar burada: **tekme sürünmekten çok daha verimli.** Bir bar 4,4 saniye;
 sürünerek 338 piksel çıkarsın, tekmeleyerek 690. Ama tekme karşı duvarı
-tutturmayı gerektiriyor — ıskalarsan bacanın dibine kadar düşersin. Güvenli olan
+tutturmayı gerektiriyor, ıskalarsan bacanın dibine kadar düşersin. Güvenli olan
 yavaş, hızlı olan riskli. Bir tırmanışın olması gereken şey tam olarak bu.
 
 ### Baca
 
 İki karşılıklı duvar ve aralarında basacak hiçbir şey yok. Zıplayarak geçilmiyor;
-tek yol tutunmak, ve tutunma tükeniyor. Uzun bacalarda **duvarın kendisi
-kırılıyor**: sütun bir yerde bitiyor, başı sağlam zemin oluyor, ve bir boy hava
-sonra buz yeniden başlıyor. Barı orada doldurup ikinci nefese başlıyorsun — ve
+tek yol tutunmak ve tutunma tükeniyor. Uzun bacalarda **duvarın kendisi
+kırılıyor**: sütun bir yerde bitiyor, başı sağlam zemin oluyor ve bir boy hava
+sonra buz yeniden başlıyor. Barı orada doldurup ikinci nefese başlıyorsun, ve
 o rafa çıkma hareketi, bacadan çıkma hareketinin aynısı.
 
 Tepede baca öylece bitiyor: **duvarın başı sağlam zemin**, üstüne çekilip
-çıkıyorsun. Bu, ilk denediğim tasarım değildi — şaftın içine asılı bir saçak
+çıkıyorsun. Bu, ilk denediğim tasarım değildi, şaftın içine asılı bir saçak
 koymuştum ve son tekme onu sıyırıp yetmiş piksellik bir rafa konmak zorundaydı.
 Kâğıtta çalışıyordu, pratikte defalarca beş pikselle ıskalıyordu. Çözücü bunu
 gördü, ben de bölümün payı en dar hareketini tamamen kaldırdım.
@@ -887,14 +907,14 @@ Besteci, tekmenin sıfır ya da eksi kazandırdığı bir bacayı **kurmayı red
 
 Aynı şekilde `reachAt(ölçek, yükseliş)`: 110 piksel yükselen bir zıplamanın
 yatayda neredeyse hiç yolu kalmaz. Sahanlıkta mesafe ve yükseklik ayrı bütçelerdi
-ve orada yeterince doğru; dağda değil — bu yüzden ikisi birlikte hesaplanıyor.
+ve orada yeterince doğru; dağda değil, bu yüzden ikisi birlikte hesaplanıyor.
 
 ### Yayına giren ve girmeyen
 
 `climb.js` içinde on beş tırmanış planı var ve **on beşi de** hem geometri
-doğrulayıcısını hem de fizik çözücüsünü geçiyor: **32–46**. Kural değişmedi —
+doğrulayıcısını hem de fizik çözücüsünü geçiyor: **32–46**. Kural değişmedi
 *kimsenin çıkabildiğini kanıtlayamadığım bir bölümü oyuna koymam*. Geçemeyen bir
-plan dosyada `ship: false` ile durur, oyuna girmez, ve `node tests/climb-run.mjs
+plan dosyada `ship: false` ile durur, oyuna girmez ve `node tests/climb-run.mjs
 --all` onu yine de dener: hatasını raporlar, derlemeyi düşürmez. Şu an o listede
 kimse yok.
 
@@ -906,7 +926,7 @@ Son turda üç taneydi:
 
 1. **Baca, penguenin durduğu buzun üstünde değildi.** Besteci şaftı imlecin o
    anki yerine sabitliyor, sonra ağzı fazla yüksekse yukarı doğru basamak
-   ekliyordu — ve o basamaklar imleci kaydırıyordu. Sonuçta oyuncunun kalktığı
+   ekliyordu ve o basamaklar imleci kaydırıyordu. Sonuçta oyuncunun kalktığı
    buz, bacanın *yanında* kalıyordu, bazen iki yüz piksel yanında. Altında
    durmadığın bacaya giremezsin. Artık şaft ile kalkış buzu birlikte
    kararlaştırılıyor, her basamakta yeniden.
@@ -914,13 +934,13 @@ Son turda üç taneydi:
 2. **Mola rafları tırmanılan yüzü kapatıyordu.** Duvara yapıştırılmış bir raf
    çizimde iyi durur; oyunda tırmanışın karşılaştığı ilk şey rafın *altı*
    olur. Ölçüm nettir: raflı her baca tam rafın hizasında ölüyordu, dört ayrı
-   bölümde, yirmi piksel içinde. Artık **duvarın kendisi kırılıyor** — sütunun
+   bölümde, yirmi piksel içinde. Artık **duvarın kendisi kırılıyor**: sütunun
    alt parçası rafta bitiyor, penguen oraya bacadan çıktığı gibi çıkıyor
    (tutun, kendini çek, doğrul, nefeslen), üstünde bir boy hava var ve buz
    yeniden başlıyor. Aynı fiil, bacada üç kez, öğrenilecek yeni bir şey yok.
 
 3. **Çözücü, tepeye çıkacağı duvarı tekmeleyip bırakıyordu.** Çıkışın olduğu
-   sütuna tutunmuş, hedefi görüyor — ve tekmeleyip karşıya atlıyordu. Şaftın
+   sütuna tutunmuş, hedefi görüyor ve tekmeleyip karşıya atlıyordu. Şaftın
    iki yüz piksel üstüne kadar zıplayıp "bu baca çıkılmaz" diyordu, oysa
    çıkıştaydı ve elini bırakmıştı.
 
@@ -930,7 +950,7 @@ yerine duvarın kendisi düzeldi.
 
 ---
 
-## Buz Altı — dalış
+## Buz Altı, dalış
 
 Sahanlık "oraya yetişir miyim?" diye sordu. Dağ "ne kadar tutunabilirim?" diye
 sordu. 47. bölümde soru üçüncü kez değişiyor: **nefesim ne kadar yeter?**
@@ -938,7 +958,7 @@ sordu. 47. bölümde soru üçüncü kez değişiyor: **nefesim ne kadar yeter?*
 ### Tersine çevirme
 
 Bu bölüm oyunun tek gerçek tersine çevirmesi. Buzun üstünde penguen bir
-komedyendir — kısa bacaklı, tutunamayan, her hareketi zahmetli. Suda yüz mil
+komedyendir, kısa bacaklı, tutunamayan, her hareketi zahmetli. Suda yüz mil
 çevrenin en hızlı şeyidir. Bu yüzden Buz Altı zorluğunu penguene **daha çok iş
 yaptırarak** kurmuyor; tam tersine, otuz bölümdür kısıtladığı şeyi serbest
 bırakıyor: suda yürüme hızının bir buçuk katıyla gidiyorsun, durmak yok, sürtünme
@@ -950,7 +970,7 @@ yok, su seni taşıyor. Karşılığında elinden alınan tek şey hava.
 |---|---|
 | Hiçbir şeye basma | **Yüksel.** Penguen yüzer; yukarı bedava ve sürekli |
 | BOŞLUK'u basılı tut | **Dal.** Aşağı emek ister, o yüzden basılı olan bu |
-| ← → | Sağa sola — daha hızlı, ve bıraktığında bir saniye daha sürüyor |
+| ← → | Sağa sola, daha hızlı ve bıraktığında bir saniye daha sürüyor |
 | Buzdaki delik | Kafanı çıkar, nefes al |
 
 Yeni tuş yok, yeni kural yok. Buton artık *derinlik*. Ve ilk saniyede kendini
@@ -959,12 +979,12 @@ delik o tavandaki tek boşluk.
 
 ### Nefes
 
-Bir ciğer 9,5–9,8 saniye — büyüyen penguenin ciğeri de büyüyor, ve bu, oyunda
+Bir ciğer 9,5–9,8 saniye, büyüyen penguenin ciğeri de büyüyor ve bu, oyunda
 irileşmenin katıksız iyi haber olduğu tek yer. Sayaç sen hareket etmesen de
 işliyor: **dağ acele etmeni cezalandırıyordu, deniz oyalanmanı cezalandırıyor.**
 Doldurmanın tek yolu buzdaki bir delikten kafanı çıkarmak.
 
-Delikler geniş — kasten. İlk hallerinde bir kapı genişliğindeydiler ve seyir
+Delikler geniş, kasten. İlk hallerinde bir kapı genişliğindeydiler ve seyir
 hızında içlerinden 0,38 saniyede geçiliyordu: bu bir nefes değil, bir yudum.
 Çözücü dört bölümü, çıkış görünürken, ciğeri sıfırlanmış halde kaybetti. Artık
 bir delik yavaşlayıp kafanı çıkaracak kadar uzun.
@@ -974,37 +994,37 @@ bir delik yavaşlayıp kafanı çıkaracak kadar uzun.
 Tavan ile deniz tabanı arasındaki boşluk her parçada aynı yükseklikte başlıyor
 ve bitiyor; bir geçit koridoru **daraltabilir, asla taşamaz**. Bu bir estetik
 tercih değil: taşan bir geçit, bir sonraki parçanın başladığı yerde tabanda bir
-basamak bırakıyor, ve tabandaki bir basamak duvardır. Penguen geçidin içinden
+basamak bırakıyor ve tabandaki bir basamak duvardır. Penguen geçidin içinden
 kusursuz bir çizgi çizip ekin dibinde duruyordu. Çözücü bunu buldu.
 
 ### Bunun matematiği de tahmin değil
 
-`swimReach(ölçek, dy)` mesafeyi ve derinliği tek bütçede birleştiriyor —
+`swimReach(ölçek, dy)` mesafeyi ve derinliği tek bütçede birleştiriyor
 dağdaki `reachAt`'in denizdeki karşılığı. Yükselmek yavaş ve bedava, dalmak
 hızlı ve emekli, yani **iki yön gerçekten farklı geometri**: yukarıdan kolay
 girilen bir geçide aşağıdan girmek çoğu zaman imkânsız. `breathRange` de ciğeri
-piksele çeviriyor, ve besteci bir ciğerin taşıyamayacağı iki delik arasını
-**kurmayı reddediyor** — dahası, gerektiğinde buzda kendi deliğini açıyor. Bir
+piksele çeviriyor ve besteci bir ciğerin taşıyamayacağı iki delik arasını
+**kurmayı reddediyor**: dahası, gerektiğinde buzda kendi deliğini açıyor. Bir
 planın hatırlamak zorunda olduğu söz, tutulmayan sözdür.
 
 ---
 
-## Kar Topu — hizalama
+## Kar Topu, hizalama
 
 Üç bölüm boyunca oyun penguene bir fiil verdi: zıpla, tutun, dal. Dördüncüsü
 hepsini geri alıyor ve yerine bir **konum** veriyor.
 
 ### Elinde hiçbir şey yok
 
-Atma tuşu yok. Kar topu toplamak yok. Yeni tuş yok — bu bölümde penguenin
+Atma tuşu yok. Kar topu toplamak yok. Yeni tuş yok, bu bölümde penguenin
 yapabildiği tek şey bir yerde durmak. Ama:
 
 - Rakipler **nişan aldıkları anda durduğun yere** atıyor, sonrasına bakmıyor.
-- Bir kar topu **değdiği ilk şeyde** duruyor: bir penguen, sen, ya da buz.
+- Bir kar topu **değdiği ilk şeyde** duruyor: bir penguen, sen ya da buz.
 
 Bu iki cümleden çıkan tek fikir bütün bölüm: **birinin arkasına geç.** Yolu
 kapatan pengueni atıcıyla arana koy, at sinyalini bekle, sonra o hattan çekil.
-Kırmızı atkılı olanlar kapıyı tutuyor — hepsi düşmeden sal açılmıyor. Mavi
+Kırmızı atkılı olanlar kapıyı tutuyor, hepsi düşmeden sal açılmıyor. Mavi
 atkılılar sadece sana atıyor; onları devirmek zorunda değilsin, ama sana
 duracak yeri onlar dar ediyor.
 
@@ -1013,7 +1033,7 @@ duracak yeri onlar dar ediyor.
 Çünkü kilitlenmezse baştan aşağı farklı bir oyun oluyor. Seni takip eden bir
 nişanla yapabileceğin tek şey kaçmak; **kilitli** bir nişanla yapabileceğin şey
 *hattı seçmek*. Wind-up 0,62 saniye sürüyor ve o süre boyunca hat buzun üstüne
-noktalı çiziliyor — hem de hedefinin çok ötesine kadar, çünkü oyuncunun
+noktalı çiziliyor, hem de hedefinin çok ötesine kadar, çünkü oyuncunun
 düzenlediği şey topun **içinden geçtiği** şey.
 
 ### Neden düz atıyorlar
@@ -1023,7 +1043,7 @@ hattı göremiyorsa ortada bulmaca değil şans vardır. O yüzden atış sert v
 
 ### Buz sivrileri
 
-Rakipler raf üstünde değil, ince buz sivrilerinin tepesinde duruyor — ve bu bir
+Rakipler raf üstünde değil, ince buz sivrilerinin tepesinde duruyor ve bu bir
 görsel tercih değil, geometrinin dayattığı şey. Kar topu değdiği ilk buzda
 durduğu için, geniş bir rafın üstündeki birinin içinden geçen hat birkaç piksel
 sonra o rafa çarpıyor: oyuncunun kusursuz hizaladığı atış yerde patlıyor. Raf ne
@@ -1034,13 +1054,13 @@ kadar dar olursa hat o kadar dik olabilir. `SLOPE_MAX` bu yüzden seçilmiş de�
 
 `Arena` bir arena kurup "umarım vardır" demiyor. Her düello **cevabından geriye
 doğru** kuruluyor: oyuncunun duracağı yeri seç, kapıdakini yerleştir, ikisinden
-geçen hattı çiz, atıcıyı o hattın üstüne koy. Sonra sıra önemli — kapıcılar ve
-manzara önce, atıcılar tek tek en son, ve her yeni atıcı daha önce çizilmiş
+geçen hattı çiz, atıcıyı o hattın üstüne koy. Sonra sıra önemli, kapıcılar ve
+manzara önce, atıcılar tek tek en son ve her yeni atıcı daha önce çizilmiş
 bütün hatları yeniden kontrol ediyor. Çünkü ikinci düellonun sivrisi birincinin
 atış hattına düşüyor: bakması hoş, oynaması bozuk.
 
 Kayalar da bu yüzden **yukarıdan sarkıyor**, yerden yükselmiyor. Zemin bu
-bölümde her şeyin oynandığı yer — bütün duracak noktalar orada — ve zeminden
+bölümde her şeyin oynandığı yer, bütün duracak noktalar orada ve zeminden
 çıkan bir sütun cevabın iki parçası arasına duvar koyuyor. Tavandan sarkınca
 getirildiği işi yapıyor: hatları yiyor, altından yürüyüp geçiyorsun.
 
@@ -1048,15 +1068,15 @@ getirildiği işi yapıyor: hatları yiyor, altından yürüyüp geçiyorsun.
 
 ## Arayüz
 
-Oyunun kendisi kadar üstünde durulan ikinci şey. Her ekran üç boyutta —
-telefon dik, telefon yatık, masaüstü — ekran görüntüsü alınıp *bakılarak*
-gözden geçirildi, ve bulunanların çoğu okuyarak fark edilmeyecek türdendi.
+Oyunun kendisi kadar üstünde durulan ikinci şey. Her ekran üç boyutta
+telefon dik, telefon yatık, masaüstü, ekran görüntüsü alınıp *bakılarak*
+gözden geçirildi ve bulunanların çoğu okuyarak fark edilmeyecek türdendi.
 
 ### Bulunan ve düzeltilenler
 
 | Neydi | Ne oldu |
 |---|---|
-| Ana ekranda tanıtım yazısı telefonun iki kenarından da taşıyordu | Bir flex öğesi içeriğinin altına inemiyordu — `min-width: 0` |
+| Ana ekranda tanıtım yazısı telefonun iki kenarından da taşıyordu | Bir flex öğesi içeriğinin altına inemiyordu, `min-width: 0` |
 | Bölüm listesinin üçüncü sütunu ekranın 20px dışındaydı | Aynı sebep, iki eleman ötedeki bir başlıktan |
 | Market ve koleksiyonda bir satırdaki düğmeler üç farklı hizadaydı | Kartlar metne göre boyutlanıyordu; artık aksiyon alta sabit |
 | Rozetler düğmenin dışında, kırpılıyordu | İçeri alındı |
@@ -1069,14 +1089,14 @@ gözden geçirildi, ve bulunanların çoğu okuyarak fark edilmeyecek türdendi.
 ### Market
 
 Sekiz kart, hepsi tam genişlikte parlak bir "Al" düğmesiyle: hepsi aynı sesle
-bağırınca hiçbiri konuşmuyor, ve telefonda tek bir yükseltme bir buçuk ekran
+bağırınca hiçbiri konuşmuyor ve telefonda tek bir yükseltme bir buçuk ekran
 kaplıyordu. Şimdi:
 
-- **Üç başlık** — Hareket, Dayanma, Ekipman. Sekiz kartlık düz bir ızgara bir
+- **Üç başlık**: Hareket, Dayanma, Ekipman. Sekiz kartlık düz bir ızgara bir
   duvar; üç başlık onu bir listeye çeviriyor.
 - **Fiyat bir çip**, slab değil. Kart kahraman, fiyat sessiz bir teklif.
 - **Yetmiyorsa kartın üstünde yazıyor**: "820 balık daha". Basınca öğrenilen
-  bir şey değil — "az kaldı" ile "çok uzak" farklı duygular ve oyuncunun
+  bir şey değil, "az kaldı" ile "çok uzak" farklı duygular ve oyuncunun
   doğrusunu hissetmeye hakkı var.
 - **Telefonda kart bir satır**: simge, ne olduğu, ne tuttuğu. Ekranda bir buçuk
   yerine dört tane.
@@ -1086,10 +1106,10 @@ kaplıyordu. Şimdi:
 
 Bir dükkâna giden tek bir kapı yeterli değil. Üç tane var:
 
-1. Ana ekrandaki **Market** düğmesi — kaç şey alabileceğini rozetle söylüyor
-2. **Cüzdana dokunmak** — parana dokunmak paranın gittiği yere götürüyor;
+1. Ana ekrandaki **Market** düğmesi, kaç şey alabileceğini rozetle söylüyor
+2. **Cüzdana dokunmak**: parana dokunmak paranın gittiği yere götürüyor;
    insanların ilk denediği hareket buydu ve hiçbir şey yapmıyordu
-3. **Bölüm sonu ekranı** — balığı yeni kazandığın ve rakamı gördüğün an,
+3. **Bölüm sonu ekranı**: balığı yeni kazandığın ve rakamı gördüğün an,
    *ve yalnızca gerçekten bir şey alabiliyorsan*
 
 ### Bölüm listesi
@@ -1101,15 +1121,15 @@ oynayacağın tek bölümün üstünde **"Sıradaki"**. Sonuncusu olmadan liste 
 yaptım"ı cevaplıyor, "nerede kalmıştım"ı hiç.
 
 Süreler de değişti: koşarkenki kronometre sabit genişlikte kalıyor (`00:21.40`
-— rakamlar oynarken zıplamasın), ama bir *rekor* listesinde baştaki `00:`
+rakamlar oynarken zıplamasın), ama bir *rekor* listesinde baştaki `00:`
 her satırda iki karakter gürültü. Rekorlar artık `21.40 sn`.
 
 ### Bunu koruyan test
 
 `tests/browser-layout.mjs` dokuz ekranı üç boyutta açıp bir tasarımcının gözle
 bakacağı şeyleri ölçüyor: viewport dışına taşan bir şey var mı (yatay kaydırma
-alanının içindekiler hariç — orada taşmak işin kendisi), bir satırdaki kart
-düğmeleri aynı hizada mı, ve parmakla tutulamayacak kadar küçük düğme var mı.
+alanının içindekiler hariç, orada taşmak işin kendisi), bir satırdaki kart
+düğmeleri aynı hizada mı ve parmakla tutulamayacak kadar küçük düğme var mı.
 Yukarıdaki tablodaki dokuz hatanın hepsi bu testin yakaladığı türden.
 
 ---
@@ -1126,14 +1146,14 @@ yaratıyor ve oyuncunun bunu doğru anlaması gerekiyor:
 - Ad **yalnızca bu cihazda** saklanıyor. Sunucu yok, giriş yok, doğrulama yok.
 - Kimlik (`PNG-XXXXX`) bir etiket, sır değil: aynı adı taşıyan iki oyuncu
   sıralamada birbirine karışmasın diye var. Bir kere üretiliyor ve bir daha
-  değişmiyor — düzeltilebilen bir etiket etiket değildir.
+  değişmiyor, düzeltilebilen bir etiket etiket değildir.
 - Ad, ancak **sen bir hayalet kodu paylaşırsan** cihazdan çıkar. Kodun içinde
   ne olduğu [gizlilik metninde](docs/GIZLILIK.md) tek tek yazıyor.
 
 **Unvanlar** bölüm bitirerek kazanılıyor, biriktirerek değil: *Yeni Yumurta*,
 *Buz Çırağı*, *Sahanlık Kaşifi*, *Duvar Tırmanıcısı*, *Zirve Sahibi*,
 *Derin Dalgıç*, *Koloni Efsanesi*. Eşikler chapter sonlarına oturuyor ve
-`tools/lint.mjs` son unvanın gerçekten ulaşılabilir olduğunu kontrol ediyor —
+`tools/lint.mjs` son unvanın gerçekten ulaşılabilir olduğunu kontrol ediyor
 76 bölümlük bir oyunda 90. bölümde verilen bir unvan, kimsenin görmediği bir
 metindir.
 
@@ -1152,7 +1172,7 @@ kayıyordu.
 
 ### Tek tema, dört kostüm
 
-Beş nota — dörtlü yukarı, adım adım geri, eve. Penguene ait, bölüme değil.
+Beş nota, dörtlü yukarı, adım adım geri, eve. Penguene ait, bölüme değil.
 Ana ekranda majörde duyuyorsun; dağda minörde, çıplak bir beşlinin üstünde;
 buzun altında yarı hızda ve gecikmeye boğulmuş; kar topu arenasında staccato
 parçalanmış. Kimsenin bunu fark etmesi gerekmiyor. Dört bambaşka parçanın tek
@@ -1161,9 +1181,9 @@ bir oyun gibi duymasının sebebi bu.
 ### Katman, parça değil
 
 Ped, bas, arpej, perküsyon ve tema beş ayrı ses ve her biri kendi başına
-geliyor gidiyor — neyin olduğuna bakarak. Ped hep var; davul yalnızca işler
+geliyor gidiyor, neyin olduğuna bakarak. Ped hep var; davul yalnızca işler
 kötüye gidince. **İyi giden bir bölüm ile neredeyse kaybedilmiş bir bölüm aynı
-duyulmuyor**, ve ikisi de ayrı ayrı bestelenmedi.
+duyulmuyor** ve ikisi de ayrı ayrı bestelenmedi.
 
 Sıcaklık (`_heat`) kasten oyuncunun *hissettiği* şeylerden yapılıyor: ne kadar
 ilerlediğin, seni öldürecek şeyin ne kadar yakın olduğu, o chapter'ın senden
@@ -1174,8 +1194,8 @@ arenada havada uçan kar topu.
 
 25 ms'de bir uyanan bir ileri-bakış zamanlayıcısı, sonraki beşte bir saniyenin
 notalarını tam zamanlarıyla kuyruğa koyuyor. `setInterval` bunu yapamaz: ana
-iş parçacığı ne kadar meşgulse o kadar geç kalır, ve bir chapter dolusu buzun
-çizildiği karede **çok** geç kalır — yani ritim tam da oyun heyecanlandığında
+iş parçacığı ne kadar meşgulse o kadar geç kalır ve bir chapter dolusu buzun
+çizildiği karede **çok** geç kalır, yani ritim tam da oyun heyecanlandığında
 tökezler.
 
 Efektler müziği kısıyor (`duck`): buz kırılırken müziğin üstüne binmesi,
@@ -1183,8 +1203,38 @@ oyuncunun duyması gereken tek sesi bastırmak demek.
 
 Testi `tests/music.mjs`: Web Audio sayaçlarla taklit ediliyor ve ızgaranın
 tam, katmanların yoğunlukla geldiği, sahne geçişinin vuruşa oturduğu ve temanın
-her bölümde çaldığı ölçülüyor. Müzik, okuyarak kontrol edilemeyen tek parça —
+her bölümde çaldığı ölçülüyor. Müzik, okuyarak kontrol edilemeyen tek parça
 ve sessizce bozulan tek parça.
+
+---
+
+## Diller
+
+Oyun Türkçe yazıldı ve öyle kalıyor: her metin iki kere var, Türkçesi asıl,
+İngilizcesi çeviri. Arayüz metinleri `src/core/i18n.js` içindeki tek sözlükte
+adla duruyor; bir içeriğe ait olan her şey (bölüm adı, penguen tanıtımı, market
+etiketi, görev, lig kademesi, unvan) o girdinin kendi `en` bloğunda, çünkü adı
+çiziminden üç dosya uzakta duran bir penguen, yeniden adlandırılması unutulan
+penguendir.
+
+İlk açılışta tarayıcının dili seçiliyor; biri elle seçim yapınca o seçim
+kalıyor. Seçici her dilin adını kendi dilinde yazıyor, tam da okuyamadığı bir
+arayüzde kalan oyuncu için.
+
+Eksik bir metin çökme değil, sessizce diğer dile düşme demek, o yüzden üç
+denetim var:
+
+| Denetim | Ne yapıyor |
+|---|---|
+| `tools/lint.mjs` | İki sözlükte birebir aynı anahtarlar var mı |
+| `tools/lint.mjs` | Kodun istediği her anahtar sözlükte var mı |
+| `tests/browser-lang.mjs` | Dili değiştirip her ekranda Türkçe harf arıyor |
+
+Sonuncusu ilk koşuşunda dört gerçek boşluk buldu: chapter başlıkları, market
+grup adları, HUD'daki bölüm adı ve market kademe sayacı.
+
+Uzun yasal metinlerin İngilizcesi `docs/PRIVACY.md` ve `docs/TERMS.md`
+dosyalarında; Türkçeleriyle birebir aynı şeyi söylüyorlar.
 
 ---
 
@@ -1192,8 +1242,8 @@ ve sessizce bozulan tek parça.
 
 | | |
 |---|---|
-| ← → veya A D | Yürü — *buz duvarına doğru basılıysa: tutun* · *suda: yüz* |
-| Boşluk / ↑ / W | Zıpla — basılı tut, yükseğe çık · *suda: basılı tut, dal* |
+| ← → veya A D | Yürü, *buz duvarına doğru basılıysa: tutun* · *suda: yüz* |
+| Boşluk / ↑ / W | Zıpla, basılı tut, yükseğe çık · *suda: basılı tut, dal* |
 | Boşluk **havada basılı tut** | Kanatları aç, süzül *(Planör Kanat gerekir)* |
 | Boşluk **havada tek dokunuş** | Sırt motorunu ateşle *(Sırt Motoru gerekir)* |
 | Boşluk **tutunurken basılı tut** | Duvarı tırman |
@@ -1202,11 +1252,11 @@ ve sessizce bozulan tek parça.
 | Esc veya P | Duraklat |
 
 Dokunmatik ekranda alttaki üç tuş, ayrıca gamepad desteği var. Ekipmanların
-ikisi de aynı zıplama tuşuna bindi — çünkü dokunmatikte dördüncü bir düğme
-olmamalı, ve "bas" ile "basılı tut" zaten iki farklı niyet.
+ikisi de aynı zıplama tuşuna bindi, çünkü dokunmatikte dördüncü bir düğme
+olmamalı ve "bas" ile "basılı tut" zaten iki farklı niyet.
 
 **Gamepad**: sol çubuk ve D-pad yürütüyor (%35 ölü bölge), A/B/X/Y zıplatıyor,
-Start duraklatıyor. Tarayıcı `getGamepads()` çağrısı hata atarsa kare düşmüyor —
+Start duraklatıyor. Tarayıcı `getGamepads()` çağrısı hata atarsa kare düşmüyor
 o kare klavyeye düşülüyor, oyun devam ediyor.
 
 ---
@@ -1223,14 +1273,14 @@ süren beş dakika artmıyor (test ölçtü: `0 sn` kayma).
 **Pencere odağını kaybedince** basılı tuşlar bırakılıyor. Alt+Tab yaparken sağ
 ok basılıysa penguen sonsuza kadar sağa yürümüyor.
 
-**Sekmeyi kapatınca** koşu kaydediliyor — kontrol noktasına her değdiğinde,
+**Sekmeyi kapatınca** koşu kaydediliyor, kontrol noktasına her değdiğinde,
 duraklatınca, ölünce ve `pagehide`'da. Geri geldiğinde ana ekrandaki düğme
 **"Devam et · Bölüm 7 · 00:12.53"** diyor ve bastığında bıraktığın kontrol
 noktasında, aynı süreyle, aynı ölüm ve balık sayısıyla başlıyorsun. Kayıt 36
 saat sonra kendini siliyor, bölümü bitirince de siliniyor.
 
 > Bu özellik yazılırken **gerçekten bozuktu** ve testle bulundu: başlık ekranı
-> UI kurucusunda, yani `game` nesnesi var olmadan önce çiziliyordu — bu yüzden
+> UI kurucusunda, yani `game` nesnesi var olmadan önce çiziliyordu, bu yüzden
 > yarım kalmış koşuyu bilmesine imkân yoktu ve "Devam et" hiç görünmüyordu.
 > `main.js` artık `attach()` sonrasında başlığı bir kez daha çiziyor.
 
@@ -1240,4 +1290,4 @@ saat sonra kendini siliyor, bölümü bitirince de siliniyor.
 
 Modern Chrome, Safari, Firefox ve Edge (masaüstü + mobil). ES modülleri, Canvas
 2D, Web Audio ve `localStorage` kullanıyor. Ses yoksa, kayıt yapılamıyorsa veya
-yazı tipi yüklenemiyorsa oyun yine de oynanır — hepsi isteğe bağlı.
+yazı tipi yüklenemiyorsa oyun yine de oynanır, hepsi isteğe bağlı.
