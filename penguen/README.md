@@ -485,6 +485,15 @@ durmadığını kontrol ediyor.
   Kasten sabit: fırtına zamanladığın şey, bu kullandığın şey ve havadayken
   gücü değişen bir alet alet değildir.
 
+Rüzgâr uzun süre dekor kaldı çünkü **fizik onu siliyordu**. İtki doğrudan
+`vx`'e ekleniyordu ve bir üst satırdaki yürüme kelepçesi her karede hızı yürüme
+hızına geri çekiyordu: fırtına pengueni dört saniye itebiliyor ve iniş noktasını
+sıfır piksel değiştiriyordu. Rüzgâr artık kendi kanalında (`player.drift`).
+Kelepçe oyuncunun istediği hıza, sürüklenme de havanın verdiği hıza sahip ve
+ikisi birbirini silemiyor. Sürtünme terimi kaçmayı engelliyor: sürüklenme
+`itki / sürtünme` değerine yaklaşıp orada duruyor ve yerde havadakinin üç katı,
+çünkü ayak tutar hava tutmaz.
+
 Rüzgârın işi var, dekor değil. İki parça bunun üstüne kurulu:
 
 - **`windGap`**: zıplamanın yetmediği, kuyruk rüzgârının rahatça yetiştirdiği
@@ -494,6 +503,14 @@ Rüzgârın işi var, dekor değil. İki parça bunun üstüne kurulu:
 - **`updraft`**: zıplamanın yetmediği yükseklikteki bir raf ve altında yükselen
   hava sütunu. Aynı kanıt yukarı doğru, artı bir sınır: akım yerçekiminin
   %60'ını geçemiyor, yoksa penguen uçmaya başlar.
+
+Dördü de iki katmanlı: `validate-levels.mjs` aritmetiği, `wind-run.mjs` ise
+**gerçek `Player` sınıfını** gerçek bölüm verisine karşı çalıştırıp iki şeyi
+birden arıyor. Rüzgârla geçen bir tuş dizisi bulmalı ve rüzgârsız hiçbir dizi
+bulamamalı. İkinci yarısı olmayan bir kanıt kanıt değil, çünkü fırtınanın
+dekor olduğu durum tam da testin sessizce geçtiği durumdur. İlk koşuşunda
+yakaladığı şey de buydu: boşluklar rüzgârsız da geçiliyordu, çünkü doğrulayıcı
+boşluğu penguen *gövdesi* kadar kısa ölçüyordu.
 
 ---
 

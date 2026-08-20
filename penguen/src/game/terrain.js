@@ -23,7 +23,7 @@
  * at the bottom of the world.
  */
 
-import { reachFor, reachWithWind, riseWithLift, PHYS, PENGUIN, ICE, STORM, WIND } from './config.js';
+import { reachFor, reachWithWind, riseWithLift, crossableGap, PHYS, PENGUIN, ICE, STORM, WIND } from './config.js';
 
 /** Sea-level ice, near the bottom of a tall world. */
 export const SEA_LEVEL = 700;
@@ -277,16 +277,19 @@ export class Course {
    * it is a wall, and that is exactly the kind of mistake worth making
    * impossible rather than checking for.
    */
-  windGap({ w = 210, type = 'solid', reach: over = 1.16 } = {}) {
+  windGap({ w = 210, type = 'solid' } = {}) {
     const from = this.x - 60;
     const body = PENGUIN.w * this.scale;
     // Wide, flat, and nothing that gives way: the answer to this gap is to
     // stand still and wait, and a level that asks you to wait somewhere had
     // better give you somewhere to wait.
     const perch = this.put(this.gapOf(0.34), Math.max(w, body * 3.6), this.y, 'solid');
-    const plain = this.reach.distance;
-    const withWind = reachWithWind(this.scale, WIND.power);
-    const gap = Math.round(Math.min(plain * over, withWind * 0.82));
+    // Both numbers are edge-to-edge, which is the only way a gap is ever
+    // measured. `crossableGap` is what a running jump really clears; the
+    // assisted one is the same jump with the tailwind's drift under it.
+    const plain = crossableGap(this.scale);
+    const withWind = reachWithWind(this.scale, WIND.power) + body;
+    const gap = Math.round(Math.min(plain * 1.2, withWind * 0.82));
     const landing = this.put(gap, Math.max(w, body * 3.2), this.y, type);
     this.storm(from, { period: WIND.period });
     this.windGaps = this.windGaps ?? [];
@@ -299,6 +302,7 @@ export class Course {
     });
     return this;
   }
+
 
   /**
    * A shelf too high to jump to, and a column of rising air under it.

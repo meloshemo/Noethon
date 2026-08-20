@@ -24,6 +24,7 @@ const NODE_SUITES = [
   ['tests/save.mjs', 'kayıt dosyası göçü'],
   ['tests/music.mjs', 'müzik'],
   ['tests/validate-levels.mjs', 'sahanlık bölümleri'],
+  ['tests/wind-run.mjs', 'rüzgâr çözücüsü'],
   ['tests/validate-climb.mjs', 'tırmanış geometrisi'],
   ['tests/climb-run.mjs', 'tırmanış çözücüsü'],
   ['tests/validate-dive.mjs', 'dalış geometrisi'],

@@ -9,7 +9,7 @@
  * large sample of generated ones, and fails loudly on anything impossible.
  */
 
-import { PHYS, PENGUIN, ICE, WIND, windAt, tailWindow, lullWindow, reachWithWind, riseWithLift, scaleForLevel, reachFor, CRAFTED_LEVELS } from '../src/game/config.js';
+import { PHYS, PENGUIN, ICE, WIND, windAt, tailWindow, lullWindow, reachWithWind, riseWithLift, crossableGap, scaleForLevel, reachFor, CRAFTED_LEVELS } from '../src/game/config.js';
 import { LEVELS, WATER_Y } from '../src/game/levels.js';
 import { CRAFTED_TOTAL, CHAPTERS } from '../src/game/chapters.js';
 import { generateLevel } from '../src/game/generator.js';
@@ -217,7 +217,11 @@ function check(def, { tutorial = false } = {}) {
   // jump with the wind behind you. That claim is worth proving in both
   // directions, because getting either half wrong ruins it — too short and
   // the wind is decoration again, too long and the level is a wall.
-  const winded = reachWithWind(scale, WIND.power);
+  // Both edge-to-edge: a gap is the hole between two floes, and the penguin
+  // crosses it a whole body longer than its centre travels.
+  const body = PENGUIN.w * scale;
+  const plainGap = crossableGap(scale);
+  const winded = reachWithWind(scale, WIND.power) + body;
   // The assist is only real if the wind is still at full strength when the
   // penguin lands, so the jump has to fit inside the tailwind, not straddle it.
   const jumpV = Math.abs(PHYS.jumpVelocity) * (1 - PENGUIN.jumpPenaltyPerScale * (scale - 1));
@@ -226,13 +230,13 @@ function check(def, { tutorial = false } = {}) {
   for (const g of windGaps) {
     // It has to be a real gate. If a flat-out running jump clears it, the
     // storm is scenery.
-    if (g.gap <= reach.distance * 1.02) {
-      fail(`rüzgâr boşluğu rüzgârsız da geçiliyor: ${g.gap}px, erişim ${Math.round(reach.distance)}px`);
+    if (g.gap <= plainGap * 1.08) {
+      fail(`rüzgâr boşluğu rüzgârsız da geçiliyor: ${g.gap}px, rüzgârsız erişim ${Math.round(plainGap)}px`);
     }
     // And it has to be comfortably inside the assisted jump, not on its lip:
     // the tailwind is not perfectly timed by a human, so the margin is where
     // the fairness lives.
-    if (g.gap > winded * 0.9) {
+    if (g.gap > winded * 0.86) {
       fail(`rüzgâr boşluğu rüzgârla bile zor: ${g.gap}px, rüzgârlı erişim ${Math.round(winded)}px`);
     }
     // A storm has to actually blow over the whole crossing, and it has to

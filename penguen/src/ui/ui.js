@@ -187,6 +187,11 @@ export class UI {
     // The rotate hint belongs to the title screen only.
     this._checkOrientation?.();
 
+    // Settings were synced by whatever opened them, which is fine right up
+    // until something else opens them. The screen's job is to show the truth,
+    // so it reads the save every time it appears.
+    if (name === 'settings') this._syncSettings();
+
     if (name && name !== 'intro') {
       // Focus the *primary* action, not the first one in the markup.
       //
@@ -1854,6 +1859,7 @@ export class UI {
   }
 
   _syncSettings() {
+    this._buildLangPicker();
     $('setSfx').checked = this.save.settings.sfx;
     $('setMusic').checked = this.save.settings.music;
     $('setMotion').checked = this.save.settings.reducedMotion;

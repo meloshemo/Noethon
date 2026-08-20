@@ -35,6 +35,12 @@ Rüzgâr havaydı. Esiyordu, kar yatıyordu ve bölümde hiçbir şey değişmiy
 kuralıyla kısıtlıyordu. O cümle "rüzgâr asla okunmaya değmemeli" ile aynı
 cümle.
 
+Asıl sebep daha aşağıdaydı: fizik rüzgârı siliyordu. İtki doğrudan `vx`'e
+ekleniyor, bir üst satırdaki yürüme kelepçesi de her karede hızı geri çekiyordu.
+Fırtına pengueni dört saniye itip iniş noktasını sıfır piksel değiştirebiliyordu.
+Rüzgâr artık kendi kanalında: kelepçe oyuncunun istediği hıza sahip, sürüklenme
+havanın verdiği hıza, ve ikisi birbirini silemiyor.
+
 Kural tersine çevrildi. Rüzgâr artık dört vuruşluk bir eğri (karşı, dinginlik,
 arkadan, dinginlik) ve fizik, çizim, ibre ve kanıt aynı eğriyi okuyor. Duran
 penguen sürüklenmiyor, yani beklemek gerçek bir cevap ve bedeli zaman.
@@ -43,7 +49,11 @@ penguen sürüklenmiyor, yani beklemek gerçek bir cevap ve bedeli zaman.
 rüzgârının rahatça yetiştirdiği bir boşluk; `updraft` zıplamanın yetmediği
 yükseklikte bir raf ve altında yükselen hava sütunu. İkisi de varsayılmıyor,
 kanıtlanıyor: rüzgârsız gerçekten geçilemiyor, rüzgârla payı var, üstünü
-gerçekten bir fırtına örtüyor ve kuyruk rüzgârı sıçrayıştan uzun sürüyor.
+gerçekten bir fırtına örtüyor ve kuyruk rüzgârı sıçrayıştan uzun sürüyor. Üstüne
+`tests/wind-run.mjs` gerçek `Player` sınıfını gerçek bölüm verisine karşı
+çalıştırıp iki şeyi birden arıyor: rüzgârla geçen bir tuş dizisi bulmalı ve
+rüzgârsız hiçbir dizi bulamamalı. İlk koşuşunda ikinci yarısı düştü, çünkü
+doğrulayıcı boşluğu penguen gövdesi kadar kısa ölçüyordu.
 
 İbre pengueni takip ediyor, köşede durmuyor: bir iğne hangi yöne ne kadar
 estiğini, altındaki vuruş şeridi de bir sonraki kuyruk rüzgârının ne zaman

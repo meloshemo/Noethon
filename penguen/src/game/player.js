@@ -6,7 +6,7 @@
  * exactly what the early levels need.
  */
 
-import { PHYS, PENGUIN, BOOST, ROT, GEAR, CLIMB, SWIM, breathFor } from './config.js';
+import { PHYS, PENGUIN, BOOST, ROT, GEAR, CLIMB, SWIM, WIND, breathFor } from './config.js';
 import { clamp, damp, rectsOverlap } from '../core/util.js';
 
 export class Player {
@@ -51,6 +51,7 @@ export class Player {
   /** Thrown by a geyser — briefly ignores ground contact so it reads clean. */
   launch(vx, vy) {
     this.vx = vx;
+    this.drift = 0;
     this.vy = vy;
     this.onGround = false;
     this.groundFloe = null;
@@ -67,6 +68,7 @@ export class Player {
     this.y = y - this.h;
     this.vx = 0;
     this.vy = 0;
+    this.drift = 0;
     this.onGround = false;
     this.groundFloe = null;
     this.coyote = 0;
@@ -295,8 +297,24 @@ export class Player {
       this.vx = Math.abs(this.vx) <= drop ? 0 : this.vx - Math.sign(this.vx) * drop;
     }
 
-    // External forces (wind) are injected by the level each frame.
-    this.vx += (intent.push ?? 0) * dt;
+    /**
+     * Wind, in its own channel.
+     *
+     * This used to be `vx += push * dt`, which looked right and did nothing.
+     * The steering above clamps `vx` to the walk speed every single frame, so
+     * whatever the wind added on one frame was taken straight back on the
+     * next: a storm could lean on a penguin for four seconds and move the
+     * landing spot by nothing. That is the entire reason the weather read as
+     * decoration.
+     *
+     * Kept separate, steering owns the speed the player asked for and the wind
+     * owns the speed the weather gave, and neither can erase the other. The
+     * drag term is what stops it running away: drift approaches `push / drag`
+     * and no further, so a tailwind is a bonus with a ceiling rather than an
+     * accelerating slide into the sea.
+     */
+    this.drift += (intent.push ?? 0) * dt;
+    this.drift -= this.drift * (this.onGround ? WIND.dragGround : WIND.dragAir) * dt;
     /**
      * Rising air.
      *
@@ -524,7 +542,7 @@ export class Player {
       this.y += ridden.dy;
     }
 
-    this.x += this.vx * dt;
+    this.x += (this.vx + this.drift) * dt;
     this._resolveX(floes);
 
     this.y += this.vy * dt;
@@ -616,6 +634,11 @@ export class Player {
       this.vx = Math.abs(this.vx) <= drop ? 0 : this.vx - Math.sign(this.vx) * drop;
     }
     this.vx += (intent.push ?? 0) * dt;
+    // A current is not wind: it pushes a swimmer, and the swim branch has no
+    // steering clamp to fight it, so it lives in `vx` where it belongs. The
+    // drift channel is cleared so a gust caught on the way in cannot keep
+    // shoving somebody around underwater.
+    this.drift = 0;
 
     // Up is free, down is held. A penguin floats; it has to *work* to go
     // under, and that is the whole control: the button is the depth.
@@ -720,10 +743,15 @@ export class Player {
         box.y = this.y;
         continue;
       }
-      if (this.vx > 0) this.x = fb.x - this.w;
-      else if (this.vx < 0) this.x = fb.x + fb.w;
+      // Which way the penguin was actually going, not which way it was
+      // steering: walk into a wall on a tailwind and the wind is what has to
+      // stop at it.
+      const move = this.vx + this.drift;
+      if (move > 0) this.x = fb.x - this.w;
+      else if (move < 0) this.x = fb.x + fb.w;
       else continue;
       this.vx = 0;
+      this.drift = 0;
       box.x = this.x;
     }
   }

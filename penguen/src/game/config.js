@@ -163,20 +163,47 @@ export const WIND = {
   /** One full breath: against, lull, with, lull. */
   period: 4.6,
   /** Peak acceleration in px/s². Everything else is a fraction of this. */
-  power: 620,
+  power: 900,
   /** Felt on the ground while moving, and while standing still. */
   ground: 0.55,
-  dugIn: 0.26,
-  /** How long the tailwind is at or near full strength. */
-  tailWindow: 0.9,
-  /** Warning before each peak, in seconds. */
-  warn: 0.6,
+  /**
+   * Almost nothing. Standing still is the counterplay to a headwind, and a
+   * counterplay that still loses you ground is not one: at this fraction a
+   * penguin holding position drifts about a finger's width a second, which is
+   * a lean rather than a slide.
+   */
+  dugIn: 0.08,
+  /**
+   * How fast wind-given speed bleeds away, per second.
+   *
+   * This is what stops a tailwind becoming an accelerating slide into the sea:
+   * drift approaches `push / drag` and no further. It is much higher on the
+   * ground than in the air because feet grip and air does not, which is the
+   * same sentence as "the wind moves you most while you are jumping".
+   */
+  dragAir: 2,
+  dragGround: 6,
   /**
    * Upward acceleration inside a rising column, in px/s². Kept well under
    * gravity on purpose: an updraft lightens the penguin, it never flies it.
    */
   lift: 900,
+  /** Warning before each peak, in seconds. */
+  warn: 0.6,
 };
+
+/**
+ * The longest gap a penguin can actually cross with no help.
+ *
+ * `reachFor().distance` is how far the *body* travels, and a gap is measured
+ * edge to edge, so the true crossing is a whole penguin longer: it can leave
+ * with its toes on the lip and land with its beak on the far side. Getting
+ * this wrong is not academic — it is how a gap sized to need the wind turned
+ * out to be jumpable without it.
+ */
+export function crossableGap(scale, maxHeight = Infinity) {
+  return reachFor(scale, maxHeight).distance + PENGUIN.w * scale;
+}
 
 /**
  * Where the storm is in its breath, as a signed -1..+1.
@@ -232,9 +259,13 @@ export function reachWithWind(scale, accel) {
   const speed = PHYS.moveSpeed * (1 - PENGUIN.speedPenaltyPerScale * (scale - 1));
   const apex = (v * v) / (2 * PHYS.gravityUp);
   const t = v / PHYS.gravityUp + Math.sqrt((2 * apex) / PHYS.gravityDown);
-  // Air friction is not modelled here for the same reason `reachFor` does not:
-  // it is small next to the jump and leaving it out is the conservative error.
-  return Math.max(0, speed * t + 0.5 * accel * t * t);
+  // Integral of the drift channel the player runs: drift climbs toward
+  // accel/drag and the distance it buys is the area under that curve. Written
+  // out rather than approximated, because the whole point of the number is
+  // that the proof and the physics agree.
+  const k = WIND.dragAir;
+  const carried = (accel / k) * (t - (1 - Math.exp(-k * t)) / k);
+  return Math.max(0, speed * t + carried);
 }
 
 /**
