@@ -11,6 +11,7 @@ import { CRAFTED_LEVELS, UPGRADES, MONUMENT, monumentCost, scaleForLevel } from 
 import { getLevel } from '../game/game.js';
 import { ALL_LEVELS as LEVELS, chapterOf, startsChapter } from '../game/chapters.js';
 import { Storage, todayKey } from '../core/storage.js';
+import { cleanName, nameProblem, suggestName, titleFor, ensureProfile, profileLine } from '../game/profile.js';
 import { ensureMissions } from '../game/missions.js';
 import { shareText, withName } from '../game/ghost.js';
 import { SKINS, TRAILS, RARITY, getSkin, getTrail, skinStatus, drawPortrait, perkText } from '../game/skins.js';
@@ -72,6 +73,27 @@ export class UI {
       playLabel: $('playLabel'),
       playSub: $('playSub'),
       titleStats: $('titleStats'),
+      whoChip: $('whoChip'),
+      whoArt: $('whoArt'),
+      whoName: $('whoName'),
+      whoTitle: $('whoTitle'),
+      whoId: $('whoId'),
+      idArt: $('idArt'),
+      idName: $('idName'),
+      idHint: $('idHint'),
+      profArt: $('profArt'),
+      profName: $('profName'),
+      profTitle: $('profTitle'),
+      profId: $('profId'),
+      profNext: $('profNext'),
+      profLevels: $('profLevels'),
+      profStars: $('profStars'),
+      profFish: $('profFish'),
+      profDeaths: $('profDeaths'),
+      profSkins: $('profSkins'),
+      profSince: $('profSince'),
+      profNameInput: $('profNameInput'),
+      profHint: $('profHint'),
       levelGrid: $('levelGrid'),
       levelsMeta: $('levelsMeta'),
       iceLegend: $('iceLegend'),
@@ -202,12 +224,109 @@ export class UI {
       ? `${done} bölüm tamamlandı · ${stars} yıldız · ${this.save.stats.totalFish} balık`
       : 'Kontroller: ← → yürü, Boşluk zıpla';
 
+    this.refreshWho();
     this.refreshWallet();
     this.refreshDaily();
     this.refreshMissions();
     this.refreshLeague();
     this.refreshSkinsBadge();
     this.refreshOffer();
+  }
+
+  /* -------------------------------------------------------- kimlik */
+
+  /**
+   * The chip on the title screen: who is playing, and how far they have got.
+   *
+   * Drawn with the penguin they are actually wearing, because the collection is
+   * the game's other progress bar and a player who has just bought a gold
+   * penguin should see it looking back at them from the front page.
+   */
+  refreshWho() {
+    ensureProfile(this.save);
+    const t = titleFor(this.save);
+    this.el.whoName.textContent = this.save.name || 'Kimliğini oluştur';
+    this.el.whoTitle.textContent = this.save.name ? profileLine(this.save) : 'Adını ve penguenini seç';
+    this.el.whoId.textContent = this.save.name ? this.save.profile.id : '';
+    this._portrait(this.el.whoArt);
+    void t;
+  }
+
+  /** The worn penguin, drawn into one of the small identity canvases. */
+  _portrait(canvas) {
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    drawPortrait(ctx, getSkin(this.save.skin ?? 'normal'), {
+      w: canvas.width,
+      h: canvas.height,
+      time: performance.now() / 1000,
+    });
+  }
+
+  /**
+   * The first-run introduction.
+   *
+   * Shown once, before anything else, and only when there is no name yet. It
+   * is skippable by pressing Başla with the field left alone — the suggestion
+   * is already in it, so "skip" and "accept" are the same button, which is one
+   * decision fewer between a player and the game.
+   */
+  openIdentity() {
+    ensureProfile(this.save);
+    this.el.idName.value = this.save.name || suggestName();
+    this.el.idHint.textContent = '2–14 karakter';
+    this.el.idHint.classList.remove('field__hint--bad');
+    this._portrait(this.el.idArt);
+    this.showScreen('identity');
+    // Focus, but do not open the keyboard on a phone before the player has
+    // seen what they are being asked.
+    if (!this._isTouch) setTimeout(() => this.el.idName.focus(), 60);
+  }
+
+  /** Save a typed name from either screen. Returns true when it took. */
+  _commitName(input, hint) {
+    const problem = nameProblem(input.value);
+    if (problem) {
+      hint.textContent = problem;
+      hint.classList.add('field__hint--bad');
+      input.focus();
+      this.audio.ui('back');
+      return false;
+    }
+    this.save.name = cleanName(input.value);
+    this.save.profile.greeted = true;
+    this._persist();
+    hint.textContent = 'Kaydedildi';
+    hint.classList.remove('field__hint--bad');
+    this.refreshWho();
+    this.audio.ui();
+    return true;
+  }
+
+  buildProfile() {
+    ensureProfile(this.save);
+    const t = titleFor(this.save);
+    const levels = Object.values(this.save.levels ?? {});
+    const stars = levels.reduce((n, l) => n + (l.stars ?? 0), 0);
+    const skins = Object.keys(this.save.skins ?? {}).length + 1;
+
+    this.el.profName.textContent = this.save.name || 'Adsız Penguen';
+    this.el.profTitle.textContent = `${t.name} — ${t.note}`;
+    this.el.profId.textContent = this.save.profile.id;
+    this.el.profNext.textContent = t.next
+      ? `Sıradaki unvan: ${t.next.name} — ${t.next.at} bölüm bitince.`
+      : 'Kazanılacak unvan kalmadı.';
+    this.el.profLevels.textContent = `${t.done} / ${CRAFTED_LEVELS}`;
+    this.el.profStars.textContent = `${stars} / ${CRAFTED_LEVELS * 3}`;
+    this.el.profFish.textContent = String(this.save.stats?.totalFish ?? 0);
+    this.el.profDeaths.textContent = String(this.save.stats?.totalDeaths ?? 0);
+    this.el.profSkins.textContent = `${skins} / ${SKINS.length}`;
+    this.el.profSince.textContent = new Date(this.save.profile.created).toLocaleDateString('tr-TR');
+    this.el.profNameInput.value = this.save.name ?? '';
+    this.el.profHint.textContent = '2–14 karakter';
+    this.el.profHint.classList.remove('field__hint--bad');
+    this._portrait(this.el.profArt);
   }
 
   /**
@@ -1142,6 +1261,85 @@ export class UI {
       this.audio.ui();
       this._syncSettings();
       this.showScreen('settings');
+    });
+
+    /* ---------------------------------------------------- kimlik */
+
+    const openProfile = () => {
+      this.audio.ui();
+      this.buildProfile();
+      this.showScreen('profile');
+    };
+    const openLegal = () => {
+      this.audio.ui();
+      this.showScreen('legal');
+    };
+
+    this.el.whoChip.addEventListener('click', () => {
+      if (!this.save.name) this.openIdentity();
+      else openProfile();
+    });
+    $('settingsProfile').addEventListener('click', openProfile);
+    $('settingsLegal').addEventListener('click', openLegal);
+    $('profLegal').addEventListener('click', openLegal);
+    $('idLegal').addEventListener('click', openLegal);
+
+    $('idDice').addEventListener('click', () => {
+      this.audio.ui();
+      this.el.idName.value = suggestName();
+      this.el.idHint.textContent = '2–14 karakter';
+      this.el.idHint.classList.remove('field__hint--bad');
+    });
+    $('idSave').addEventListener('click', () => {
+      if (this._commitName(this.el.idName, this.el.idHint)) {
+        this.showScreen('title');
+        this._toastOnce(`Hoş geldin, ${this.save.name}`);
+      }
+    });
+    this.el.idName.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') $('idSave').click();
+    });
+
+    $('profDice').addEventListener('click', () => {
+      this.audio.ui();
+      this.el.profNameInput.value = suggestName();
+      this.el.profHint.textContent = '2–14 karakter';
+      this.el.profHint.classList.remove('field__hint--bad');
+    });
+    $('profSave').addEventListener('click', () => {
+      if (this._commitName(this.el.profNameInput, this.el.profHint)) this.buildProfile();
+    });
+    this.el.profNameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') $('profSave').click();
+    });
+
+    /**
+     * Take your data with you.
+     *
+     * A download rather than a screenful of JSON: the point of the button is
+     * that somebody can move their progress to another phone, and copying two
+     * kilobytes of text out of a mobile browser is not a thing anybody does.
+     */
+    $('legalExport').addEventListener('click', () => {
+      this.audio.ui();
+      try {
+        const blob = new Blob([JSON.stringify(this.save, null, 2)], {
+          type: 'application/json',
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `pengu-kayit-${todayKey()}.json`;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+        this._toastOnce('Kaydın indirildi');
+      } catch {
+        this._toastOnce('Bu tarayıcı indirmeye izin vermedi');
+      }
+    });
+    $('legalWipe').addEventListener('click', () => {
+      this.audio.ui('back');
+      $('resetBtn').click();
     });
     $('offerCard').addEventListener('click', () => {
       const offer = this._offer;

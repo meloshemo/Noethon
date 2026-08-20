@@ -22,6 +22,7 @@ const PORT = Number(process.env.PORT ?? 8123);
 const NODE_SUITES = [
   ['tools/lint.mjs', 'proje kuralları'],
   ['tests/save.mjs', 'kayıt dosyası göçü'],
+  ['tests/music.mjs', 'müzik'],
   ['tests/validate-levels.mjs', 'sahanlık bölümleri'],
   ['tests/validate-climb.mjs', 'tırmanış geometrisi'],
   ['tests/climb-run.mjs', 'tırmanış çözücüsü'],
@@ -34,6 +35,7 @@ const NODE_SUITES = [
 ];
 
 const BROWSER_SUITES = [
+  ['tests/browser-identity.mjs', 'kimlik'],
   ['tests/browser-climb.mjs', 'tırmanma mekaniği'],
   ['tests/browser-dive.mjs', 'yüzme mekaniği'],
   ['tests/browser-brawl.mjs', 'kar topu mekaniği'],

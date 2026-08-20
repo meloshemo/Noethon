@@ -91,6 +91,16 @@ console.log('Proje kuralları denetleniyor...\n');
     if (!c.levels.length) bad(`${c.name} chapter'ı boş`);
     if (!c.verb) bad(`${c.name} chapter'ının fiili yazılmamış`);
   }
+
+  // The last player title has to be reachable. A title granted at level 76 in
+  // a game with 61 levels is a title nobody ever sees, and nothing else in the
+  // codebase would ever mention it again.
+  const { LAST_TITLE_AT } = await import('../src/game/profile.js');
+  if (LAST_TITLE_AT !== CRAFTED_TOTAL) {
+    bad(`son unvan ${LAST_TITLE_AT}. bölümde ama oyunda ${CRAFTED_TOTAL} bölüm var`);
+  } else {
+    ok(`son unvan son bölümde — ${LAST_TITLE_AT}`);
+  }
 }
 
 /* 3 — no debug leftovers in the shipped source -------------------------- */
@@ -120,7 +130,35 @@ console.log('Proje kuralları denetleniyor...\n');
   if (!hits) ok(`kaynakta debug artığı yok — ${files.length} dosya`);
 }
 
-/* 4 — the single-file build is small enough to be worth having ---------- */
+/* 4 — nothing reaches off the machine ----------------------------------- */
+{
+  // The legal screen promises the game talks to nobody. That promise is only
+  // worth making if it cannot quietly stop being true — and it did once
+  // already: a Google Fonts link meant every launch called two other
+  // companies' servers before drawing a pixel.
+  const files = [
+    'index.html',
+    'sw.js',
+    ...(await walk(resolve(root, 'src'))).map((f) => relative(root, f)),
+    ...['tokens.css', 'base.css', 'ui.css'].map((f) => `styles/${f}`),
+  ];
+  const offenders = [];
+  for (const rel of files) {
+    const text = await readFile(resolve(root, rel), 'utf8');
+    for (const [i, line] of text.split('\n').entries()) {
+      // Comments are allowed to mention a URL; code is not.
+      if (/^\s*(\/\/|\*|<!--|-->)/.test(line)) continue;
+      const m = line.match(/https?:\/\/[^\s'"`)]+/);
+      if (!m) continue;
+      if (/w3\.org|schema\.org|localhost/.test(m[0])) continue;
+      offenders.push(`${rel}: ${m[0].slice(0, 60)}`);
+    }
+  }
+  if (offenders.length) offenders.forEach((o) => bad(`dış adres: ${o}`));
+  else ok('hiçbir dosya dışarı bağlanmıyor');
+}
+
+/* 5 — the single-file build is small enough to be worth having ---------- */
 {
   try {
     const info = await stat(resolve(root, 'dist/pengu.html'));

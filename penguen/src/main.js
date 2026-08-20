@@ -56,10 +56,17 @@ function start() {
     ui.buildLevelGrid();
     ui._syncSettings();
     ui.showScreen('title');
+    // A wipe is a new player: introduce them again.
+    ui.openIdentity();
   });
 
   game.showMenuScene();
+  // A player with no name has not been introduced yet, so that is the first
+  // thing they see — once, before the title. `greeted` rather than the name
+  // itself, so somebody who deliberately clears their name does not get the
+  // welcome card again every time they open the game.
   ui.showScreen('title');
+  if (!save.profile?.greeted) ui.openIdentity();
 
   // Debug handle — used by the smoke test and handy in the browser console.
   window.__pengu = game;

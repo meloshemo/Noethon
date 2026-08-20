@@ -115,6 +115,9 @@ Bakılacaklar, sırayla:
 - [ ] **Sekmeyi kapatıp aç** — kaldığın yer geri geliyor mu
 - [ ] **Uçak moduna al** — bir kere online açtıysan offline çalışmalı (§5)
 - [ ] **Oyun kolu** — varsa bağla, USB/Bluetooth
+- [ ] **Müzik** — kulaklıkla dinle: dört bölümün dördü ayrı duyuluyor mu,
+      dalışta nefes azalınca gerginleşiyor mu, efektler müziği bastırıyor mu
+- [ ] **Kimlik** — ilk açılışta ad sorma ekranı çıkıyor mu, klavye kapatıyor mu
 
 Bir şey kötü hissettiriyorsa not al ve söyle; ayar değerlerinin hepsi
 `src/game/config.js` içinde tek yerde.
@@ -153,6 +156,24 @@ Ana depoda zaten bir `CNAME` var. Oyuna ayrı bir adres istersen:
 1. Alan adı sağlayıcında `CNAME` kaydı: `oyun` → `meloshemo.github.io`
 2. cld deposu → Settings → Pages → Custom domain → `oyun.alanadın.com`
 3. *Enforce HTTPS* işaretle (sertifika 15–60 dk sürebilir)
+
+---
+
+## 7b. Yasal metinleri gözden geçir (senin kararın)
+
+`docs/GIZLILIK.md` ve `docs/KULLANIM-SARTLARI.md` yazıldı ve oyunun **gerçekte
+ne yaptığını** anlatıyor: sunucu yok, hesap yok, toplanan veri yok. Metinler
+kısa, çünkü liste boş.
+
+Şu hâliyle yeterli. Ama şunlardan biri olursa **avukata göster**:
+
+- Gerçek parayla satın alma eklenirse
+- Reklam ya da analitik eklenirse
+- Bir hesap sistemi ya da sunucu eklenirse
+- Oyunu bir şirket adına yayınlarsan
+
+Bu dördünün hiçbiri yoksa metinleri olduğu gibi bırakabilirsin; oyunun içindeki
+*Ayarlar → Yasal ve veri* ekranı aynı şeyleri özetliyor.
 
 ---
 

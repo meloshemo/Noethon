@@ -176,6 +176,8 @@ export class Game {
     this.input.releaseAll();
     this.jumpPressed = false;
     this.world.onCheckpoint = () => this.saveSession();
+    this.audio.setScene(def);
+    this.audio.setIntensity(0.35);
     this.ui.onLevelStart(def, scaleForLevel(def.id));
   }
 
@@ -230,6 +232,8 @@ export class Game {
    */
   showMenuScene() {
     this.state = 'menu';
+    this.audio.setScene(null);
+    this.audio.setIntensity(0.18);
     this.particles.clear();
     this.world = new World(getLevel(1), {
       particles: this.particles,
@@ -287,7 +291,54 @@ export class Game {
       this.particles.update(frame);
       this.renderer.draw(this.world, this.particles, ts / 1000);
       this.ui.updateHud(this.world, this.levelId, this.runDeaths);
+      if (this.state === 'playing') this.audio.setIntensity(this._heat());
     }
+  }
+
+  /**
+   * How much is going on, 0..1 — the one number the score listens to.
+   *
+   * Deliberately made of things the *player* is feeling rather than things the
+   * level contains: how far in they are, how close the thing that kills them
+   * is, how much of the resource this chapter charges them is left. A level
+   * that is going well and the same level nearly lost do not sound alike, and
+   * neither of them was written twice.
+   */
+  _heat() {
+    const w = this.world;
+    if (!w || w.status !== 'playing') return 0.25;
+    const p = w.player;
+    // Everywhere: getting on with it raises the temperature, and so does the
+    // end of the level being in sight.
+    let heat = 0.28 + w.progress * 0.34;
+    if (Math.abs(p.vx) > p.moveSpeed * 0.6) heat += 0.08;
+
+    // Chapter by chapter, whatever that chapter is actually about.
+    if (w.diving) {
+      // Air. Below a third of a lungful this is the only thing that matters.
+      const air = p.breathFrac;
+      heat += air < 0.34 ? (0.34 - air) * 1.9 : 0;
+      if (p.breathing) heat -= 0.18;
+    } else if (w.axis === 'up') {
+      // Arms, and the drop underneath them.
+      heat += (1 - p.staminaFrac) * 0.4;
+      if (p.clinging) heat += 0.1;
+      if (p.onGround) heat -= 0.14;
+    } else if (w.brawl) {
+      // The guards still standing, and anything in the air right now.
+      const guards = w.rivals.filter((r) => r.guard);
+      const down = guards.filter((r) => r.out).length;
+      heat = 0.3 + (guards.length ? down / guards.length : 0) * 0.3;
+      if (w.snowballs.length) heat += 0.22;
+      if (w.rivals.some((r) => r.aim)) heat += 0.12;
+    } else if (!p.onGround) {
+      heat += 0.1;
+    }
+
+    // Anything currently trying to kill you, in every chapter at once.
+    if (w.skua) heat += 0.3;
+    if (w.collapse) heat += 0.25;
+    return Math.max(0, Math.min(1, heat));
   }
 
   _step(dt) {

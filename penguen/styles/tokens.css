@@ -44,9 +44,15 @@
   --danger:        var(--c-coral);
 
   /* ---- Typography ------------------------------------------------ */
-  --font-ui: 'Outfit', ui-sans-serif, system-ui, -apple-system, 'Segoe UI',
-             Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-num: 'Outfit', ui-monospace, 'SF Mono', 'Roboto Mono', monospace;
+  /*
+   * The system stack. See the note in index.html: there is deliberately no
+   * webfont, so this is what the game is actually set in everywhere — in the
+   * browser, in the single-file build, and on a device with no signal.
+   */
+  --font-ui: ui-rounded, 'SF Pro Rounded', system-ui, -apple-system, 'Segoe UI Variable Display',
+             'Segoe UI', Roboto, 'Helvetica Neue', 'Noto Sans', Arial, sans-serif;
+  --font-num: ui-rounded, 'SF Compact Rounded', system-ui, 'Segoe UI Variable Display',
+              'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 
   /* Fluid scale — 1.25 ratio, clamped so it never gets silly on a phone. */
   --fs-2xs:  clamp(0.68rem, 0.66rem + 0.1vw, 0.74rem);

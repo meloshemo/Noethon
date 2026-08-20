@@ -32,7 +32,7 @@ export function launch() {
  * touch source tests the thing the game actually reads, on the same code path
  * a phone uses.
  */
-export async function openGame(browser, { width = 1280, height = 720 } = {}) {
+export async function openGame(browser, { width = 1280, height = 720, fresh = false } = {}) {
   // Service workers off. The game registers one so it can be played with no
   // signal, and a test that is quietly served yesterday's modules out of a
   // cache is worse than no test: it passes.
@@ -51,8 +51,16 @@ export async function openGame(browser, { width = 1280, height = 720 } = {}) {
 
   await page.goto(`${URL}/index.html`, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => Boolean(window.__pengu), null, { timeout: 15000 });
-  await page.evaluate(() => {
+  await page.evaluate((keepIntro) => {
     window.__pengu.save.unlocked = 999;
+    // Get the first-run introduction out of the way, unless the suite under
+    // test is the introduction. Every other suite drives levels directly and
+    // does not want a welcome card sitting over the screen.
+    if (!keepIntro) {
+      window.__pengu.save.name ||= 'Testçi';
+      window.__pengu.save.profile.greeted = true;
+      window.__pengu.ui.showScreen('title');
+    }
     const inp = window.__pengu.input;
     window.__ctl = {
       hold(a, on) {
@@ -81,7 +89,7 @@ export async function openGame(browser, { width = 1280, height = 720 } = {}) {
         inp._sync();
       },
     };
-  });
+  }, fresh);
   return { page, errors };
 }
 

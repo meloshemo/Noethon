@@ -5,6 +5,36 @@ değiştiği yeterli. En yeni en üstte.
 
 ---
 
+## Kimlik, yasal metinler ve müzik
+
+**Kimlik.** Oyun ilk açılışta tek bir şey soruyor: sana ne diyelim? Ad, unvan,
+penguen kimliği (`PNG-XXXXX`) ve başlangıç tarihi bir kimlik kartında; kart ana
+ekranda, giydiğin penguenin portresiyle. Unvanlar chapter sonlarında kazanılıyor
+(*Yeni Yumurta* → *Koloni Efsanesi*) ve `tools/lint.mjs` son unvanın gerçekten
+ulaşılabilir olduğunu kontrol ediyor. Ad sanitize ediliyor: kontrol karakterleri,
+görünmez yön işaretleri ve açılı parantezler siliniyor — ad hem DOM'a hem
+paylaşım koduna gidiyor.
+
+**Yasal.** Oyun içinde *Ayarlar → Yasal ve veri*: ne saklanıyor, paylaşınca ne
+gidiyor, kullanım şartları, çocuklar, KVKK/GDPR. Tam metinler `docs/GIZLILIK.md`
+ve `docs/KULLANIM-SARTLARI.md`. Kaydını JSON olarak indirme ve her şeyi silme
+tuşları aynı ekranda.
+
+**Google Fonts kaldırıldı.** Kimlik testi yakaladı: oyun her açılışta, tek
+piksel çizilmeden önce iki başka şirketin sunucusuna bağlanıyordu — gizlilik
+ekranının "hiçbir şey cihazdan çıkmıyor" dediği bir sayfada. Artık cihazın kendi
+yazı tipleri kullanılıyor; hem söz doğru oldu hem açılış hızlandı. `lint` ve
+tarayıcı testi bunun böyle kalmasını sağlıyor.
+
+**Müzik baştan yazıldı.** Yerini aldığı şey `setInterval` üstünde dönen tek bir
+dört akorluk arpejdi. Şimdi: beş notalık tek bir tema dört bölümde dört ayrı
+kostümle (majör / minör / yarı hız + gecikme / staccato), ped-bas-arpej-perküsyon-tema
+olarak beş katman, ve katmanlar **olan bitene göre** geliyor gidiyor — dalışta
+nefes, tırmanışta kol gücü, arenada havadaki kar topu. Ses saatinde 25 ms'lik
+ileri-bakış zamanlayıcısıyla planlanıyor, efektler müziği kısıyor.
+`tests/music.mjs` Web Audio'yu sayaçlarla taklit edip ızgarayı, katmanları,
+sahne geçişini ve temayı ölçüyor.
+
 ## Bölüm IV — Kar Topu · 62–76
 
 Oyunun dördüncü fiili, ve penguenin *yapmadığı* ilk fiil. Atma tuşu yok, kar

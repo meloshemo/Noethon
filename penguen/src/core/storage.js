@@ -80,6 +80,11 @@ function defaults() {
     missions: { date: null, list: [] },
     /** The name this player's runs are shared under. */
     name: '',
+    /**
+     * Who is playing: a permanent short id, when they started, and whether
+     * they have been introduced. Never sent anywhere — see docs/GIZLILIK.md.
+     */
+    profile: { id: '', created: 0, greeted: false },
     /** Your own best run per level, as a share code: { [key]: {code, time, at} } */
     ghosts: {},
     /** Imported runs: { [key]: [{name, time, code, at}] } — the board. */
@@ -111,6 +116,9 @@ function migrate(parsed) {
     league: { ...base.league, ...(parsed.league ?? {}) },
     monument: Number.isFinite(parsed.monument) ? parsed.monument : 0,
     session: parsed.session ?? null,
+    // Merged rather than replaced: a save from before profiles existed has no
+    // id at all, and `ensureProfile` mints one on the next boot.
+    profile: { ...base.profile, ...(parsed.profile ?? {}) },
   };
 
   // v3 had no record of the best streak ever reached, only the live one. The

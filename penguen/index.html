@@ -17,9 +17,20 @@
 <link rel="apple-touch-icon" href="assets/favicon.svg" />
 <link rel="manifest" href="manifest.webmanifest" />
 
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<!--
+  No webfont, on purpose.
+
+  This used to pull Outfit from Google Fonts, which meant every launch made a
+  request to two other companies' servers before the game drew a pixel — on a
+  page whose own privacy screen says nothing leaves the device. It also meant
+  the first paint waited on a network the player might not have, and the
+  single-file build (which cannot carry the link) already rendered with the
+  fallbacks, so nobody was seeing the same game twice.
+
+  The system stack below is the one the operating system already has loaded.
+  It costs nothing, arrives instantly, works on a plane, and makes the promise
+  on the legal screen literally true — which is checked by a test.
+-->
 
 <link rel="stylesheet" href="styles/tokens.css" />
 <link rel="stylesheet" href="styles/base.css" />
@@ -118,6 +129,15 @@
           <h1 class="brand__title">Pengu</h1>
           <p class="brand__tagline">Antarktika'dan Kaçış</p>
         </div>
+
+        <button class="who" id="whoChip" type="button">
+          <span class="who__art"><canvas id="whoArt" width="72" height="72" aria-hidden="true"></canvas></span>
+          <span class="who__body">
+            <strong class="who__name" id="whoName">Kimliğini oluştur</strong>
+            <small class="who__title" id="whoTitle">Adını ve penguenini seç</small>
+          </span>
+          <span class="who__id" id="whoId"></span>
+        </button>
 
         <p class="screen__lede">
           Buzlar eriyor. Yeni doğmuş bir penguensin ve kuzeye açılan sala ulaşman gerek.
@@ -333,9 +353,177 @@
           </label>
         </div>
 
+        <div class="settings settings--links">
+          <button class="btn" id="settingsProfile" type="button">Kimliğim</button>
+          <button class="btn" id="settingsLegal" type="button">Yasal ve veri</button>
+        </div>
+
         <div class="danger">
           <button class="btn btn--danger" id="resetBtn">İlerlemeyi sıfırla</button>
           <p class="danger__note">Tüm bölümler, yıldızlar ve rekorlar silinir.</p>
+        </div>
+      </section>
+
+      <!-- First run: who are you -->
+      <section class="screen screen--sheet" data-name="identity" hidden>
+        <div class="sheet sheet--who">
+          <p class="sheet__kicker">Merhaba</p>
+          <h2 class="sheet__title">Sana ne diyelim?</h2>
+          <p class="sheet__meta">
+            Rekorların, unvanın ve paylaştığın hayaletler bu adla anılacak.
+            Sonradan değiştirebilirsin.
+          </p>
+
+          <div class="who__setup">
+            <span class="who__art who__art--big"><canvas id="idArt" width="112" height="112" aria-hidden="true"></canvas></span>
+            <label class="field">
+              <span class="field__label">Adın</span>
+              <input class="field__input" id="idName" type="text" maxlength="14"
+                     placeholder="Buzkanat" autocomplete="off" spellcheck="false"
+                     enterkeyhint="done" aria-describedby="idHint" />
+              <small class="field__hint" id="idHint">2–14 karakter</small>
+            </label>
+          </div>
+
+          <div class="sheet__actions">
+            <button class="btn" id="idDice" type="button">Şaşırt beni</button>
+            <button class="btn btn--primary" id="idSave" type="button">Başla</button>
+          </div>
+
+          <p class="sheet__hint sheet__hint--fine">
+            Bu ad <strong>yalnızca bu cihazda</strong> saklanır — sunucu yok, hesap yok.
+            Bir hayalet kodu paylaşmadıkça hiçbir yere gitmez.
+            <button class="linkish" id="idLegal" type="button">Yasal metinler</button>
+          </p>
+        </div>
+      </section>
+
+      <!-- Profile -->
+      <section class="screen screen--profile" data-name="profile" hidden>
+        <header class="screen__head">
+          <button class="btn btn--ghost btn--back" data-back>← Geri</button>
+          <h2 class="screen__title">Kimlik</h2>
+        </header>
+
+        <div class="profile">
+          <div class="profile__card">
+            <span class="who__art who__art--big"><canvas id="profArt" width="112" height="112" aria-hidden="true"></canvas></span>
+            <div class="profile__who">
+              <strong class="profile__name" id="profName">—</strong>
+              <span class="profile__title" id="profTitle">—</span>
+              <code class="profile__id" id="profId">—</code>
+            </div>
+          </div>
+
+          <p class="profile__next" id="profNext"></p>
+
+          <dl class="results results--wide">
+            <div><dt>Bölüm</dt><dd id="profLevels">—</dd></div>
+            <div><dt>Yıldız</dt><dd id="profStars">—</dd></div>
+            <div><dt>Balık</dt><dd id="profFish">—</dd></div>
+            <div><dt>Deneme</dt><dd id="profDeaths">—</dd></div>
+            <div><dt>Penguen</dt><dd id="profSkins">—</dd></div>
+            <div><dt>Başladığın gün</dt><dd id="profSince">—</dd></div>
+          </dl>
+
+          <label class="field">
+            <span class="field__label">Adını değiştir</span>
+            <input class="field__input" id="profNameInput" type="text" maxlength="14"
+                   autocomplete="off" spellcheck="false" enterkeyhint="done" />
+            <small class="field__hint" id="profHint">2–14 karakter</small>
+          </label>
+          <div class="sheet__actions">
+            <button class="btn" id="profDice" type="button">Şaşırt beni</button>
+            <button class="btn btn--primary" id="profSave" type="button">Kaydet</button>
+          </div>
+
+          <p class="profile__note">
+            Hepsi bu cihazda duruyor. Hesap yok, sunucu yok, takip yok.
+            <button class="linkish" id="profLegal" type="button">Yasal metinler ve veri</button>
+          </p>
+        </div>
+      </section>
+
+      <!-- Legal -->
+      <section class="screen screen--legal" data-name="legal" hidden>
+        <header class="screen__head">
+          <button class="btn btn--ghost btn--back" data-back>← Geri</button>
+          <h2 class="screen__title">Yasal</h2>
+        </header>
+
+        <div class="legal">
+          <p class="legal__lede">
+            Kısası: <strong>bu oyun hakkında hiçbir şey toplamıyor.</strong>
+            Sunucu yok, hesap yok, çerez yok, reklam yok, analitik yok.
+            Aşağıdakiler bunun uzun hâli.
+          </p>
+
+          <details class="legal__block" open>
+            <summary>Gizlilik — ne saklanıyor</summary>
+            <p>Her şey tarayıcının <code>localStorage</code> alanında, tek bir kayıtta duruyor:</p>
+            <ul>
+              <li>Adın, penguen kimliğin (<code>PNG-XXXXX</code>) ve başladığın tarih</li>
+              <li>Bölüm ilerlemen: yıldızlar, rekor süreler, deneme sayısı</li>
+              <li>Balığın, aldıkların, giydiğin penguen ve izi</li>
+              <li>Ayarların ve günün görevleri</li>
+              <li>Kendi koşularının hayalet kayıtları ve içe aktardığın rakip kodları</li>
+            </ul>
+            <p>
+              Bunların hiçbiri cihazından çıkmıyor. Oyunun ağ üzerinden konuştuğu
+              tek bir adres yok; kaynak koddan doğrulayabilirsin.
+            </p>
+          </details>
+
+          <details class="legal__block">
+            <summary>Paylaştığında ne gidiyor</summary>
+            <p>
+              Bir hayalet kodu paylaştığında kodun içinde <strong>adın, bölüm numarası,
+              süren ve koşunun sıkıştırılmış hareket kaydı</strong> bulunur. Bu kodu
+              nereye yapıştıracağına sen karar veriyorsun; oyun kendiliğinden
+              hiçbir yere göndermiyor.
+            </p>
+          </details>
+
+          <details class="legal__block">
+            <summary>Kullanım şartları</summary>
+            <p>
+              Oyun olduğu gibi sunuluyor. Kişisel ve ticari olmayan kullanım
+              serbest. Kaynak kodu değiştirip dağıtmak isteyen olursa depodaki
+              lisans dosyasına baksın. Oyunun kesintisiz ya da hatasız çalışacağı
+              taahhüt edilmiyor.
+            </p>
+          </details>
+
+          <details class="legal__block">
+            <summary>Çocuklar</summary>
+            <p>
+              Oyun her yaşa uygun: şiddet, sohbet, kullanıcı içeriği ve harcama
+              yok. Hiçbir kişisel veri toplanmadığı için ebeveyn onayı gerektiren
+              bir işleme de yok. Ad alanına gerçek isim yazmak zorunlu değil —
+              "Şaşırt beni" tuşu bir tane uydurur.
+            </p>
+          </details>
+
+          <details class="legal__block">
+            <summary>KVKK / GDPR</summary>
+            <p>
+              Verilerin bir "veri sorumlusuna" aktarılmadığı için oyun bu
+              mevzuatların tanımladığı anlamda bir işleme yapmıyor. Yine de
+              haklarının karşılığı burada bir tuş: <em>İlerlemeyi sıfırla</em>
+              kaydın tamamını siler ve geri alınamaz. Verini görmek istersen
+              tarayıcı geliştirici araçlarından <code>localStorage</code> içindeki
+              <code>pengu.save.v1</code> anahtarına bakabilirsin.
+            </p>
+          </details>
+
+          <div class="legal__data">
+            <button class="btn" id="legalExport" type="button">Kaydımı dosyaya aktar</button>
+            <button class="btn btn--danger" id="legalWipe" type="button">Her şeyi sil</button>
+          </div>
+          <p class="legal__foot">
+            Tam metinler ve kaynak kod: <code>docs/GIZLILIK.md</code>,
+            <code>docs/KULLANIM-SARTLARI.md</code>
+          </p>
         </div>
       </section>
 

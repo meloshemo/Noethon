@@ -22,6 +22,8 @@ Toplam yük tek dosyada ~385 KB ve çevrimdışı çalışıyor.
 | **76 elle yazılmış bölüm** | 31 parkur + 15 tırmanış + 15 dalış + 15 arena — dördü ayrı fiil |
 | **Tutunma** | Buz duvarına asıl, tırman, tekmele — ve kollarında sınırlı güç var |
 | **Sonsuz mod** | Bölüm numarasıyla tohumlanmış — 77. bölüm herkeste aynı |
+| **Kimlik** | Ad, unvan ve penguen kimliği — hepsi cihazda, hesap yok |
+| **Uyarlanan müzik** | Tek tema, dört kostüm; katmanlar olan bitene göre geliyor |
 | **10 buz türü** | sağlam · çatlak · cilalı · eriyen · sürüklenen · düşen · tuzak · **sahte** · kaçan · gayzer |
 | **4 tehlike** | sarkıt · fok · fırtına kuşağı · orka |
 | **2 pusu** | Bölümün planlamadığı anda dalan kutup kuşu · bayrağa 100 px kala kopan buzul |
@@ -65,6 +67,14 @@ tam **nişan aldıkları anda durduğun yere**. Bir kar topu değdiği ilk şeyd
 duruyor. Gerisi tek bir fikir: *birinin arkasına geç.* Devirmek istediğin
 penguen ile atıcının arasına gir, sonra top gelmeden oradan çekil.
 → [ayrıntı](#kar-topu--hizalama)
+
+### 🎼 Tek tema, dört kostüm
+Ses dosyası yok: müzik de bölümler gibi kural olarak yazılıyor. Beş notalık bir
+tema penguene ait ve dört bölümün dördünde de var — ana ekranda majörde, dağda
+minörde, buzun altında yarı hızda, arenada staccato. Ped, bas, arpej, perküsyon
+ve tema ayrı katmanlar ve **olan bitene göre** geliyor gidiyor: iyi giden bir
+bölümle neredeyse kaybedilmiş bir bölüm aynı duyulmuyor.
+→ [ayrıntı](#müzik)
 
 ### 🪽 Aktif ekipman — tek tuşta iki yetenek
 Markette **Planör Kanat** ve **Sırt Motoru** var. Havada zıplamayı *basılı tutmak*
@@ -133,6 +143,8 @@ hedef var ve **gün boyunca birikiyorlar** — tek turda hepsini yapman gerekmiy
 | [Haftalık lig](#haftalık-lig) · [Günün Pengu'su](#günün-pengusu) | Meta sistemler |
 | [Hayalet yarışı](#hayalet-yarışı-ve-sıralama) | Rekor yarışı ve paylaşım kodu |
 | [Kontroller](#kontroller) | Tuşlar |
+| [Kimlik ve müzik](#kimlik) | Oyuncu profili, unvanlar, uyarlanan müzik |
+| [Belgeler](docs/) | Gizlilik, kullanım şartları, bilgisayarda yapılacaklar |
 
 ---
 
@@ -1030,6 +1042,80 @@ Kayalar da bu yüzden **yukarıdan sarkıyor**, yerden yükselmiyor. Zemin bu
 bölümde her şeyin oynandığı yer — bütün duracak noktalar orada — ve zeminden
 çıkan bir sütun cevabın iki parçası arasına duvar koyuyor. Tavandan sarkınca
 getirildiği işi yapıyor: hatları yiyor, altından yürüyüp geçiyorsun.
+
+---
+
+## Kimlik
+
+Oyun ilk açıldığında sorduğu tek şey: **sana ne diyelim?** Ad, unvan, penguen
+kimliği ve o günden beri geçen zaman bir kimlik kartında toplanıyor; kart ana
+ekranda, giydiğin penguenin portresiyle duruyor.
+
+Bunun bir hesap olmadığını söylemek önemli, çünkü oyun bir "kullanıcı"
+yaratıyor ve oyuncunun bunu doğru anlaması gerekiyor:
+
+- Ad **yalnızca bu cihazda** saklanıyor. Sunucu yok, giriş yok, doğrulama yok.
+- Kimlik (`PNG-XXXXX`) bir etiket, sır değil: aynı adı taşıyan iki oyuncu
+  sıralamada birbirine karışmasın diye var. Bir kere üretiliyor ve bir daha
+  değişmiyor — düzeltilebilen bir etiket etiket değildir.
+- Ad, ancak **sen bir hayalet kodu paylaşırsan** cihazdan çıkar. Kodun içinde
+  ne olduğu [gizlilik metninde](docs/GIZLILIK.md) tek tek yazıyor.
+
+**Unvanlar** bölüm bitirerek kazanılıyor, biriktirerek değil: *Yeni Yumurta*,
+*Buz Çırağı*, *Sahanlık Kaşifi*, *Duvar Tırmanıcısı*, *Zirve Sahibi*,
+*Derin Dalgıç*, *Koloni Efsanesi*. Eşikler chapter sonlarına oturuyor ve
+`tools/lint.mjs` son unvanın gerçekten ulaşılabilir olduğunu kontrol ediyor —
+76 bölümlük bir oyunda 90. bölümde verilen bir unvan, kimsenin görmediği bir
+metindir.
+
+Ad alanı sanitize ediliyor: kontrol karakterleri, yön değiştiren görünmez
+işaretler ve açılı parantezler siliniyor. Ad hem DOM'a hem paylaşım koduna
+yazılıyor ve ikisi de "ne yazdıysa odur" güveninin yanlış olduğu yerler.
+
+---
+
+## Müzik
+
+Oyunda ses dosyası yok ve olmayacak; müzik de bölümler gibi **kural olarak**
+yazıldı. Yerini aldığı şey tek bir dört akorluk arpejdi: her bölümde aynı, ve
+`setInterval` üstünde çalıştığı için duvar saati ile ses saati arasında yavaşça
+kayıyordu.
+
+### Tek tema, dört kostüm
+
+Beş nota — dörtlü yukarı, adım adım geri, eve. Penguene ait, bölüme değil.
+Ana ekranda majörde duyuyorsun; dağda minörde, çıplak bir beşlinin üstünde;
+buzun altında yarı hızda ve gecikmeye boğulmuş; kar topu arenasında staccato
+parçalanmış. Kimsenin bunu fark etmesi gerekmiyor. Dört bambaşka parçanın tek
+bir oyun gibi duymasının sebebi bu.
+
+### Katman, parça değil
+
+Ped, bas, arpej, perküsyon ve tema beş ayrı ses ve her biri kendi başına
+geliyor gidiyor — neyin olduğuna bakarak. Ped hep var; davul yalnızca işler
+kötüye gidince. **İyi giden bir bölüm ile neredeyse kaybedilmiş bir bölüm aynı
+duyulmuyor**, ve ikisi de ayrı ayrı bestelenmedi.
+
+Sıcaklık (`_heat`) kasten oyuncunun *hissettiği* şeylerden yapılıyor: ne kadar
+ilerlediğin, seni öldürecek şeyin ne kadar yakın olduğu, o chapter'ın senden
+aldığı kaynaktan ne kadar kaldığı. Dalışta nefes, tırmanışta kol gücü,
+arenada havada uçan kar topu.
+
+### Ses saatinde planlanıyor
+
+25 ms'de bir uyanan bir ileri-bakış zamanlayıcısı, sonraki beşte bir saniyenin
+notalarını tam zamanlarıyla kuyruğa koyuyor. `setInterval` bunu yapamaz: ana
+iş parçacığı ne kadar meşgulse o kadar geç kalır, ve bir chapter dolusu buzun
+çizildiği karede **çok** geç kalır — yani ritim tam da oyun heyecanlandığında
+tökezler.
+
+Efektler müziği kısıyor (`duck`): buz kırılırken müziğin üstüne binmesi,
+oyuncunun duyması gereken tek sesi bastırmak demek.
+
+Testi `tests/music.mjs`: Web Audio sayaçlarla taklit ediliyor ve ızgaranın
+tam, katmanların yoğunlukla geldiği, sahne geçişinin vuruşa oturduğu ve temanın
+her bölümde çaldığı ölçülüyor. Müzik, okuyarak kontrol edilemeyen tek parça —
+ve sessizce bozulan tek parça.
 
 ---
 

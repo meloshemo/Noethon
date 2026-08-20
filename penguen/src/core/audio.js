@@ -3,7 +3,13 @@
  *
  * Every sound is synthesised with the Web Audio API — no asset files, so the
  * game stays a zero-dependency static bundle that works offline.
+ *
+ * Effects live here; the score lives in `music.js`, on its own bus, because it
+ * is a different problem. An effect is a reaction and has to be instant; music
+ * is a schedule and has to be early.
  */
+
+import { Music } from './music.js';
 
 const NOTES = { C4: 261.63, D4: 293.66, E4: 329.63, G4: 392.0, A4: 440.0, C5: 523.25, D5: 587.33, E5: 659.25, G5: 783.99, C6: 1046.5 };
 
@@ -13,8 +19,7 @@ export class Audio {
     this.sfxGain = null;
     this.musicGain = null;
     this.enabled = { sfx: true, music: true };
-    this._musicTimer = null;
-    this._step = 0;
+    this.music = null;
   }
 
   /** Browsers only allow audio after a gesture, so this is called on first input. */
@@ -32,16 +37,47 @@ export class Audio {
     this.sfxGain.connect(this.ctx.destination);
 
     this.musicGain = this.ctx.createGain();
-    this.musicGain.gain.value = 0.16;
+    this.musicGain.gain.value = 0.2;
     this.musicGain.connect(this.ctx.destination);
 
-    if (this.enabled.music) this.startMusic();
+    this.music = new Music(this.ctx, this.musicGain);
+    if (this._pendingScene !== undefined) this.music.setScene(sceneFor(this._pendingScene));
+    if (this.enabled.music) this.music.start();
+  }
+
+  /**
+   * Which piece of music is playing. Menus, and one per chapter.
+   *
+   * Called with a level definition rather than a name so the caller does not
+   * have to know how chapters map to scenes — that mapping is a fact about the
+   * music, and it belongs on this side of the wall.
+   */
+  setScene(def) {
+    if (!this.music) {
+      this._pendingScene = def;
+      return;
+    }
+    this.music.setScene(sceneFor(def));
+  }
+
+  /** How much is going on, 0..1. Layers arrive and leave on this. */
+  setIntensity(v) {
+    this.music?.setIntensity(v);
   }
 
   setEnabled(kind, on) {
     this.enabled[kind] = on;
-    if (kind === 'music') on ? this.startMusic() : this.stopMusic();
+    if (kind === 'music' && this.music) on ? this.music.start() : this.music.stop();
     if (kind === 'sfx' && this.sfxGain) this.sfxGain.gain.value = on ? 0.5 : 0;
+  }
+
+  /** Kept so a caller that predates the score still works. */
+  startMusic() {
+    this.music?.start();
+  }
+
+  stopMusic() {
+    this.music?.stop();
   }
 
   _tone({ freq = 440, dur = 0.15, type = 'sine', gain = 0.3, slide = 0, delay = 0, attack = 0.008 }) {
@@ -94,6 +130,7 @@ export class Audio {
   }
 
   shatter() {
+    this.music?.duck(0.5);
     this._noise({ dur: 0.42, gain: 0.3, filter: 3200, q: 1.2 });
     for (let i = 0; i < 4; i++) {
       this._tone({ freq: 1200 + i * 300, slide: -700, dur: 0.2, type: 'triangle', gain: 0.05, delay: i * 0.03 });
@@ -114,6 +151,7 @@ export class Audio {
   }
 
   splash() {
+    this.music?.duck(0.4);
     this._noise({ dur: 0.5, gain: 0.32, filter: 520, q: 0.5 });
     this._tone({ freq: 220, slide: -140, dur: 0.35, type: 'sine', gain: 0.12 });
   }
@@ -145,6 +183,7 @@ export class Audio {
    * a player who is watching their feet will get.
    */
   screech() {
+    this.music?.duck(0.6);
     this._tone({ freq: 900, slide: 520, dur: 0.14, type: 'sawtooth', gain: 0.11 });
     this._tone({ freq: 1150, slide: 700, dur: 0.12, type: 'square', gain: 0.07, delay: 0.13 });
     this._noise({ dur: 0.2, gain: 0.07, filter: 2600, q: 2.4, delay: 0.02 });
@@ -167,6 +206,7 @@ export class Audio {
   }
 
   win() {
+    this.music?.duck(0.5);
     const seq = [NOTES.C5, NOTES.E5, NOTES.G5, NOTES.C6];
     seq.forEach((f, i) => this._tone({ freq: f, dur: 0.3, type: 'triangle', gain: 0.2, delay: i * 0.11 }));
   }
@@ -176,40 +216,18 @@ export class Audio {
     this._tone({ freq, dur: 0.07, type: 'sine', gain: 0.14 });
   }
 
-  /** Slow arpeggio pad — deliberately sparse so it never fights the SFX. */
-  startMusic() {
-    if (!this.ctx || this._musicTimer || !this.enabled.music) return;
-    const chords = [
-      [NOTES.C4, NOTES.E4, NOTES.G4],
-      [NOTES.A4 / 2, NOTES.C4, NOTES.E4],
-      [NOTES.G4 / 2, NOTES.D4, NOTES.G4],
-      [NOTES.C4, NOTES.G4, NOTES.C5],
-    ];
-    const play = () => {
-      const chord = chords[Math.floor(this._step / 4) % chords.length];
-      const note = chord[this._step % chord.length] * (this._step % 8 < 4 ? 1 : 2);
-      const t0 = this.ctx.currentTime;
-      const osc = this.ctx.createOscillator();
-      const env = this.ctx.createGain();
-      const lp = this.ctx.createBiquadFilter();
-      lp.type = 'lowpass';
-      lp.frequency.value = 1400;
-      osc.type = 'sine';
-      osc.frequency.value = note;
-      env.gain.setValueAtTime(0.0001, t0);
-      env.gain.exponentialRampToValueAtTime(0.5, t0 + 0.4);
-      env.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.9);
-      osc.connect(lp).connect(env).connect(this.musicGain);
-      osc.start(t0);
-      osc.stop(t0 + 2);
-      this._step++;
-    };
-    play();
-    this._musicTimer = setInterval(play, 900);
-  }
+}
 
-  stopMusic() {
-    if (this._musicTimer) clearInterval(this._musicTimer);
-    this._musicTimer = null;
-  }
+/**
+ * Which scene a level asks for.
+ *
+ * By chapter, not by level number, because the number is an accident of how
+ * many levels each chapter happens to have and the music is about the verb.
+ */
+function sceneFor(def) {
+  if (!def) return 'menu';
+  if (def.brawl) return 'brawl';
+  if (def.axis === 'dive') return 'dive';
+  if (def.axis === 'up') return 'climb';
+  return 'shelf';
 }
