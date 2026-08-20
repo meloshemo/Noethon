@@ -268,6 +268,10 @@
 
 .screen {
   width: min(100%, 62rem);
+  /* A flex item will not shrink below its content's minimum unless told to,
+     and one long unbreakable word in a header was enough to push a whole
+     screen twenty pixels off the right edge of a phone. */
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: var(--s-5);
@@ -290,6 +294,9 @@
   display: flex;
   align-items: center;
   gap: var(--s-4);
+  /* The meta on the right ("102 / 228 yıldız") used to be pushed off a narrow
+     screen by a long title. Both are allowed to give ground now. */
+  flex-wrap: wrap;
 }
 
 .screen__title {
@@ -368,11 +375,22 @@
   width: 100%;
 }
 
+/*
+ * The menu, as a grid rather than a wrapping row.
+ *
+ * Six buttons of six different widths wrapped into a ragged three-two-one
+ * shape that changed every time a label did. Equal cells make it a menu
+ * instead of a paragraph of buttons, and two columns is the right count on a
+ * phone: wide enough for "Nasıl oynanır", tall enough to thumb.
+ */
 .actions__row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
   gap: var(--s-2);
+  width: 100%;
+}
+.actions__row .btn {
+  width: 100%;
 }
 
 .btn {
@@ -460,22 +478,57 @@
 
 .levels {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+  /* `minmax(0, …)` on the track, not just the floor: without it a long level
+     name sets the column's minimum content width and the last column is pushed
+     off the right edge of a phone. */
+  grid-template-columns: repeat(auto-fill, minmax(min(7.5rem, 100%), 1fr));
   gap: var(--s-3);
+}
+.levels > .level {
+  min-width: 0;
 }
 
 /*
  * A chapter heading spans the whole grid rather than sitting in a cell — it is
  * a divider in a list of levels, not another level.
  */
+/*
+ * Chapter headings stick to the top of the list.
+ *
+ * On a list this long the heading scrolls away in a second and a half, and
+ * then level 51 is just a number — you cannot tell whether you are in the sea
+ * or the arena without scrolling back. Stuck to the top it is a running label
+ * for wherever you happen to be.
+ */
 .levels__chapter {
   grid-column: 1 / -1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
+  position: sticky;
+  top: -1px;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'name done'
+    'verb done';
+  gap: 0 var(--s-3);
   margin: var(--s-3) 0 0;
-  padding-top: var(--s-3);
+  padding: var(--s-2) 0;
   border-top: 1px solid rgba(150, 200, 240, 0.18);
+  /* Opaque, because level cards scroll underneath it. */
+  background: linear-gradient(180deg, var(--bg) 72%, rgba(5, 13, 28, 0));
+}
+.levels__chapterName {
+  grid-area: name;
+}
+.levels__chapterVerb {
+  grid-area: verb;
+}
+.levels__chapterDone {
+  grid-area: done;
+  align-self: center;
+  color: var(--text-faint);
+  font-size: var(--fs-2xs);
+  font-variant-numeric: tabular-nums;
 }
 .levels__chapter:first-child {
   margin-top: 0;
@@ -546,6 +599,106 @@
 
 .level__stars .off {
   color: rgba(255, 196, 90, 0.22);
+}
+
+/*
+ * Every card the same height.
+ *
+ * Two-word level names wrap and one-word names do not, so the grid used to
+ * come out ragged — rows of different depths with the stars at four different
+ * heights. A minimum height plus a name clamped to two lines makes the list
+ * scan as a list, which on eighty-eight items is the difference between
+ * reading it and giving up on it.
+ */
+.level {
+  min-height: 6.6rem;
+}
+
+.level__name {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.level__foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-2);
+  margin-top: auto;
+  padding-top: var(--s-1);
+  min-height: 1.1rem;
+}
+
+/* Where you are. The ring is the eye-catch, the word is the answer. */
+.level--current {
+  border-color: var(--c-aqua);
+  box-shadow: 0 0 0 1px rgba(79, 215, 255, 0.4), 0 8px 24px -14px rgba(79, 215, 255, 0.7);
+}
+
+.level__next {
+  font-style: normal;
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--c-aqua);
+}
+
+/* Three stars is worth a whisper, not a shout. */
+.level--perfect .level__num {
+  color: var(--c-amber);
+}
+
+/* ---- Chapter chips -------------------------------------------------- */
+
+.chapters {
+  display: flex;
+  gap: var(--s-2);
+  min-width: 0;
+  overflow-x: auto;
+  padding: var(--s-1) 0 var(--s-3);
+  margin-bottom: var(--s-1);
+  scrollbar-width: none;
+}
+.chapters::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.05rem;
+  flex: 0 0 auto;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: var(--r-full);
+  background: var(--surface-2);
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.16s, background 0.16s;
+}
+.chip:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  background: var(--surface);
+}
+.chip--locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.chip__name {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.chip__meta {
+  font-size: var(--fs-2xs);
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .level__time {
@@ -1015,6 +1168,13 @@ kbd {
 
 /* ============================================================== Wallet */
 
+/*
+ * The purse is a door.
+ *
+ * It was a read-only pill at the top of the screen, which is a strange thing
+ * to do with the one number a shop exists to spend: the obvious gesture — tap
+ * your money — did nothing. Now it goes where the money goes.
+ */
 .wallet {
   display: inline-flex;
   align-items: center;
@@ -1029,6 +1189,27 @@ kbd {
   border-radius: var(--r-full);
   backdrop-filter: var(--blur);
   -webkit-backdrop-filter: var(--blur);
+}
+
+.wallet--btn {
+  cursor: pointer;
+  transition: border-color 0.16s, transform 0.16s, background 0.16s;
+}
+.wallet--btn:hover,
+.wallet--btn:focus-visible {
+  background: rgba(255, 196, 90, 0.2);
+  border-color: rgba(255, 196, 90, 0.6);
+  transform: translateY(-1px);
+}
+.wallet__go {
+  padding-left: 0.5em;
+  margin-left: 0.15em;
+  border-left: 1px solid rgba(255, 196, 90, 0.3);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  opacity: 0.85;
 }
 
 .wallet svg {
@@ -1236,43 +1417,60 @@ kbd {
   text-align: left;
 }
 
+/*
+ * A shop card.
+ *
+ * A flex column rather than a grid of areas, for one reason that matters more
+ * than it sounds: the action is pinned to the bottom with `margin-top:auto`,
+ * so two cards side by side whose descriptions wrap to different heights still
+ * put their buttons on the same line. Before this the buttons in one row sat
+ * at three different heights and the whole shop read as unfinished.
+ */
 .item {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  grid-template-areas:
-    'icon head'
-    'icon blurb'
-    'effect effect'
-    'buy buy';
-  align-items: center;
-  gap: 0.35rem var(--s-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
   padding: var(--s-4);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
+  transition: border-color 0.18s, transform 0.18s;
+}
+.item:hover {
+  border-color: var(--border-strong);
+}
+
+/* Out of reach: quieter, but never hidden — you are meant to want it. */
+.item--dear {
+  opacity: 0.78;
+}
+.item--maxed {
+  border-color: rgba(92, 225, 166, 0.32);
 }
 
 .item__icon {
-  grid-area: icon;
   display: grid;
   place-items: center;
-  width: 2.6rem;
-  height: 2.6rem;
+  width: 2.4rem;
+  height: 2.4rem;
   border-radius: var(--r-md);
   background: rgba(79, 215, 255, 0.14);
   color: var(--c-aqua);
-  align-self: start;
+  flex: 0 0 auto;
+}
+.item--maxed .item__icon {
+  background: rgba(92, 225, 166, 0.16);
+  color: var(--c-mint);
 }
 
 .item__icon svg {
-  width: 1.4rem;
-  height: 1.4rem;
+  width: 1.35rem;
+  height: 1.35rem;
 }
 
 .item__head {
-  grid-area: head;
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: var(--s-2);
   flex-wrap: wrap;
 }
@@ -1282,14 +1480,42 @@ kbd {
   font-weight: 700;
 }
 
+/* "1/3" beats three dots: a number is read, a dot pattern is counted. */
+.item__level {
+  margin-left: auto;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  background: rgba(8, 19, 42, 0.55);
+  color: var(--text-faint);
+  font-size: var(--fs-2xs);
+  font-variant-numeric: tabular-nums;
+}
+.item--maxed .item__level {
+  color: var(--c-mint);
+}
+
+.item__blurb {
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+}
+
+.item__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+
 .item__pips {
   display: inline-flex;
   gap: 3px;
+  margin-left: auto;
 }
 
 .item__pips i {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: rgba(143, 196, 226, 0.25);
 }
@@ -1298,18 +1524,80 @@ kbd {
   background: var(--c-mint);
 }
 
-.item__blurb {
-  grid-area: blurb;
+/* The action, always last and always on the same line as its neighbours'. */
+.item__foot {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-top: auto;
+  padding-top: var(--s-2);
+}
+
+.btn--buy {
+  flex: 0 0 auto;
+  min-height: 2.3rem;
+  padding: 0.45rem 0.95rem;
   font-size: var(--fs-xs);
+}
+.btn__price b {
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.item__short {
+  color: var(--c-amber);
+  font-size: var(--fs-2xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.item__done {
+  color: var(--c-mint);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+
+/* ---- Shop groups ---------------------------------------------------- */
+
+.shop__group {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  grid-column: 1 / -1;
+  margin: var(--s-4) 0 calc(var(--s-2) * -1);
+  padding-bottom: var(--s-2);
+  border-bottom: 1px solid var(--border);
+}
+.shop__group:first-of-type {
+  margin-top: var(--s-2);
+}
+.shop__groupName {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.shop__groupNote {
   color: var(--text-faint);
-  line-height: var(--lh-snug);
+  font-size: var(--fs-2xs);
+}
+.shop__groupCount {
+  margin-left: auto;
+  color: var(--text-faint);
+  font-size: var(--fs-2xs);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A purchase should be felt where the money is, not only where you pressed. */
+.wallet--hit {
+  animation: walletHit 0.42s ease-out;
+}
+@keyframes walletHit {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.16); filter: brightness(1.35); }
+  100% { transform: scale(1); }
 }
 
 .item__effect {
-  grid-area: effect;
-  margin-top: var(--s-2);
   padding: 0.25em 0.7em;
-  justify-self: start;
   font-size: var(--fs-2xs);
   font-weight: 600;
   color: var(--c-ice-200);
@@ -1317,25 +1605,16 @@ kbd {
   border-radius: var(--r-full);
 }
 
-.item__buy {
-  grid-area: buy;
-  margin-top: var(--s-3);
-  width: 100%;
-}
-
-.item--maxed {
-  border-color: rgba(92, 225, 166, 0.35);
-}
-
-.item--maxed .item__icon {
-  background: rgba(92, 225, 166, 0.16);
-  color: var(--c-mint);
-}
-
+/*
+ * The count sits *inside* the button.
+ *
+ * Hung outside it, the badge was clipped by whatever the button happened to be
+ * next to and looked like a rendering fault rather than a number worth reading.
+ */
 .btn__badge {
   position: absolute;
-  top: -6px;
-  right: -6px;
+  top: 4px;
+  right: 6px;
   min-width: 1.15rem;
   padding: 0 0.3em;
   font-size: var(--fs-2xs);
@@ -1389,9 +1668,69 @@ kbd {
   text-align: center;
 }
 
+.payout__shop {
+  width: 100%;
+  margin-top: var(--s-2);
+}
+
+/* The shop's opening line is context, not content: it should never be the
+   tallest thing above the fold. */
+.screen--shop .screen__lede {
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+  max-width: 46ch;
+}
+
+/*
+ * On a phone a shop card becomes a row.
+ *
+ * A column of full-width cards meant one upgrade filled a screen and a half,
+ * so choosing between eight of them was a scrolling exercise with no way to
+ * compare. As rows they are four to a screen: icon, what it is, what it costs,
+ * in the order you read them.
+ */
 @media (max-width: 560px) {
   .shop {
     grid-template-columns: 1fr;
+    gap: var(--s-2);
+  }
+  .item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'icon head foot'
+      'icon blurb foot'
+      'icon meta foot';
+    align-items: center;
+    gap: 0.2rem var(--s-3);
+    padding: var(--s-3);
+  }
+  .item__icon {
+    grid-area: icon;
+    align-self: center;
+  }
+  .item__head {
+    grid-area: head;
+  }
+  .item__blurb {
+    grid-area: blurb;
+  }
+  .item__meta {
+    grid-area: meta;
+  }
+  .item__foot {
+    grid-area: foot;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.15rem;
+    margin-top: 0;
+    padding-top: 0;
+  }
+  .item__level {
+    margin-left: 0;
+  }
+  .item__pips {
+    margin-left: 0;
   }
 }
 
@@ -1446,6 +1785,45 @@ kbd {
 @container stage (max-height: 780px) {
   .screen--title .screen__lede { display: none; }
   .screen--title { gap: var(--s-2); }
+}
+
+/*
+ * A phone held sideways.
+ *
+ * Three hundred and ninety pixels of height, and the logo alone was taking two
+ * hundred and seventy of them — so "Oyna" was below the fold on the screen
+ * whose entire job is to have "Oyna" on it. Everything decorative gets smaller
+ * and the two things that matter keep their size.
+ */
+@container stage (max-height: 560px) {
+  .screen--title {
+    gap: var(--s-2);
+  }
+  .brand {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--s-3);
+  }
+  .brand__mark {
+    width: 2.4rem;
+  }
+  .brand__title {
+    font-size: clamp(1.6rem, 1.2rem + 2vw, 2.2rem);
+  }
+  .brand__tagline {
+    display: none;
+  }
+  .who {
+    padding: 0.4rem 0.7rem;
+  }
+  .who__art {
+    width: 32px;
+    height: 32px;
+  }
+  .missions,
+  .goals {
+    display: none;
+  }
 }
 
 @container stage (max-height: 640px) {
@@ -2067,11 +2445,38 @@ kbd {
   height: 5.5rem;
 }
 
+/*
+ * The card's text grows; its button does not move.
+ *
+ * Blurbs are one to three lines and unlock conditions are one line or none, so
+ * a row of four cards used to put its four buttons at four different heights.
+ * The body takes the slack, the button is pinned to the bottom, and the row
+ * reads as a row.
+ */
 .skin__body {
   display: flex;
   flex-direction: column;
   gap: 0.3em;
   width: 100%;
+  flex: 1 1 auto;
+}
+.skin__btn,
+.skin__worn {
+  margin-top: auto;
+}
+/* The one you are wearing says so plainly; the button beside it is spent. */
+.skin__worn {
+  display: block;
+  width: 100%;
+  padding: 0.55rem 0;
+  border-radius: var(--r-full);
+  background: rgba(79, 215, 255, 0.14);
+  border: 1px solid rgba(79, 215, 255, 0.42);
+  color: var(--c-aqua);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
 }
 
 .skin__name {
@@ -2112,6 +2517,12 @@ kbd {
 
 .skin__btn {
   width: 100%;
+}
+
+/* Earned but not yet collected — the card says so instead of showing a full
+   bar and no way through. */
+.skin--ready {
+  border-color: rgba(92, 225, 166, 0.5);
 }
 
 /* ============================================================ Gear HUD */
@@ -2563,8 +2974,16 @@ kbd {
   color: var(--c-coral);
 }
 
-/* A button that behaves like a link, because in a sentence it should. */
+/*
+ * A button that behaves like a link, because in a sentence it should.
+ *
+ * Inline text is about sixteen pixels tall and a thumb is about forty-four, so
+ * the visible link keeps the line height it needs and the *hit area* is grown
+ * underneath it with a pseudo-element. Padding would have worked too and would
+ * have pushed the sentence around it apart.
+ */
 .linkish {
+  position: relative;
   padding: 0;
   border: 0;
   background: none;
@@ -2573,6 +2992,11 @@ kbd {
   text-decoration: underline;
   text-underline-offset: 2px;
   cursor: pointer;
+}
+.linkish::after {
+  content: '';
+  position: absolute;
+  inset: -0.7rem -0.4rem;
 }
 .linkish:hover {
   color: var(--c-ice-100);
@@ -2710,4 +3134,54 @@ kbd {
   .who__setup .who__art--big {
     align-self: center;
   }
+}
+
+
+/* ─────────────────────────  Boş durumlar  ─────────────────────────── */
+
+/*
+ * An empty state is a screen with a job.
+ *
+ * A single centred sentence tells the player what they already knew — that
+ * there is nothing here — and leaves them on a blank page to find their own
+ * way out. A mark, a line and the button that fixes it is the whole pattern.
+ */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-6) var(--s-4);
+  text-align: center;
+}
+.empty__mark {
+  display: grid;
+  place-items: center;
+  width: 3.4rem;
+  height: 3.4rem;
+  border-radius: 50%;
+  background: rgba(143, 196, 226, 0.1);
+  color: var(--c-ice-400);
+}
+.empty__mark svg {
+  width: 1.7rem;
+  height: 1.7rem;
+}
+.empty__text {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+}
+
+/* The board's identity line: who you are here, and the way to change it. */
+.boardwho {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  min-height: 2.6rem;
+}
+.boardwho__name {
+  font-size: var(--fs-md, 1rem);
+  font-weight: 700;
 }

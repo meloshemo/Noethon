@@ -36,6 +36,7 @@ const NODE_SUITES = [
 
 const BROWSER_SUITES = [
   ['tests/browser-identity.mjs', 'kimlik'],
+  ['tests/browser-layout.mjs', 'arayüz düzeni'],
   ['tests/browser-climb.mjs', 'tırmanma mekaniği'],
   ['tests/browser-dive.mjs', 'yüzme mekaniği'],
   ['tests/browser-brawl.mjs', 'kar topu mekaniği'],

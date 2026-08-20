@@ -44,3 +44,22 @@ export function formatTime(seconds) {
   const cs = Math.floor((seconds * 100) % 100);
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${String(cs).padStart(2, '0')}`;
 }
+
+/**
+ * A time for reading rather than for racing.
+ *
+ * The running clock is `formatTime` and stays `00:21.00` — it is a stopwatch
+ * and a stopwatch has a fixed width, otherwise the digits jump about while you
+ * are trying to play. A *record*, in a list of eighty of them, is different:
+ * the leading `00:` is two characters of noise on every row, and nobody has
+ * ever needed to be told that twenty-one seconds is under a minute.
+ */
+export function formatRecord(seconds) {
+  if (!Number.isFinite(seconds)) return '—';
+  const m = Math.floor(seconds / 60);
+  const rest = seconds - m * 60;
+  const s = Math.floor(rest);
+  const cs = Math.floor((rest * 100) % 100);
+  const tail = `${String(s).padStart(m ? 2 : 1, '0')}.${String(cs).padStart(2, '0')}`;
+  return m ? `${m}:${tail}` : `${tail} sn`;
+}

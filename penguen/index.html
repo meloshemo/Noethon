@@ -118,10 +118,12 @@
 
       <!-- Title -->
       <section class="screen screen--title" data-name="title">
-        <div class="wallet" id="walletTitle">
+        <button class="wallet wallet--btn" id="walletTitle" type="button"
+                aria-label="Balığın — markete git">
           <svg viewBox="0 0 24 16" aria-hidden="true"><path d="M14 8c0 3-3.6 5.5-7 5.5S1 11 1 8s2.6-5.5 6-5.5S14 5 14 8Z" fill="currentColor"/><path d="M14.5 8 22 3v10l-7.5-5Z" fill="currentColor"/></svg>
           <span id="walletTitleValue">0</span>
-        </div>
+          <span class="wallet__go" aria-hidden="true">Market</span>
+        </button>
         <div class="brand">
           <div class="brand__mark" aria-hidden="true">
             <svg viewBox="0 0 64 64"><ellipse cx="32" cy="40" rx="17" ry="19" fill="#26364a"/><ellipse cx="32" cy="42" rx="11" ry="14" fill="#f6fbff"/><ellipse cx="32" cy="20" rx="13" ry="11" fill="#26364a"/><ellipse cx="26" cy="19" rx="3.4" ry="3.8" fill="#fff"/><ellipse cx="37" cy="19" rx="3.4" ry="3.8" fill="#fff"/><circle cx="26.8" cy="19.4" r="1.7" fill="#0e1723"/><circle cx="37.4" cy="19.4" r="1.7" fill="#0e1723"/><path d="M32 23.5 39 26l-7 2.5Z" fill="#ff9c3f"/><ellipse cx="25" cy="58" rx="5" ry="2.4" fill="#ff9c3f"/><ellipse cx="39" cy="58" rx="5" ry="2.4" fill="#ff9c3f"/></svg>
@@ -221,6 +223,8 @@
           <h2 class="screen__title">Bölümler</h2>
           <span class="screen__meta" id="levelsMeta"></span>
         </header>
+
+        <nav class="chapters" id="chapterJump" aria-label="Bölümler"></nav>
         <div class="levels" id="levelGrid"></div>
         <p class="screen__foot">31 bölümden sonra sonsuz mod başlar — her bölüm biraz daha zorlu.</p>
       </section>
@@ -612,11 +616,21 @@
         </header>
 
         <div class="boardtop">
-          <label class="field field--name">
-            <span class="field__label">Adın</span>
-            <input class="field__input" id="boardName" type="text" maxlength="14" placeholder="Sen"
-                   autocomplete="off" spellcheck="false" />
-          </label>
+          <!--
+            One place to set a name.
+
+            This used to be a second name field, with the profile screen as a
+            third — three inputs writing the same value, so whichever you
+            edited last won and none of them said so. The board shows who you
+            are and sends you to the one screen that changes it.
+          -->
+          <div class="field field--name">
+            <span class="field__label">Sıralamadaki adın</span>
+            <div class="boardwho">
+              <strong class="boardwho__name" id="boardWho">—</strong>
+              <button class="linkish" id="boardRename" type="button">Değiştir</button>
+            </div>
+          </div>
           <div class="field field--code">
             <span class="field__label">Rakip kodu</span>
             <div class="field__row">

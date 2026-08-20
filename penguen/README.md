@@ -143,6 +143,7 @@ hedef var ve **gün boyunca birikiyorlar** — tek turda hepsini yapman gerekmiy
 | [Haftalık lig](#haftalık-lig) · [Günün Pengu'su](#günün-pengusu) | Meta sistemler |
 | [Hayalet yarışı](#hayalet-yarışı-ve-sıralama) | Rekor yarışı ve paylaşım kodu |
 | [Kontroller](#kontroller) | Tuşlar |
+| [Arayüz](#arayüz) | Market, bölüm listesi, düzen testi |
 | [Kimlik ve müzik](#kimlik) | Oyuncu profili, unvanlar, uyarlanan müzik |
 | [Belgeler](docs/) | Gizlilik, kullanım şartları, bilgisayarda yapılacaklar |
 
@@ -1042,6 +1043,74 @@ Kayalar da bu yüzden **yukarıdan sarkıyor**, yerden yükselmiyor. Zemin bu
 bölümde her şeyin oynandığı yer — bütün duracak noktalar orada — ve zeminden
 çıkan bir sütun cevabın iki parçası arasına duvar koyuyor. Tavandan sarkınca
 getirildiği işi yapıyor: hatları yiyor, altından yürüyüp geçiyorsun.
+
+---
+
+## Arayüz
+
+Oyunun kendisi kadar üstünde durulan ikinci şey. Her ekran üç boyutta —
+telefon dik, telefon yatık, masaüstü — ekran görüntüsü alınıp *bakılarak*
+gözden geçirildi, ve bulunanların çoğu okuyarak fark edilmeyecek türdendi.
+
+### Bulunan ve düzeltilenler
+
+| Neydi | Ne oldu |
+|---|---|
+| Ana ekranda tanıtım yazısı telefonun iki kenarından da taşıyordu | Bir flex öğesi içeriğinin altına inemiyordu — `min-width: 0` |
+| Bölüm listesinin üçüncü sütunu ekranın 20px dışındaydı | Aynı sebep, iki eleman ötedeki bir başlıktan |
+| Market ve koleksiyonda bir satırdaki düğmeler üç farklı hizadaydı | Kartlar metne göre boyutlanıyordu; artık aksiyon alta sabit |
+| Rozetler düğmenin dışında, kırpılıyordu | İçeri alındı |
+| Menüde altı düğme üç-iki-bir şeklinde dağınık sarıyordu | Eşit hücreli ızgara |
+| Satır içi bağlantılar parmakla tutulamayacak kadar küçüktü | Görünmez `::after` ile dokunma alanı büyütüldü |
+| Aynı adı yazan üç ayrı alan vardı | Tek kaynak: Kimlik ekranı; sıralama oraya yönlendiriyor |
+| Sıralamanın boş hâli bir cümle ve bomboş bir sayfaydı | Simge, tek satır ve çıkış yolu olan bir düğme |
+| Bir koşu dışında kazanılan penguen "Kilitli" görünüyordu | Koleksiyon açılırken hak edilenler teslim ediliyor |
+
+### Market
+
+Sekiz kart, hepsi tam genişlikte parlak bir "Al" düğmesiyle: hepsi aynı sesle
+bağırınca hiçbiri konuşmuyor, ve telefonda tek bir yükseltme bir buçuk ekran
+kaplıyordu. Şimdi:
+
+- **Üç başlık** — Hareket, Dayanma, Ekipman. Sekiz kartlık düz bir ızgara bir
+  duvar; üç başlık onu bir listeye çeviriyor.
+- **Fiyat bir çip**, slab değil. Kart kahraman, fiyat sessiz bir teklif.
+- **Yetmiyorsa kartın üstünde yazıyor**: "820 balık daha". Basınca öğrenilen
+  bir şey değil — "az kaldı" ile "çok uzak" farklı duygular ve oyuncunun
+  doğrusunu hissetmeye hakkı var.
+- **Telefonda kart bir satır**: simge, ne olduğu, ne tuttuğu. Ekranda bir buçuk
+  yerine dört tane.
+- **`2/3` yazıyor**, üç nokta değil. Sayı okunur, nokta deseni sayılır.
+
+### Markete erişim
+
+Bir dükkâna giden tek bir kapı yeterli değil. Üç tane var:
+
+1. Ana ekrandaki **Market** düğmesi — kaç şey alabileceğini rozetle söylüyor
+2. **Cüzdana dokunmak** — parana dokunmak paranın gittiği yere götürüyor;
+   insanların ilk denediği hareket buydu ve hiçbir şey yapmıyordu
+3. **Bölüm sonu ekranı** — balığı yeni kazandığın ve rakamı gördüğün an,
+   *ve yalnızca gerçekten bir şey alabiliyorsan*
+
+### Bölüm listesi
+
+Seksen sekiz kart. Gezilebilir olmasını sağlayan üç şey: en üstte **chapter
+çipleri** (dağa ya da denize tek dokunuşla), kaydırırken **tepede yapışık
+kalan başlıklar** (51. bölümdeyken hangi chapter'da olduğunu bilmek), ve
+oynayacağın tek bölümün üstünde **"Sıradaki"**. Sonuncusu olmadan liste "ne
+yaptım"ı cevaplıyor, "nerede kalmıştım"ı hiç.
+
+Süreler de değişti: koşarkenki kronometre sabit genişlikte kalıyor (`00:21.40`
+— rakamlar oynarken zıplamasın), ama bir *rekor* listesinde baştaki `00:`
+her satırda iki karakter gürültü. Rekorlar artık `21.40 sn`.
+
+### Bunu koruyan test
+
+`tests/browser-layout.mjs` dokuz ekranı üç boyutta açıp bir tasarımcının gözle
+bakacağı şeyleri ölçüyor: viewport dışına taşan bir şey var mı (yatay kaydırma
+alanının içindekiler hariç — orada taşmak işin kendisi), bir satırdaki kart
+düğmeleri aynı hizada mı, ve parmakla tutulamayacak kadar küçük düğme var mı.
+Yukarıdaki tablodaki dokuz hatanın hepsi bu testin yakaladığı türden.
 
 ---
 

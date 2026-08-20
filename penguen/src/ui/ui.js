@@ -6,15 +6,15 @@
  * free. This class is the only place that touches the DOM.
  */
 
-import { formatTime } from '../core/util.js';
-import { CRAFTED_LEVELS, UPGRADES, MONUMENT, monumentCost, scaleForLevel } from '../game/config.js';
+import { formatTime, formatRecord } from '../core/util.js';
+import { CRAFTED_LEVELS, UPGRADES, SHOP_GROUPS, MONUMENT, monumentCost, scaleForLevel } from '../game/config.js';
 import { getLevel } from '../game/game.js';
-import { ALL_LEVELS as LEVELS, chapterOf, startsChapter } from '../game/chapters.js';
+import { ALL_LEVELS as LEVELS, CHAPTERS, chapterOf, startsChapter } from '../game/chapters.js';
 import { Storage, todayKey } from '../core/storage.js';
 import { cleanName, nameProblem, suggestName, titleFor, ensureProfile, profileLine } from '../game/profile.js';
 import { ensureMissions } from '../game/missions.js';
 import { shareText, withName } from '../game/ghost.js';
-import { SKINS, TRAILS, RARITY, getSkin, getTrail, skinStatus, drawPortrait, perkText } from '../game/skins.js';
+import { SKINS, TRAILS, RARITY, getSkin, getTrail, skinStatus, newlyEarned, drawPortrait, perkText } from '../game/skins.js';
 import { standing, weekKey } from '../game/league.js';
 import { dailyObjectives } from '../game/daily.js';
 import { generateDailyLevel } from '../game/generator.js';
@@ -96,6 +96,7 @@ export class UI {
       profHint: $('profHint'),
       levelGrid: $('levelGrid'),
       levelsMeta: $('levelsMeta'),
+      chapterJump: $('chapterJump'),
       iceLegend: $('iceLegend'),
       pauseMeta: $('pauseMeta'),
       introCard: $('introCard'),
@@ -133,7 +134,7 @@ export class UI {
       shareName: $('shareName'),
       shareNameInput: $('shareNameInput'),
       boardList: $('boardList'),
-      boardName: $('boardName'),
+      boardWho: $('boardWho'),
       boardCode: $('boardCode'),
       boardMsg: $('boardMsg'),
       boardMeta: $('boardMeta'),
@@ -195,8 +196,17 @@ export class UI {
     this._checkOrientation?.();
 
     if (name && name !== 'intro') {
-      // Move focus to the first control so keyboard users land in the sheet.
-      const first = overlay.querySelector(`.screen[data-name="${name}"] .btn, .screen[data-name="${name}"] .switch`);
+      // Focus the *primary* action, not the first one in the markup.
+      //
+      // "First in the DOM" is an accident of layout: adding a quiet shortcut
+      // near the top of a sheet silently stole the focus ring from the button
+      // the screen exists for, so the win screen came up with "go to the shop"
+      // lit and "next level" dark. Whatever is marked primary is what the
+      // screen is for, and that is where a keyboard should land.
+      const sel = `.screen[data-name="${name}"]`;
+      const first =
+        overlay.querySelector(`${sel} .btn--primary:not(:disabled)`) ??
+        overlay.querySelector(`${sel} .btn:not(:disabled), ${sel} .switch`);
       first?.focus({ preventScroll: true });
     }
   }
@@ -212,7 +222,7 @@ export class UI {
     if (session) {
       const where = session.daily ? 'Günün Bölümü' : `Bölüm ${session.level}`;
       this.el.playLabel.textContent = 'Devam et';
-      this.el.playSub.textContent = `${where} · ${formatTime(session.elapsed ?? 0)}`;
+      this.el.playSub.textContent = `${where} · ${formatRecord(session.elapsed ?? 0)}`;
     } else {
       this.el.playLabel.textContent = isNew ? 'Başla' : 'Devam et';
       this.el.playSub.textContent = `Bölüm ${next}`;
@@ -378,6 +388,18 @@ export class UI {
   }
 
   /** Badge the collection when something is claimable or affordable. */
+  /** Grant every skin and trail whose condition is already satisfied. */
+  _claimEarned() {
+    const earned = newlyEarned(this.save);
+    if (!earned.length) return;
+    for (const item of earned) {
+      const bag = item.bag ?? 'skins';
+      this.save[bag] = this.save[bag] ?? {};
+      this.save[bag][item.id] = true;
+    }
+    this._persist();
+  }
+
   refreshSkinsBadge() {
     const count = (list, bag) =>
       list.filter((item) => {
@@ -419,7 +441,7 @@ export class UI {
     const got = list.filter((o) => done.includes(o.id)).length;
 
     this.el.dailyState.textContent = d.done
-      ? `${got}/${list.length} hedef · en iyi ${formatTime(d.bestTime)}`
+      ? `${got}/${list.length} hedef · en iyi ${formatRecord(d.bestTime)}`
       : `${list.length} hedef · herkes için aynı bölüm`;
     this.el.dailyStreak.hidden = !d.streak;
     this.el.dailyStreak.textContent = d.streak ? `${d.streak} gün` : '';
@@ -447,6 +469,14 @@ export class UI {
    */
   buildSkins(tab = this._skinTab ?? 'skins') {
     this._skinTab = tab;
+    // Hand over anything already earned before drawing.
+    //
+    // Unlocks are normally granted at the end of a run, which leaves one odd
+    // gap: a condition met outside a run — by a purchase, or by a stat that
+    // moved elsewhere — showed a full progress bar, the word "Kilitli", and no
+    // way through. Nothing was broken; the next run would have granted it. But
+    // the card was lying in the meantime, which is worse than being slow.
+    this._claimEarned();
     const trails = tab === 'trails';
     const list = trails ? TRAILS : SKINS;
     const bag = trails ? 'trails' : 'skins';
@@ -501,14 +531,25 @@ export class UI {
                <span class="skin__state">${st.label}</span>`
         }`;
 
+      const isWorn = st.owned && worn === item.id;
+      if (isWorn) {
+        // Not a disabled button. A greyed-out "Giyildi" reads as something
+        // broken; a label reads as a state, which is what it is.
+        const tag = document.createElement('span');
+        tag.className = 'skin__worn';
+        tag.textContent = trails ? 'Kullanılıyor' : 'Giyili';
+        card.append(canvas, body, tag);
+        grid.append(card);
+        continue;
+      }
+
       const btn = document.createElement('button');
       btn.className = 'btn skin__btn';
       btn.type = 'button';
       if (st.owned) {
-        const isWorn = worn === item.id;
-        btn.textContent = isWorn ? 'Giyildi' : 'Giy';
-        btn.disabled = isWorn;
-        if (!isWorn) btn.classList.add('btn--primary');
+        btn.textContent = 'Giy';
+        btn.disabled = false;
+        btn.classList.add('btn--primary');
         btn.addEventListener('click', () => {
           Storage.wearSkin(this.save, item.id, bag);
           this.audio.ui();
@@ -527,6 +568,7 @@ export class UI {
         btn.addEventListener('click', () => {
           if (!Storage.buySkin(this.save, item.id, st.cost, bag)) return;
           this.audio.fish();
+          this._flashCoins();
           this.buildSkins(tab);
           this.refreshWallet();
           this.refreshSkinsBadge();
@@ -613,48 +655,114 @@ export class UI {
     this._monumentCost = cost;
   }
 
+  /**
+   * The shop.
+   *
+   * Rebuilt around three things it was getting wrong. It was a flat grid of
+   * eight identical cards, each with a full-width primary button — so every
+   * item shouted equally, which is the same as none of them saying anything,
+   * and on a phone one upgrade filled a screen and a half. It never said what
+   * you could not afford until you pressed it. And the cards were different
+   * heights, so the buttons in a row sat at three different levels, which is
+   * the visual equivalent of a shrug.
+   *
+   * Now: three named groups, a price *chip* rather than a slab, the shortfall
+   * written on the card when you cannot afford it, and every action locked to
+   * the bottom edge of its card so a row reads as a row.
+   */
   buildShop() {
     this.refreshMonument();
     const coins = this.save.coins ?? 0;
-    this.el.shopGrid.innerHTML = '';
+    const grid = this.el.shopGrid;
+    grid.innerHTML = '';
 
-    for (const spec of UPGRADES) {
-      const owned = this.save.upgrades[spec.id] ?? 0;
-      const maxed = owned >= spec.levels.length;
-      const next = maxed ? null : spec.levels[owned];
-      const affordable = next && coins >= next.cost;
+    for (const group of SHOP_GROUPS) {
+      const items = UPGRADES.filter((u) => (u.group ?? 'hareket') === group.id);
+      if (!items.length) continue;
 
-      const card = document.createElement('div');
-      card.className = `item${maxed ? ' item--maxed' : ''}`;
-      card.innerHTML = `
-        <span class="item__icon" aria-hidden="true"><svg viewBox="0 0 24 24">${SHOP_ICONS[spec.icon] ?? ''}</svg></span>
-        <span class="item__head">
-          <strong class="item__name">${spec.name}</strong>
-          <span class="item__pips">${spec.levels
-            .map((_, i) => `<i class="${i < owned ? 'on' : ''}"></i>`)
-            .join('')}</span>
-        </span>
-        <span class="item__blurb">${spec.blurb}</span>
-        <span class="item__effect">${
-          maxed ? spec.levels[spec.levels.length - 1].label : next.label
-        }</span>`;
+      const have = items.reduce((n, sp) => n + (this.save.upgrades[sp.id] ?? 0), 0);
+      const all = items.reduce((n, sp) => n + sp.levels.length, 0);
+      const head = document.createElement('h3');
+      head.className = 'shop__group';
+      head.innerHTML =
+        `<span class="shop__groupName">${group.name}</span>` +
+        `<span class="shop__groupNote">${group.note}</span>` +
+        `<span class="shop__groupCount">${have}/${all} seviye</span>`;
+      grid.append(head);
 
+      for (const spec of items) grid.append(this._shopCard(spec, coins));
+    }
+  }
+
+  _shopCard(spec, coins) {
+    const owned = this.save.upgrades[spec.id] ?? 0;
+    const maxed = owned >= spec.levels.length;
+    const next = maxed ? null : spec.levels[owned];
+    const short = next ? next.cost - coins : 0;
+    const affordable = Boolean(next) && short <= 0;
+
+    const card = document.createElement('div');
+    card.className = `item${maxed ? ' item--maxed' : ''}${!maxed && !affordable ? ' item--dear' : ''}`;
+    card.innerHTML = `
+      <span class="item__icon" aria-hidden="true"><svg viewBox="0 0 24 24">${SHOP_ICONS[spec.icon] ?? ''}</svg></span>
+      <span class="item__head">
+        <strong class="item__name">${spec.name}</strong>
+        <span class="item__level">${maxed ? 'Tam' : `${owned}/${spec.levels.length}`}</span>
+      </span>
+      <span class="item__blurb">${spec.blurb}</span>
+      <span class="item__meta">
+        <span class="item__effect">${maxed ? spec.levels[spec.levels.length - 1].label : next.label}</span>
+        <span class="item__pips" aria-hidden="true">${spec.levels
+          .map((_, i) => `<i class="${i < owned ? 'on' : ''}"></i>`)
+          .join('')}</span>
+      </span>`;
+
+    const foot = document.createElement('div');
+    foot.className = 'item__foot';
+
+    if (maxed) {
+      foot.innerHTML = '<span class="item__done">Tamamlandı</span>';
+    } else {
       const btn = document.createElement('button');
-      btn.className = `btn item__buy${affordable ? ' btn--primary' : ''}`;
+      btn.className = `btn btn--buy${affordable ? ' btn--primary' : ''}`;
       btn.type = 'button';
-      btn.disabled = maxed || !affordable;
-      btn.innerHTML = maxed
-        ? 'Tamamlandı'
-        : `<span>Al</span><small class="btn__sub">${next.cost} balık</small>`;
+      btn.disabled = !affordable;
+      btn.innerHTML = `<span class="btn__price"><b>${next.cost}</b> balık</span>`;
+      btn.setAttribute(
+        'aria-label',
+        affordable
+          ? `${spec.name} al — ${next.cost} balık`
+          : `${spec.name} için ${short} balık daha lazım`,
+      );
       btn.addEventListener('click', () => {
         if (!Storage.buyUpgrade(this.save, spec)) return;
         this.audio.fish();
+        this._flashCoins();
         this.buildShop();
         this.refreshWallet();
       });
+      foot.append(btn);
+      if (!affordable) {
+        // Said on the card rather than discovered by pressing it. The number
+        // is the useful half — "nearly" and "nowhere near" are different
+        // feelings and the player should get to have the right one.
+        const gap = document.createElement('span');
+        gap.className = 'item__short';
+        gap.textContent = `${short} balık daha`;
+        foot.append(gap);
+      }
+    }
 
-      card.append(btn);
-      this.el.shopGrid.append(card);
+    card.append(foot);
+    return card;
+  }
+
+  /** A pulse on every wallet on screen, so spending is felt where the money is. */
+  _flashCoins() {
+    for (const el of document.querySelectorAll('.wallet')) {
+      el.classList.remove('wallet--hit');
+      void el.offsetWidth;
+      el.classList.add('wallet--hit');
     }
   }
 
@@ -677,14 +785,28 @@ export class UI {
    * server, which is the only way to have one with no backend at all.
    */
   buildBoard() {
-    this.el.boardName.value = this.save.name ?? '';
+    this.el.boardWho.textContent = this.save.name || 'Adsız Penguen';
     const keys = Storage.boardKeys(this.save);
     const list = this.el.boardList;
     list.innerHTML = '';
 
     if (!keys.length) {
-      list.innerHTML =
-        '<p class="board__empty">Henüz kayıtlı süre yok. Bir bölümü bitir — süren buraya düşsün.</p>';
+      // An empty state with a way out of it. A sentence alone leaves the
+      // player on a blank screen holding the one piece of information they
+      // already had — that there is nothing here.
+      list.innerHTML = `
+        <div class="empty">
+          <span class="empty__mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 19h16v2H4v-2Zm2-4h3v3H6v-3Zm4.5-6h3v9h-3V9ZM15 3h3v15h-3V3Z"/></svg>
+          </span>
+          <p class="empty__text">Henüz kayıtlı süre yok.<br />Bir bölümü bitir — süren buraya düşsün.</p>
+          <button class="btn btn--primary" id="boardGo" type="button">Bölüm seç</button>
+        </div>`;
+      list.querySelector('#boardGo')?.addEventListener('click', () => {
+        this.audio.ui();
+        this.buildLevelGrid();
+        this.showScreen('levels');
+      });
       this.el.boardMeta.textContent = '';
       return;
     }
@@ -708,7 +830,7 @@ export class UI {
             <li class="board__row${r.you ? ' is-you' : ''}">
               <span class="board__rank">${i + 1}</span>
               <span class="board__who">${escapeHtml(r.name)}</span>
-              <span class="board__time">${formatTime(r.time)}</span>
+              <span class="board__time">${formatRecord(r.time)}</span>
               ${
                 r.you
                   ? '<span class="board__tag">sen</span>'
@@ -734,12 +856,24 @@ export class UI {
     el.classList.toggle('is-bad', text && !ok);
   }
 
+  /**
+   * The level list.
+   *
+   * Eighty-eight cards is a lot of scrolling, and the three things that make
+   * it navigable are all here: a row of chapter chips that jumps straight to
+   * the mountain or the sea, headings that stay stuck to the top while you
+   * scroll through their chapter, and a marker on the one level you are
+   * actually about to play. Without the last one the list answers "what have
+   * I done" and never "where was I".
+   */
   buildLevelGrid() {
     const grid = this.el.levelGrid;
     grid.innerHTML = '';
     const unlocked = this.save.unlocked;
     const endlessShown = Math.max(0, unlocked - CRAFTED_LEVELS);
     const count = CRAFTED_LEVELS + Math.min(endlessShown, 12);
+
+    this._buildChapterJump(unlocked);
 
     for (let id = 1; id <= count; id++) {
       const rec = this.save.levels[id];
@@ -750,11 +884,25 @@ export class UI {
       // letting the mountain start silently between two numbered buttons.
       if (startsChapter(id)) {
         const chapter = chapterOf(id);
+        const done = Object.keys(this.save.levels).filter(
+          (k) => Number(k) >= chapter.from && Number(k) <= chapter.to,
+        ).length;
         const head = document.createElement('h3');
         head.className = 'levels__chapter';
+        head.id = `chapter-${chapter.id}`;
         head.innerHTML =
           `<span class="levels__chapterName">${chapter.name}</span>` +
-          `<span class="levels__chapterVerb">${chapter.verb}</span>`;
+          `<span class="levels__chapterVerb">${chapter.verb}</span>` +
+          `<span class="levels__chapterDone">${done}/${chapter.levels.length}</span>`;
+        grid.appendChild(head);
+      }
+      if (id === CRAFTED_LEVELS + 1) {
+        const head = document.createElement('h3');
+        head.className = 'levels__chapter';
+        head.id = 'chapter-endless';
+        head.innerHTML =
+          '<span class="levels__chapterName">Sonsuz</span>' +
+          '<span class="levels__chapterVerb">Bölüm numarasıyla üretilir — herkeste aynı</span>';
         grid.appendChild(head);
       }
 
@@ -762,6 +910,7 @@ export class UI {
       btn.className = 'level';
       if (id === unlocked) btn.classList.add('level--current');
       if (id > CRAFTED_LEVELS) btn.classList.add('level--endless');
+      if (rec?.stars === 3) btn.classList.add('level--perfect');
       btn.disabled = !open;
       btn.type = 'button';
 
@@ -775,25 +924,40 @@ export class UI {
 
       const stars = document.createElement('span');
       stars.className = 'level__stars';
-      for (let s = 0; s < 3; s++) {
+      for (let i = 0; i < 3; i++) {
         stars.insertAdjacentHTML(
           'beforeend',
-          `<svg viewBox="0 0 24 24" class="${(rec?.stars ?? 0) > s ? '' : 'off'}" aria-hidden="true"><path fill="currentColor" d="m12 2 2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.3 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8L12 2Z"/></svg>`,
+          `<svg viewBox="0 0 24 24" class="${(rec?.stars ?? 0) > i ? '' : 'off'}" aria-hidden="true"><path fill="currentColor" d="m12 2 2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.3 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8L12 2Z"/></svg>`,
         );
       }
 
-      btn.append(num, name, stars);
-
+      const foot = document.createElement('span');
+      foot.className = 'level__foot';
       if (rec?.bestTime && Number.isFinite(rec.bestTime)) {
         const t = document.createElement('span');
         t.className = 'level__time';
-        t.textContent = formatTime(rec.bestTime);
-        btn.append(t);
+        t.textContent = formatRecord(rec.bestTime);
+        foot.append(t);
       }
+      // The one card that answers "where was I". A ring alone is not enough on
+      // a list this long: it needs the word the player just read on the button
+      // they came from.
+      if (id === unlocked) {
+        const tag = document.createElement('em');
+        tag.className = 'level__next';
+        tag.textContent = 'Sıradaki';
+        foot.append(tag);
+      }
+
+      btn.append(num, name, stars, foot);
 
       btn.setAttribute(
         'aria-label',
-        open ? `${num.textContent}: ${name.textContent}, ${rec?.stars ?? 0} yıldız` : `${num.textContent} kilitli`,
+        open
+          ? `${num.textContent}: ${name.textContent}, ${rec?.stars ?? 0} yıldız${
+              id === unlocked ? ', sıradaki bölüm' : ''
+            }`
+          : `${num.textContent} kilitli`,
       );
 
       if (open) {
@@ -805,8 +969,55 @@ export class UI {
       grid.append(btn);
     }
 
-    const totalStars = Object.values(this.save.levels).reduce((s, l) => s + (l.stars ?? 0), 0);
+    const totalStars = Object.values(this.save.levels).reduce((s2, l) => s2 + (l.stars ?? 0), 0);
     this.el.levelsMeta.textContent = `${totalStars} / ${CRAFTED_LEVELS * 3} yıldız`;
+  }
+
+  /**
+   * Chapter chips: a table of contents for a list eighty-eight items long.
+   *
+   * Scrolling to the sea from the top takes about six flicks on a phone, and
+   * a player who wants to replay a dive does not want to travel through the
+   * whole mountain to find one. The chip for a chapter you have not reached is
+   * still there and still says how far away it is, because a locked door you
+   * can see is an invitation and a locked door you cannot is just a wall.
+   */
+  _buildChapterJump(unlocked) {
+    const bar = this.el.chapterJump;
+    if (!bar) return;
+    bar.innerHTML = '';
+    for (const chapter of CHAPTERS) {
+      const open = unlocked >= chapter.from;
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = `chip${open ? '' : ' chip--locked'}`;
+      chip.disabled = !open;
+      const done = Object.keys(this.save.levels).filter(
+        (k) => Number(k) >= chapter.from && Number(k) <= chapter.to,
+      ).length;
+      chip.innerHTML =
+        `<span class="chip__name">${chapter.name}</span>` +
+        `<span class="chip__meta">${open ? `${done}/${chapter.levels.length}` : `${chapter.from}. bölümde`}</span>`;
+      chip.addEventListener('click', () => {
+        this.audio.ui();
+        document
+          .getElementById(`chapter-${chapter.id}`)
+          ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      bar.append(chip);
+    }
+    if (unlocked > CRAFTED_LEVELS) {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'chip';
+      chip.innerHTML =
+        '<span class="chip__name">Sonsuz</span><span class="chip__meta">üretilen</span>';
+      chip.addEventListener('click', () => {
+        this.audio.ui();
+        document.getElementById('chapter-endless')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      bar.append(chip);
+    }
   }
 
   /* ---------------------------------------------------------- HUD */
@@ -956,12 +1167,12 @@ export class UI {
           ? 'Tek seferde!'
           : 'Bölüm tamam';
     this.el.winTitle.textContent = result.name;
-    this.el.winTime.textContent = formatTime(result.time);
+    this.el.winTime.textContent = formatRecord(result.time);
     this.el.winFish.textContent = `${result.fish}/${result.totalFish}`;
     this.el.winDeaths.textContent = String(result.deaths);
 
     const isRecord = !Number.isFinite(prevBest) || result.time < prevBest;
-    this.el.winBest.textContent = formatTime(isRecord ? result.time : prevBest);
+    this.el.winBest.textContent = formatRecord(isRecord ? result.time : prevBest);
 
     this.el.winStars.querySelectorAll('.star').forEach((s, i) => {
       s.classList.toggle('on', i < result.stars);
@@ -1205,6 +1416,29 @@ export class UI {
           ? `<p class="payout__missions">Görev tamam: ${result.missionsDone.join(' · ')}</p>`
           : ''
       }`;
+
+    // A door to the shop, at the one moment the player has just been paid and
+    // can see the number. It only appears when the money would actually buy
+    // something — an invitation to a shop you cannot afford is a tease, and
+    // this screen already has three buttons competing for the same thumb.
+    const coins = this.save.coins ?? 0;
+    const buyable = UPGRADES.filter((u) => {
+      const owned = this.save.upgrades[u.id] ?? 0;
+      return owned < u.levels.length && coins >= u.levels[owned].cost;
+    });
+    if (buyable.length) {
+      const go = document.createElement('button');
+      go.className = 'btn btn--ghost payout__shop';
+      go.type = 'button';
+      go.innerHTML =
+        `<span>Markete git</span><small class="btn__sub">${buyable.length} şey alabilirsin</small>`;
+      go.addEventListener('click', () => {
+        this.audio.ui();
+        this.buildShop();
+        this.showScreen('shop');
+      });
+      box.append(go);
+    }
   }
 
   /**
@@ -1301,6 +1535,15 @@ export class UI {
       if (!this.save.name) this.openIdentity();
       else openProfile();
     });
+    // Tapping your money goes where money goes. The shop was previously only
+    // reachable from one button in a row of six; the purse is on every screen
+    // that has one and is the gesture people try first.
+    const openShop = () => {
+      this.audio.ui();
+      this.buildShop();
+      this.showScreen('shop');
+    };
+    $('walletTitle').addEventListener('click', openShop);
     $('settingsProfile').addEventListener('click', openProfile);
     $('settingsLegal').addEventListener('click', openLegal);
     $('profLegal').addEventListener('click', openLegal);
@@ -1329,7 +1572,16 @@ export class UI {
       this.el.profHint.classList.remove('field__hint--bad');
     });
     $('profSave').addEventListener('click', () => {
-      if (this._commitName(this.el.profNameInput, this.el.profHint)) this.buildProfile();
+      if (!this._commitName(this.el.profNameInput, this.el.profHint)) return;
+      // Every stored run carries the name it was set under, so a rename has to
+      // reach back through them — otherwise the board shows two people.
+      this._renameRuns(this.save.name);
+      this.buildProfile();
+      if (this._returnTo === 'board') {
+        this._returnTo = null;
+        this.buildBoard();
+        this.showScreen('board');
+      }
     });
     this.el.profNameInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') $('profSave').click();
@@ -1468,11 +1720,14 @@ export class UI {
   }
 
   _bindBoard() {
-    // Renaming restamps every stored code, so the board and anything shared
-    // afterwards agree on who you are.
-    this.el.boardName.addEventListener('change', () => {
-      this._renameRuns(this.el.boardName.value);
-      this.buildBoard();
+    // The name is changed in one place — the identity screen — and the board
+    // sends you there. Renaming restamps every stored code on the way back, so
+    // the board and anything shared afterwards agree on who you are.
+    $('boardRename').addEventListener('click', () => {
+      this.audio.ui();
+      this._returnTo = 'board';
+      this.buildProfile();
+      this.showScreen('profile');
     });
 
     const add = () => {

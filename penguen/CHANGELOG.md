@@ -5,6 +5,32 @@ değiştiği yeterli. En yeni en üstte.
 
 ---
 
+## Arayüz elden geçti
+
+Her ekran telefon dik / telefon yatık / masaüstü olarak ekran görüntüsü alınıp
+gözden geçirildi. Bulunan dokuz hatanın hiçbiri okuyarak fark edilecek türden
+değildi ve hepsi ilk on saniyede görülüyordu: ana ekranda taşan yazı, bölüm
+listesinin ekran dışında kalan üçüncü sütunu, bir satırda üç farklı hizada
+duran kart düğmeleri, kırpılan rozetler, parmakla tutulamayan bağlantılar.
+
+**Market** yeniden kuruldu: üç başlık, slab yerine fiyat çipi, yetmediğinde
+kartın üstünde "820 balık daha", telefonda kart yerine satır (ekranda 1,5
+yerine 4 tane), ve üç nokta yerine `2/3`.
+
+**Markete üç kapı**: ana ekran düğmesi, cüzdana dokunmak (parana dokunmak
+paranın gittiği yere götürsün — insanların ilk denediği hareketti ve hiçbir şey
+yapmıyordu), ve bölüm sonunda balığı yeni kazandığın an — yalnızca gerçekten
+bir şey alabiliyorsan.
+
+**Bölüm listesi**: chapter çipleri, yapışık başlıklar, "Sıradaki" işareti, ve
+rekorlarda `00:21.40` yerine `21.40 sn`.
+
+Ad artık tek bir yerden değişiyor (Kimlik); sıralama oraya yönlendiriyor.
+Koleksiyon açılırken hak edilmiş ama teslim edilmemiş penguenler veriliyor.
+
+`tests/browser-layout.mjs` bunu koruyor: dokuz ekran, üç boyut, taşma /
+hizalama / dokunma alanı.
+
 ## Kimlik, yasal metinler ve müzik
 
 **Kimlik.** Oyun ilk açılışta tek bir şey soruyor: sana ne diyelim? Ad, unvan,

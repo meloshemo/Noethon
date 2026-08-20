@@ -618,9 +618,27 @@ export const REWARDS = {
  * what the penguin can *do* — deliberately far enough away that owning one is
  * something you saved for rather than something that happened on the way past.
  */
+/**
+ * How the shop is laid out.
+ *
+ * Eight upgrades in one flat grid is a wall: everything is equally loud, so
+ * nothing is, and a player scrolling past on a phone has no idea whether the
+ * next card is another boot or something that changes how they play. Three
+ * headings do more for that than any amount of card polish.
+ *
+ * The order is the order they matter in for somebody who has just arrived:
+ * move better, survive longer, then the two things that add a button.
+ */
+export const SHOP_GROUPS = [
+  { id: 'hareket', name: 'Hareket', note: 'Daha hızlı, daha uzağa, daha sağlam bas' },
+  { id: 'dayanma', name: 'Dayanma', note: 'Hata payı ve balık toplama' },
+  { id: 'ekipman', name: 'Ekipman', note: 'Havadayken bir şansın daha olsun' },
+];
+
 export const UPGRADES = [
   {
     id: 'boots',
+    group: 'hareket',
     name: 'Kar Botu',
     blurb: 'Daha yükseğe ve daha uzağa zıpla.',
     icon: 'boot',
@@ -632,6 +650,7 @@ export const UPGRADES = [
   },
   {
     id: 'speed',
+    group: 'hareket',
     name: 'Hızlı Ayak',
     blurb: 'Buz üstünde daha çevik koş.',
     icon: 'bolt',
@@ -643,6 +662,7 @@ export const UPGRADES = [
   },
   {
     id: 'crampons',
+    group: 'hareket',
     name: 'Krampon',
     blurb: 'Cilalı buzda kayma azalır.',
     icon: 'spike',
@@ -653,6 +673,7 @@ export const UPGRADES = [
   },
   {
     id: 'down',
+    group: 'dayanma',
     name: 'Kalın Tüy',
     blurb: 'Her denemede bir kez ölümden kurtarır.',
     icon: 'shield',
@@ -660,6 +681,7 @@ export const UPGRADES = [
   },
   {
     id: 'magnet',
+    group: 'dayanma',
     name: 'Balık Mıknatısı',
     blurb: 'Balıklar sana doğru gelir.',
     icon: 'magnet',
@@ -670,6 +692,7 @@ export const UPGRADES = [
   },
   {
     id: 'vest',
+    group: 'dayanma',
     name: 'Rüzgar Yeleği',
     blurb: 'Kutup rüzgarı seni daha az savurur.',
     icon: 'wind',
@@ -677,6 +700,7 @@ export const UPGRADES = [
   },
   {
     id: 'wings',
+    group: 'ekipman',
     name: 'Planör Kanat',
     blurb: 'Havada zıplamayı basılı tut — kanatlar açılır, düşüş yavaşlar.',
     icon: 'wings',
@@ -688,6 +712,7 @@ export const UPGRADES = [
   },
   {
     id: 'rocket',
+    group: 'ekipman',
     name: 'Sırt Motoru',
     blurb: 'Havadayken zıplamaya bas — motor bir kez ateşler.',
     icon: 'rocket',
@@ -698,6 +723,7 @@ export const UPGRADES = [
   },
   {
     id: 'radar',
+    group: 'dayanma',
     name: 'Kuş Radarı',
     blurb: 'Kuş dalışa geçmeden önce daha uzun uyarı verir.',
     icon: 'radar',
