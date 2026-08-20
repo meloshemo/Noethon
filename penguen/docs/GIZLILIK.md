@@ -44,8 +44,8 @@ Bunların hiçbiri cihazından çıkmıyor.
 
 ## Kişisel veri
 
-Adı **sen** yazıyorsun ve gerçek adın olmak zorunda değil. "Şaşırt beni" tuşu
-bir tane uyduruyor. Oyun IP adresi, konum, cihaz kimliği, kişi listesi,
+Adı **sen** yazıyorsun ve gerçek adın olmak zorunda değil: alan zaten uydurma
+bir adla dolu geliyor ve olduğu gibi bırakabilirsin. Oyun IP adresi, konum, cihaz kimliği, kişi listesi,
 fotoğraf ya da benzeri hiçbir şeye erişmiyor; tarayıcıdan böyle bir izin
 istemiyor.
 

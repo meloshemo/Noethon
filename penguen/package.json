@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Pengu — Antarktika'dan Kaçış. Bağımlılıksız, derleme adımı olmayan bir HTML5 platform oyunu.",
+  "description": "Pengu: Antarktika'dan Kaçış. Bağımlılıksız, derleme adımı olmayan bir HTML5 platform oyunu.",
   "license": "UNLICENSED",
   "engines": {
     "node": ">=20"

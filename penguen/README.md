@@ -8,7 +8,7 @@ istiyor.
 
 **Bağımlılık yok, derleme adımı yok, backend yok, görsel/ses dosyası yok.**
 Penguen de, buz da, kuzey ışıkları da, bütün sesler de kodla üretiliyor.
-Toplam yük tek dosyada ~385 KB ve çevrimdışı çalışıyor.
+Toplam yük tek dosyada 732 KB ve çevrimdışı çalışıyor.
 
 ▶ **[Oyunu aç](https://claude.ai/code/artifact/2f6dd29b-3ad8-4d60-b4f7-c8490114b96f)**
 
@@ -23,15 +23,16 @@ Toplam yük tek dosyada ~385 KB ve çevrimdışı çalışıyor.
 | **Tutunma** | Buz duvarına asıl, tırman, tekmele ve kollarında sınırlı güç var |
 | **Sonsuz mod** | Bölüm numarasıyla tohumlanmış, 77. bölüm herkeste aynı |
 | **Kimlik** | Ad, unvan ve penguen kimliği, hepsi cihazda, hesap yok |
-| **Uyarlanan müzik** | Tek tema, dört kostüm; katmanlar olan bitene göre geliyor |
+| **Uyarlanan müzik** | Tek tema, beş kostüm; beş katman olan bitene göre geliyor |
 | **10 buz türü** | sağlam · çatlak · cilalı · eriyen · sürüklenen · düşen · tuzak · **sahte** · kaçan · gayzer |
-| **5 tehlike** | sarkıt · fok · fırtına kuşağı · yükselen hava · orka |
+| **6 tehlike** | sarkıt · fok · fırtına kuşağı · yükselen hava sütunu · orka · serak |
 | **2 pusu** | Bölümün planlamadığı anda dalan kutup kuşu · bayrağa 100 px kala kopan buzul |
 | **3 çürük balık etkisi** | ağırlaşma · ters kontrol · körlük |
 | **24 penguen + 10 iz** | 5 nadirlik seviyesi, 240 kombin |
 | **4 elmas penguen** | Tek yetenek taşıyan tek tür: zıplama · hız · süzülme · mıknatıs |
 | **9 market eşyası** | 3'ü penguenin *ne yapabildiğini* değiştiriyor |
 | **21 günlük görev** | üç ağırlıkta, her gün birer tane |
+| **289 metin, 2 dil** | Türkçe asıl, İngilizce tam; üç denetim ikisini eşit tutuyor |
 | **Haftalık lig** | Bronz → Gümüş (500) → Altın (2.000) → Elmas (5.000) |
 | **Günün Pengu'su** | Herkese aynı bölüm, gün boyu biriken 4 hedef |
 | **Günün Teklifi** | 24 saatlik indirimli kozmetik, geri sayımlı |
@@ -69,7 +70,7 @@ duruyor. Gerisi tek bir fikir: *birinin arkasına geç.* Devirmek istediğin
 penguen ile atıcının arasına gir, sonra top gelmeden oradan çekil.
 → [ayrıntı](#kar-topu-hizalama)
 
-### 🎼 Tek tema, dört kostüm
+### 🎼 Tek tema, beş kostüm
 Ses dosyası yok: müzik de bölümler gibi kural olarak yazılıyor. Beş notalık bir
 tema penguene ait ve dört bölümün dördünde de var, ana ekranda majörde, dağda
 minörde, buzun altında yarı hızda, arenada staccato. Ped, bas, arpej, perküsyon
@@ -235,7 +236,8 @@ geçmez, hata verip durur.
 
 ## Testler
 
-Tek komut, on beş paket, kendi sunucusunu kurup kapatıyor:
+Tek komut, 21 paket (13 node + paketleme + 7 tarayıcı), kendi sunucusunu
+kurup kapatıyor ve portu doluysa bir yanına kayıyor:
 
 ```bash
 npm test               # lint + node testleri + paketleme + tarayıcı testleri
@@ -248,30 +250,49 @@ Ayrı ayrı:
 ```bash
 node tools/lint.mjs              # proje kuralları (aşağıda)
 node tests/save.mjs              # kayıt dosyası: her eski sürüm kayıpsız açılıyor
+node tests/music.mjs             # ızgara, katmanlar, sahne geçişi, tema
 node tests/validate-levels.mjs   # sahanlık bölümleri: geçilebilirlik
+node tests/wind-run.mjs          # rüzgâr boşlukları: gerçek Player ile çözücü
 node tests/validate-climb.mjs    # tırmanış bölümleri: geometri
 node tests/climb-run.mjs         # tırmanış bölümleri: gerçek fizikle çözücü
 node tests/validate-dive.mjs     # dalış bölümleri: geometri ve nefes bütçesi
 node tests/dive-run.mjs          # dalış bölümleri: gerçek World ile çözücü
 node tests/validate-brawl.mjs    # arenalar: her kapıcının temiz atış hattı var mı
 node tests/brawl-run.mjs         # arenalar: gerçek World ile çözücü
-node tests/ghost.mjs             # paylaşım kodu çözücüsü
 node tests/economy.mjs           # ekonomi dengesi simülasyonu
+node tests/ghost.mjs             # paylaşım kodu çözücüsü
 node tools/bundle.mjs            # tek dosyaya paketle (isim çakışmasını da yakalar)
+```
+
+Tarayıcı tarafı (önce bir kere `npm run setup:browser`):
+
+```bash
+node tests/browser-identity.mjs  # ilk açılış, ad temizleme, dışa aktarma, dış istek yok
+node tests/browser-layout.mjs    # üç boyutta taşma ve hizalama
+node tests/browser-climb.mjs     # tutunma, tırmanma, tekme, bar
+node tests/browser-dive.mjs      # dalma, yükselme, nefes, delik
+node tests/browser-brawl.mjs     # nişan, atış, çarpma, kilitli çıkış
+node tests/browser-lang.mjs      # dil değişince her ekran gerçekten çevriliyor mu
+node tests/browser-bundle.mjs    # tek dosya sürümü file:// üzerinden gerçekten açılıyor mu
 ```
 
 ### Proje kuralları (`tools/lint.mjs`)
 
 Biçim denetleyicisi değil, bu kod zaten tutarlı yazılıyor ve noktalı virgül
 tartışan bir araç burada hiçbir şey satın almıyor. Denetlenen şey, **gerçekten
-başa gelmiş** ve her seferinde sessizce bozulmuş dört kural:
+başa gelmiş** ve her seferinde sessizce bozulmuş sekiz kural:
 
 | Kural | Bozulunca ne oluyordu |
 |---|---|
 | Her modül `bundle.mjs` listesinde | Tek dosya sürümü bir chapter eksik çıkıyordu |
-| `CRAFTED_LEVELS` = chapter toplamı | Bölüm seçimi elle yazılan setin ucundan taşıyordu |
+| `CRAFTED_LEVELS` = chapter toplamı, numaralar 1..N kesintisiz | Bölüm seçimi elle yazılan setin ucundan taşıyordu |
+| Son unvan son bölümde kazanılıyor | 76 bölümlük oyunda 90. bölümde verilen unvan |
 | Kaynakta `console.log`/`debugger`/`TODO` yok | Sıcak döngüde unutulmuş debug |
+| Hiçbir dosyada dış adres yok | Yazı tipi Google'dan çekiliyordu, gizlilik metni yalan oluyordu |
 | Tek dosya ≤ 900 KB | Kötü bağlantıdaki telefonun beklemeyeceği boyut |
+| İki sözlükte birebir aynı anahtarlar | Bir dilde eksik metin, sessizce diğerine düşer |
+| Kodun istediği her anahtar sözlükte | Ekranda anahtar adı görünür |
+| Arayüz metninde uzun tire yok | Yazı yeniden makine gibi okunmaya başlar |
 
 ### Sürekli entegrasyon
 
@@ -285,27 +306,38 @@ mağaza ve ödeme kararları, ayrı bir dosyada:
 
 **Doğrulayıcı** oynamadan, analitik olarak, her bölümdeki her sıçramanın
 penguenin o bölümdeki gerçek erişim mesafesi içinde olduğunu doğrular. 31 elle
-yazılmış bölümü ve üretilen bölümlerden 80'lik bir örneklemi kapsar: **3.188
+yazılmış bölümü ve üretilen bölümlerden 80'lik bir örneklemi kapsar: **3.271
 buz**. Ayrıca kaya-buz çakışması, tavan yüksekliği, fok devriyesinin kalkış
-kenarını kapatması, orkanın buzun altında kalması, fırtınanın havada savurması,
-dikey çeşitlilik ve parkur uzunluğu gibi kuralları da kontrol eder, biri
-tutmazsa derleme düşer.
+kenarını kapatması, orkanın buzun altında kalması, fırtınanın dinginlik ve
+kuyruk pencerelerinin yeterince uzun olması, rüzgâr boşluklarının iki yönden
+de doğru boyutta olması, dikey çeşitlilik ve parkur uzunluğu gibi kuralları da
+kontrol eder, biri tutmazsa derleme düşer.
 
 **Hayalet testi** 30 saniyelik bir koşuyu örnek örnek gidip geliyor mu, on bir
 çeşit bozuk yapıştırma sessizce reddediliyor mu, isim değişikliği koşuyu koruyor
 mu diye bakar.
 
-Tarayıcı tarafı testler `playwright` ile yürütülüyor: bot 20 bölüm oynuyor,
-ekipman fiziği ölçülüyor, kuş uyarı→dalış→çekiliş döngüsü izleniyor, 24 portre
-ve 10 iz önizlemesinin gerçekten piksel bastığı doğrulanıyor.
+Tarayıcı tarafı yedi paket, hepsi `playwright` ile gerçek Chromium'da:
 
-Ayrıca **dayanıklılık** testi: sanal bir gamepad takılıyor (yön, zıplama, ölü
-bölge ve `getGamepads()` hata attığında karenin hayatta kalması), sekme arkaya
-alınıp kronometrenin kaymadığı ölçülüyor, odak kaybında tuşların bırakıldığı
-görülüyor, sayfa kapatılıp yeniden açılıyor ve pengueninin **aynı kontrol
-noktasında, aynı süreyle** başladığı piksel piksel doğrulanıyor. Elmas
-penguenlerin yetenekleri de burada fiziğe ulaştıkları yerden ölçülüyor
-Albatros'un kanatsızken 0 kazandırdığı dahil.
+| Paket | Ne ölçüyor |
+|---|---|
+| `browser-identity` | İlk açılışın bir kere çıkması, adın temizlenmesi, kimliğin değişmemesi, kaydın dosyaya inmesi, gömülü sayfada metne düşmesi ve **sayfanın kendi dosyaları dışında tek bir istek yapmaması** |
+| `browser-layout` | Telefon dik, telefon yatık ve masaüstünde her ekranda yatay taşma ve kart hizası |
+| `browser-climb` | Tutunma, asılı kalmanın azar azar, tırmanmanın iki katından fazla, tekmenin bir çırpıda tüketmesi, barın yalnızca yerde dolması, sahanlıkta tutunmanın olmaması |
+| `browser-dive` | Bırakınca yükselme, basınca inme, suda karadan hızlı olma, nefesin bitmesi ve delikte dolması |
+| `browser-brawl` | Nişan alıp atma, kar topunun ilk değdiği şeyde durması, oyuncuyu öldürmesi, ölünce arenanın sıfırlanması, kilitli çıkışın gerçekten kilitli olması |
+| `browser-lang` | Dil değişince sekiz ekranın her birinde diğer dilden harf kalmaması ve seçimin yeniden açılışta hatırlanması |
+| `browser-bundle` | `dist/pengu.html`'in **sunucusuz**, `file://` üzerinden açılması, bölüm bestelemesi ve kronometrenin dönmesi |
+
+Hepsi bittiğinde konsolun temiz olduğuna bakıyor: sessiz bir hata, hiç olmamış
+bir hata değil.
+
+Sonuncusu geç eklendi ve eksikliği ciddiydi: tek dosya sürümü aslında **başka
+bir program**. Paketleyici otuz iki modülü elle düzleştiriyor, import ve export
+sözdizimini yeniden yazıyor, ve bu tam da geçerli ama hiçbir şey yapmayan bir
+dosya üretebilecek türden bir dönüşüm. İnsanlara verilen kopya da o: e-postayla
+gidenler, `file://` ile açılanlar ve yayınlanan linkin arkasındaki dosya. Yeşil
+bir test takımıyla bozuk bir paket, buradaki en kötü sonuç.
 
 ---
 
@@ -314,6 +346,7 @@ Albatros'un kanatsızken 0 kazandırdığı dahil.
 ```
 index.html                 tek sayfa, tüm ekranlar gerçek HTML olarak
 manifest.webmanifest       telefona "uygulama" olarak eklenebilsin diye
+sw.js                      servis çalışanı: sayfa ağ öncelikli, gerisi önbellekten
 styles/
   tokens.css               renk, tipografi, boşluk, hareket, tek kaynak
   base.css                 reset + sayfa iskeleti
@@ -322,30 +355,63 @@ src/
   main.js                  bootstrap: parçaları birbirine bağlar
   core/
     util.js                matematik, easing, deterministik rastgelelik
+    i18n.js                iki dilin sözlüğü, dil seçimi, DOM'u boyama
     input.js               klavye + dokunmatik + gamepad → tek girdi durumu
     audio.js               Web Audio ile sentezlenen ses (dosya yok)
+    music.js               uyarlanan müzik: tek tema, beş sahne, beş katman
     storage.js             localStorage, sürümlü ve bozulmaya dayanıklı
     particles.js           havuzlanmış parçacık sistemi (çöp üretmez)
   game/
-    config.js              tüm oyun hissi sabitleri + zıplama erişimi (reachFor)
-    skins.js               penguen koleksiyonu: palet, aksesuar çizimi, açılma şartları
+    config.js              tüm oyun hissi sabitleri + erişim matematiği (reachFor, reachWithWind, crossableGap)
+    chapters.js            dört chapter, hangi bölüm hangisine ait
+    profile.js             ad temizleme, penguen kimliği, unvanlar
+    skins.js               24 penguen + 10 iz: palet, aksesuar çizimi, açılma şartları
+    store.js               Günün Teklifi ve gerçek para kataloğu (kapalı)
     league.js              haftalık lig: puanlama, kademeler, hafta anahtarı
     daily.js               Günün Pengu'su: güne göre seçilen hedefler
-    terrain.js             parkur bestecisi: raf, yamaç, uçurum, yarık, tünel
+    missions.js            21 günlük görev (tarihe göre tohumlanmış)
+    terrain.js             I. chapter bestecisi: raf, yamaç, uçurum, yarık, tünel, rüzgâr
+    tower.js               II. chapter bestecisi: duvar, baca, çıkıntı
+    deep.js                III. chapter bestecisi: koridor, delik, akıntı
+    arena.js               IV. chapter bestecisi: atış hatları ve siperler
+    levels.js              1–31 elle yazılmış bölüm planları
+    climb.js               32–46 tırmanış planları
+    dive.js                47–61 dalış planları
+    brawl.js               62–76 arena planları
+    generator.js           77+ ve günün bölümü için tohumlanmış üretici
     entities.js            buz kütleleri, tehlikeler, balıklar, kontrol noktaları
-    player.js              penguen fiziği ve çarpışma çözümü
+    player.js              penguen fiziği, sürüklenme kanalı ve çarpışma çözümü
     ghost.js               koşu kaydı, hayalet oynatma, paylaşım kodu
     world.js               simülasyon, kamera, kazanma/kaybetme
-    levels.js              31 elle yazılmış bölüm planı
-    generator.js           32+ ve günün bölümü için tohumlanmış üretici
     render.js              canvas çizimi (görsel varlık yok, hepsi prosedürel)
-    missions.js            günlük görevler (tarihe göre tohumlanmış)
     game.js                oyun döngüsü, ödüller, durum makinesi
   ui/
     ui.js                  DOM'a dokunan tek yer
 tests/
-  validate-levels.mjs      bölüm geçilebilirlik doğrulayıcısı
-  ghost.mjs                paylaşım kodu çözücüsü testleri
+  browser-kit.mjs          tarayıcı testlerinin ortak tesisatı
+  save.mjs                 kayıt dosyası göçü
+  music.mjs                ızgara, katmanlar, sahne geçişi
+  validate-levels.mjs      I. chapter geçilebilirlik doğrulayıcısı
+  wind-run.mjs             rüzgâr boşlukları ve sütunlar: gerçek Player ile çözücü
+  validate-climb.mjs       II. chapter geometrisi
+  climb-run.mjs            II. chapter çözücüsü
+  validate-dive.mjs        III. chapter geometrisi ve nefes bütçesi
+  dive-run.mjs             III. chapter çözücüsü
+  validate-brawl.mjs       IV. chapter atış hatları
+  brawl-run.mjs            IV. chapter çözücüsü
+  economy.mjs              ekonomi dengesi simülasyonu
+  ghost.mjs                paylaşım kodu çözücüsü
+  browser-*.mjs            kimlik, düzen, tırmanma, yüzme, kar topu, diller
+tools/
+  serve.mjs                bağımlılıksız statik sunucu
+  bundle.mjs               tek dosyaya düzleştirme
+  lint.mjs                 proje kuralları
+  test.mjs                 hepsini koşan tek komut
+  mirror.mjs               bağımsız depoya kopyalama
+docs/
+  GIZLILIK.md · PRIVACY.md          gizlilik, iki dilde
+  KULLANIM-SARTLARI.md · TERMS.md   kullanım şartları, iki dilde
+  BILGISAYARDA.md                   uzaktan yapılamayan işler
 ```
 
 ### Parkurlar piksel değil, cümle
@@ -391,7 +457,9 @@ boşluk o sayıya göre ölçülüyor.
 - **Sabit adımlı fizik (1/120 s).** 60 Hz, 120 Hz ve 144 Hz ekranlarda oyun aynı
   hissettiriyor; arka planda kalan sekme geri geldiğinde penguen ışınlanmıyor.
 - **Görsel/ses varlığı yok.** Penguen, buzlar, kuzey ışıkları, su ve bütün sesler
-  kodla üretiliyor. Toplam yük birkaç yüz KB, çevrimdışı çalışıyor.
+  kodla üretiliyor. Tek dosya sürümü 732 KB ve çevrimdışı çalışıyor.
+- **Metin koddan ayrı.** Arayüz metinleri tek sözlükte, içeriğe ait metinler
+  girdinin kendi `en` bloğunda. Bir dil eklemek bir tablo eklemek.
 
 ---
 
@@ -401,13 +469,20 @@ Oyunun en çok emek verilen kısmı bu. Kural:
 
 | Bölüm | Ne oluyor |
 |-------|-----------|
-| 1–3   | Sadece yürüme ve zıplama. Geniş buzlar, küçük aralıklar, sıfır tehlike. |
-| 4–8   | Bölüm başına **tek** yeni mekanik. Her yeni şey güvenli bir buzdan tanıtılır ve hemen ardından sağlam bir buz gelir. |
-| 9–13  | Mekanikler birleşmeye başlar, kontrol noktaları girer. |
-| 14–18 | Gerçek baskı: tuzaklar, zincirler, dar pencereler. |
+| 1–3   | Sadece yürüme ve zıplama. Geniş buzlar, sıfır tehlike, ama boşluklar ilk hâlinden geniş: en baştan bir şey isteniyor. |
+| 4–8   | Bölüm başına **tek** yeni buz türü. Her yeni şey güvenli bir buzdan tanıtılır ve hemen ardından sağlam bir buz gelir. |
+| 9–13  | Kıta geliyor: yamaç, yarık, tünel, sarkıt, fok. Mekanikler birleşmeye başlar, kontrol noktaları girer. |
+| 14–18 | Gerçek baskı: sahte zemin, fırtına, çürük yem, uçurum, kaçan buz. **15. bölüm** kuyruk rüzgârını öğretir: beş sahanlık boyunca aynı rüzgâr seni ittikten sonra, ancak rüzgârla geçilen bir boşluk gelir. |
 | 19–22 | Pusu mekanikleri: gayzer ve orka. Her biri yine kendi öğretici bölümünü alır. |
-| 23–30 | Hiçbir şeye güvenilmez. Kaçan buz, zincirleme gayzer, hepsi bir arada. |
-| 31+   | Üretilen sonsuz mod; zorluk 20 bölümde artıp sabitlenir. |
+| 23–31 | Hiçbir şeye güvenilmez. Tuzak tüneli, zincirleme gayzer, avcılar, hepsi bir arada. **25. bölüm** yükselen hava sütununu öğretir; 30 ve 31 ikisini de bildiğini varsayar. |
+| 32–46 | **Zirve.** Fiil değişiyor: tutunma, tırmanma, tekme ve tükenen kol gücü. |
+| 47–61 | **Buz Altı.** Fiil yine değişiyor: dalma, yükselme ve biten nefes. |
+| 62–76 | **Kar Topu.** Elinde hiçbir şey yok; hizalanıp çekilmek. |
+| 77+   | Üretilen sonsuz mod; zorluk 20 bölümde artıp sabitlenir. |
+
+Penguen büyüyor: 1. bölümde ölçek 1,00, 31'de 1,58, 76'da 1,62. Daha ağır
+zıplıyor ve daha geniş yer istiyor, o yüzden her boşluk **o bölümdeki** erişime
+göre ölçülüyor, sabit bir piksele göre değil.
 
 Ayrıca oyuncunun tarafında olan şeyler:
 
@@ -416,6 +491,8 @@ Ayrıca oyuncunun tarafında olan şeyler:
 - **Değişken yükseklik**: tuşu bırakınca alçak, basılı tutunca yüksek zıplar.
 - **Kolay mod**: aynı bölümde 4 kez ölünce kendiliğinden teklif edilir; buzlar
   daha geç kırılır, tuzaklar yavaşlar. İstendiği an ayarlardan açılıp kapanır.
+- **Rüzgârda durmak**: fırtına seni geri itiyorsa durmak gerçek bir cevap.
+  Duran penguen sürüklenmiyor ve dinginlik birkaç saniyede bir geliyor.
 - **Kontrol noktaları**: uzun bölümlerde ölünce en baştan başlamazsın.
 - **Ölünce bütün buzlar sıfırlanır**: kırık bir yol yüzünden bölüm kilitlenmez.
 
@@ -443,11 +520,16 @@ matematiksel olarak imkânsız üç sıçrama dahil.
 
 ## Buz türleri
 
+On tür var ve hepsi `src/game/terrain.js` içinden geçiyor; tek tek listesi
+`config.js` değil, buzun kendisi. Oyun içindeki **Nasıl oynanır → Buz türleri**
+kartı aynı listeyi çiziyor.
+
 | Tür | Görünüm | Davranış |
 |-----|---------|----------|
 | Sağlam | Düz beyaz | Hiç kırılmaz |
 | Çatlak | Mavi çatlak çizgileri | Basınca çatlar, kısa süre sonra kırılır, sonra geri gelir |
-| Sahte (tuzak) | Kızıl damar | Neredeyse anında kırılır, bas ve geç |
+| Tuzak | Kızıl damar | Neredeyse anında kırılır, bas ve geç |
+| Sahte | **Sağlam buzdan farksız** | Hiçbir işareti yok, basınca gider (aşağıda) |
 | Eriyen | Soluk, damlayan | Kendi döngüsünde erir ve geri donar |
 | Cilalı | Üstünde parlama çizgileri | Kaygan, fren mesafesi uzun |
 | Sürüklenen | Ok işaretleri | Bir yol boyunca gider gelir, üstündekini taşır |
@@ -484,6 +566,11 @@ durmadığını kontrol ediyor.
 - **Yükselen hava**: sütun hâlinde çizilen ve yukarı taşıyan bir akım.
   Kasten sabit: fırtına zamanladığın şey, bu kullandığın şey ve havadayken
   gücü değişen bir alet alet değildir.
+- **Serak** (yalnızca dağda): yukarıdan kopup gelen buz kütlesi. Sarkıttan farkı
+  senin nerede olduğuna bakmaması. Duvarda duramaz ve yana çekilemezsin, o
+  yüzden tek adil hâli öğrenilebilir bir saati olması: çatlak hep aynı uzunlukta
+  ve hep aynı aralıkla geliyor. Sen şafta girene kadar da saat başlamıyor,
+  yoksa ilk yaptığı şey daha kıpırdamamış birinin üstüne düşmek olurdu.
 
 Rüzgâr uzun süre dekor kaldı çünkü **fizik onu siliyordu**. İtki doğrudan
 `vx`'e ekleniyordu ve bir üst satırdaki yürüme kelepçesi her karede hızı yürüme
@@ -655,9 +742,9 @@ Mitik 2600 balık; indirim %25–40).
 
 ## Para modeli
 
-**Oyunun tamamı ücretsiz ve öyle kalıyor:** 31 bölüm, sonsuz mod, Günün
-Bölümü, görevler, hayalet yarışı, lig, koleksiyonun tamamı. Satılan tek şey
-kısayol.
+**Oyunun tamamı ücretsiz ve öyle kalıyor:** dört chapter ve 76 bölüm, sonsuz
+mod, Günün Bölümü, görevler, hayalet yarışı, lig, koleksiyonun tamamı. Satılan
+tek şey kısayol.
 
 Fiyat basamakları `src/game/store.js` içinde **veri olarak** duruyor:
 
@@ -1085,9 +1172,9 @@ getirildiği işi yapıyor: hatları yiyor, altından yürüyüp geçiyorsun.
 
 ## Arayüz
 
-Oyunun kendisi kadar üstünde durulan ikinci şey. Her ekran üç boyutta
-telefon dik, telefon yatık, masaüstü, ekran görüntüsü alınıp *bakılarak*
-gözden geçirildi ve bulunanların çoğu okuyarak fark edilmeyecek türdendi.
+Oyunun kendisi kadar üstünde durulan ikinci şey. Her ekran üç boyutta (telefon dik 390×844, telefon
+yatık 844×390, masaüstü 1280×800) ekran görüntüsü alınıp *bakılarak* gözden
+geçirildi ve bulunanların çoğu okuyarak fark edilmeyecek türdendi.
 
 ### Bulunan ve düzeltilenler
 
@@ -1105,12 +1192,13 @@ gözden geçirildi ve bulunanların çoğu okuyarak fark edilmeyecek türdendi.
 
 ### Market
 
-Sekiz kart, hepsi tam genişlikte parlak bir "Al" düğmesiyle: hepsi aynı sesle
+Dokuz kart, hepsi tam genişlikte parlak bir "Al" düğmesiyle: hepsi aynı sesle
 bağırınca hiçbiri konuşmuyor ve telefonda tek bir yükseltme bir buçuk ekran
 kaplıyordu. Şimdi:
 
-- **Üç başlık**: Hareket, Dayanma, Ekipman. Sekiz kartlık düz bir ızgara bir
-  duvar; üç başlık onu bir listeye çeviriyor.
+- **Üç başlık**: Hareket (bot, hızlı ayak, krampon), Dayanma (kalın tüy,
+  mıknatıs, rüzgâr yeleği, kuş radarı), Ekipman (planör kanat, sırt motoru).
+  Dokuz kartlık düz bir ızgara bir duvar; üç başlık onu bir listeye çeviriyor.
 - **Fiyat bir çip**, slab değil. Kart kahraman, fiyat sessiz bir teklif.
 - **Yetmiyorsa kartın üstünde yazıyor**: "820 balık daha". Basınca öğrenilen
   bir şey değil, "az kaldı" ile "çok uzak" farklı duygular ve oyuncunun
@@ -1131,9 +1219,11 @@ Bir dükkâna giden tek bir kapı yeterli değil. Üç tane var:
 
 ### Bölüm listesi
 
-Seksen sekiz kart. Gezilebilir olmasını sağlayan üç şey: en üstte **chapter
-çipleri** (dağa ya da denize tek dokunuşla), kaydırırken **tepede yapışık
-kalan başlıklar** (51. bölümdeyken hangi chapter'da olduğunu bilmek), ve
+En fazla 88 kart: 76 elle yazılmış bölüm, artı açtığın kadar sonsuz bölüm
+(en çok 12 tanesi gösteriliyor, sonsuz bir listenin sonu olmaz). Gezilebilir
+olmasını sağlayan üç şey: en üstte **chapter çipleri** (dağa ya da denize tek
+dokunuşla), kaydırırken **tepede yapışık kalan başlıklar** (51. bölümdeyken
+hangi chapter'da olduğunu bilmek), ve
 oynayacağın tek bölümün üstünde **"Sıradaki"**. Sonuncusu olmadan liste "ne
 yaptım"ı cevaplıyor, "nerede kalmıştım"ı hiç.
 
@@ -1143,11 +1233,13 @@ her satırda iki karakter gürültü. Rekorlar artık `21.40 sn`.
 
 ### Bunu koruyan test
 
-`tests/browser-layout.mjs` dokuz ekranı üç boyutta açıp bir tasarımcının gözle
-bakacağı şeyleri ölçüyor: viewport dışına taşan bir şey var mı (yatay kaydırma
-alanının içindekiler hariç, orada taşmak işin kendisi), bir satırdaki kart
-düğmeleri aynı hizada mı ve parmakla tutulamayacak kadar küçük düğme var mı.
-Yukarıdaki tablodaki dokuz hatanın hepsi bu testin yakaladığı türden.
+`tests/browser-layout.mjs` dokuz ekranı (ana ekran, bölümler, market,
+koleksiyon, sıralama, nasıl oynanır, ayarlar, kimlik, yasal) üç boyutta açıp
+bir tasarımcının gözle bakacağı şeyleri ölçüyor: viewport dışına taşan bir şey
+var mı (yatay kaydırma alanının içindekiler hariç, orada taşmak işin kendisi),
+bir satırdaki kart düğmeleri aynı hizada mı ve parmakla tutulamayacak kadar
+küçük düğme var mı. Yukarıdaki tablodaki dokuz hatanın hepsi bu testin
+yakaladığı türden.
 
 ---
 
@@ -1174,9 +1266,16 @@ yaratıyor ve oyuncunun bunu doğru anlaması gerekiyor:
 76 bölümlük bir oyunda 90. bölümde verilen bir unvan, kimsenin görmediği bir
 metindir.
 
-Ad alanı sanitize ediliyor: kontrol karakterleri, yön değiştiren görünmez
-işaretler ve açılı parantezler siliniyor. Ad hem DOM'a hem paylaşım koduna
-yazılıyor ve ikisi de "ne yazdıysa odur" güveninin yanlış olduğu yerler.
+Ad alanı **hazır dolu geliyor**: uydurulmuş bir ad zaten içinde, o yüzden
+"geç" ile "kabul et" aynı düğme ve oyuncu ile oyun arasında bir karar eksiliyor.
+İkinci bir "yeniden üret" düğmesi vardı, kaldırıldı: tek işi "bir bas ve oyna"
+olan bir ekran, seni oynatmayan ikinci bir düğme sunmamalı ve alan zaten
+düzenlenebilir. Öneri listesi de dile göre değişiyor, kelime kelime çeviri
+değil aynı yöntemle kurulmuş İngilizce parçalardan.
+
+Ad sanitize ediliyor: kontrol karakterleri, yön değiştiren görünmez işaretler ve
+açılı parantezler siliniyor. Ad hem DOM'a hem paylaşım koduna yazılıyor ve ikisi
+de "ne yazdıysa odur" güveninin yanlış olduğu yerler.
 
 ---
 
@@ -1187,13 +1286,17 @@ yazıldı. Yerini aldığı şey tek bir dört akorluk arpejdi: her bölümde ay
 `setInterval` üstünde çalıştığı için duvar saati ile ses saati arasında yavaşça
 kayıyordu.
 
-### Tek tema, dört kostüm
+### Tek tema, beş kostüm
 
 Beş nota, dörtlü yukarı, adım adım geri, eve. Penguene ait, bölüme değil.
-Ana ekranda majörde duyuyorsun; dağda minörde, çıplak bir beşlinin üstünde;
-buzun altında yarı hızda ve gecikmeye boğulmuş; kar topu arenasında staccato
-parçalanmış. Kimsenin bunu fark etmesi gerekmiyor. Dört bambaşka parçanın tek
-bir oyun gibi duymasının sebebi bu.
+Beş sahne var ve tema beşinde de aynı tema: ana ekranda majörde ve ağır;
+sahanlıkta aynı majör, 100 vuruşta ve shaker'lı; dağda minörde, çıplak bir
+beşlinin üstünde; buzun altında yarı hızda, lidyen ve gecikmeye boğulmuş; kar
+topu arenasında dorian ve staccato. Kimsenin bunu fark etmesi gerekmiyor. Beş
+bambaşka parçanın tek bir oyun gibi duymasının sebebi bu.
+
+Sayılar `src/core/music.js` içindeki `SCENES` tablosunda: her sahnenin kendi
+tempo, kök nota, dizi, dalga biçimi, filtre kesimi, perküsyonu ve swing'i var.
 
 ### Katman, parça değil
 
@@ -1272,20 +1375,24 @@ Dokunmatik ekranda alttaki üç tuş, ayrıca gamepad desteği var. Ekipmanları
 ikisi de aynı zıplama tuşuna bindi, çünkü dokunmatikte dördüncü bir düğme
 olmamalı ve "bas" ile "basılı tut" zaten iki farklı niyet.
 
-**Gamepad**: sol çubuk ve D-pad yürütüyor (%35 ölü bölge), A/B/X/Y zıplatıyor,
-Start duraklatıyor. Tarayıcı `getGamepads()` çağrısı hata atarsa kare düşmüyor
-o kare klavyeye düşülüyor, oyun devam ediyor.
+**Gamepad**: sol çubuk ve D-pad yürütüyor, A/B/X/Y zıplatıyor, Start
+duraklatıyor (`src/core/input.js`, `pollGamepad`). Tarayıcı `getGamepads()`
+çağrısı hata atarsa kare düşmüyor, o kare klavyeye düşülüyor.
+
+> Dürüst olmak gerekirse: gamepad yolu **otomatik test edilmiyor**. Klavye ve
+> dokunmatik testlerden geçiyor, gamepad yalnızca gerçek bir kolla denenebilir
+> ve o [`docs/BILGISAYARDA.md`](docs/BILGISAYARDA.md) listesinde duruyor.
 
 ---
 
 ## Arka plan ve kaldığın yer
 
-Üç ayrı şey, üçü de ayrı ayrı test ediliyor:
+Üç ayrı şey:
 
 **Sekme arkaya alınınca** oyun duraklıyor. Önemli olan sadece durması değil,
 *kronometrenin akmaması*: `visibilitychange` geldiğinde döngü duruyor ve
 geri dönünce biriktirici sıfırlanıyor, yani beş dakika başka sekmedeysen
-süren beş dakika artmıyor (test ölçtü: `0 sn` kayma).
+süren beş dakika artmıyor.
 
 **Pencere odağını kaybedince** basılı tuşlar bırakılıyor. Alt+Tab yaparken sağ
 ok basılıysa penguen sonsuza kadar sağa yürümüyor.
@@ -1303,8 +1410,54 @@ saat sonra kendini siliyor, bölümü bitirince de siliniyor.
 
 ---
 
+## Ne var, ne yok
+
+Bu bölüm depoda **gerçekten çalışan** şeyin listesi ve ikinci yarısı daha
+önemli: bir README'nin yalan söylemesinin normal yolu, olmayan bir şeyi
+anlatmak değil, olan bir şeyi olduğundan iyi anlatmaktır.
+
+### Var ve çalışıyor
+
+| | |
+|---|---|
+| Bölümler | 76 elle yazılmış (31 + 15 + 15 + 15) + sonsuz üretici + Günün Bölümü |
+| Fiiller | Koş-zıpla · tutun-tırman-tekmele · dal-yüksel-nefes al · hizalan-çekil |
+| Buz | 10 tür |
+| Tehlike | 6 tür (sarkıt, fok, orka, fırtına, yükselen hava, serak) |
+| Rüzgâr | Dört vuruşluk eğri, kendi sürüklenme kanalı, ibre, `windGap`, `updraft` |
+| Koleksiyon | 24 penguen, 10 iz, 5 nadirlik, 4'ünde yetenek var |
+| Market | 9 eşya, 19 kademe, 3 başlık, bitmeyen Buzul Anıtı |
+| Meta | 21 günlük görev, 4 günlük hedef, haftalık lig (4 kademe), Günün Teklifi |
+| Kimlik | Ad, `PNG-XXXXX` kimliği, 7 unvan, hepsi cihazda |
+| Hayalet | Kendi rekorun yanında koşuyor, paylaşım koduyla arkadaşınki de |
+| Müzik | Tek tema, 5 sahne, 5 katman, ses saatinde planlanıyor, ses dosyası yok |
+| Dil | Türkçe ve İngilizce, 289 metin, tarayıcıdan seçiliyor |
+| Kayıt | Tek sürümlü JSON, ileri göç, dosyaya aktarma, tek tuşla silme |
+| Çevrimdışı | Servis çalışanı + tek dosya sürümü (732 KB) |
+| Girdi | Klavye, dokunmatik, gamepad |
+| Test | 13 node + paketleme + 7 tarayıcı paketi, hepsi tek komutta |
+
+### Yok, ve neden
+
+| | |
+|---|---|
+| **Gerçek para ile satın alma** | Katalog `store.js` içinde veri olarak duruyor ama `canPurchase()` kapalı. Tarayıcı bir makbuzu güvenle doğrulayamaz; sunucu, Stripe hesabı ve bir kullanıcı kavramı gerekiyor. |
+| **Ödüllü reklam** | Mekanikler için hazır ama SDK'lar uygulama kimliği istiyor ve web'de ödüllü reklam desteği zayıf. |
+| **Gerçek zamanlı çok oyunculu** | Kar topu chapter'ı yerel yapay zekâ rakiplerle. Gerçek online için WebSocket sunucusu, eşleştirme ve gecikme telafisi gerekir; hayalet yarışı bunun asenkron karşılığı. |
+| **Gerçek sıralama tablosu** | Süreler cihazda duruyor, paylaşım koduyla dolaşıyor. Lig kademeleri bir hedef, bir sıralama değil. |
+| **Gamepad testi** | Kod var, otomatik testi yok. Gerçek bir kolla denenmeli. |
+| **Safari ve Firefox testi** | Otomatik testler yalnızca Chromium'da. |
+| **Gerçek cihazda oynama** | Hiçbir otomatik test bunun yerine geçmiyor ve hâlâ yapılmadı: [`docs/BILGISAYARDA.md`](docs/BILGISAYARDA.md) §4. |
+| **I. chapter için fizik çözücüsü** | Tırmanış, dalış ve arena gerçek `Player`/`World` ile çözülüyor; sahanlıkta yalnızca rüzgâr boşlukları çözülüyor, geri kalanı analitik doğrulayıcıya güveniyor. |
+
+---
+
 ## Tarayıcı desteği
 
 Modern Chrome, Safari, Firefox ve Edge (masaüstü + mobil). ES modülleri, Canvas
-2D, Web Audio ve `localStorage` kullanıyor. Ses yoksa, kayıt yapılamıyorsa veya
-yazı tipi yüklenemiyorsa oyun yine de oynanır, hepsi isteğe bağlı.
+2D, Web Audio ve `localStorage` kullanıyor. Ses yoksa ya da kayıt yapılamıyorsa
+oyun yine de oynanır; ikisi de isteğe bağlı. Yazı tipi zaten indirilmiyor,
+işletim sisteminin kendi yığını kullanılıyor.
+
+Otomatik testler yalnızca Chromium'da koşuyor. Safari ve Firefox elle
+denenmeli, bu da yapılacaklar listesinde duruyor.

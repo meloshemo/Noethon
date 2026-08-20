@@ -5,6 +5,37 @@ değiştiği yeterli. En yeni en üstte.
 
 ---
 
+## "Şaşırt beni" gitti, README gerçeğe döndü
+
+Kimlik ekranındaki ikinci düğme kaldırıldı. Tek işi "bir bas ve oyna" olan bir
+ekran, seni oynatmayan ikinci bir düğme sunmamalı; alan zaten uydurulmuş bir
+adla dolu geliyor ve düzenlenebilir. Yasal metinler de buna göre düzeltildi:
+artık "tuş bir tane uydurur" değil, "alan zaten dolu geliyor" diyor.
+
+README baştan sona gerçekle karşılaştırıldı ve **anlattığı ama var olmayan**
+şeyler ayıklandı: 20 bölüm oynayan bir bot, sanal gamepad testi, sekme kayması
+ölçümü ve portre önizleme testi. Hiçbiri yoktu. Yerine gerçekten koşan yedi
+tarayıcı paketinin ne ölçtüğü tek tek yazıldı.
+
+Düzelen sayılar: tek dosya 385 KB değil 732 KB, doğrulanan buz 3.188 değil
+3.271, sonsuz mod 31'den değil 77'den başlıyor, market sekiz değil dokuz eşya,
+müzik dört değil beş sahne, lint dört değil sekiz kural denetliyor. Dosya ağacı
+on bir modül eksikti. Zorluk tablosu yalnızca ilk chapter'ı anlatıyordu, artık
+dördünü de anlatıyor.
+
+Bir de **Ne var, ne yok** bölümü eklendi. İkinci yarısı daha önemli: gerçek
+para, ödüllü reklam, gerçek zamanlı çok oyunculu, gerçek sıralama tablosu,
+gamepad testi, Safari/Firefox testi ve gerçek cihazda oynama yok, hepsinin
+sebebi yazıyor. Bir README'nin yalan söylemesinin normal yolu olmayan bir şeyi
+anlatmak değil, olan bir şeyi olduğundan iyi anlatmaktır.
+
+Ve bir test eksikti: **tek dosya sürümünün gerçekten açıldığını hiçbir şey
+doğrulamıyordu.** İnsanlara verilen kopya o: e-postayla giden, `file://` ile
+açılan, yayınlanan linkin arkasındaki dosya. `tests/browser-bundle.mjs` onu
+sunucusuz açıp bölüm besteletiyor ve kronometrenin döndüğüne bakıyor.
+
+---
+
 ## İki dil ve makine gibi yazmayı bırakma
 
 Oyun artık İngilizce de konuşuyor. Türkçe bir oyunun üstüne geçirilmiş bir

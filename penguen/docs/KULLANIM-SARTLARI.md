@@ -30,7 +30,8 @@ kendi cihazında duruyor. Bu şu demek:
 - Oyunu kişisel ve ticari olmayan amaçla oynayabilirsin.
 - Ad alanına başkasını rahatsız edecek, yanıltıcı ya da başkasının kimliğine
   bürünen bir şey yazma. Ad yalnızca senin cihazında ve paylaştığın kodlarda
-  görünür; onu paylaşmanın sorumluluğu sende.
+  görünür; onu paylaşmanın sorumluluğu sende. Hiçbir şey yazmak istemiyorsan
+  alanın hazır geldiği uydurma adı olduğu gibi bırak.
 - Oyunu tersine çevirip incelemekte serbestsin. Kaynak kodu zaten açık.
 
 ## 5. Kaynak kod ve içerik

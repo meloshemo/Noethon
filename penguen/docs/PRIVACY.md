@@ -48,8 +48,8 @@ None of it leaves your device.
 
 ## Personal data
 
-**You** type the name and it does not have to be your real one. The "Surprise
-me" button will invent one. The game does not touch your IP address, location,
+**You** type the name and it does not have to be your real one: the field
+arrives with an invented one already in it, and leaving it alone is fine. The game does not touch your IP address, location,
 device id, contacts, photos or anything of that sort, and it asks the browser
 for no such permission.
 

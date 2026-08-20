@@ -42,9 +42,14 @@ console.log('\n2) Ad doğrulama');
   ok('sebebi yazıyor', (await p.textContent('#idHint')).includes('En az'), await p.textContent('#idHint'));
   ok('kaydedilmedi', (await save()).name === '');
 
-  await p.click('#idDice');
-  const dice = await p.inputValue('#idName');
-  ok('şaşırt beni bir ad üretiyor', dice.length >= 4, dice);
+  // No dice button any more: the field arrives filled in, so "skip" and
+  // "accept" are the same press. Reopening has to keep giving a usable name.
+  await p.evaluate(() => {
+    window.__pengu.save.name = '';
+    window.__pengu.ui.openIdentity();
+  });
+  const offered = await p.inputValue('#idName');
+  ok('alan hazır bir adla geliyor', offered.length >= 4, offered);
 }
 
 /* 3 ------------------------------------------------------------------ */

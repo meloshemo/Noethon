@@ -272,10 +272,15 @@ export class UI {
   /**
    * The first-run introduction.
    *
-   * Shown once, before anything else, and only when there is no name yet. It
-   * is skippable by pressing Başla with the field left alone — the suggestion
-   * is already in it, so "skip" and "accept" are the same button, which is one
+   * Shown once, before anything else, and only when there is no name yet. It is
+   * skippable by pressing Başla with the field left alone: the suggestion is
+   * already in it, so "skip" and "accept" are the same button, which is one
    * decision fewer between a player and the game.
+   *
+   * There used to be a second button that rerolled the suggestion. It went,
+   * because a screen whose whole job is "one press and you are playing" should
+   * not offer a second press that does not get you there, and the field is
+   * editable anyway.
    */
   openIdentity() {
     ensureProfile(this.save);
@@ -1566,12 +1571,6 @@ export class UI {
     $('profLegal').addEventListener('click', openLegal);
     $('idLegal').addEventListener('click', openLegal);
 
-    $('idDice').addEventListener('click', () => {
-      this.audio.ui();
-      this.el.idName.value = suggestName();
-      this.el.idHint.textContent = t('ui.nameHint');
-      this.el.idHint.classList.remove('field__hint--bad');
-    });
     $('idSave').addEventListener('click', () => {
       if (this._commitName(this.el.idName, this.el.idHint)) {
         this.showScreen('title');
@@ -1582,12 +1581,6 @@ export class UI {
       if (e.key === 'Enter') $('idSave').click();
     });
 
-    $('profDice').addEventListener('click', () => {
-      this.audio.ui();
-      this.el.profNameInput.value = suggestName();
-      this.el.profHint.textContent = t('ui.nameHint');
-      this.el.profHint.classList.remove('field__hint--bad');
-    });
     $('profSave').addEventListener('click', () => {
       if (!this._commitName(this.el.profNameInput, this.el.profHint)) return;
       // Every stored run carries the name it was set under, so a rename has to
