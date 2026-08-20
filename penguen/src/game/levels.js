@@ -39,54 +39,54 @@ export const GROUND_Y = SEA_LEVEL;
  * @type {Plan[]}
  */
 const PLANS = [
-  /* ---------------------------------------------------- 1–3 · verbs */
+  /* ---------------------------------------------------- 1-3 · verbs */
   {
     name: 'İlk Adımlar',
     subtitle: 'Buzul kıyısı',
     target: 30,
     signs: [{ dx: 90, dy: -96, text: 'Yürü: ← →  •  Zıpla: BOŞLUK' }],
     build: (c) => {
-      c.shelf({ n: 4, gap: 0.26, w: 250 });
-      c.landing({ w: 250 });
+      c.shelf({ n: 4, gap: 0.3, w: 230 });
+      c.landing({ w: 240 });
       c.scatterFish(3, 58);
     },
   },
   {
     name: 'Açık Sular',
     subtitle: 'Buzlar seyreliyor',
-    target: 34,
+    target: 36,
     build: (c) => {
-      c.shelf({ n: 3, gap: 0.4, w: 200, wave: 16 });
-      c.slope({ n: 2, rise: 0.3, gap: 0.34, w: 190 });
-      c.slope({ n: 2, rise: -0.3, gap: 0.32, w: 190 });
-      c.landing({ w: 230 });
+      c.shelf({ n: 3, gap: 0.46, w: 180, wave: 22 });
+      c.slope({ n: 2, rise: 0.34, gap: 0.4, w: 170 });
+      c.slope({ n: 3, rise: -0.34, gap: 0.4, w: 165 });
+      c.landing({ w: 210 });
       c.scatterFish(3, 60);
     },
   },
   {
     name: 'Basamaklar',
     subtitle: 'Yukarı, aşağı',
-    target: 40,
+    target: 42,
     build: (c) => {
-      c.shelf({ n: 2, gap: 0.3, w: 210 });
-      c.slope({ n: 3, rise: 0.4, gap: 0.36, w: 150 });
-      c.shelf({ n: 2, gap: 0.34, w: 170 });
-      c.slope({ n: 3, rise: -0.4, gap: 0.34, w: 160 });
-      c.landing({ w: 230 });
+      c.shelf({ n: 2, gap: 0.4, w: 190 });
+      c.slope({ n: 4, rise: 0.46, gap: 0.44, w: 135 });
+      c.shelf({ n: 3, gap: 0.46, w: 150, wave: 18 });
+      c.slope({ n: 4, rise: -0.44, gap: 0.44, w: 145 });
+      c.landing({ w: 210 });
       c.scatterFish(3, 60);
     },
   },
 
-  /* ------------------------------------------------ 4–8 · the ice */
+  /* ------------------------------------------------ 4-8 · the ice */
   {
     name: 'Çatlak',
     subtitle: 'Ayağının altında',
-    target: 42,
+    target: 46,
     build: (c) => {
-      c.shelf({ n: 2, gap: 0.32, w: 200 });
-      c.slope({ n: 2, rise: 0.34, gap: 0.36, w: 180 });
-      c.shelf({ n: 4, gap: 0.42, w: 165, types: ['crack', 'solid'] });
-      c.slope({ n: 3, rise: -0.3, gap: 0.36, w: 170, types: ['solid', 'crack'] });
+      c.shelf({ n: 2, gap: 0.4, w: 180 });
+      c.slope({ n: 3, rise: 0.42, gap: 0.44, w: 155 });
+      c.shelf({ n: 5, gap: 0.5, w: 140, types: ['crack', 'solid'] });
+      c.slope({ n: 3, rise: -0.4, gap: 0.44, w: 150, types: ['solid', 'crack'] });
       c.landing();
       c.scatterFish(3, 62);
     },
@@ -94,12 +94,12 @@ const PLANS = [
   {
     name: 'Cilalı Buz',
     subtitle: 'Fren yok',
-    target: 44,
+    target: 50,
     build: (c) => {
-      c.shelf({ n: 2, gap: 0.32, w: 195 });
-      c.slope({ n: 3, rise: 0.34, gap: 0.36, w: 175, type: 'slip' });
-      c.shelf({ n: 3, gap: 0.4, w: 200, types: ['slip', 'solid'] });
-      c.slope({ n: 3, rise: -0.3, gap: 0.34, w: 190, type: 'slip' });
+      c.shelf({ n: 2, gap: 0.4, w: 175 });
+      c.slope({ n: 4, rise: 0.42, gap: 0.46, w: 145, type: 'slip' });
+      c.shelf({ n: 4, gap: 0.5, w: 165, types: ['slip', 'solid'] });
+      c.slope({ n: 4, rise: -0.4, gap: 0.44, w: 155, type: 'slip' });
       c.landing();
       c.scatterFish(3, 62);
     },
@@ -107,15 +107,15 @@ const PLANS = [
   {
     name: 'Eriyen Zemin',
     subtitle: 'Bekle, sonra geç',
-    target: 48,
+    target: 54,
     build: (c) => {
-      c.shelf({ n: 2, gap: 0.32, w: 200 });
-      c.slope({ n: 2, rise: 0.4, gap: 0.36, w: 175 });
-      for (let i = 0; i < 3; i++) {
-        c.put(c.gapOf(0.44), 165, c.y, 'melt', { meltPhase: i * 0.33, meltPeriod: 3.4 });
-        c.put(c.gapOf(0.36), 175, c.y - (i === 1 ? c.riseOf(0.36) : 0));
+      c.shelf({ n: 2, gap: 0.42, w: 180 });
+      c.slope({ n: 2, rise: 0.5, gap: 0.46, w: 160 });
+      for (let i = 0; i < 4; i++) {
+        c.put(c.gapOf(0.56), 145, c.y, 'melt', { meltPhase: i * 0.27, meltPeriod: 2.9 });
+        c.put(c.gapOf(0.46), 160, c.y - (i % 2 ? c.riseOf(0.4) : 0));
       }
-      c.slope({ n: 2, rise: -0.34, gap: 0.34, w: 180 });
+      c.slope({ n: 3, rise: -0.44, gap: 0.44, w: 165 });
       c.landing();
       c.scatterFish(3, 62);
     },
@@ -123,14 +123,14 @@ const PLANS = [
   {
     name: 'Akıntı',
     subtitle: 'Buz da yolculuk eder',
-    target: 50,
+    target: 56,
     build: (c) => {
-      c.shelf({ n: 2, gap: 0.3, w: 200 });
-      for (let i = 0; i < 3; i++) {
-        c.put(c.gapOf(0.36), 155, c.y, 'move', { ax: 74, period: 3.6, phase: i * 1.1 });
-        c.put(c.gapOf(0.34), 175, c.y - c.riseOf(0.3));
+      c.shelf({ n: 2, gap: 0.4, w: 180 });
+      for (let i = 0; i < 4; i++) {
+        c.put(c.gapOf(0.46), 135, c.y, 'move', { ax: 92, period: 3.1, phase: i * 0.9 });
+        c.put(c.gapOf(0.44), 155, c.y - c.riseOf(0.38));
       }
-      c.slope({ n: 3, rise: -0.32, gap: 0.34, w: 180 });
+      c.slope({ n: 3, rise: -0.42, gap: 0.44, w: 165 });
       c.landing();
       c.scatterFish(3, 62);
     },
@@ -138,72 +138,74 @@ const PLANS = [
   {
     name: 'Düşen Buz',
     subtitle: 'Bastığın an kaçar',
-    target: 50,
+    target: 58,
     build: (c) => {
-      c.shelf({ n: 2, gap: 0.3, w: 200 });
-      c.shelf({ n: 3, gap: 0.42, w: 150, types: ['fall', 'solid'] });
-      c.slope({ n: 3, rise: 0.4, gap: 0.38, w: 155 });
-      c.shelf({ n: 3, gap: 0.42, w: 150, types: ['fall', 'solid'] });
-      c.slope({ n: 2, rise: -0.34, gap: 0.34, w: 170 });
+      c.shelf({ n: 2, gap: 0.4, w: 175 });
+      c.shelf({ n: 4, gap: 0.54, w: 128, types: ['fall', 'solid'] });
+      c.slope({ n: 4, rise: 0.46, gap: 0.48, w: 135 });
+      c.shelf({ n: 4, gap: 0.54, w: 128, types: ['fall', 'solid'] });
+      c.slope({ n: 3, rise: -0.42, gap: 0.44, w: 155 });
       c.landing();
       c.scatterFish(3, 62);
+      c.temptation(0.6, 'heavy');
     },
   },
 
-  /* ------------------------------------------ 9–13 · the continent */
+  /* ------------------------------------------ 9-13 · the continent */
   {
     name: 'Yamaç',
     subtitle: 'Kıta yükseliyor',
-    target: 55,
+    target: 62,
     build: (c) => {
-      c.shelf({ n: 2, gap: 0.3, w: 190 });
-      c.slope({ n: 5, rise: 0.5, gap: 0.4, w: 130 });
-      c.shelf({ n: 2, gap: 0.36, w: 170, types: ['crack', 'solid'] });
-      c.cliff({ drop: 300, ledges: 4 });
+      c.shelf({ n: 2, gap: 0.42, w: 175 });
+      c.slope({ n: 6, rise: 0.58, gap: 0.48, w: 120 });
+      c.shelf({ n: 3, gap: 0.5, w: 150, types: ['crack', 'solid'] });
+      c.cliff({ drop: 340, ledges: 4 });
       c.landing();
       c.scatterFish(3, 62);
-      c.checkpoint(c.at(0.5));
+      c.checkpoint(c.at(0.55));
     },
   },
   {
     name: 'Yarık',
     subtitle: 'Altında dip yok',
-    target: 58,
+    target: 64,
     build: (c) => {
-      c.shelf({ n: 2, gap: 0.32, w: 195 });
-      c.slope({ n: 3, rise: 0.42, gap: 0.36, w: 165 });
-      c.crevasse({ pillars: 2, gap: 0.6, depth: 240 });
-      c.shelf({ n: 2, gap: 0.36, w: 170 });
-      c.crevasse({ pillars: 3, gap: 0.62, depth: 280 });
-      c.slope({ n: 2, rise: -0.36, gap: 0.34, w: 175 });
+      c.shelf({ n: 2, gap: 0.42, w: 175 });
+      c.slope({ n: 3, rise: 0.5, gap: 0.46, w: 150 });
+      c.crevasse({ pillars: 3, gap: 0.68, depth: 260 });
+      c.shelf({ n: 2, gap: 0.48, w: 155, types: ['crack', 'solid'] });
+      c.crevasse({ pillars: 4, gap: 0.7, depth: 300 });
+      c.slope({ n: 3, rise: -0.44, gap: 0.44, w: 160 });
       c.landing();
       c.scatterFish(3, 64);
-      c.checkpoint(c.at(0.45));
+      c.checkpoint(c.at(0.5));
     },
   },
   {
     name: 'Buz Tüneli',
     subtitle: 'Tavan alçak',
-    target: 60,
+    target: 66,
     build: (c) => {
-      c.shelf({ n: 2, gap: 0.3, w: 190 });
-      c.slope({ n: 2, rise: -0.3, gap: 0.34, w: 175 });
-      c.tunnel({ n: 5, headroom: 116, gap: 0.46, w: 150 });
-      c.slope({ n: 2, rise: 0.36, gap: 0.36, w: 165 });
+      c.shelf({ n: 2, gap: 0.4, w: 175 });
+      c.slope({ n: 2, rise: -0.4, gap: 0.44, w: 160 });
+      c.tunnel({ n: 7, headroom: 110, gap: 0.52, w: 135 });
+      c.slope({ n: 3, rise: 0.44, gap: 0.44, w: 150 });
       c.landing();
       c.scatterFish(3, 62);
+      c.temptation(0.5, 'dizzy');
       c.checkpoint(c.at(0.35));
     },
   },
   {
     name: 'Sarkıtlar',
     subtitle: 'Yukarıdan düşen',
-    target: 62,
+    target: 68,
     build: (c) => {
-      c.shelf({ n: 2, gap: 0.3, w: 190 });
-      c.slope({ n: 2, rise: 0.4, gap: 0.36, w: 170 });
-      c.tunnel({ n: 6, headroom: 122, gap: 0.46, w: 150, icicles: 3 });
-      c.slope({ n: 3, rise: -0.36, gap: 0.34, w: 175, type: 'crack' });
+      c.shelf({ n: 2, gap: 0.4, w: 175 });
+      c.slope({ n: 2, rise: 0.46, gap: 0.44, w: 155 });
+      c.tunnel({ n: 8, headroom: 116, gap: 0.52, w: 135, icicles: 5 });
+      c.slope({ n: 4, rise: -0.42, gap: 0.44, w: 155, type: 'crack' });
       c.landing();
       c.scatterFish(3, 62);
       c.checkpoint(c.at(0.3));
@@ -212,353 +214,365 @@ const PLANS = [
   {
     name: 'Foklar',
     subtitle: 'Yolun üstünde',
-    target: 62,
+    target: 68,
     build: (c) => {
-      c.shelf({ n: 3, gap: 0.34, w: 205 });
-      c.seal(c.at(0.35), { speed: 66 });
-      c.slope({ n: 3, rise: 0.42, gap: 0.38, w: 160 });
-      c.seal(undefined, { speed: 76 });
-      c.shelf({ n: 2, gap: 0.38, w: 180 });
-      c.cliff({ drop: 260, ledges: 3 });
+      c.shelf({ n: 3, gap: 0.44, w: 180 });
+      c.seal(c.at(0.35), { speed: 82 });
+      c.slope({ n: 4, rise: 0.5, gap: 0.48, w: 140 });
+      c.seal(undefined, { speed: 92 });
+      c.shelf({ n: 3, gap: 0.5, w: 155 });
+      c.seal(undefined, { speed: 86 });
+      c.cliff({ drop: 300, ledges: 3 });
       c.landing();
       c.scatterFish(3, 62);
-      c.checkpoint(c.at(0.5));
+      c.checkpoint(c.at(0.55));
     },
   },
 
-  /* ------------------------------------------- 14–18 · the pressure */
+  /* ------------------------------------------- 14-18 · the pressure */
   {
     name: 'Sahte Zemin',
     subtitle: 'Göründüğü gibi değil',
-    target: 62,
+    target: 68,
     build: (c) => {
-      c.shelf({ n: 2, gap: 0.3, w: 185 });
-      c.slope({ n: 3, rise: 0.42, gap: 0.36, w: 165 });
-      c.put(c.gapOf(0.42), 72, c.y, 'trap');
-      c.put(c.gapOf(0.34), 175, c.y);
-      c.slope({ n: 3, rise: 0.34, gap: 0.4, w: 155, types: ['solid', 'fake'] });
-      c.put(c.gapOf(0.42), 72, c.y, 'trap');
-      c.put(c.gapOf(0.34), 180, c.y);
-      c.cliff({ drop: 340, ledges: 4 });
+      c.shelf({ n: 2, gap: 0.4, w: 170 });
+      c.slope({ n: 3, rise: 0.5, gap: 0.46, w: 150 });
+      c.put(c.gapOf(0.5), 68, c.y, 'trap');
+      c.put(c.gapOf(0.42), 160, c.y);
+      c.slope({ n: 4, rise: 0.4, gap: 0.5, w: 138, types: ['solid', 'fake'] });
+      c.put(c.gapOf(0.5), 68, c.y, 'trap');
+      c.put(c.gapOf(0.42), 165, c.y);
+      c.cliff({ drop: 380, ledges: 4 });
       c.landing();
       c.scatterFish(3, 62);
       c.temptation(0.55, 'heavy');
-      c.checkpoint(c.at(0.5));
+      c.checkpoint(c.at(0.55));
     },
   },
   {
     name: 'Fırtına Kıyısı',
     subtitle: 'Rüzgâr geri itiyor',
-    target: 66,
+    target: 72,
     build: (c) => {
-      c.shelf({ n: 3, gap: 0.32, w: 195 });
+      c.shelf({ n: 3, gap: 0.42, w: 175 });
       const from = c.x;
-      c.shelf({ n: 4, gap: 0.36, w: 180 });
-      c.storm(from, { period: 3.8 });
-      c.slope({ n: 3, rise: 0.4, gap: 0.36, w: 160 });
+      c.shelf({ n: 5, gap: 0.46, w: 160 });
+      c.storm(from, { period: 4.6 });
+      // The first gap the wind has to carry you over. It comes after five
+      // ledges of being pushed around by the same wind, so by the time the
+      // gap arrives the beat is already familiar.
+      c.windGap({ w: 200 });
+      c.slope({ n: 3, rise: 0.46, gap: 0.44, w: 150 });
       c.landing();
       c.scatterFish(3, 62);
       c.sprint(0.55);
-      c.checkpoint(c.at(0.45));
+      c.checkpoint(c.at(0.4));
     },
   },
   {
     name: 'Çürük Yem',
     subtitle: 'Her balık iyi balık değil',
-    target: 64,
+    target: 70,
     build: (c) => {
-      c.shelf({ n: 2, gap: 0.34, w: 190 });
-      c.slope({ n: 3, rise: 0.44, gap: 0.36, w: 160 });
-      c.tunnel({ n: 4, headroom: 118, gap: 0.44, w: 155 });
-      c.cliff({ drop: 260, ledges: 3 });
-      c.shelf({ n: 2, gap: 0.4, w: 170, types: ['crack', 'solid'] });
+      c.shelf({ n: 2, gap: 0.44, w: 170 });
+      c.slope({ n: 4, rise: 0.52, gap: 0.46, w: 145 });
+      c.tunnel({ n: 5, headroom: 112, gap: 0.5, w: 140 });
+      c.cliff({ drop: 300, ledges: 3 });
+      c.shelf({ n: 3, gap: 0.5, w: 150, types: ['crack', 'solid'] });
       c.landing();
       c.scatterFish(3, 62);
-      c.temptation(0.4, 'dizzy');
-      c.temptation(0.72, 'heavy');
-      c.checkpoint(c.at(0.45));
+      c.temptation(0.34, 'dizzy');
+      c.temptation(0.58, 'heavy');
+      c.temptation(0.78, 'dizzy');
+      c.checkpoint(c.at(0.5));
     },
   },
   {
     name: 'Uçurum Yolu',
     subtitle: 'Aşağısı çok aşağı',
-    target: 68,
+    target: 74,
     build: (c) => {
-      c.shelf({ n: 2, gap: 0.3, w: 185 });
-      c.summit({ height: 230, steps: 3, w: 200 });
-      c.shelf({ n: 2, gap: 0.4, w: 150, types: ['crack', 'solid'] });
-      c.cliff({ drop: 340, ledges: 4, gap: 0.32 });
-      c.crevasse({ pillars: 2, gap: 0.6, depth: 220 });
+      c.shelf({ n: 2, gap: 0.4, w: 170 });
+      c.summit({ height: 260, steps: 3, w: 180 });
+      c.shelf({ n: 3, gap: 0.5, w: 140, types: ['crack', 'solid'] });
+      c.cliff({ drop: 380, ledges: 4, gap: 0.38 });
+      c.crevasse({ pillars: 3, gap: 0.68, depth: 250 });
       c.landing();
       c.scatterFish(3, 62);
       c.sprint(0.3);
-      c.checkpoint(c.at(0.55));
+      c.checkpoint(c.at(0.6));
     },
   },
   {
     name: 'Kaçan Buz',
     subtitle: 'Tam inerken',
-    target: 66,
+    target: 72,
     build: (c) => {
-      c.shelf({ n: 3, gap: 0.34, w: 185 });
-      for (let i = 0; i < 3; i++) {
+      c.shelf({ n: 3, gap: 0.44, w: 170 });
+      for (let i = 0; i < 4; i++) {
         // The snap floe hangs low and inviting beside the real route, which is
         // the only reason anybody ever lands on one.
-        const bait = { x: c.x + c.gapOf(0.3), y: c.y + 46, w: 96, type: 'snap' };
+        const bait = { x: c.x + c.gapOf(0.32), y: c.y + 48, w: 92, type: 'snap' };
         c.floes.push(bait);
-        c.put(c.gapOf(0.46), 175, c.y);
+        c.put(c.gapOf(0.56), 160, c.y);
       }
-      c.slope({ n: 3, rise: 0.4, gap: 0.36, w: 165 });
-      c.tunnel({ n: 3, headroom: 120, gap: 0.44, w: 155 });
-      c.cliff({ drop: 280, ledges: 3 });
+      c.slope({ n: 4, rise: 0.48, gap: 0.44, w: 150 });
+      c.tunnel({ n: 4, headroom: 114, gap: 0.5, w: 140 });
+      c.cliff({ drop: 320, ledges: 3 });
+      c.landing();
+      c.scatterFish(3, 62);
+      c.checkpoint(c.at(0.55));
+    },
+  },
+
+  /* ------------------------------------------ 19-22 · the ambushes */
+  {
+    name: 'Gayzer',
+    subtitle: 'Buz tıslamaya başlarsa',
+    target: 76,
+    build: (c) => {
+      c.shelf({ n: 3, gap: 0.42, w: 170 });
+      for (let i = 0; i < 4; i++) {
+        c.put(c.gapOf(0.46), 190, c.y, 'burst');
+        c.put(c.gapOf(0.44), 165, c.y - c.riseOf(0.44));
+      }
+      c.cliff({ drop: 360, ledges: 4 });
       c.landing();
       c.scatterFish(3, 62);
       c.checkpoint(c.at(0.5));
     },
   },
-
-  /* ------------------------------------------ 19–22 · the ambushes */
-  {
-    name: 'Gayzer',
-    subtitle: 'Buz tıslamaya başlarsa',
-    target: 70,
-    build: (c) => {
-      c.shelf({ n: 3, gap: 0.32, w: 190 });
-      for (let i = 0; i < 3; i++) {
-        c.put(c.gapOf(0.38), 200, c.y, 'burst');
-        c.put(c.gapOf(0.36), 185, c.y - c.riseOf(0.38));
-      }
-      c.cliff({ drop: 320, ledges: 4 });
-      c.landing();
-      c.scatterFish(3, 62);
-      c.checkpoint(c.at(0.45));
-    },
-  },
   {
     name: 'Katil Balina',
     subtitle: 'Boşluklara dikkat',
-    target: 72,
+    target: 78,
     build: (c) => {
-      c.shelf({ n: 3, gap: 0.34, w: 185 });
-      for (let i = 0; i < 3; i++) {
+      c.shelf({ n: 3, gap: 0.44, w: 170 });
+      for (let i = 0; i < 4; i++) {
         const before = c.x;
-        c.put(c.gapOf(0.56), 170, c.y);
+        c.put(c.gapOf(0.66), 155, c.y);
         c.hazard({
           kind: 'orca',
           x: before + 24,
           y: WATER - 30,
           w: 76,
           h: 60,
-          period: 3.2 + i * 0.3,
-          height: 250,
+          period: 2.9 + i * 0.25,
+          height: 260,
         });
-        if (i < 2) c.slope({ n: 2, rise: 0.42, gap: 0.36, w: 165 });
+        if (i < 3) c.slope({ n: 2, rise: 0.48, gap: 0.44, w: 150 });
       }
-      c.cliff({ drop: 340, ledges: 4 });
+      c.cliff({ drop: 380, ledges: 4 });
       c.landing();
       c.scatterFish(3, 62);
-      c.checkpoint(c.at(0.5));
+      c.checkpoint(c.at(0.55));
     },
   },
   {
     name: 'Zirve',
     subtitle: 'Kıtanın tepesi',
-    target: 78,
+    target: 84,
     build: (c) => {
-      c.shelf({ n: 2, gap: 0.3, w: 185 });
-      c.summit({ height: 250, steps: 4, w: 190 });
-      c.shelf({ n: 2, gap: 0.38, w: 160, types: ['crack', 'solid'] });
-      c.summit({ height: 180, steps: 3, w: 180 });
-      c.cliff({ drop: 420, ledges: 5, gap: 0.3 });
+      c.shelf({ n: 2, gap: 0.4, w: 170 });
+      c.summit({ height: 280, steps: 4, w: 175 });
+      c.shelf({ n: 3, gap: 0.5, w: 145, types: ['crack', 'solid'] });
+      c.summit({ height: 210, steps: 3, w: 165 });
+      c.cliff({ drop: 460, ledges: 5, gap: 0.36 });
       c.landing();
       c.scatterFish(3, 64);
       c.sprint(0.65);
-      c.checkpoint(c.at(0.55));
+      c.checkpoint(c.at(0.6));
     },
   },
   {
     name: 'Derin Tünel',
     subtitle: 'Işık yok',
-    target: 76,
+    target: 82,
     build: (c) => {
-      c.shelf({ n: 2, gap: 0.3, w: 180 });
-      c.slope({ n: 2, rise: -0.34, gap: 0.34, w: 170 });
-      c.tunnel({ n: 8, headroom: 112, gap: 0.44, w: 145, icicles: 4, types: ['solid', 'crack'] });
-      c.slope({ n: 3, rise: 0.4, gap: 0.36, w: 160 });
+      c.shelf({ n: 2, gap: 0.4, w: 170 });
+      c.slope({ n: 2, rise: -0.42, gap: 0.44, w: 155 });
+      c.tunnel({ n: 10, headroom: 106, gap: 0.5, w: 130, icicles: 6, types: ['solid', 'crack'] });
+      c.slope({ n: 4, rise: 0.46, gap: 0.44, w: 150 });
       c.landing();
       c.scatterFish(3, 60);
-      c.temptation(0.5, 'blind');
-      c.checkpoint(c.at(0.35));
+      c.temptation(0.42, 'blind');
+      c.temptation(0.66, 'dizzy');
+      c.checkpoint(c.at(0.4));
     },
   },
 
-  /* -------------------------------------------- 23–30 · the hurting */
+  /* -------------------------------------------- 23-30 · the hurting */
   {
     name: 'Tuzak Tüneli',
     subtitle: 'Alçak ve kötü niyetli',
-    target: 78,
+    target: 84,
     build: (c) => {
-      c.shelf({ n: 2, gap: 0.32, w: 180 });
-      c.slope({ n: 3, rise: 0.44, gap: 0.36, w: 155 });
-      c.tunnel({ n: 6, headroom: 114, gap: 0.42, w: 150, icicles: 3, types: ['solid', 'fake', 'solid'] });
-      c.put(c.gapOf(0.4), 72, c.y, 'trap');
-      c.put(c.gapOf(0.34), 170, c.y);
-      c.cliff({ drop: 280, ledges: 3 });
+      c.shelf({ n: 2, gap: 0.42, w: 165 });
+      c.slope({ n: 4, rise: 0.52, gap: 0.46, w: 140 });
+      c.tunnel({ n: 8, headroom: 108, gap: 0.48, w: 138, icicles: 5, types: ['solid', 'fake', 'solid'] });
+      c.put(c.gapOf(0.48), 68, c.y, 'trap');
+      c.put(c.gapOf(0.42), 160, c.y);
+      c.cliff({ drop: 320, ledges: 3 });
       c.landing();
       c.scatterFish(3, 60);
       c.temptation(0.6, 'dizzy');
-      c.checkpoint(c.at(0.45));
+      c.checkpoint(c.at(0.5));
     },
   },
   {
     name: 'Gayzer Zinciri',
     subtitle: 'Biri diğerini tetikler',
-    target: 80,
+    target: 86,
     build: (c) => {
-      c.shelf({ n: 2, gap: 0.32, w: 180 });
-      for (let i = 0; i < 4; i++) {
-        c.put(c.gapOf(0.36), 200, c.y, 'burst', { burstPeriod: 3.4 + i * 0.4, burstPhase: i * 0.6 });
-        c.put(c.gapOf(0.34), 165, c.y - c.riseOf(0.34));
+      c.shelf({ n: 2, gap: 0.42, w: 165 });
+      for (let i = 0; i < 5; i++) {
+        c.put(c.gapOf(0.44), 190, c.y, 'burst', { burstPeriod: 3.1 + i * 0.35, burstPhase: i * 0.55 });
+        c.put(c.gapOf(0.42), 150, c.y - c.riseOf(0.4));
       }
-      c.slope({ n: 2, rise: -0.4, gap: 0.34, w: 175 });
-      c.crevasse({ pillars: 2, gap: 0.6, depth: 260 });
+      c.slope({ n: 2, rise: -0.48, gap: 0.44, w: 160 });
+      c.crevasse({ pillars: 3, gap: 0.66, depth: 280 });
       c.landing();
       c.scatterFish(3, 60);
       c.sprint(0.4);
-      c.checkpoint(c.at(0.5));
+      c.checkpoint(c.at(0.55));
     },
   },
   {
     name: 'Rüzgârlı Yamaç',
     subtitle: 'Yokuş yukarı, rüzgâra karşı',
-    target: 82,
+    target: 88,
     build: (c) => {
-      c.shelf({ n: 2, gap: 0.3, w: 180 });
+      c.shelf({ n: 2, gap: 0.4, w: 165 });
       const from = c.x;
-      c.slope({ n: 5, rise: 0.46, gap: 0.36, w: 145 });
-      c.storm(from, { period: 3.6 });
-      c.shelf({ n: 2, gap: 0.38, w: 160, types: ['crack', 'solid'] });
-      c.cliff({ drop: 360, ledges: 4 });
+      c.slope({ n: 6, rise: 0.56, gap: 0.46, w: 130 });
+      c.storm(from, { period: 4.6 });
+      // A climb you cannot make on your own legs, with the air doing the
+      // lifting. The column is right there under the shelf, so the answer is
+      // visible from the ledge you are standing on.
+      c.updraft({ w: 175 });
+      c.shelf({ n: 2, gap: 0.48, w: 150, types: ['crack', 'solid'] });
+      c.cliff({ drop: 400, ledges: 4 });
       c.landing();
       c.scatterFish(3, 60);
       c.temptation(0.55, 'heavy');
-      c.checkpoint(c.at(0.5));
+      c.checkpoint(c.at(0.55));
     },
   },
   {
     name: 'Yeraltı Nehri',
     subtitle: 'Tünelin altında su',
-    target: 84,
+    target: 90,
     build: (c) => {
-      c.shelf({ n: 2, gap: 0.3, w: 175 });
-      c.slope({ n: 3, rise: -0.36, gap: 0.34, w: 165 });
-      c.tunnel({ n: 7, headroom: 110, gap: 0.44, w: 140, icicles: 4, types: ['solid', 'melt'] });
-      c.crevasse({ pillars: 2, gap: 0.58, depth: 200 });
-      c.slope({ n: 3, rise: 0.42, gap: 0.36, w: 155 });
+      c.shelf({ n: 2, gap: 0.4, w: 160 });
+      c.slope({ n: 3, rise: -0.44, gap: 0.44, w: 155 });
+      c.tunnel({ n: 9, headroom: 104, gap: 0.5, w: 128, icicles: 6, types: ['solid', 'melt'] });
+      c.crevasse({ pillars: 3, gap: 0.64, depth: 220 });
+      c.slope({ n: 4, rise: 0.5, gap: 0.46, w: 140 });
       c.landing();
       c.scatterFish(3, 58);
       c.temptation(0.45, 'blind');
-      c.checkpoint(c.at(0.4));
+      c.checkpoint(c.at(0.45));
     },
   },
   {
     name: 'Kırılgan Zirve',
     subtitle: 'Yukarısı da güvenli değil',
-    target: 86,
+    target: 92,
     build: (c) => {
-      c.shelf({ n: 2, gap: 0.3, w: 175 });
-      c.summit({ height: 240, steps: 4, w: 175 });
-      c.shelf({ n: 3, gap: 0.4, w: 150, types: ['crack', 'fake', 'solid'] });
-      c.put(c.gapOf(0.36), 200, c.y, 'burst');
-      c.cliff({ drop: 400, ledges: 5, gap: 0.3 });
+      c.shelf({ n: 2, gap: 0.4, w: 160 });
+      c.summit({ height: 270, steps: 4, w: 160 });
+      c.shelf({ n: 4, gap: 0.5, w: 138, types: ['crack', 'fake', 'solid'] });
+      c.put(c.gapOf(0.44), 190, c.y, 'burst');
+      c.cliff({ drop: 440, ledges: 5, gap: 0.36 });
       c.landing();
       c.scatterFish(3, 58);
       c.sprint(0.35);
-      c.checkpoint(c.at(0.55));
+      c.checkpoint(c.at(0.6));
     },
   },
   {
     name: 'Buzul Labirenti',
     subtitle: 'İn, çık, in',
-    target: 90,
+    target: 96,
     build: (c) => {
-      c.shelf({ n: 2, gap: 0.3, w: 175 });
-      c.tunnel({ n: 4, headroom: 112, gap: 0.42, w: 145, icicles: 2 });
-      c.slope({ n: 3, rise: 0.44, gap: 0.36, w: 145 });
-      c.crevasse({ pillars: 3, gap: 0.6, depth: 240 });
-      c.tunnel({ n: 4, headroom: 110, gap: 0.42, w: 140, types: ['solid', 'fake'] });
-      c.cliff({ drop: 300, ledges: 4 });
+      c.shelf({ n: 2, gap: 0.4, w: 160 });
+      c.tunnel({ n: 6, headroom: 106, gap: 0.48, w: 135, icicles: 4 });
+      c.slope({ n: 4, rise: 0.54, gap: 0.46, w: 132 });
+      c.crevasse({ pillars: 4, gap: 0.68, depth: 260 });
+      c.tunnel({ n: 6, headroom: 104, gap: 0.48, w: 130, types: ['solid', 'fake'] });
+      c.cliff({ drop: 340, ledges: 4 });
       c.landing();
       c.scatterFish(3, 58);
-      c.temptation(0.35, 'dizzy');
-      c.temptation(0.7, 'heavy');
-      c.checkpoint(c.at(0.35));
-      c.checkpoint(c.at(0.7));
+      c.temptation(0.32, 'dizzy');
+      c.temptation(0.68, 'heavy');
+      c.checkpoint(c.at(0.45));
     },
   },
   {
     name: 'Avcılar',
     subtitle: 'Sudan ve buzdan',
-    target: 92,
+    target: 98,
     build: (c) => {
-      c.shelf({ n: 3, gap: 0.34, w: 175 });
-      for (let i = 0; i < 3; i++) {
+      c.shelf({ n: 3, gap: 0.44, w: 160 });
+      for (let i = 0; i < 4; i++) {
         const before = c.x;
-        c.put(c.gapOf(0.54), 165, c.y);
-        c.hazard({ kind: 'orca', x: before + 22, y: WATER - 30, w: 76, h: 60, period: 2.9 + i * 0.2, height: 260 });
+        c.put(c.gapOf(0.64), 150, c.y);
+        c.hazard({ kind: 'orca', x: before + 22, y: WATER - 30, w: 76, h: 60, period: 2.7 + i * 0.2, height: 265 });
         const f = c.floes[c.floes.length - 1];
-        c.seal(f, { speed: 84 });
+        c.seal(f, { speed: 96 });
       }
-      c.summit({ height: 200, steps: 3, w: 170 });
-      c.cliff({ drop: 340, ledges: 4 });
+      c.summit({ height: 220, steps: 3, w: 160 });
+      c.cliff({ drop: 360, ledges: 4 });
       c.landing();
       c.scatterFish(3, 58);
-      c.checkpoint(c.at(0.5));
+      c.checkpoint(c.at(0.55));
     },
   },
   {
     name: 'Son Fırtına',
     subtitle: 'Her şey aynı anda',
-    target: 96,
+    target: 102,
     build: (c) => {
-      c.shelf({ n: 2, gap: 0.3, w: 170 });
+      c.shelf({ n: 2, gap: 0.4, w: 155 });
       const from = c.x;
-      c.slope({ n: 3, rise: 0.42, gap: 0.36, w: 145 });
-      c.put(c.gapOf(0.36), 200, c.y, 'burst');
-      c.shelf({ n: 2, gap: 0.4, w: 150, types: ['crack', 'solid'] });
-      c.storm(from, { period: 3.4 });
-      c.tunnel({ n: 5, headroom: 110, gap: 0.42, w: 140, icicles: 3, types: ['solid', 'crack'] });
-      c.crevasse({ pillars: 3, gap: 0.58, depth: 260 });
-      c.cliff({ drop: 320, ledges: 4 });
+      c.slope({ n: 3, rise: 0.5, gap: 0.46, w: 135 });
+      c.put(c.gapOf(0.44), 190, c.y, 'burst');
+      c.shelf({ n: 2, gap: 0.5, w: 140, types: ['crack', 'solid'] });
+      c.storm(from, { period: 4.6 });
+      c.windGap({ w: 180 });
+      c.tunnel({ n: 6, headroom: 104, gap: 0.48, w: 130, icicles: 4, types: ['solid', 'crack'] });
+      c.crevasse({ pillars: 4, gap: 0.64, depth: 280 });
+      c.cliff({ drop: 360, ledges: 4 });
       c.landing();
       c.scatterFish(3, 58);
       c.temptation(0.4, 'heavy');
       c.sprint(0.62);
-      c.checkpoint(c.at(0.35));
-      c.checkpoint(c.at(0.72));
+      c.checkpoint(c.at(0.4));
+      c.checkpoint(c.at(0.75));
     },
   },
   {
     name: 'Kuzeye Açılan Yol',
     subtitle: 'Salı görüyorsun',
-    target: 100,
+    target: 108,
     build: (c) => {
-      c.shelf({ n: 2, gap: 0.3, w: 170 });
-      c.summit({ height: 260, steps: 4, w: 165 });
-      c.tunnel({ n: 5, headroom: 108, gap: 0.42, w: 138, icicles: 3, types: ['solid', 'fake', 'trap'] });
-      c.cliff({ drop: 420, ledges: 5, gap: 0.3 });
-      for (let i = 0; i < 3; i++) {
+      c.shelf({ n: 2, gap: 0.4, w: 155 });
+      c.summit({ height: 290, steps: 4, w: 155 });
+      c.updraft({ w: 165 });
+      c.tunnel({ n: 6, headroom: 102, gap: 0.48, w: 128, icicles: 4, types: ['solid', 'fake', 'trap'] });
+      c.cliff({ drop: 460, ledges: 5, gap: 0.36 });
+      for (let i = 0; i < 4; i++) {
         const before = c.x;
-        c.put(c.gapOf(0.52), 155, c.y, i === 1 ? 'burst' : 'solid');
-        c.hazard({ kind: 'orca', x: before + 20, y: WATER - 30, w: 76, h: 60, period: 2.8 + i * 0.2, height: 265 });
+        c.put(c.gapOf(0.62), 145, c.y, i === 1 ? 'burst' : 'solid');
+        c.hazard({ kind: 'orca', x: before + 20, y: WATER - 30, w: 76, h: 60, period: 2.6 + i * 0.2, height: 270 });
       }
-      c.crevasse({ pillars: 3, gap: 0.6, depth: 280 });
-      c.landing({ w: 260 });
+      c.crevasse({ pillars: 4, gap: 0.66, depth: 300 });
+      c.landing({ w: 250 });
       c.scatterFish(3, 58);
       c.temptation(0.45, 'dizzy');
       c.sprint(0.7);
       c.checkpoint(c.at(0.4));
-      c.checkpoint(c.at(0.75));
+      c.checkpoint(c.at(0.78));
     },
   },
 ];

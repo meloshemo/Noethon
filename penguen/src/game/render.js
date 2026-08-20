@@ -194,6 +194,7 @@ export class Renderer {
     this._skuaShadow(ctx, world, time);
     this._ghost(ctx, world, time);
     if (world.status !== 'dying') this._penguin(ctx, world, time);
+    this._windGauge(ctx, world, time);
     this._skua(ctx, world, time);
     this._collapse(ctx, world, time);
     particles.draw(ctx);
@@ -1210,6 +1211,67 @@ export class Renderer {
     ctx.restore();
   }
 
+  /**
+   * The wind, read off the penguin's own head.
+   *
+   * Wind is the one hazard in this chapter you are supposed to use rather than
+   * survive, and using it means knowing two things: which way it is blowing
+   * right now, and when the next tailwind arrives. The snow tells you the
+   * first. This tells you the second, because "wait for the good gust" is only
+   * a decision if you can see it coming.
+   *
+   * It rides above the penguin instead of sitting in the corner, so reading it
+   * never costs you sight of the gap you are about to jump.
+   */
+  _windGauge(ctx, world, time) {
+    const p = world.player;
+    if (!p || !world.windZone) return;
+    const cycle = world.windCycle ?? 0;
+    const signed = world.windSigned ?? 0;
+    const w = p.w * 2.6;
+    const x = p.x + p.w / 2 - w / 2;
+    const y = p.y - p.h * 0.62;
+    const mid = x + w / 2;
+
+    ctx.save();
+    // The beat track. The lit stretch is the tailwind, and it comes round the
+    // same way every time, so it can be counted rather than guessed at.
+    ctx.fillStyle = 'rgba(6,26,44,0.5)';
+    ctx.fillRect(x - 1, y + 6, w + 2, 4);
+    ctx.fillStyle = 'rgba(150,235,170,0.55)';
+    ctx.fillRect(x + w * 0.66, y + 6, w * 0.24, 4);
+    ctx.fillStyle = '#eaf6ff';
+    ctx.fillRect(x + w * cycle - 1, y + 4, 2, 8);
+
+    // The needle. Length is strength, direction is direction; nothing to read,
+    // only something to see.
+    const tail = Boolean(world.windTail);
+    const len = (w / 2 - 3) * Math.abs(signed);
+    ctx.strokeStyle = tail ? '#9ff5b4' : '#cfe4f5';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    if (len > 1) {
+      const dir = Math.sign(signed) || 1;
+      ctx.beginPath();
+      ctx.moveTo(mid, y);
+      ctx.lineTo(mid + len * dir, y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(mid + len * dir, y);
+      ctx.lineTo(mid + (len - 6) * dir, y - 4);
+      ctx.moveTo(mid + len * dir, y);
+      ctx.lineTo(mid + (len - 6) * dir, y + 4);
+      ctx.stroke();
+    }
+    if (tail && !this.reducedMotion) {
+      ctx.globalAlpha = 0.25 + 0.35 * Math.sin(time * 9);
+      ctx.strokeStyle = '#e6fff0';
+      ctx.stroke();
+    }
+    ctx.lineCap = 'butt';
+    ctx.restore();
+  }
+
   _hazards(ctx, world, time) {
     for (const h of world.hazards) {
       if (h.kind === 'icicle') {
@@ -1359,13 +1421,18 @@ export class Renderer {
           ctx.restore();
         }
       } else if (h.kind === 'storm') {
-        const dir = Math.sign(h.power ?? -1);
+        // The streaks blow the way the wind is actually blowing, which is the
+        // whole point: you read the beat off the snow, not off a meter.
+        const signed = h.signed ?? 0;
+        const dir = signed === 0 ? 1 : Math.sign(signed * (h.dir ?? 1));
         const t = h.intensity ?? 0;
         ctx.save();
 
         // Haze: the whole stretch greys out as the surge builds.
         ctx.globalAlpha = 0.06 + t * 0.16;
-        ctx.fillStyle = '#cfe4f5';
+        // A tailwind is the thing you were waiting for, so it warms rather
+        // than greys: the colour is the cue to go.
+        ctx.fillStyle = h.tail ? '#dff0d8' : '#cfe4f5';
         ctx.fillRect(h.x, h.y, h.w, h.h);
 
         // Driven snow — long, near-horizontal streaks. Density and lean both
@@ -1403,23 +1470,46 @@ export class Renderer {
         ctx.lineCap = 'butt';
         ctx.restore();
       } else if (h.kind === 'gust') {
+        // An updraft: a column of rising air you jump into. It is drawn as a
+        // column and it moves upward, because a player should never have to be
+        // told which way a thing pushes.
+        const t = h.intensity ?? 0;
+        const move = this.reducedMotion ? 0 : 1;
         ctx.save();
-        ctx.globalAlpha = 0.22;
-        const dir = Math.sign(h.power ?? 1);
-        ctx.strokeStyle = '#bfe8ff';
+        const col = ctx.createLinearGradient(0, h.y + h.h, 0, h.y);
+        col.addColorStop(0, `rgba(191,232,255,${0.02 + t * 0.05})`);
+        col.addColorStop(1, `rgba(191,232,255,${0.14 + t * 0.18})`);
+        ctx.fillStyle = col;
+        ctx.fillRect(h.x, h.y, h.w, h.h);
+
+        ctx.globalAlpha = 0.2 + t * 0.4;
+        ctx.strokeStyle = '#dff4ff';
         ctx.lineWidth = 2;
-        for (let i = 0; i < 7; i++) {
-          const yy = h.y + 22 + i * (h.h / 7);
-          const t = (time * (this.reducedMotion ? 0 : 1) * 260 * dir + i * 90) % (h.w + 120);
-          const sx = dir > 0 ? h.x - 60 + t : h.x + h.w + 60 - t;
+        ctx.lineCap = 'round';
+        for (let i = 0; i < 9; i++) {
+          const seed = i * 61.7;
+          const xx = h.x + 14 + ((seed * 5.3) % Math.max(1, h.w - 28));
+          const rise = (time * move * (300 + t * 240) + seed * 43) % (h.h + 120);
+          const yy = h.y + h.h + 60 - rise;
+          const len = 30 + ((seed * 2.7) % 40);
           ctx.beginPath();
-          ctx.moveTo(sx, yy);
-          ctx.lineTo(sx + 46 * dir, yy);
+          ctx.moveTo(xx, yy);
+          ctx.lineTo(xx + Math.sin((yy + seed) * 0.02) * 7, yy - len);
           ctx.stroke();
         }
-        ctx.globalAlpha = 0.08;
-        ctx.fillStyle = '#bfe8ff';
-        ctx.fillRect(h.x, h.y, h.w, h.h);
+
+        // Arrowheads at the mouth, pointing the way out.
+        ctx.globalAlpha = 0.3 + t * 0.3;
+        for (let i = 0; i < 3; i++) {
+          const xx = h.x + (h.w / 4) * (i + 1);
+          const yy = h.y + 18 + Math.sin(time * 3 * move + i) * 5;
+          ctx.beginPath();
+          ctx.moveTo(xx - 9, yy + 9);
+          ctx.lineTo(xx, yy);
+          ctx.lineTo(xx + 9, yy + 9);
+          ctx.stroke();
+        }
+        ctx.lineCap = 'butt';
         ctx.restore();
       }
     }

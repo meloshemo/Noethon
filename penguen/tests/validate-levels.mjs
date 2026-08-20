@@ -9,7 +9,7 @@
  * large sample of generated ones, and fails loudly on anything impossible.
  */
 
-import { PHYS, PENGUIN, ICE, STORM, scaleForLevel, reachFor, CRAFTED_LEVELS } from '../src/game/config.js';
+import { PHYS, PENGUIN, ICE, WIND, windAt, tailWindow, lullWindow, reachWithWind, riseWithLift, scaleForLevel, reachFor, CRAFTED_LEVELS } from '../src/game/config.js';
 import { LEVELS, WATER_Y } from '../src/game/levels.js';
 import { CRAFTED_TOTAL, CHAPTERS } from '../src/game/chapters.js';
 import { generateLevel } from '../src/game/generator.js';
@@ -54,6 +54,15 @@ function check(def, { tutorial = false } = {}) {
   // below walk the level as if it were not there.
   const floes = all.filter((f) => f.type !== 'snap');
 
+  // A wind gap is deliberately longer than an unassisted jump — that is the
+  // whole point of it — so the plain reach rule below steps aside for those
+  // pairs and the stricter wind rules further down take over.
+  const windGaps = def.windGaps ?? [];
+  const overWind = new Set(windGaps.map((g) => `${g.from}:${g.to}`));
+  // Same for a shelf that only the rising air reaches.
+  const updrafts = def.updrafts ?? [];
+  const overLift = new Set(updrafts.map((g) => `${g.from}:${g.to}`));
+
   if (!floes.length) return fail('hiç buz yok');
   if (def.spawn.x < floes[0].x || def.spawn.x > floes[0].x + floes[0].w) {
     fail(`başlangıç noktası ilk buzun üstünde değil (spawn ${def.spawn.x})`);
@@ -69,10 +78,12 @@ function check(def, { tutorial = false } = {}) {
     const gap = b.x - (a.x + a.w) - assistA - assistB;
     const rise = a.y - b.y + (b.type === 'move' ? Math.abs(b.ay ?? 0) : 0);
 
-    if (gap > reach.distance * budget.distance) {
+    const windCrossed = overWind.has(`${a.x + a.w}:${b.x}`);
+    if (!windCrossed && gap > reach.distance * budget.distance) {
       fail(`${i}→${i + 1} arası ${Math.round(gap)}px, erişim ${Math.round(reach.distance * budget.distance)}px`);
     }
-    if (rise > reach.height * budget.rise) {
+    const liftCrossed = overLift.has(`${a.x + a.w}:${b.x}`);
+    if (!liftCrossed && rise > reach.height * budget.rise) {
       fail(`${i}→${i + 1} yükselişi ${Math.round(rise)}px, tırmanış sınırı ${Math.round(reach.height * budget.rise)}px`);
     }
     if (gap < -a.w) warn(`${i}→${i + 1} buzları üst üste biniyor`);
@@ -165,24 +176,122 @@ function check(def, { tutorial = false } = {}) {
   const speed = PHYS.moveSpeed * (1 - PENGUIN.speedPenaltyPerScale * (scale - 1));
   for (const h of def.hazards ?? []) {
     if (h.kind !== 'storm') continue;
-    const period = h.period ?? STORM.period;
-    const power = Math.abs(h.power ?? 300);
-    if (period < 2.6) fail(`fırtına çok sık esiyor (period=${period})`);
-    // At peak, walking into the wind must still be net forward motion.
-    const groundPush = power * STORM.groundFactor;
-    if (groundPush >= PHYS.groundAccel * 0.45) {
-      fail(`fırtına yerde çok güçlü: ${Math.round(groundPush)} vs ivme ${PHYS.groundAccel}`);
+    const period = h.period ?? WIND.period;
+    const power = Math.abs(h.power ?? WIND.power);
+    if (period < 3) fail(`fırtına çok sık esiyor (period=${period})`);
+
+    // The wind is allowed to matter now, so the rules that keep it fair are
+    // different ones. The old cap said "it must never change what you can
+    // reach", which is the same as saying it must never be worth reading.
+    //
+    // What has to hold instead:
+    //
+    //   1. There is a lull, it comes round on a fixed beat, and it is long
+    //      enough to take off in. Everything the level asks is possible then.
+    //   2. Standing still on the ground beats the wind. A penguin that stops
+    //      and digs in must not be pushed backwards off its own ledge.
+    let lullSeconds = 0;
+    let tailSeconds = 0;
+    for (let i = 0; i < 400; i++) {
+      if (lullWindow(i / 400)) lullSeconds += period / 400;
+      if (tailWindow(i / 400)) tailSeconds += period / 400;
     }
-    // Airborne drift over one full jump must stay under half a jump's reach,
-    // or a jump taken inside the zone can never be aimed.
-    const airtime = 0.66;
-    const drift = power * airtime * airtime * 0.5;
-    if (drift > reach.distance * 0.5) {
-      fail(`fırtına havada çok savuruyor: ${Math.round(drift)}px, erişimin yarısı ${Math.round(reach.distance * 0.5)}px`);
+    if (lullSeconds < 0.62) fail(`fırtınanın sakin anı çok kısa: ${lullSeconds.toFixed(2)} sn`);
+    if (tailSeconds < 0.62) fail(`kuyruk rüzgârı çok kısa: ${tailSeconds.toFixed(2)} sn`);
+    const dugIn = power * WIND.dugIn;
+    if (dugIn >= PHYS.groundFriction * 0.8) {
+      fail(`fırtına duran pengueni sürüklüyor: ${Math.round(dugIn)} vs sürtünme ${PHYS.groundFriction}`);
+    }
+    // And walking with the wind against you must still be forward motion.
+    const walking = power * WIND.ground;
+    if (walking >= PHYS.groundAccel * 0.5) {
+      fail(`fırtınaya karşı yürünmüyor: ${Math.round(walking)} vs ivme ${PHYS.groundAccel}`);
     }
     // There has to be ice inside the zone to shelter on.
     const inside = floes.filter((f) => f.x + f.w > h.x && f.x < h.x + h.w);
     if (inside.length < 2) fail(`fırtına bölgesinde sığınacak buz yok (x=${h.x})`);
+  }
+
+  // --- wind gaps ------------------------------------------------------
+  // The one place the wind is load-bearing: a gap you cannot jump, and can
+  // jump with the wind behind you. That claim is worth proving in both
+  // directions, because getting either half wrong ruins it — too short and
+  // the wind is decoration again, too long and the level is a wall.
+  const winded = reachWithWind(scale, WIND.power);
+  // The assist is only real if the wind is still at full strength when the
+  // penguin lands, so the jump has to fit inside the tailwind, not straddle it.
+  const jumpV = Math.abs(PHYS.jumpVelocity) * (1 - PENGUIN.jumpPenaltyPerScale * (scale - 1));
+  const apexH = (jumpV * jumpV) / (2 * PHYS.gravityUp);
+  const flight = jumpV / PHYS.gravityUp + Math.sqrt((2 * apexH) / PHYS.gravityDown);
+  for (const g of windGaps) {
+    // It has to be a real gate. If a flat-out running jump clears it, the
+    // storm is scenery.
+    if (g.gap <= reach.distance * 1.02) {
+      fail(`rüzgâr boşluğu rüzgârsız da geçiliyor: ${g.gap}px, erişim ${Math.round(reach.distance)}px`);
+    }
+    // And it has to be comfortably inside the assisted jump, not on its lip:
+    // the tailwind is not perfectly timed by a human, so the margin is where
+    // the fairness lives.
+    if (g.gap > winded * 0.9) {
+      fail(`rüzgâr boşluğu rüzgârla bile zor: ${g.gap}px, rüzgârlı erişim ${Math.round(winded)}px`);
+    }
+    // A storm has to actually blow over the whole crossing, and it has to
+    // hold full strength for longer than the jump takes.
+    const period = ((def.hazards ?? []).find((h) => h.kind === 'storm')?.period) ?? WIND.period;
+    let atFull = 0;
+    for (let i = 0; i < 400; i++) if (windAt(i / 400) > 0.999) atFull += period / 400;
+    if (atFull < flight) {
+      fail(`kuyruk rüzgârı sıçrayıştan kısa: ${atFull.toFixed(2)}s < ${flight.toFixed(2)}s`);
+    }
+    const covering = (def.hazards ?? []).find(
+      (h) => h.kind === 'storm' && h.x <= g.from && h.x + h.w >= g.to,
+    );
+    if (!covering) fail(`rüzgâr boşluğunun üstünde fırtına yok (${g.from}→${g.to})`);
+    // The answer to this gap is to stand still and wait for the beat, so the
+    // ledge you wait on must be solid, wide, and not on a fuse.
+    const perch = floes.find((f) => f.x + f.w === g.from);
+    if (!perch) {
+      fail(`rüzgâr boşluğundan önce buz yok (${g.from})`);
+    } else {
+      if (perch.type !== 'solid') fail(`rüzgâr boşluğunun bekleme buzu '${perch.type}', kalıcı olmalı`);
+      if (perch.w < PENGUIN.w * scale * 3) {
+        fail(`rüzgâr boşluğunun bekleme buzu dar: ${perch.w}px`);
+      }
+    }
+    const landing = floes.find((f) => f.x === g.to);
+    if (!landing) fail(`rüzgâr boşluğunun karşısında buz yok (${g.to})`);
+    else if (landing.w < PENGUIN.w * scale * 2.5) {
+      fail(`rüzgâr boşluğunun iniş buzu dar: ${landing.w}px`);
+    }
+  }
+
+  // --- updrafts -------------------------------------------------------
+  // The vertical half of the same idea: a shelf out of jumping range with a
+  // column of rising air under it. The column has to be the reason you get
+  // there, it has to actually cover the climb, and it must never be so strong
+  // that the penguin stops falling altogether.
+  const lifted = riseWithLift(scale, WIND.lift);
+  for (const g of updrafts) {
+    if (g.rise <= reach.height * 1.05) {
+      fail(`yükselen hava olmadan da çıkılıyor: ${g.rise}px, zıplama ${Math.round(reach.height)}px`);
+    }
+    if (g.rise > lifted * 0.85) {
+      fail(`yükselen havayla bile çıkılmıyor: ${g.rise}px, taşınan yükseklik ${Math.round(lifted)}px`);
+    }
+    const column = (def.hazards ?? []).find(
+      (h) => h.kind === 'gust' && h.x <= g.from && h.x + h.w >= g.to,
+    );
+    if (!column) {
+      fail(`yükselen hava sütunu boşluğu kapsamıyor (${g.from}→${g.to})`);
+    } else {
+      if ((column.power ?? 0) >= PHYS.gravityUp * 0.6) {
+        fail(`yükselen hava çok güçlü: ${column.power} vs yerçekimi ${PHYS.gravityUp}`);
+      }
+      const ledge = floes.find((f) => f.x === g.to);
+      if (ledge && column.y > ledge.y - 20) {
+        fail(`sütun iniş buzuna kadar çıkmıyor (${column.y} > ${ledge.y})`);
+      }
+    }
   }
 
   // --- the speed fish -------------------------------------------------

@@ -23,7 +23,7 @@
  * at the bottom of the world.
  */
 
-import { reachFor, PHYS, PENGUIN, ICE, STORM } from './config.js';
+import { reachFor, reachWithWind, riseWithLift, PHYS, PENGUIN, ICE, STORM, WIND } from './config.js';
 
 /** Sea-level ice, near the bottom of a tall world. */
 export const SEA_LEVEL = 700;
@@ -237,24 +237,103 @@ export class Course {
   /**
    * A storm over the stretch just built.
    *
-   * The strength is capped from the physics: at full surge the penguin must
-   * still make headway on the ground, and one jump taken inside the zone must
-   * not be blown further than half a jump off its line — otherwise the wind is
-   * not weather, it is a wall.
+   * No longer capped into irrelevance. The old rule was that the wind must
+   * never change what the penguin can reach, which made it weather you could
+   * ignore; the rule now is that the wind must never make the *level* harder
+   * than it looks — every gap under a storm is crossable in the lull, and the
+   * lull comes round every few seconds and is visible before it arrives.
+   *
+   * What the wind buys instead is `windGap`: a gap that is only crossable on
+   * the tailwind. That is a real mechanic and it is proved rather than assumed.
    */
-  storm(fromX, { period = 3.6 } = {}) {
-    const groundCap = (PHYS.groundAccel * 0.4) / STORM.groundFactor;
-    const airCap = (this.reach.distance * 0.45) / (0.66 * 0.66 * 0.5);
-    const power = Math.round(Math.min(groundCap, airCap));
+  /**
+   * @param {number} fromX
+   * @param {{period?:number, dir?:number}} opts `dir` is which way the level
+   *   runs, so a tailwind pushes forward wherever the level happens to face.
+   */
+  storm(fromX, { period = WIND.period, dir = 1 } = {}) {
     return this.hazard({
       kind: 'storm',
       x: fromX - 40,
       y: CEILING,
       w: this.x - fromX + 80,
       h: WATER - CEILING,
-      power,
-      period: Math.max(2.8, period),
+      power: WIND.power,
+      dir,
+      period: Math.max(3.2, period),
     });
+  }
+
+  /**
+   * A gap that only the tailwind crosses.
+   *
+   * Sized deliberately past what the penguin can jump, and comfortably inside
+   * what it can jump with the wind behind it. The ledge before it is wide, on
+   * purpose: the answer to this gap is to stand still and wait, and a level
+   * that asks you to wait somewhere had better give you somewhere to wait.
+   *
+   * The storm over it is placed here rather than by the plan, because the gap
+   * and the wind that crosses it are one object — a `windGap` with no storm on
+   * it is a wall, and that is exactly the kind of mistake worth making
+   * impossible rather than checking for.
+   */
+  windGap({ w = 210, type = 'solid', reach: over = 1.16 } = {}) {
+    const from = this.x - 60;
+    const body = PENGUIN.w * this.scale;
+    // Wide, flat, and nothing that gives way: the answer to this gap is to
+    // stand still and wait, and a level that asks you to wait somewhere had
+    // better give you somewhere to wait.
+    const perch = this.put(this.gapOf(0.34), Math.max(w, body * 3.6), this.y, 'solid');
+    const plain = this.reach.distance;
+    const withWind = reachWithWind(this.scale, WIND.power);
+    const gap = Math.round(Math.min(plain * over, withWind * 0.82));
+    const landing = this.put(gap, Math.max(w, body * 3.2), this.y, type);
+    this.storm(from, { period: WIND.period });
+    this.windGaps = this.windGaps ?? [];
+    this.windGaps.push({
+      from: perch.x + perch.w,
+      to: landing.x,
+      gap,
+      plain: Math.round(plain),
+      withWind: Math.round(withWind),
+    });
+    return this;
+  }
+
+  /**
+   * A shelf too high to jump to, and a column of rising air under it.
+   *
+   * The sibling of `windGap`: one buys distance, this one buys height. The
+   * column is drawn as a column and it is drawn where it acts, so the answer
+   * — jump into the rising air, not beside it — is visible before it is
+   * explained, which is the only way anything gets explained in this game.
+   */
+  updraft({ w = 190, gap = 0.3, rise: over = 1.32 } = {}) {
+    const body = PENGUIN.w * this.scale;
+    const launch = this.put(this.gapOf(0.32), Math.max(w, body * 3), this.y, 'solid');
+    const plain = this.reach.height;
+    const lifted = riseWithLift(this.scale, WIND.lift);
+    const rise = Math.round(Math.min(plain * over, lifted * 0.76));
+    const across = this.gapOf(gap);
+    const ledge = this.put(across, Math.max(w, body * 3), clampY(this.y - rise), 'solid');
+    this.hazard({
+      kind: 'gust',
+      x: launch.x + launch.w - 12,
+      y: ledge.y - 70,
+      w: ledge.x - (launch.x + launch.w) + 24,
+      h: launch.y - ledge.y + 140,
+      power: WIND.lift,
+      period: 2.8,
+    });
+    this.updrafts = this.updrafts ?? [];
+    this.updrafts.push({
+      from: launch.x + launch.w,
+      to: ledge.x,
+      rise,
+      plain: Math.round(plain),
+      lifted: Math.round(lifted),
+    });
+    return this;
   }
 
   /* -------------------------------------------------------- segments */
@@ -456,6 +535,9 @@ export class Course {
       speedFish: this.speedFish,
       rotFish: this.rotFish,
       checkpoints: this.checkpoints,
+      /** Gaps that only the tailwind crosses, for the validator to prove. */
+      windGaps: this.windGaps ?? [],
+      updrafts: this.updrafts ?? [],
     };
   }
 }

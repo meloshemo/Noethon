@@ -121,7 +121,7 @@ export function generateLevel(id, opts = {}) {
         // A storm needs a stretch of coast with shelter on it, which is exactly
         // what a shelf is — so it is the only segment one gets hung on.
         if (storms < 1 && d > 0.25 && rng() < 0.45) {
-          c.storm(from, { period: 3.4 + rng() * 0.8 });
+          c.storm(from, { period: 3.6 + rng() * 1.2 });
           storms++;
         }
         break;

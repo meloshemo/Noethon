@@ -5,7 +5,7 @@
  * `{x, y, w, h}` box that the collision code in level.js consumes.
  */
 
-import { ICE, STORM, BRAWL } from './config.js';
+import { ICE, STORM, BRAWL, WIND, windAt, tailWindow, lullWindow } from './config.js';
 import { clamp, easeOutCubic, lerp } from '../core/util.js';
 
 /* ------------------------------------------------------------------ */
@@ -343,6 +343,13 @@ export class Hazard {
     // Storm: 0..1 wind strength this frame, and whether it is still building.
     this.intensity = 0;
     this.building = false;
+    /** Storm: -1 fully against, +1 fully with, and where in the breath it is. */
+    this.signed = 0;
+    this.cycle = 0;
+    this.tail = false;
+    this.lull = false;
+    /** Gust: how hard the column is lifting right now. */
+    this.lift = 0;
     /** Serac: when its cycle started, or null while it is still asleep. */
     this.armedAt = null;
   }
@@ -436,22 +443,35 @@ export class Hazard {
         break;
       }
       case 'gust': {
-        this.strength = (this.power ?? 320) * (0.6 + 0.4 * Math.sin(time * 2.2 + this.phase * 6));
+        // A rising column. Not a sideways nudge with a different name: this is
+        // the only thing in the shelf chapter that gives height for free, so
+        // it is drawn as a shaft of moving snow and it lifts.
+        // Deliberately steady. The storm is the thing you time; this is the
+        // thing you use, and a tool that changes strength while you are in the
+        // air is not a tool. What breathes is the drawing of it, not the push.
+        const cycle = ((time * s) / (this.period ?? 3.2) + this.phase) % 1;
+        this.intensity = 0.82 + 0.18 * Math.sin(cycle * Math.PI * 2);
+        this.lift = this.power ?? WIND.lift;
+        this.strength = 0;
         break;
       }
       case 'storm': {
-        // One surge per period with a visible build-up, then a lull long
-        // enough to cross in. The player is never asked to fight a flat wall
-        // of wind — they are asked to read the rhythm.
-        const cycle = (((time * s) / (this.period ?? STORM.period)) + this.phase) % 1;
-        const warnFrac = STORM.warn / (this.period ?? STORM.period);
-        let t;
-        if (cycle < warnFrac) t = STORM.lull + (1 - STORM.lull) * (cycle / warnFrac);
-        else if (cycle < warnFrac + STORM.surge) t = 1;
-        else t = STORM.lull + (1 - STORM.lull) * Math.max(0, 1 - (cycle - warnFrac - STORM.surge) / 0.22);
-        this.intensity = t;
-        this.building = cycle < warnFrac;
-        this.strength = (this.power ?? -320) * t;
+        // Four beats: against, lull, with, lull. The shape lives in
+        // `windAt` so that what the player is shown, what the physics does and
+        // what the validator proved are all reading the same curve.
+        const cycle = ((time * s) / (this.period ?? WIND.period) + this.phase) % 1;
+        const signed = windAt(cycle);
+        this.cycle = cycle;
+        this.signed = signed;
+        this.intensity = Math.abs(signed);
+        this.tail = tailWindow(cycle);
+        this.lull = lullWindow(cycle);
+        // Building is now "about to be against you", which is the half of the
+        // cycle worth a warning. Nobody needs warning about a tailwind.
+        this.building = signed < 0 && cycle < 0.16;
+        // `dir` is which way the level runs. A positive `signed` blows that
+        // way, so a tailwind is a tailwind wherever the level happens to face.
+        this.strength = (this.power ?? WIND.power) * signed * (this.dir ?? 1);
         break;
       }
       case 'orca': {

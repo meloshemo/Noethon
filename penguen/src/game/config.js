@@ -130,17 +130,133 @@ export const ICE = {
  * because a constant headwind is just a slower walk, while a pulsing one is a
  * decision: push through the lull, or wait out the surge on solid ice.
  */
+/**
+ * Wind.
+ *
+ * It used to be scenery with a physics component: a sideways nudge, capped by
+ * the validator at a level where it provably could not change what the penguin
+ * could reach. That cap was there for a good reason and it had one very bad
+ * consequence — wind that cannot change anything is wind you can ignore, and a
+ * mechanic you can ignore is not a mechanic. It blew, snow moved, nothing
+ * happened.
+ *
+ * So the cap is gone and a *shape* replaces it. The storm breathes: it pushes
+ * against you, drops to nothing, then pushes with you, and drops again. Four
+ * beats, the same every time, and the whole of it visible on screen before it
+ * arrives.
+ *
+ *   · **Headwind** — a jump taken into it falls short. Wait, or lose the gap.
+ *   · **Lull** — the neutral window. Everything the level asks is possible here.
+ *   · **Tailwind** — a jump taken with it goes *further than the penguin can
+ *     jump*. Some gaps in this game can only be crossed on that beat.
+ *
+ * The last one is the point. Wind is no longer a tax on the level, it is a
+ * tool the level is built around — and because the composer can now place a
+ * gap that needs it, the validator has to prove the tailwind actually makes it,
+ * the same way it proves everything else.
+ *
+ * The counterplay on the ground is a small, quiet one, and it needs no button:
+ * a penguin that stops and stands still digs in and is pushed about half as
+ * hard as one that is running. Fighting the wind is a decision, not a fee.
+ */
+export const WIND = {
+  /** One full breath: against, lull, with, lull. */
+  period: 4.6,
+  /** Peak acceleration in px/s². Everything else is a fraction of this. */
+  power: 620,
+  /** Felt on the ground while moving, and while standing still. */
+  ground: 0.55,
+  dugIn: 0.26,
+  /** How long the tailwind is at or near full strength. */
+  tailWindow: 0.9,
+  /** Warning before each peak, in seconds. */
+  warn: 0.6,
+  /**
+   * Upward acceleration inside a rising column, in px/s². Kept well under
+   * gravity on purpose: an updraft lightens the penguin, it never flies it.
+   */
+  lift: 900,
+};
+
+/**
+ * Where the storm is in its breath, as a signed -1..+1.
+ *
+ * Negative is against the direction of travel, positive is with it. Written as
+ * one function so the physics, the renderer, the HUD gauge and the validator
+ * all read the same curve — a wind the player sees and a wind the player feels
+ * disagreeing by a tenth of a second is worse than no gauge at all.
+ */
+export function windAt(cycle) {
+  const t = ((cycle % 1) + 1) % 1;
+  // 0.00 build against · 0.16 full against · 0.38 fall · 0.50 lull
+  // 0.60 build with    · 0.72 full with    · 0.90 fall · 1.00 lull
+  if (t < 0.16) return -(t / 0.16);
+  if (t < 0.38) return -1;
+  if (t < 0.5) return -(1 - (t - 0.38) / 0.12);
+  if (t < 0.6) return 0;
+  if (t < 0.72) return (t - 0.6) / 0.12;
+  if (t < 0.9) return 1;
+  return 1 - (t - 0.9) / 0.1;
+}
+
+/** True while the wind is in the window a jump can be launched on. */
+export function tailWindow(cycle) {
+  const t = ((cycle % 1) + 1) % 1;
+  return t >= 0.66 && t < 0.9;
+}
+
+/**
+ * True while the wind is neither helping nor hindering.
+ *
+ * Slightly wider than the flat part of the curve, because the edges of the
+ * lull are a tenth of the wind's strength and a tenth of the wind is nothing.
+ * What has to be true is that a player who sets off here lands before the
+ * headwind returns — and the beat after the lull is the *tailwind*, so a
+ * jump that runs long is helped rather than punished.
+ */
+export function lullWindow(cycle) {
+  const t = ((cycle % 1) + 1) % 1;
+  return t >= 0.42 && t < 0.64;
+}
+
+/**
+ * How far a jump reaches with `accel` of wind behind it the whole way.
+ *
+ * The same trajectory as `reachFor`, with a constant horizontal acceleration
+ * added — which is what a tailwind is. A negative `accel` gives the headwind
+ * answer, and the difference between the two is the size of the decision the
+ * player is being asked to make.
+ */
+export function reachWithWind(scale, accel) {
+  const v = Math.abs(PHYS.jumpVelocity) * (1 - PENGUIN.jumpPenaltyPerScale * (scale - 1));
+  const speed = PHYS.moveSpeed * (1 - PENGUIN.speedPenaltyPerScale * (scale - 1));
+  const apex = (v * v) / (2 * PHYS.gravityUp);
+  const t = v / PHYS.gravityUp + Math.sqrt((2 * apex) / PHYS.gravityDown);
+  // Air friction is not modelled here for the same reason `reachFor` does not:
+  // it is small next to the jump and leaving it out is the conservative error.
+  return Math.max(0, speed * t + 0.5 * accel * t * t);
+}
+
+/**
+ * How high the penguin gets inside a rising column.
+ *
+ * An updraft is not a lift and not a second jump: it subtracts from gravity
+ * for as long as you are inside it, so it buys height in proportion to the
+ * jump you already made. Jump badly into one and you go badly high.
+ */
+export function riseWithLift(scale, lift) {
+  const v = Math.abs(PHYS.jumpVelocity) * (1 - PENGUIN.jumpPenaltyPerScale * (scale - 1));
+  const g = Math.max(PHYS.gravityUp * 0.35, PHYS.gravityUp - lift);
+  return (v * v) / (2 * g);
+}
+
+/** Kept for the storm's own visuals, which still think in surges. */
 export const STORM = {
-  /** Seconds per surge cycle. */
-  period: 3.6,
-  /** Fraction of the cycle spent at full strength. */
+  period: WIND.period,
   surge: 0.34,
-  /** Wind during the lull, as a fraction of full power. */
   lull: 0.22,
-  /** How much of the wind is felt with both feet on the ice. */
-  groundFactor: 0.6,
-  /** Seconds of visible build-up before a surge peaks. */
-  warn: 0.55,
+  groundFactor: WIND.ground,
+  warn: WIND.warn,
 };
 
 /**

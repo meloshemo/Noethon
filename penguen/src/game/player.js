@@ -92,6 +92,8 @@ export class Player {
       p.age = 1;
     }
     this.gliding = false;
+    /** Inside a rising column this frame — drawn, and read by the HUD. */
+    this.lifted = false;
     this.glideLeft = this.glideMax;
     this.rocketLeft = this.rocketMax;
     this.burn = 0;
@@ -293,8 +295,18 @@ export class Player {
       this.vx = Math.abs(this.vx) <= drop ? 0 : this.vx - Math.sign(this.vx) * drop;
     }
 
-    // External forces (wind gusts) are injected by the level each frame.
+    // External forces (wind) are injected by the level each frame.
     this.vx += (intent.push ?? 0) * dt;
+    /**
+     * Rising air.
+     *
+     * Applied as an upward acceleration rather than a velocity, so a column
+     * does not teleport a falling penguin: you enter it moving down, you slow,
+     * you stop, you climb. That takes about a third of a second and it is the
+     * whole feel of the thing — a gust catches you rather than grabbing you.
+     */
+    this.lifted = (intent.lift ?? 0) > 0 && !this.onGround;
+    if (this.lifted) this.vy -= intent.lift * dt;
 
     // --- Jump: buffered press + coyote time ---------------------------
     if (intent.jumpPressed) this.buffer = PHYS.jumpBuffer;
