@@ -101,10 +101,12 @@ if (!noBrowser) {
     console.log('  · Playwright kurulu değil — atlandı.');
     console.log('    Kurmak için:  npm install && npm run setup:browser');
   } else {
-    const { serve } = await import('../tools/serve.mjs');
-    const server = await serve(PORT);
+    const { serveFree } = await import('../tools/serve.mjs');
+    const server = await serveFree(PORT);
+    const at = server.address().port;
+    if (at !== PORT) console.log(`\n(${PORT} dolu — ${at} kullanılıyor)`);
     await section('Tarayıcı testleri', BROWSER_SUITES, {
-      PENGU_URL: `http://localhost:${PORT}`,
+      PENGU_URL: `http://localhost:${at}`,
     });
     server.close();
   }

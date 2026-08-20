@@ -119,7 +119,31 @@ console.log('\n7) Kaydı dışa aktarma');
   await p.click('#legalExport');
   const file = await download;
   ok('dosya iniyor', Boolean(file), file ? file.suggestedFilename() : 'inmedi');
-  if (file) ok('adı anlamlı', /^pengu-kayit-\d{4}-\d{2}-\d{2}\.json$/.test(file.suggestedFilename()), file.suggestedFilename());
+  if (file) {
+    ok(
+      'adı anlamlı',
+      /^pengu-kayit-\d{4}-\d{2}-\d{2}\.json$/.test(file.suggestedFilename()),
+      file.suggestedFilename(),
+    );
+  }
+
+  // Embedded in another page — a viewer, an iframe — downloads are blocked and
+  // do not throw. The button has to say something rather than nothing.
+  const frameOk = await p.evaluate(async () => {
+    const box = document.createElement('iframe');
+    box.src = location.href;
+    document.body.append(box);
+    await new Promise((r) => box.addEventListener('load', r, { once: true }));
+    const w = box.contentWindow;
+    await new Promise((r) => setTimeout(r, 1200));
+    w.__pengu.ui.showScreen('legal');
+    w.document.getElementById('legalExport').click();
+    const fallback = w.document.getElementById('dataFallback');
+    const out = Boolean(fallback && !fallback.hidden && fallback.value.includes('profile'));
+    box.remove();
+    return out;
+  });
+  ok('gömülü sayfada metin olarak veriliyor', frameOk);
 }
 
 /* 8 ------------------------------------------------------------------ */

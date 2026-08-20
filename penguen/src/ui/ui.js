@@ -1108,6 +1108,28 @@ export class UI {
     box.select();
   }
 
+  /**
+   * The save as selectable text, for anywhere a download will not happen.
+   *
+   * Same idea as the share-code fallback and for the same reason: a button
+   * whose whole purpose is "take your data with you" must never be a button
+   * that silently does nothing.
+   */
+  _showDataFallback(text) {
+    let box = document.getElementById('dataFallback');
+    if (!box) {
+      box = document.createElement('textarea');
+      box.id = 'dataFallback';
+      box.className = 'share__fallback';
+      box.setAttribute('readonly', '');
+      box.setAttribute('aria-label', 'Kaydının tamamı');
+      document.querySelector('.legal__data').after(box);
+    }
+    box.value = text;
+    box.hidden = false;
+    box.select();
+  }
+
   _flashButton(btn, label) {
     const original = btn.dataset.label ?? btn.innerHTML;
     btn.dataset.label = original;
@@ -1322,20 +1344,34 @@ export class UI {
      */
     $('legalExport').addEventListener('click', () => {
       this.audio.ui();
+      const json = JSON.stringify(this.save, null, 2);
+      // Embedded viewers block downloads outright, and a blocked download does
+      // not throw — the link is simply ignored and the player is left pressing
+      // a button that does nothing. So when the game is running inside another
+      // page, hand them the text instead: worse than a file, infinitely better
+      // than silence.
+      let embedded = false;
       try {
-        const blob = new Blob([JSON.stringify(this.save, null, 2)], {
-          type: 'application/json',
-        });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `pengu-kayit-${todayKey()}.json`;
-        a.click();
-        setTimeout(() => URL.revokeObjectURL(url), 4000);
-        this._toastOnce('Kaydın indirildi');
+        embedded = window.self !== window.top;
       } catch {
-        this._toastOnce('Bu tarayıcı indirmeye izin vermedi');
+        embedded = true;
       }
+      if (!embedded) {
+        try {
+          const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `pengu-kayit-${todayKey()}.json`;
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(url), 4000);
+          this._toastOnce('Kaydın indirildi');
+          return;
+        } catch {
+          /* fall through to the copyable box */
+        }
+      }
+      this._showDataFallback(json);
+      this._toastOnce('İndirme kapalı — metni kopyalayabilirsin');
     });
     $('legalWipe').addEventListener('click', () => {
       this.audio.ui('back');

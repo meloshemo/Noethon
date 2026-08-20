@@ -32,6 +32,25 @@ const TYPES = {
   '.woff2': 'font/woff2',
 };
 
+/**
+ * Start the server, moving to the next free port if this one is taken.
+ *
+ * A stray `python -m http.server` from an hour ago should not be able to fail
+ * the test suite, and on a shared machine somebody else's process on 8123 is
+ * not an error worth stopping for either. The caller is told which port it
+ * actually got.
+ */
+export async function serveFree(from = port, tries = 10) {
+  for (let i = 0; i < tries; i++) {
+    try {
+      return await serve(from + i);
+    } catch (err) {
+      if (err?.code !== 'EADDRINUSE') throw err;
+    }
+  }
+  throw new Error(`${from}–${from + tries - 1} arası boş port yok`);
+}
+
 export function serve(at = port) {
   const server = createServer(async (req, res) => {
     // Everything is served from the project root and nothing above it: a path
@@ -60,12 +79,21 @@ export function serve(at = port) {
       res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' }).end('404');
     }
   });
-  return new Promise((ok) => server.listen(at, () => ok(server)));
+  return new Promise((ok, fail) => {
+    // Without this the EADDRINUSE arrives as an unhandled 'error' event and
+    // takes the whole process with it, which is a hard way to find out that
+    // something else is on the port.
+    server.once('error', fail);
+    server.listen(at, () => {
+      server.removeListener('error', fail);
+      ok(server);
+    });
+  });
 }
 
 // Run directly rather than imported: `node tools/serve.mjs`
 if (import.meta.url === `file://${process.argv[1]}`) {
-  await serve(port);
-  console.log(`Pengu  →  http://localhost:${port}`);
+  const server = await serveFree(port);
+  console.log(`Pengu  →  http://localhost:${server.address().port}`);
   console.log('Durdurmak için Ctrl+C.');
 }
