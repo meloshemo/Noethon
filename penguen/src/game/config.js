@@ -193,6 +193,29 @@ export const WIND = {
 };
 
 /**
+ * The opening beat: how long the player has before the first gap.
+ *
+ * A level starts from rest, on a screen nobody has read yet, and the first
+ * thing anybody does is press a direction. This used to be a hard-coded eighty
+ * pixels of spawn offset, which was fine while first floes were two hundred and
+ * fifty pixels wide and became a third of a second of reaction time once they
+ * were narrowed. A number in seconds cannot rot that way: it means the same
+ * thing at every growth scale and after every change to how wide ice is.
+ */
+export const OPENING = {
+  /** Seconds of running between the spawn and the edge. */
+  beat: 0.6,
+  /** How far in from the floe's left edge the body starts, in bodies. */
+  inset: 0.55,
+};
+
+/** How wide the first floe has to be for the opening to last its beat. */
+export function openingWidth(scale) {
+  const speed = PHYS.moveSpeed * (1 - PENGUIN.speedPenaltyPerScale * (scale - 1));
+  return Math.ceil(PENGUIN.w * scale * OPENING.inset + speed * OPENING.beat);
+}
+
+/**
  * The longest gap a penguin can actually cross with no help.
  *
  * `reachFor().distance` is how far the *body* travels, and a gap is measured

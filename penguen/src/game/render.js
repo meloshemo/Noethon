@@ -468,7 +468,14 @@ export class Renderer {
       }
 
       const g = ctx.createLinearGradient(0, b.y, 0, b.y + b.h);
-      if (b.kind === 'roof') {
+      if (b.kind === 'back' || b.kind === 'shoulder') {
+        // The coast the penguin came down from. It is scenery with a job, not
+        // a route, so it is painted to recede: darker than the sky in front of
+        // it and flatter than the cliffs the level is actually made of.
+        g.addColorStop(0, '#1b2f4d');
+        g.addColorStop(0.3, '#152742');
+        g.addColorStop(1, '#0b1830');
+      } else if (b.kind === 'roof') {
         // A roof is seen from underneath, so it is lit from above and its cut
         // face is the darkest thing on screen.
         g.addColorStop(0, '#2b4a70');

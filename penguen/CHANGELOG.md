@@ -5,6 +5,45 @@ değiştiği yeterli. En yeni en üstte.
 
 ---
 
+## Bölümlerin bir arkası oldu, açılışlar saniyeyle ölçülüyor
+
+31. bölüm başlar başlamaz öldürüyordu. Sebebi bir boşluk değildi: doğuş noktası
+ilk buza **sabit seksen piksel** içeriden konuyordu. İlk buzlar iki yüz elli
+piksel genişken bu doğru sayıydı, zorluk geçişinde daraltılınca sağa basan
+oyuncuya üçte bir saniye kalıyordu. Sabit piksel, altındaki her şey değişirken
+sessizce yanlış hâle gelen türden bir sayı.
+
+Aramaya başlayınca ikinci bir şey çıktı ve daha kötüydü: **doğuş noktasının
+arkasında hiçbir şey yoktu.** Sola yürümek 23. bölüme kadar her yerde yarım
+saniyeden kısa sürede boğuyordu. Birinci bölümün tek tabelası "Yürü: ← →"
+diyor. Denize düşmek oyunun kendisi; öğreticiye uyduğu için denize düşmek değil.
+
+İkisi de mesafe hatası değildi, o yüzden mesafe kontrol eden hiçbir şey
+göremezdi. Düzeltmeler yapısal:
+
+- Açılış artık **saniye** cinsinden: her bölüm zemin bitmeden 0,6 saniye
+  veriyor ve ilk buz bunu tutacak kadar geniş olmak zorunda. Piksel çürür,
+  saniye çürümez.
+- Her bölümün bir arkası var. İlk buz dünyanın soluna kadar uzatıldı ve arkasına
+  penguenin indiği kaya yüzü kondu. Rota hiç değişmedi, çünkü rota buzun
+  yalnızca sağ kenarını okuyor.
+- Dağda taban genişletmek olmazdı: taban rotanın kendisi ve genişletince
+  besteci iki basamağı yutup son tekmeyi dört yüz piksele çıkardı. Onun yerine
+  tabanın iki yanına, suya kadar inen kaya omuzlar kondu. Fizik katı görüyor,
+  rota hiç görmüyor.
+
+İki yeni test bunu bir daha olmaz hâle getiriyor. `tests/spawn-safe.mjs`
+76 bölümü gerçek `World` ile açıp üç şey deniyor: hiçbir şey yapma, sağa yürü,
+sola yürü. `tests/shelf-run.mjs` ise I. chapter'ın rotasını gerçek doğuş
+noktasından başlayıp gerçek `Player` ile baştan sona yürüyor. Sahanlığın
+çözücüsü yoktu, diğer üç chapter'ın vardı.
+
+Yazılırken çözücünün kendisi de bir hata verdi: fırtına fazını periyodun
+yalnızca beşte biri kadar tarıyordu ve iki rüzgâr boşluğunu geçilemez sanıyordu.
+Bölümler doğruydu, çözücü yanılıyordu.
+
+---
+
 ## "Şaşırt beni" gitti, README gerçeğe döndü
 
 Kimlik ekranındaki ikinci düğme kaldırıldı. Tek işi "bir bas ve oyna" olan bir

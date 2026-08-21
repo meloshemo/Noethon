@@ -23,7 +23,7 @@
  * at the bottom of the world.
  */
 
-import { reachFor, reachWithWind, riseWithLift, crossableGap, PHYS, PENGUIN, ICE, STORM, WIND } from './config.js';
+import { reachFor, reachWithWind, riseWithLift, crossableGap, openingWidth, OPENING, PHYS, PENGUIN, ICE, STORM, WIND } from './config.js';
 
 /** Sea-level ice, near the bottom of a tall world. */
 export const SEA_LEVEL = 700;
@@ -33,6 +33,17 @@ export const WATER = 790;
 export const SKY = 900;
 /** Nothing is ever placed above this: it is the top of the weather. */
 export const CEILING = 120;
+
+/**
+ * The back of every shelf level.
+ *
+ * `WALL` is the rock face the penguin came down from, at the world's left edge.
+ * `BACK` is how much shore there is between that face and where the penguin is
+ * standing when the level starts, so pressing left is a walk rather than a
+ * drowning.
+ */
+const WALL = 80;
+const BACK = 150;
 
 /** Roof thickness, and how much rock is drawn above a tunnel. */
 const ROOF = 46;
@@ -53,13 +64,15 @@ export class Course {
   /**
    * @param {{x?:number, y?:number, scale?:number, seed?:number}} opts
    */
-  constructor({ x = 40, y = SEA_LEVEL, scale = 1 } = {}) {
+  constructor({ x = WALL + BACK, y = SEA_LEVEL, scale = 1 } = {}) {
     this.scale = scale;
     this.reach = reachFor(scale);
     /** Right edge of the last thing placed, and its surface height. */
     this.x = x;
     this.y = y;
     this.startX = x;
+    /** Decided when the first floe is placed, before the back is built. */
+    this.spawnX = null;
 
     this.floes = [];
     this.terrain = [];
@@ -131,6 +144,12 @@ export class Course {
     // is applied here where the physics are known.
     w = Math.max(this.minWidth, Math.min(w, this.widthCap(type) * 0.94));
 
+    // The first floe is the opening, and the opening is a promise: whoever
+    // presses a direction gets a beat to read the screen before the ground runs
+    // out. A plan can ask for a narrow one and will not get it, because the
+    // width that keeps that promise is arithmetic, not taste.
+    if (!this.floes.length) w = Math.max(w, openingWidth(this.scale));
+
     // Leaving a stepping stone starts from where you landed on it, not from
     // its far edge — so the gap after one has to be paid for out of the same
     // jump. Shortening it here means no plan can accidentally ask for a jump
@@ -142,6 +161,11 @@ export class Course {
     }
     const x = Math.round(this.x + gap);
     const floe = { x, y: Math.round(y), w: Math.round(w), type, ...extra };
+    // Where the penguin stands, decided from the floe as first placed. The back
+    // is carved out behind it afterwards and must not move it.
+    if (!this.floes.length) {
+      this.spawnX = Math.round(x + PENGUIN.w * this.scale * (OPENING.inset + 0.5));
+    }
     this.floes.push(floe);
     this.x = floe.x + floe.w;
     this.y = floe.y;
@@ -516,7 +540,34 @@ export class Course {
    * actually placed rather than declared up front, so a course cannot end up
    * with the sea in the wrong place or a summit off the top of the screen.
    */
+  /**
+   * The back of the level.
+   *
+   * Walking *left* off the spawn used to drown you. The shelf simply stopped a
+   * body's width behind where the penguin started, and on level one, whose only
+   * sign reads "Yürü: ← →", pressing the left half of that instruction killed
+   * you in under half a second. Falling in the sea is the game; falling in the
+   * sea for obeying the tutorial is not.
+   *
+   * A level has a front, so it needs a back. The first floe is carried out to
+   * the world's edge and a wall of rock is put behind it: the coast the penguin
+   * came down from. Nothing about the route changes, because the route only
+   * ever reads the floe's *right* edge.
+   */
+  _closeTheBack() {
+    const first = this.floes[0];
+    if (!first || first.x <= WALL) return;
+    const grew = first.x - WALL;
+    first.x = WALL;
+    first.w += grew;
+    // From the very top of the world, not from the ceiling: a wall that starts
+    // partway down reads as a floating slab on a tall camera.
+    this.rock(0, 0, WALL, WATER, 'back');
+  }
+
   build(meta) {
+    this._closeTheBack();
+
     const last = this.floes[this.floes.length - 1];
     const goalX = last.x + last.w - 70;
     const worldW = Math.round(last.x + last.w + 120);
@@ -529,7 +580,11 @@ export class Course {
       worldW,
       worldH,
       waterY: WATER,
-      spawn: { x: this.startX + 80, y: this.floes[0].y },
+      // Measured from the first floe rather than from where the composer
+      // happened to start, and in bodies rather than in pixels, so it means the
+      // same thing at every growth scale. `_closeTheBack` has already made sure
+      // there is ground on the other side of it.
+      spawn: { x: this.spawnX ?? this.floes[0].x + 80, y: this.floes[0].y },
       goal: { x: goalX, y: last.y },
       floes: this.floes,
       terrain: this.terrain,

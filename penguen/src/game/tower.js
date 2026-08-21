@@ -26,7 +26,7 @@
  * designer meant you to wall-jump here" from quietly becoming "nobody can pass".
  */
 
-import { reachFor, reachAt, climbBudget, kickGain, CLIMB, PENGUIN } from './config.js';
+import { reachFor, reachAt, climbBudget, kickGain, openingWidth, CLIMB, PENGUIN } from './config.js';
 
 /** Thickness of an ice wall. Thick enough to read as the mountain, not a line. */
 const WALL_T = 44;
@@ -830,7 +830,57 @@ export class Tower {
 
   /* ------------------------------------------------------------ build */
 
+  /**
+   * The ground the climb starts from, either side of the ledge.
+   *
+   * The base was narrow enough to walk off in a third of a second, in a chapter
+   * that starts you standing on it from rest with the whole shaft above you.
+   * Widening the ledge itself is not the fix: the ledge is route, the composer
+   * lays the whole tower out relative to it, and a wider one silently swallowed
+   * two steps and left a kick asking for four hundred pixels in one go.
+   *
+   * So this is rock, not ice. Physics treats it as solid, the route never sees
+   * it, and it reads as what it is: the shoulder of the mountain the starting
+   * ledge is attached to. Standing on it does nothing but keep you alive.
+   */
+  _standOn() {
+    const floor = this.route[0] ?? this.floes[0];
+    if (!floor) return;
+    const body = PENGUIN.w * this.scale;
+    const want = Math.max(0, openingWidth(this.scale) - body * 0.55);
+    // Deep enough to reach the water, so the shoulders read as the mountain
+    // holding the ledge up rather than as two slabs floating beside it. The
+    // renderer clamps anything below the waterline.
+    const depth = BASE_MARGIN;
+
+    // A shoulder that grows into a ledge is a ledge buried in rock, which the
+    // climb validator rightly refuses. So each side only reaches as far as the
+    // nearest thing already standing there.
+    const clear = (from, to) => {
+      const box = { x: Math.min(from, to), y: floor.y, w: Math.abs(to - from), h: depth };
+      for (const other of [...this.floes, ...this.walls]) {
+        const oh = other.h ?? 20;
+        if (other.y + oh <= box.y || other.y >= box.y + box.h) continue;
+        if (other.x + other.w <= box.x || other.x >= box.x + box.w) continue;
+        return false;
+      }
+      return true;
+    };
+
+    let leftSpan = want;
+    while (leftSpan > 8 && !clear(floor.x - leftSpan, floor.x)) leftSpan -= 8;
+    let rightSpan = want;
+    const rightEdge = floor.x + floor.w;
+    while (rightSpan > 8 && !clear(rightEdge, rightEdge + rightSpan)) rightSpan -= 8;
+
+    if (leftSpan > 8) this.rock(floor.x - leftSpan, floor.y, leftSpan, depth, 'shoulder');
+    if (rightSpan > 8) this.rock(rightEdge, floor.y, rightSpan, depth, 'shoulder');
+  }
+
   build(meta) {
+    // Before the shift, so the shoulders travel with everything else.
+    this._standOn();
+
     // Everything was composed with the base at y=0 and the summit negative.
     // Shift it into a world box now that the height is known.
     const shift = -this.top + TOP_MARGIN;

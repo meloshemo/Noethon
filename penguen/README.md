@@ -161,12 +161,24 @@ Bu oyunun en çok emek verilen kısmı zorluğun *adil* olması. Üç katman:
 2. **Fizikten türeyen sınırlar**: tuzak buzun genişliği fitilinden, gayzerinki
    uyarı süresinden, fırtınanın gücü yürüme ivmesinden hesaplanıyor. Bir plan
    "160 piksellik gayzer" isteyemez.
-3. **Doğrulayıcı** (`tests/validate-levels.mjs`) 31 elle yazılmış + 80 üretilmiş
+3. **Açılış** (`tests/spawn-safe.mjs`) 76 bölümü gerçek `World` ile açıp üç şey
+   deniyor: hiçbir şey yapma, sağa yürü, sola yürü. Üçü de ilk 0,6 saniyede
+   öldürmemeli. Bu testin varlık sebebi iki gerçek hata: doğuş noktası ilk buza
+   **sabit 80 piksel** içeriden konuyordu ve buzlar daraltılınca 31. bölüm sağa
+   basana üçte bir saniye veriyordu; ayrıca doğuş noktasının arkasında hiçbir şey
+   yoktu, yani sola yürümek 23. bölüme kadar her yerde boğuyordu. İkisi de
+   mesafe hatası değildi, o yüzden hiçbir mesafe kontrolü göremezdi.
+4. **Doğrulayıcı** (`tests/validate-levels.mjs`) 31 elle yazılmış + 80 üretilmiş
    bölümü, 3.271 buzu analitik olarak kontrol ediyor. Geçilemez tek bir zıplama
    varsa derleme düşüyor. Rüzgârla geçilen boşluklar bu kuralın dışında değil,
    tersine iki yönlü kanıtlanıyor: rüzgârsız geçilemediği *ve* rüzgârla rahatça
    geçildiği. İkisinden biri yanlışsa ya fırtına dekordur ya bölüm duvardır.
-4. **Çözücü** (`tests/climb-run.mjs`) tırmanış bölümlerinde bir adım daha ileri
+5. **Sahanlık çözücüsü** (`tests/shelf-run.mjs`) I. chapter'ın rotasını gerçek
+   doğuş noktasından başlayıp gerçek `Player` ile hop hop yürüyor: nereden
+   kalkacağını, ne zaman zıplayacağını, tuşu ne kadar tutacağını ve fırtınanın
+   hangi vuruşunda olduğunu tarıyor. Aritmetik "her boşluk erişim içinde" deyip
+   geçebiliyordu; bu, geçilemeyen bir adım varsa söylüyor.
+6. **Çözücü** (`tests/climb-run.mjs`) tırmanış bölümlerinde bir adım daha ileri
    gidiyor: *gerçek* `Player` sınıfını gerçek bölüm verisine karşı çalıştırıp
    her adım için işe yarayan bir tuş dizisi **arıyor**. Kalkış yerini, zamanını
    ve tuşu ne kadar basılı tuttuğunu tarıyor; hiçbir deneme tutmuyorsa o adımı
@@ -236,7 +248,7 @@ geçmez, hata verip durur.
 
 ## Testler
 
-Tek komut, 21 paket (13 node + paketleme + 7 tarayıcı), kendi sunucusunu
+Tek komut, 23 paket (15 node + paketleme + 7 tarayıcı), kendi sunucusunu
 kurup kapatıyor ve portu doluysa bir yanına kayıyor:
 
 ```bash
@@ -251,7 +263,9 @@ Ayrı ayrı:
 node tools/lint.mjs              # proje kuralları (aşağıda)
 node tests/save.mjs              # kayıt dosyası: her eski sürüm kayıpsız açılıyor
 node tests/music.mjs             # ızgara, katmanlar, sahne geçişi, tema
+node tests/spawn-safe.mjs        # açılışlar: ilk 0,6 sn hiçbir tuş öldürmemeli
 node tests/validate-levels.mjs   # sahanlık bölümleri: geçilebilirlik
+node tests/shelf-run.mjs         # sahanlık rotası: gerçek Player ile baştan sona
 node tests/wind-run.mjs          # rüzgâr boşlukları: gerçek Player ile çözücü
 node tests/validate-climb.mjs    # tırmanış bölümleri: geometri
 node tests/climb-run.mjs         # tırmanış bölümleri: gerçek fizikle çözücü
@@ -392,6 +406,8 @@ tests/
   save.mjs                 kayıt dosyası göçü
   music.mjs                ızgara, katmanlar, sahne geçişi
   validate-levels.mjs      I. chapter geçilebilirlik doğrulayıcısı
+  spawn-safe.mjs           açılışlar: ilk saliseler öldürmüyor
+  shelf-run.mjs            I. chapter rotası: gerçek Player ile çözücü
   wind-run.mjs             rüzgâr boşlukları ve sütunlar: gerçek Player ile çözücü
   validate-climb.mjs       II. chapter geometrisi
   climb-run.mjs            II. chapter çözücüsü
@@ -493,6 +509,9 @@ Ayrıca oyuncunun tarafında olan şeyler:
   daha geç kırılır, tuzaklar yavaşlar. İstendiği an ayarlardan açılıp kapanır.
 - **Rüzgârda durmak**: fırtına seni geri itiyorsa durmak gerçek bir cevap.
   Duran penguen sürüklenmiyor ve dinginlik birkaç saniyede bir geliyor.
+- **Açılış vuruşu**: her bölüm, oyuncuya zemin bitmeden önce **0,6 saniye**
+  veriyor ve bu piksel değil saniye cinsinden yazılmış, çünkü piksel çürüyor.
+  Ayrıca her bölümün bir *arkası* var: sola yürümek artık boğulmak değil.
 - **Kontrol noktaları**: uzun bölümlerde ölünce en baştan başlamazsın.
 - **Ölünce bütün buzlar sıfırlanır**: kırık bir yol yüzünden bölüm kilitlenmez.
 
@@ -1435,7 +1454,7 @@ anlatmak değil, olan bir şeyi olduğundan iyi anlatmaktır.
 | Kayıt | Tek sürümlü JSON, ileri göç, dosyaya aktarma, tek tuşla silme |
 | Çevrimdışı | Servis çalışanı + tek dosya sürümü (732 KB) |
 | Girdi | Klavye, dokunmatik, gamepad |
-| Test | 13 node + paketleme + 7 tarayıcı paketi, hepsi tek komutta |
+| Test | 15 node + paketleme + 7 tarayıcı paketi, hepsi tek komutta |
 
 ### Yok, ve neden
 
@@ -1448,7 +1467,7 @@ anlatmak değil, olan bir şeyi olduğundan iyi anlatmaktır.
 | **Gamepad testi** | Kod var, otomatik testi yok. Gerçek bir kolla denenmeli. |
 | **Safari ve Firefox testi** | Otomatik testler yalnızca Chromium'da. |
 | **Gerçek cihazda oynama** | Hiçbir otomatik test bunun yerine geçmiyor ve hâlâ yapılmadı: [`docs/BILGISAYARDA.md`](docs/BILGISAYARDA.md) §4. |
-| **I. chapter için fizik çözücüsü** | Tırmanış, dalış ve arena gerçek `Player`/`World` ile çözülüyor; sahanlıkta yalnızca rüzgâr boşlukları çözülüyor, geri kalanı analitik doğrulayıcıya güveniyor. |
+| **Tehlike zamanlaması çözücüde yok** | Çözücüler zeminin ulaşılabilir olduğunu kanıtlıyor; gayzerin patlama anı, orkanın sıçrama anı ve fokun devriyesi saat meselesi ve `validate-levels.mjs` içinde kontrol ediliyor. |
 
 ---
 
