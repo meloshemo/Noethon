@@ -33,6 +33,7 @@ const NODE_SUITES = [
   ['tests/dive-run.mjs', 'dalış çözücüsü'],
   ['tests/validate-brawl.mjs', 'arena geometrisi'],
   ['tests/brawl-run.mjs', 'arena çözücüsü'],
+  ['tests/charged-fish.mjs', 'yüklü balıklar'],
   ['tests/economy.mjs', 'ekonomi dengesi'],
   ['tests/ghost.mjs', 'hayalet kodlaması'],
 ];
@@ -43,6 +44,7 @@ const BROWSER_SUITES = [
   ['tests/browser-climb.mjs', 'tırmanma mekaniği'],
   ['tests/browser-dive.mjs', 'yüzme mekaniği'],
   ['tests/browser-brawl.mjs', 'kar topu mekaniği'],
+  ['tests/browser-charged.mjs', 'yüklü balıklar (tarayıcı)'],
   ['tests/browser-session.mjs', 'yarım kalan koşu'],
   ['tests/browser-lang.mjs', 'diller'],
   ['tests/browser-bundle.mjs', 'tek dosya sürümü'],

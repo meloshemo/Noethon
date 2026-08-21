@@ -5,6 +5,69 @@ değiştiği yeterli. En yeni en üstte.
 
 ---
 
+## Zıplama tuşu dört şey demeye başladı
+
+Yeşil çürük balık uzun süre oyundaki en ilginç pikaptı ve sebebi tek cümleyle
+söylenebilir: oyuncuya verebileceğin başka her şey bir sayıdır, sayı ise fiil
+değildir. Yön algısını ters çevirmek fiildi.
+
+Üç yeni renk aynı fikrin iyi tarafı. Hepsi zıplama tuşunun ne demek olduğunu
+birkaç saniyeliğine değiştiriyor, çünkü tek düğmeli bir oyuna ikinci düğme
+eklemeden fiil eklemenin başka yolu yok:
+
+- **Yay** (turuncu): bir tek zıplama, iki katı. Harcanmazsa kendi kendine
+  boşalıyor, yani yanlış anda yutulan bir yay seni senin seçmediğin bir yere
+  fırlatıyor. Sessizce buharlaşan bir yay bedava hediye olurdu.
+- **Kuantum** (mor): havada bir kez bas, üç buçuk gövde ileridesin. Hızını
+  koruduğu için asla yükseltmiyor, sadece taşıyor; hiçbir zıplamanın
+  yetişemeyeceği bir boşluğu geçiyor ve kendi başına bir metre tırmanamıyor.
+  Duvarın içine de sokmuyor: ışınlanma çeyrek gövdelik adımlarla süpürülüyor,
+  son *boş* nokta kazanıyor.
+- **Gevşeme** (turkuaz): sen havadayken senin dışında her şey üçte bir hızda.
+  Yerde çalışmıyor, çünkü genel bir ağır çekim düğmesi her bölümü kolaylaştırır
+  ve hiçbirini ilginçleştirmez. Su altında da çalışmıyor, çünkü orada düğme
+  zaten derinlik kumandası.
+
+Dördüncü bir lanet de geldi: **cilalı**. Diğer üç çürük balık pengueni
+değiştiriyor, bu zeminin *ne olduğunu* değiştiriyor. Hızın, zıplaman ve menzilin
+aynı kalıyor; hiç düşünmediğin tek şeyi kaybediyorsun, durabilmeyi.
+
+### Kuşun elinden kurtulmak
+
+Skua seni kapardı ve iş biterdi: bir saniye taşınma, sonra ölüm, arada
+yapabileceğin hiçbir şey yok. Cevap veremediğin bir pusu, üstüne uzun bir
+animasyon giydirilmiş yazı-turadır.
+
+Artık boğuşma. İki saniyen var, beş hızlı basış seni kurtarıyor, basışlar
+arasında kavrama geri sıkışıyor, yani yavaş tıklamak sönümlemeyle yarışır ve
+asla yetişmez. Kurtulmak da güvende olmak değil: kuşun kendi momentumuyla, o an
+altında ne varsa onun üstüne savruluyorsun.
+
+### Adalet sözleşmesi aynı kaldı
+
+Bütün bölümler hiçbir şeye sahip olmayan ve hiçbir şey toplamayan bir penguene
+göre kanıtlanıyor. Dört çözücü ve iki doğrulayıcı hiçbir balığa dokunmadığı
+için değişmedi bile: `worldRate` hiçbir balık yokken tam olarak 1, yani
+`dt * 1` son bitine kadar `dt`. Bu bir optimizasyon değil, emniyet özelliğinin
+kendisi.
+
+`charged-fish.mjs` yirmi iddiayı gerçek `Player` ve gerçek `World` üstünde
+ölçüyor, `browser-charged.mjs` aynısını gerçek sayfada yapıyor. İkisi birlikte
+yazıldıkları gün iki gerçek hata buldu:
+
+- **Kendi kendine boşalan yay üçte birine kırpılıyordu.** Değişken yükseklikli
+  zıplama, düğmeyi bırakan oyuncunun sıçrayışını kısar; düğmeye hiç basmamış
+  biri de tanımı gereği onu bırakmış sayılıyor. İstemsiz fırlatma, istemsiz
+  olduğu için cezalandırılıyordu.
+- **İki balık buzun içine düşmüştü.** Bölümler plandan besteleniyor, yani "şu
+  buzun bir zıplama üstü" bir yer değil bir yükseklik: aynı satır bir bölümde
+  açık havaya, diğerinde tünel tavanına denk geliyor. `nudgeClear` artık hepsini
+  açığa taşıyor, hem de bestecinin *en sonunda*: ilk denemede her balık
+  konduğu anda kontrol ediliyordu ve 76. bölüm balığı bir rakibin henüz var
+  olmayan tüneğine koymuştu.
+
+---
+
 ## Zorluk ölçülmeye başladı, ve ölçü kötü haber verdi
 
 "Bu bölüm kolay" bir kanaattir, ta ki biri bir sayı üretene kadar. Projede

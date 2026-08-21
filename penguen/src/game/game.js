@@ -436,6 +436,10 @@ export class Game {
       coins += v;
       breakdown.push({ label: t('game.boostEnergy'), value: v });
     }
+    if (w.chargedCoins > 0) {
+      coins += w.chargedCoins;
+      breakdown.push({ label: t('game.chargedFish'), value: w.chargedCoins });
+    }
 
     if (!prev) {
       coins += REWARDS.firstClear;
@@ -488,6 +492,10 @@ export class Game {
       const v = w.boostsTaken * REWARDS.perBoost;
       coins += v;
       breakdown.push({ label: t('game.boostEnergy'), value: v });
+    }
+    if (w.chargedCoins > 0) {
+      coins += w.chargedCoins;
+      breakdown.push({ label: t('game.chargedFish'), value: w.chargedCoins });
     }
     if (first) {
       coins += REWARDS.daily;

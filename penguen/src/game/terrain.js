@@ -23,7 +23,11 @@
  * at the bottom of the world.
  */
 
-import { reachFor, reachWithWind, riseWithLift, crossableGap, openingWidth, OPENING, PHYS, PENGUIN, ICE, STORM, WIND } from './config.js';
+import {
+  reachFor, reachWithWind, riseWithLift, crossableGap, openingWidth,
+  OPENING, PHYS, PENGUIN, ICE, STORM, WIND, CHARGED,
+} from './config.js';
+import { nudgeClear } from '../core/util.js';
 
 /** Sea-level ice, near the bottom of a tall world. */
 export const SEA_LEVEL = 700;
@@ -95,6 +99,8 @@ export class Course {
     this.hazards = [];
     this.fish = [];
     this.speedFish = [];
+    /** Coil, quantum and slack. Always off the running line, never required. */
+    this.chargedFish = [];
     this.rotFish = [];
     this.checkpoints = [];
     /** Rendering hints: shaded bands, tunnel interiors, cliff masses. */
@@ -206,6 +212,7 @@ export class Course {
     const item = { x: Math.round(floe.x + floe.w / 2 - 11), y: Math.round(floe.y - dy) };
     if (kind === 'speed') this.speedFish.push(item);
     else if (kind === 'normal') this.fish.push(item);
+    else if (CHARGED[kind]) this.chargedFish.push({ ...item, kind });
     else this.rotFish.push({ ...item, kind });
     return item;
   }
@@ -216,6 +223,7 @@ export class Course {
     const item = { x: Math.round(last.x - 34), y: Math.round(last.y - dy) };
     if (kind === 'speed') this.speedFish.push(item);
     else if (kind === 'normal') this.fish.push(item);
+    else if (CHARGED[kind]) this.chargedFish.push({ ...item, kind });
     else this.rotFish.push({ ...item, kind });
     return item;
   }
@@ -244,6 +252,19 @@ export class Course {
 
   /** Bait. In the way at chest height, where it has to be actively dodged. */
   temptation(at = 0.5, kind = 'heavy', dy = 40) {
+    this.fishAbove(this.at(at), dy, kind);
+    return this;
+  }
+
+  /**
+   * A charged fish, hung above the running line.
+   *
+   * The default height is most of a jump above a floe you were going to stand
+   * on anyway, which is the whole shape of the offer: it costs you a jump you
+   * did not need and a moment of not looking where you are going. Nothing in
+   * the level is behind it and nothing in the level needs it.
+   */
+  charged(at = 0.5, kind = 'coil', dy = 104) {
     this.fishAbove(this.at(at), dy, kind);
     return this;
   }
@@ -608,6 +629,19 @@ export class Course {
       hazards: this.hazards,
       fish: this.fish,
       speedFish: this.speedFish,
+      /**
+       * Moved clear of the ice as the very last thing the composer does.
+       *
+       * Not at the moment each one is placed, which is where this lived first
+       * and where it did not work: a chapter that builds its perches or its
+       * ceilings after the pickups would have the fish checked against a level
+       * that was not finished yet. Level seventy-six put a slack fish exactly
+       * on a rival's perch that way. Done here, every block that will ever
+       * exist already does.
+       */
+      chargedFish: this.chargedFish.map((f) =>
+        nudgeClear(f, [...this.floes, ...(this.terrain ?? [])]),
+      ),
       rotFish: this.rotFish,
       checkpoints: this.checkpoints,
       /** Gaps that only the tailwind crosses, for the validator to prove. */

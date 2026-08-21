@@ -32,7 +32,8 @@
  *      target's own perch; too flat and it never gets past the thrower's.
  */
 
-import { PENGUIN, BRAWL, dodgeWindow, PHYS } from './config.js';
+import { PENGUIN, BRAWL, dodgeWindow, PHYS, CHARGED } from './config.js';
+import { nudgeClear } from '../core/util.js';
 
 const RIVAL_W = 30;
 const RIVAL_H = 40;
@@ -99,6 +100,8 @@ export class Arena {
     this.rivals = [];
     this.fish = [];
     this.speedFish = [];
+    /** Coil, quantum and slack. Always off the running line, never required. */
+    this.chargedFish = [];
     this.rotFish = [];
     this.checkpoints = [];
     this.signs = [];
@@ -451,8 +454,19 @@ export class Arena {
     };
     if (kind === 'speed') this.speedFish.push(item);
     else if (kind === 'normal') this.fish.push(item);
+    else if (CHARGED[kind]) this.chargedFish.push({ ...item, kind });
     else this.rotFish.push({ ...item, kind });
     return this;
+  }
+
+  /**
+   * A charged fish, hung over the arena floor.
+   *
+   * High enough that going for it puts you in the air on somebody else's beat,
+   * which in this chapter is the only real currency there is.
+   */
+  charged(at = 0.5, kind = 'slack', up = 0.34) {
+    return this.fishAt(at, up, kind);
   }
 
   sign(text, at = 0.1) {
@@ -498,6 +512,19 @@ export class Arena {
       rivals: this.rivals,
       fish: this.fish,
       speedFish: this.speedFish,
+      /**
+       * Moved clear of the ice as the very last thing the composer does.
+       *
+       * Not at the moment each one is placed, which is where this lived first
+       * and where it did not work: a chapter that builds its perches or its
+       * ceilings after the pickups would have the fish checked against a level
+       * that was not finished yet. Level seventy-six put a slack fish exactly
+       * on a rival's perch that way. Done here, every block that will ever
+       * exist already does.
+       */
+      chargedFish: this.chargedFish.map((f) =>
+        nudgeClear(f, [...this.floes, ...(this.terrain ?? [])]),
+      ),
       rotFish: this.rotFish,
       checkpoints: this.checkpoints,
       signs: this.signs,

@@ -8,9 +8,29 @@
  * hazards → penguin → particles → weather → post effects.
  */
 
-import { VIEW, VIEW_LIMITS, AMBUSH, CLIMB, BRAWL } from './config.js';
+import { VIEW, VIEW_LIMITS, AMBUSH, CHARGED, COIL, QUANTUM, SLACK, CLIMB, BRAWL } from './config.js';
 import { getSkin, getTrail } from './skins.js';
 import { clamp, lerp, makeRng } from '../core/util.js';
+
+/**
+ * `#rrggbb` plus an alpha, as an `rgba()` string.
+ *
+ * Every tint in the game is written as a plain hex literal, because that is
+ * what a person reading the config wants to see. The canvas wants four
+ * numbers. This is the whole of the translation and it lives here rather than
+ * in the config so the config stays a description of the game.
+ */
+function withAlpha(hex, a) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${Math.max(0, Math.min(1, a))})`;
+}
+
+/** The same colour, darker (`k < 0`) or lighter (`k > 0`). */
+function shade(hex, k) {
+  const n = parseInt(hex.slice(1), 16);
+  const mix = (c) => Math.round(k < 0 ? c * (1 + k) : c + (255 - c) * k);
+  return `rgb(${mix((n >> 16) & 255)},${mix((n >> 8) & 255)},${mix(n & 255)})`;
+}
 
 const PALETTE = {
   skyTop: '#08132a',
@@ -920,6 +940,10 @@ export class Renderer {
       if (f.taken) continue;
       this._speedFish(ctx, f, time);
     }
+    for (const f of world.charged ?? []) {
+      if (f.taken) continue;
+      this._chargedFish(ctx, f, time);
+    }
     for (const f of world.rotten ?? []) {
       if (f.taken) continue;
       this._rotFish(ctx, f, time);
@@ -1063,6 +1087,130 @@ export class Renderer {
       ctx.beginPath();
       ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r);
       ctx.lineTo(Math.cos(a) * (r + 6), Math.sin(a) * (r + 6));
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  /**
+   * The charged fish.
+   *
+   * All three share a silhouette and a halo and differ only in colour and in
+   * the one glyph on the flank, which is on purpose: they are one family, and
+   * the player should learn "that shape means the button changes" once and
+   * then only have to read the colour.
+   *
+   * The glyphs are the ideas themselves rather than icons of them. The coil is
+   * an actual spring, drawn compressed and breathing. The quantum fish is
+   * drawn twice, in two places, neither of them quite solid. The slack fish
+   * has a ring that races and a hand that barely moves, and the gap between
+   * those two speeds is the entire mechanic stated without a word.
+   */
+  _chargedFish(ctx, f, time) {
+    const spec = CHARGED[f.kind] ?? CHARGED.coil;
+    const cx = f.x + f.w / 2;
+    const cy = f.y + f.h / 2 + Math.sin(f.phase) * 3;
+    const pulse = 0.55 + 0.45 * Math.sin(time * 5 + f.phase);
+    const tint = spec.tint;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+
+    const halo = ctx.createRadialGradient(0, 0, 3, 0, 0, 32 + pulse * 9);
+    halo.addColorStop(0, withAlpha(tint, 0.34 * pulse));
+    halo.addColorStop(0.55, withAlpha(tint, 0.14 * pulse));
+    halo.addColorStop(1, withAlpha(tint, 0));
+    ctx.fillStyle = halo;
+    ctx.fillRect(-44, -44, 88, 88);
+
+    // The quantum fish is the only one drawn more than once. The ghost is
+    // behind and offset, and it is *not* a motion blur: it sits still.
+    const copies = f.kind === 'quantum' ? [{ dx: -13, a: 0.32 }, { dx: 0, a: 1 }] : [{ dx: 0, a: 1 }];
+    for (const c of copies) {
+      ctx.save();
+      ctx.globalAlpha = c.a;
+      ctx.translate(c.dx, 0);
+      ctx.rotate(Math.sin(f.phase * 0.8) * 0.12);
+
+      const g = ctx.createLinearGradient(-14, -9, 14, 9);
+      g.addColorStop(0, tint);
+      g.addColorStop(1, shade(tint, -0.42));
+      ctx.fillStyle = g;
+      ctx.shadowColor = withAlpha(tint, 0.65);
+      ctx.shadowBlur = 15;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 15, 10, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(12, 0);
+      ctx.lineTo(23, -9);
+      ctx.lineTo(23, 9);
+      ctx.closePath();
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      ctx.fillStyle = '#08131f';
+      ctx.beginPath();
+      ctx.arc(-8, -3, 2.2, 0, Math.PI * 2);
+      ctx.fill();
+
+      // The glyph.
+      ctx.strokeStyle = '#0c1420';
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      if (f.kind === 'coil') {
+        // A spring, breathing: the turns bunch up and let go on the pulse.
+        const squeeze = 1 - pulse * 0.35;
+        ctx.beginPath();
+        ctx.moveTo(-6, 5 * squeeze);
+        for (let i = 0; i <= 3; i++) {
+          ctx.lineTo(4, (3.2 - i * 2.4) * squeeze);
+          ctx.lineTo(-5, (2 - i * 2.4) * squeeze);
+        }
+        ctx.stroke();
+      } else if (f.kind === 'quantum') {
+        // Two dots and nothing in between, which is the whole trick.
+        ctx.fillStyle = '#0c1420';
+        ctx.beginPath();
+        ctx.arc(-3, 1, 2.4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(6, 1, 2.4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = c.a * 0.4;
+        ctx.setLineDash([2, 3]);
+        ctx.beginPath();
+        ctx.moveTo(-1, 1);
+        ctx.lineTo(4, 1);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.globalAlpha = c.a;
+      } else {
+        // A dial with a hand that has almost stopped.
+        ctx.beginPath();
+        ctx.arc(0, 0, 6, 0, Math.PI * 2);
+        ctx.stroke();
+        const slow = time * 0.5;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(Math.cos(slow) * 4.4, Math.sin(slow) * 4.4);
+        ctx.stroke();
+      }
+      ctx.lineCap = 'butt';
+      ctx.restore();
+    }
+
+    // The orbiting ring. On the slack fish it runs hard, so the contrast with
+    // the almost-stopped hand inside it is impossible to miss.
+    const spin = f.kind === 'slack' ? 7 : 3;
+    ctx.strokeStyle = withAlpha(tint, 0.5 + 0.4 * pulse);
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 4; i++) {
+      const a = time * spin + (i * Math.PI) / 2;
+      const r = 23 + pulse * 4;
+      ctx.beginPath();
+      ctx.arc(0, 0, r, a, a + 0.5);
       ctx.stroke();
     }
     ctx.restore();
@@ -1684,6 +1832,38 @@ export class Renderer {
     }
     ctx.restore();
 
+    /**
+     * The struggle, drawn.
+     *
+     * Two things at once: how hard the chick is fighting, as feathers coming
+     * off and a wing-beat that gets ragged, and how close it is to winning, as
+     * a ring closing around the bird. Neither is a bar and neither is a
+     * number, because the whole event lasts two seconds and the player has to
+     * be able to read it without looking away from the penguin.
+     */
+    if (s.state === 'carry') {
+      const k = clamp((s.wrest ?? 0) / AMBUSH.shakes, 0, 1);
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      ctx.strokeStyle = `rgba(255,214,102,${0.35 + 0.55 * k})`;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(0, 6, 40, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * k);
+      ctx.stroke();
+      if (!this.reducedMotion) {
+        ctx.globalAlpha = 0.5 + 0.5 * (s.jolt ?? 0);
+        ctx.fillStyle = '#e8eef7';
+        for (let i = 0; i < 5; i++) {
+          const a = time * 3 + i * 1.27;
+          const r = 26 + ((time * 40 + i * 19) % 34);
+          ctx.beginPath();
+          ctx.ellipse(Math.cos(a) * r * 0.8, 10 + Math.sin(a) * r * 0.5, 3.4, 1.4, a, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+    }
+
     // Speed streaks behind it on the way in, so a dive reads as fast.
     if (!this.reducedMotion && diving) {
       ctx.save();
@@ -2063,17 +2243,69 @@ export class Renderer {
     }
 
     // Afterimages next, so the live bird draws on top of its own streak.
-    if (p.charge > 0 && !this.reducedMotion) {
+    if ((p.charge > 0 || p.blinked > 0) && !this.reducedMotion) {
+      // A blink leaves the same shape of streak as a boost, in the blink's own
+      // colour, so the two never get confused for one another at speed.
+      const blinking = p.blinked > 0;
       for (const g of p.trail) {
-        const a = Math.max(0, g.life / 0.22);
+        const a = Math.max(0, g.life / (blinking ? 0.3 : 0.22));
         ctx.save();
-        ctx.globalAlpha = a * 0.4;
-        ctx.fillStyle = a > 0.5 ? '#ff5560' : '#ffd23f';
+        ctx.globalAlpha = a * (blinking ? 0.55 : 0.4);
+        ctx.fillStyle = blinking
+          ? withAlpha(CHARGED.quantum.tint, 1)
+          : a > 0.5 ? '#ff5560' : '#ffd23f';
         ctx.beginPath();
         ctx.ellipse(g.x + p.w / 2, g.y + p.h * 0.55, p.w * 0.42, p.h * 0.46, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
       }
+    }
+
+    /**
+     * What the button currently means, drawn as a ring under the bird.
+     *
+     * Three effects, all short, all invisible until the player presses the
+     * button — which is exactly the situation that needs a permanent reminder
+     * on the character rather than a line of text that has already faded. The
+     * ring is on the ice at his feet, where the eye already is.
+     *
+     * The coil is the odd one out: its ring winds tighter as the timer runs
+     * down, because that clock is a threat rather than a gift. When it closes,
+     * the spring goes off whether the player asked for it or not.
+     */
+    const aura = p.coilArmed
+      ? { tint: CHARGED.coil.tint, k: clamp(p.coil / COIL.duration, 0, 1), wind: true }
+      : p.quantum > 0
+        ? { tint: CHARGED.quantum.tint, k: clamp(p.quantum / QUANTUM.duration, 0, 1), spent: p.quantumUsed }
+        : p.slack > 0
+          ? { tint: CHARGED.slack.tint, k: clamp(p.slack / SLACK.duration, 0, 1) }
+          : null;
+    if (aura && !this.reducedMotion) {
+      const rx = p.w * (aura.wind ? 0.5 + aura.k * 0.5 : 0.9);
+      ctx.save();
+      ctx.globalAlpha = aura.spent ? 0.3 : 0.55 + 0.35 * Math.sin(time * 8);
+      ctx.strokeStyle = withAlpha(aura.tint, 1);
+      ctx.lineWidth = 2.5;
+      if (aura.spent) ctx.setLineDash([4, 5]);
+      ctx.beginPath();
+      ctx.ellipse(p.x + p.w / 2, p.y + p.h, rx, rx * 0.32, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      // The remaining time, as the arc that is still closed.
+      ctx.globalAlpha = 0.85;
+      ctx.lineWidth = 3.5;
+      ctx.beginPath();
+      ctx.ellipse(
+        p.x + p.w / 2,
+        p.y + p.h,
+        rx + 4,
+        (rx + 4) * 0.32,
+        0,
+        -Math.PI / 2,
+        -Math.PI / 2 + Math.PI * 2 * aura.k,
+      );
+      ctx.stroke();
+      ctx.restore();
     }
 
     const cx = p.x + p.w / 2;

@@ -325,7 +325,10 @@ const PLANS = [
       c.scatterFish(3, 62);
       c.temptation(0.34, 'dizzy');
       c.temptation(0.58, 'heavy');
-      c.temptation(0.78, 'dizzy');
+      // The fourth bad fish, introduced on the level whose whole subject is
+      // bad fish, and placed above the cracked shelf: losing your grip on ice
+      // that is already going is how you learn what this one costs.
+      c.temptation(0.72, 'slick');
       c.checkpoint(c.at(0.5));
     },
   },
@@ -415,6 +418,16 @@ const PLANS = [
       c.cliff({ drop: 380, ledges: 4 });
       c.landing();
       c.scatterFish(3, 62);
+      // The first coil in the game, hung over the orca run.
+      //
+      // It is here rather than on a quiet level on purpose. The one thing a
+      // player wants while a whale is coming up through the gap is to be
+      // somewhere much higher very quickly, and the fish that does exactly
+      // that is floating just above their head. Nothing is behind it and the
+      // gaps are all crossable without it — but nobody believes that the
+      // first time, and going for it while the water moves is the moment the
+      // colours stop being decoration.
+      c.charged(0.46, 'coil');
       c.checkpoint(c.at(0.55));
     },
   },
@@ -491,6 +504,10 @@ const PLANS = [
       c.crevasse({ pillars: 3, gap: 0.66, depth: 280 });
       c.landing();
       c.scatterFish(3, 60);
+      // The blink, on the one level where you spend half your time being
+      // thrown. A geyser decides your height; this decides where that height
+      // gets spent, and the two together are a route the level never drew.
+      c.charged(0.5, 'quantum');
       c.sprint(0.4);
       c.checkpoint(c.at(0.55));
     },
@@ -533,6 +550,9 @@ const PLANS = [
       c.landing();
       c.scatterFish(3, 58);
       c.temptation(0.45, 'blind');
+      // Under a hundred-and-four-pixel ceiling, where the only safe way
+      // through is to stop and go. Slick takes away the stopping.
+      c.temptation(0.6, 'slick');
       c.checkpoint(c.at(0.45));
     },
   },
@@ -571,6 +591,10 @@ const PLANS = [
       c.scatterFish(3, 58);
       c.temptation(0.32, 'dizzy');
       c.temptation(0.68, 'heavy');
+      // Slack, over the second tunnel — the one with the fake floors in it.
+      // A floe that vanishes under you is a timing problem, and this is the
+      // only thing in the game that gives you longer to solve one.
+      c.charged(0.72, 'slack');
       c.checkpoint(c.at(0.45));
     },
   },
@@ -593,6 +617,9 @@ const PLANS = [
       c.cliff({ drop: 360, ledges: 4 });
       c.landing();
       c.scatterFish(3, 58);
+      // Seals below, whales beneath, and a fish that takes your footing away.
+      // This one is not a decision, it is a dare.
+      c.temptation(0.52, 'slick');
       c.checkpoint(c.at(0.55));
     },
   },
@@ -616,6 +643,11 @@ const PLANS = [
       c.landing();
       c.scatterFish(3, 58);
       c.temptation(0.4, 'heavy');
+      c.temptation(0.56, 'slick');
+      // A coil above the storm. A wound spring and a tailwind arriving on the
+      // same beat is the longest jump this chapter can produce, and the level
+      // is built so that finding out is worth a run of its own.
+      c.charged(0.66, 'coil');
       c.sprint(0.62);
       c.checkpoint(c.at(0.4));
       c.checkpoint(c.at(0.75));
@@ -642,6 +674,13 @@ const PLANS = [
       c.landing({ w: 250 });
       c.scatterFish(3, 58);
       c.temptation(0.45, 'dizzy');
+      // The last shelf level offers all three at once, spread wide enough that
+      // taking one is choosing not to take the others. That is the exam: not
+      // whether you can use them, but whether you know which one this stretch
+      // of ice is asking for.
+      c.charged(0.3, 'slack');
+      c.charged(0.55, 'quantum');
+      c.charged(0.8, 'coil');
       c.sprint(0.7);
       c.checkpoint(c.at(0.4));
       c.checkpoint(c.at(0.78));

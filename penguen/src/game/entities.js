@@ -511,18 +511,25 @@ export class Hazard {
  *   speed  — red and gold, a temporary sprint, always a detour
  *   heavy / dizzy / blind — rotten, a temporary curse, always on the line
  */
+/** The rotten kinds. A fish is bait if its kind is in here, and only then. */
+const ROT_KINDS = ['heavy', 'slick', 'dizzy', 'blind'];
+/** The fish that hand the jump button a new meaning for a few seconds. */
+const CHARGED_KINDS = ['coil', 'quantum', 'slack'];
+
 export class Fish {
   constructor(def, kind = 'normal') {
     this.kind = kind;
-    this.rot = kind === 'heavy' || kind === 'dizzy' || kind === 'blind';
+    this.rot = ROT_KINDS.includes(kind);
+    this.charged = CHARGED_KINDS.includes(kind);
     this.x = def.x;
     this.y = def.y;
     this.baseX = def.x;
     this.baseY = def.y;
-    // The speed fish is bigger and easier to grab — it is already a detour,
-    // so it should not also be a precision test.
-    this.w = kind === 'speed' ? 30 : 22;
-    this.h = kind === 'speed' ? 22 : 16;
+    // The speed and charged fish are bigger and easier to grab — they are
+    // already a detour, so they should not also be a precision test.
+    const big = kind === 'speed' || this.charged;
+    this.w = big ? 30 : 22;
+    this.h = big ? 22 : 16;
     // A rotten fish drifts on the spot, which is most of how you spot one
     // moving at speed — that and the colour.
     this.wobble = Math.random() * Math.PI * 2;
@@ -535,11 +542,21 @@ export class Fish {
     return this.kind === 'speed';
   }
 
+  /** Charged fish read as alive: they hover, they do not drift like bait. */
+  get lively() {
+    return this.charged;
+  }
+
   update(dt) {
-    this.phase += dt * (this.rot ? 1.5 : 2.4);
+    this.phase += dt * (this.rot ? 1.5 : this.charged ? 3.2 : 2.4);
     if (this.rot) {
       this.wobble += dt * 3.1;
       this.x = this.baseX + Math.sin(this.wobble) * 6;
+    } else if (this.charged) {
+      // A charged fish hovers rather than swims: it holds its lane and bobs,
+      // so from across a level it reads as a thing waiting to be used.
+      this.wobble += dt * 2.2;
+      this.y = this.baseY + Math.sin(this.wobble) * 7;
     }
     if (this.pop > 0) this.pop = Math.max(0, this.pop - dt * 3);
   }

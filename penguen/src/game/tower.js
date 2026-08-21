@@ -26,7 +26,8 @@
  * designer meant you to wall-jump here" from quietly becoming "nobody can pass".
  */
 
-import { reachFor, reachAt, climbBudget, kickGain, openingWidth, CLIMB, PENGUIN } from './config.js';
+import { reachFor, reachAt, climbBudget, kickGain, openingWidth, CLIMB, PENGUIN, CHARGED } from './config.js';
+import { nudgeClear } from '../core/util.js';
 
 /** Thickness of an ice wall. Thick enough to read as the mountain, not a line. */
 const WALL_T = 44;
@@ -102,6 +103,8 @@ export class Tower {
     this.hazards = [];
     this.fish = [];
     this.speedFish = [];
+    /** Coil, quantum and slack. Always off the running line, never required. */
+    this.chargedFish = [];
     this.rotFish = [];
     this.checkpoints = [];
     this.zones = [];
@@ -848,8 +851,21 @@ export class Tower {
     const item = { x: Math.round(f.x + f.w / 2 - 11 + dx), y: Math.round(f.y - dy) };
     if (kind === 'speed') this.speedFish.push(item);
     else if (kind === 'normal') this.fish.push(item);
+    else if (CHARGED[kind]) this.chargedFish.push({ ...item, kind });
     else this.rotFish.push({ ...item, kind });
     return this;
+  }
+
+  /**
+   * A charged fish, out to the side of the climb.
+   *
+   * Off to one side rather than above, because on a tower "above" is the
+   * route. Reaching it means a kick away from the wall you were holding, and
+   * getting back costs a regrab — which is exactly the price a shortcut in a
+   * chapter about stamina should carry.
+   */
+  charged(index, kind = 'coil', dx = 96, dy = 40) {
+    return this.fishAt(index, dy, kind, dx);
   }
 
   /** The three collectibles, spread up the climb. */
@@ -938,7 +954,7 @@ export class Tower {
     for (const f of this.floes) move(f);
     for (const t of this.terrain) move(t);
     for (const h of this.hazards) move(h);
-    for (const f of [...this.fish, ...this.speedFish, ...this.rotFish]) move(f);
+    for (const f of [...this.fish, ...this.speedFish, ...this.chargedFish, ...this.rotFish]) move(f);
     for (const c of this.checkpoints) move(c);
     for (const z of this.zones) {
       z.top += shift;
@@ -967,6 +983,19 @@ export class Tower {
       hazards: this.hazards,
       fish: this.fish,
       speedFish: this.speedFish,
+      /**
+       * Moved clear of the ice as the very last thing the composer does.
+       *
+       * Not at the moment each one is placed, which is where this lived first
+       * and where it did not work: a chapter that builds its perches or its
+       * ceilings after the pickups would have the fish checked against a level
+       * that was not finished yet. Level seventy-six put a slack fish exactly
+       * on a rival's perch that way. Done here, every block that will ever
+       * exist already does.
+       */
+      chargedFish: this.chargedFish.map((f) =>
+        nudgeClear(f, [...this.floes, ...(this.terrain ?? [])]),
+      ),
       rotFish: this.rotFish,
       checkpoints: this.checkpoints,
       route: this.route,

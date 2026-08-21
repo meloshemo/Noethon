@@ -6,12 +6,13 @@
  * is pure simulation so it stays easy to reason about.
  */
 
-import { t } from '../core/i18n.js';
+import { t, loc } from '../core/i18n.js';
 import { Floe, Hazard, Fish, Checkpoint, Rival, Snowball } from './entities.js';
 import { Player } from './player.js';
 import { GhostRecorder, Ghost } from './ghost.js';
 import {
-  VIEW, VIEW_LIMITS, ASSIST, ICE, STORM, WIND, SWIM, BRAWL, BOOST, ROT, REWARDS, AMBUSH, COLLAPSE, scaleForLevel, upgradeEffect,
+  VIEW, VIEW_LIMITS, ASSIST, ICE, STORM, WIND, SWIM, BRAWL, BOOST, CHARGED, ROT, REWARDS, AMBUSH, COLLAPSE,
+  scaleForLevel, upgradeEffect,
 } from './config.js';
 import { WATER_Y } from './levels.js';
 import { getSkin } from './skins.js';
@@ -113,6 +114,18 @@ export class World {
     this.boosts = (def.speedFish ?? []).map((d) => new Fish(d, 'speed'));
     /** Rotten fish: bait, never collectibles. */
     this.rotten = (def.rotFish ?? []).map((d) => new Fish(d, d.kind ?? 'heavy'));
+    /**
+     * The charged fish: coil, quantum, slack.
+     *
+     * Scored apart from everything else for the same reason the speed fish is:
+     * the three-fish star has to stay a three-fish star, and a level that
+     * offers a blink must not quietly make its own collectible harder to get.
+     *
+     * None of them is ever on the running line. Every level in this game is
+     * proved crossable by a penguin that owns nothing and picks up nothing,
+     * and a fish that sat on the route would turn that proof into a lie.
+     */
+    this.charged = (def.chargedFish ?? []).map((d) => new Fish(d, d.kind ?? 'coil'));
     this.checkpoints = (def.checkpoints ?? []).map((d) => new Checkpoint(d));
     this.signs = def.signs ?? [];
     this.goal = { x: def.goal.x, y: def.goal.y, w: 54, h: 64, pulse: 0 };
@@ -181,6 +194,8 @@ export class World {
     this.skuaCooldown = AMBUSH.grace;
     this.skuasDodged = 0;
     this.skuaGrabs = 0;
+    /** Grabs the chick fought its way out of. A mission asks for these. */
+    this.skuasEscaped = 0;
     /** Gear use, for the missions that ask how you played rather than what you survived. */
     this.glideTime = 0;
     this.rocketFires = 0;
@@ -206,6 +221,16 @@ export class World {
       ((def.id ?? 1) >= COLLAPSE.fromLevel || Boolean(def.daily) || Boolean(def.generated)) &&
       Math.random() < COLLAPSE.chance * (this.assist ? 0.45 : 1);
     this.boostsTaken = 0;
+    /** Charged fish swallowed this run, so a mission can ask for one. */
+    this.chargedTaken = 0;
+    /**
+     * And what they were worth.
+     *
+     * Summed as they are eaten rather than counted at the end, because the
+     * three are not worth the same: the coil is the cheapest of them and the
+     * blink is the one people will cross a level for.
+     */
+    this.chargedValue = 0;
     /** Rotten fish swallowed this run — one of the daily objectives reads it. */
     this.rottenTaken = 0;
     /** Kicks off an ice wall, so missions can ask for them. */
@@ -327,7 +352,19 @@ export class World {
   }
 
   update(dt, intent) {
-    this.time += dt;
+    /**
+     * Slack time.
+     *
+     * The penguin runs on `dt`; everything it has to dodge runs on `wdt`. When
+     * no slack fish is working the two are the same number and this costs
+     * nothing — `worldRate` is 1, so `dt * 1` is `dt` down to the last bit, and
+     * every solver and validator in `tests/` sees exactly the clock it always
+     * saw. That equality is not an optimisation, it is the safety property:
+     * the proofs of passability are run by a penguin that picks nothing up.
+     */
+    const rate = this.player.worldRate;
+    const wdt = dt * rate;
+    this.time += wdt;
     // Recording and the ghost both run on the same clock as the timer, so a
     // sample's index is its time on the clock — including the seconds lost to
     // deaths, which is exactly what the timer charges you for.
@@ -350,14 +387,15 @@ export class World {
     };
     if (this.shieldFlash > 0) this.shieldFlash = Math.max(0, this.shieldFlash - dt);
 
-    for (const f of this.floes) f.update(dt, this.time, fx);
+    for (const f of this.floes) f.update(wdt, this.time, fx);
     for (const f of this.fish) f.update(dt);
     for (const f of this.boosts) f.update(dt);
+    for (const f of this.charged) f.update(dt);
     for (const f of this.rotten) f.update(dt);
-    this._updateSkua(dt);
-    this._updateCollapse(dt);
+    this._updateSkua(wdt, intent);
+    this._updateCollapse(wdt);
     for (const c of this.checkpoints) c.update(dt);
-    for (const h of this.hazards) h.update(dt, this.time, this.player, this.hazardSpeed);
+    for (const h of this.hazards) h.update(wdt, this.time, this.player, this.hazardSpeed);
     this.goal.pulse = (this.goal.pulse + dt * 2) % (Math.PI * 2);
 
     if (this.status === 'dying') {
@@ -437,9 +475,19 @@ export class World {
     }
 
     this.player.update(dt, { ...intent, push, lift }, this.solids, this.tuning, {
-      onJump: () => {
-        this.audio.jump();
-        this.particles.puff(this.player.centerX, this.player.y + this.player.h, 6, 0);
+      onJump: (wound) => {
+        if (wound) {
+          this.audio.uncoil?.();
+          this.particles.burstIce(this.player.centerX, this.player.y + this.player.h, 14, 16);
+          this.shake(5);
+        } else {
+          this.audio.jump();
+        }
+        this.particles.puff(this.player.centerX, this.player.y + this.player.h, wound ? 12 : 6, 0);
+      },
+      onBlink: () => {
+        this.audio.blink?.();
+        this.particles.sparkle(this.player.centerX, this.player.y + this.player.h / 2, CHARGED.quantum.tint);
       },
       onLand: (impact, floe) => {
         this.audio.land();
@@ -651,7 +699,7 @@ export class World {
       const py = this.player.y + this.player.h / 2;
       // Deliberately excludes rotten fish: a magnet that pulls curses into you
       // would make a purchase actively harmful.
-      for (const f of [...this.fish, ...this.boosts]) {
+      for (const f of [...this.fish, ...this.boosts, ...this.charged]) {
         if (f.taken) continue;
         const dx = px - (f.x + f.w / 2);
         const dy = py - (f.y + f.h / 2);
@@ -681,7 +729,7 @@ export class World {
       this.audio.rot();
       this.particles.sparkle(f.x + f.w / 2, f.y + f.h / 2, '#7fbf4d');
       this.shake(3);
-      this.showHint(ROT[f.kind]?.label ?? t('world.badFish'), 1.6);
+      this.showHint(loc(ROT[f.kind], 'label') || t('world.badFish'), 1.6);
     }
 
     for (const f of this.boosts) {
@@ -696,6 +744,21 @@ export class World {
       this.shake(4);
       this.showHint(t('world.boost'), 1.4);
     }
+    for (const f of this.charged) {
+      if (f.taken || !rectsOverlap(this.player.box, f.box)) continue;
+      f.taken = true;
+      f.pop = 1;
+      this.chargedTaken++;
+      this.player.chargeFish(f.kind);
+      this.chargedValue += CHARGED[f.kind]?.reward ?? 0;
+      const spec = CHARGED[f.kind];
+      this.audio.chargedFish?.();
+      this.particles.sparkle(f.x + f.w / 2, f.y + f.h / 2, spec?.tint ?? '#8ad7ff');
+      this.particles.sparkle(f.x + f.w / 2, f.y + f.h / 2, '#ffffff');
+      this.shake(4);
+      this.showHint(loc(spec, 'label') || t('world.boost'), 1.5);
+    }
+
     for (const c of this.checkpoints) {
       if (c.active || !rectsOverlap(this.player.box, c.box)) continue;
       c.active = true;
@@ -859,6 +922,7 @@ export class World {
     // Speed fish come back on a retry; the normal three stay taken so a death
     // never costs you collectibles you already earned this run.
     for (const f of this.boosts) f.reset();
+    for (const f of this.charged) f.reset();
     for (const f of this.rotten) f.reset();
     // A collapse that already happened does not happen twice on the same
     // attempt — the shock is the mechanic, and a repeat is just a wall.
@@ -866,6 +930,8 @@ export class World {
     this.skua = null;
     this.skuaCooldown = AMBUSH.grace;
     this.boostsTaken = 0;
+    this.chargedTaken = 0;
+    this.chargedValue = 0;
     this.rottenTaken = 0;
     // Last line of defence against a death loop.
     //
@@ -936,9 +1002,10 @@ export class World {
    *   — the shadow is drawn on the ice under that point, not on the bird, so
    *     it is readable while you are busy doing something else;
    *   — never within `grace` of a spawn, and never twice inside the cooldown;
-   *   — a grab costs you the checkpoint, not the level.
+   *   — a grab is a struggle you can win, not a cutscene you watch;
+   *   — and losing it costs you the checkpoint, not the level.
    */
-  _updateSkua(dt) {
+  _updateSkua(dt, intent) {
     if (!this.ambushes || this.status !== 'playing') return;
 
     if (!this.skua) {
@@ -979,9 +1046,15 @@ export class World {
         s.state = 'carry';
         s.t = 0;
         this.skuaGrabs++;
+        s.wrest = 0;
+        s.jolt = 0;
         this.audio.screech?.();
         this.shake(7);
         this.player.alive = false;
+        // Told, not hidden. The struggle is two seconds long and a player who
+        // spends the first one working out that there is something to do has
+        // already lost it.
+        this.showHint(t('world.shakeFree'), AMBUSH.carry);
       } else if (s.t >= AMBUSH.dive) {
         this.skuasDodged++;
         this.skua = null;
@@ -991,13 +1064,53 @@ export class World {
     }
 
     if (s.state === 'carry') {
-      // Carried off, then dropped — the death lands after the indignity.
+      /**
+       * The struggle.
+       *
+       * The bird has you and it is climbing. You get a little over two seconds
+       * before it clears the level, and the only thing you can do about it is
+       * the thing you can always do: hit the button. Five good presses twist
+       * you loose. The grip tightens back between them, so it has to be five
+       * presses *quickly* — a slow tap fights the decay and never gets there.
+       *
+       * Winning does not make you safe. You come out with the bird's own
+       * momentum, sideways and rising, over whatever the level happens to have
+       * underneath at that moment — which is very often the sea. That is the
+       * point: an escape that dropped you gently onto the nearest floe would
+       * make the whole event a formality with extra steps.
+       */
       s.x += s.dir * 210 * dt;
       s.y -= 190 * dt;
-      this.player.x = s.x - this.player.w / 2;
-      this.player.y = s.y + 12;
+      s.wrest = Math.max(0, s.wrest - AMBUSH.regrip * dt);
+      if (intent?.jumpPressed) {
+        s.wrest += 1;
+        s.jolt = 1;
+        this.audio.flap?.();
+        this.particles.puff(s.x, s.y + 14, 3);
+      }
+      if (s.jolt > 0) s.jolt = Math.max(0, s.jolt - dt * 4);
+      // The thrash is drawn from the same number the escape is scored from, so
+      // the player can see how close they are without a bar being added to a
+      // game that has no bars.
+      const shove = s.jolt * 9 * s.dir;
+      this.player.x = s.x - this.player.w / 2 - shove;
+      this.player.y = s.y + 12 + s.jolt * 4;
       this.player.vx = 0;
       this.player.vy = 0;
+
+      if (s.wrest >= AMBUSH.shakes) {
+        this.player.alive = true;
+        this.player.launch(s.dir * 150, -210);
+        this.skua = null;
+        this.skuaCooldown = AMBUSH.cooldown;
+        this.skuasEscaped++;
+        this.audio.screech?.();
+        this.particles.burstIce(this.player.centerX, this.player.y, 10, 12);
+        this.shake(5);
+        this.showHint(t('world.wrestled'), 1.4);
+        return;
+      }
+
       if (s.t >= AMBUSH.carry) {
         this.skua = null;
         this.skuaCooldown = AMBUSH.cooldown;
@@ -1106,6 +1219,10 @@ export class World {
       x: 0,
       y: 0,
       hit: false,
+      /** How far through twisting free the chick is. Decays between presses. */
+      wrest: 0,
+      /** One thrash, drawn. Purely so the struggle is visible from outside. */
+      jolt: 0,
     };
     this.audio.screech?.();
   }
@@ -1118,6 +1235,11 @@ export class World {
   /** Coins the speed fish are worth this run. */
   get boostCoins() {
     return this.boostsTaken * REWARDS.perBoost;
+  }
+
+  /** And the charged ones, which are priced individually. */
+  get chargedCoins() {
+    return this.chargedValue;
   }
 
   /** Star rating for the run that just finished. */

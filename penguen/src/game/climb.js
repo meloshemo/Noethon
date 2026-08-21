@@ -139,6 +139,16 @@ const CLIMB_PLANS = [
       t.steps({ n: 2, rise: 0.6, w: 135 });
       t.crown({ w: 250 });
       t.scatterFish(3, 58);
+      // A coil beside the long chimney, level with the halfway nub.
+      //
+      // This is the first place in the game where the fish is arguably a
+      // better answer than the mechanic the chapter just taught: a wound
+      // spring off the nub clears most of the upper shaft without spending an
+      // arm. It is out to the side, so taking it costs a kick and a regrab —
+      // and if the shaft has already emptied your stamina, that price is one
+      // you cannot pay. The shortcut only exists for a climber who did not
+      // need it.
+      t.charged(4, 'coil', 104, 30);
       t.checkpoint(t.floes[3]);
       t.checkpoint(t.floes[6]);
     },
@@ -204,6 +214,14 @@ const CLIMB_PLANS = [
       t.steps({ n: 2, rise: 0.58, w: 135 });
       t.crown({ w: 250 });
       t.scatterFish(3, 58);
+      // Slack, hung between the two shard shafts.
+      //
+      // Falling ice is a metronome, and this is the only thing in the game
+      // that slows a metronome down. It works while you are airborne, which
+      // in a shaft means while you are between kicks — so a climber who has
+      // it can cross a beat they would otherwise have to wait out. Waiting
+      // costs stamina here, which is why the trade is real.
+      t.charged(5, 'slack', 108, 24);
       t.checkpoint(t.floes[3]);
       t.checkpoint(t.floes[7]);
     },
@@ -309,6 +327,13 @@ const CLIMB_PLANS = [
       t.crown({ w: 240 });
       t.scatterFish(3, 58);
       t.fishAt(5, 94, 'speed');
+      // The blink, out past the lip.
+      //
+      // A blink carries sideways and never up, which on a wall makes it the
+      // exact answer to the one problem a wall poses that a jump cannot: the
+      // overhang. Getting to it means leaving the rock in a gale, and there is
+      // nothing under it for a long way down.
+      t.charged(8, 'quantum', 126, 34);
       t.checkpoint(t.floes[2]);
       t.checkpoint(t.floes[7]);
     },

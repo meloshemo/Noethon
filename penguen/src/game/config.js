@@ -330,6 +330,93 @@ export const BOOST = {
 };
 
 /**
+ * The charged fish.
+ *
+ * One button. That is the whole control scheme, and it is why the speed fish
+ * has been the only interesting pickup in the game: everything else you could
+ * hand a player is a number, and a number is not a verb.
+ *
+ * These are. Each one changes what the jump button *means* for a few seconds,
+ * which is the only way to add a verb to a game that has one button without
+ * adding a second button. Three of them, and they are deliberately three
+ * different kinds of answer to being stuck in the air:
+ *
+ *   · `COIL`    — bigger.   One jump, and it is enormous.
+ *   · `QUANTUM` — elsewhere. Press it airborne and you are somewhere else.
+ *   · `SLACK`   — slower.   Everything but you drops to a third speed.
+ *
+ * None of them is ever required. Every level in the game is proved passable by
+ * a penguin that owns nothing and picks up nothing, and these live off the
+ * running line the way the speed fish always has. They are what you take when
+ * you want the level to be *yours* rather than merely finished.
+ */
+export const COIL = {
+  /** How long the coil is held before it springs on its own. */
+  duration: 7,
+  /** Multiplier on the jump that spends it. */
+  jump: 2.05,
+  /** Extra coins for grabbing one. */
+  reward: 14,
+};
+
+export const QUANTUM = {
+  duration: 6.5,
+  /** How far the blink carries, in penguin bodies. */
+  bodies: 3.4,
+  /**
+   * One blink per stretch in the air.
+   *
+   * Without this the fish is flight, and flight is not a verb this game has.
+   * With it, it is a second chance at a jump you have already made — which is
+   * the thing a player actually wants at the moment they want it.
+   */
+  reward: 16,
+};
+
+export const SLACK = {
+  duration: 5.5,
+  /** What everything except the penguin runs at, while the penguin is airborne. */
+  rate: 0.34,
+  /**
+   * On the ground the world runs normally, on purpose.
+   *
+   * A general slow-motion button makes every level easier and nothing more
+   * interesting. Tied to being airborne it is a tool for one moment: the jump
+   * where the geyser and the seal and the gap all arrive together.
+   */
+  reward: 16,
+};
+
+/**
+ * The three of them by kind, for the code that has to treat them alike.
+ *
+ * `tint` is the one colour that carries the whole idea — the fish, its sparkle,
+ * its afterimage and the ring the effect draws are all this colour, because a
+ * pickup with three seconds of consequence has to be recognisable at a glance
+ * from across a level and never explained twice.
+ */
+export const CHARGED = {
+  coil: {
+    ...COIL,
+    tint: '#ffb03a',
+    label: 'Yay kuruldu!',
+    en: { label: 'Wound up!' },
+  },
+  quantum: {
+    ...QUANTUM,
+    tint: '#b06cff',
+    label: 'Işınlanma hazır!',
+    en: { label: 'Blink ready!' },
+  },
+  slack: {
+    ...SLACK,
+    tint: '#4fe3c8',
+    label: 'Dünya yavaşladı!',
+    en: { label: 'The world slowed!' },
+  },
+};
+
+/**
  * Rotten fish.
  *
  * The counterweight to the speed fish, and the reason "grab everything" stops
@@ -343,6 +430,8 @@ export const BOOST = {
 export const ROT = {
   /** Lead in the belly: heavier, shorter jump. */
   heavy: { duration: 5, jump: -0.22, speed: -0.18, label: 'Ağırlaştın!', en: { label: 'You got heavy!' } },
+  /** Every floe is polished ice. You keep what you had and cannot get more. */
+  slick: { duration: 4.2, label: 'Ayağın tutmuyor!', en: { label: 'No grip!' } },
   /** Left is right. Short, because it is the nastiest. */
   dizzy: { duration: 3.2, label: 'Kontroller ters!', en: { label: 'Controls reversed!' } },
   /** Frost on the eyes: the view closes in. */
@@ -410,8 +499,23 @@ export const AMBUSH = {
   rate: 0.18,
   /** The earliest level an ambush can happen at all. */
   fromLevel: 12,
-  /** How long the bird carries the chick before dropping it. */
-  carry: 0.9,
+  /**
+   * Being carried.
+   *
+   * The bird used to grab you and that was the end of it: a fixed second of
+   * being flown away, then dead, with nothing to do but watch. An ambush you
+   * cannot answer is a coin flip with a long animation on it.
+   *
+   * Now it is a struggle. `carry` is how long you have before it gets you clear
+   * of the level, and `shakes` is how many presses it takes to twist free. Get
+   * loose and you are dropped — alive, with whatever the bird's own momentum
+   * gave you, over whatever happens to be underneath. That last part is the
+   * drama: escaping is not the same as being safe.
+   */
+  carry: 2.1,
+  shakes: 5,
+  /** How fast the grip tightens back up between presses. */
+  regrip: 1.4,
 };
 
 /**

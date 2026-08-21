@@ -27,7 +27,8 @@ Toplam yük tek dosyada 732 KB ve çevrimdışı çalışıyor.
 | **10 buz türü** | sağlam · çatlak · cilalı · eriyen · sürüklenen · düşen · tuzak · **sahte** · kaçan · gayzer |
 | **6 tehlike** | sarkıt · fok · fırtına kuşağı · yükselen hava sütunu · orka · serak |
 | **2 pusu** | Bölümün planlamadığı anda dalan kutup kuşu · bayrağa 100 px kala kopan buzul |
-| **3 çürük balık etkisi** | ağırlaşma · ters kontrol · körlük |
+| **4 çürük balık etkisi** | ağırlaşma · **ayak tutmaması** · ters kontrol · körlük |
+| **3 yüklü balık** | yay (tek dev zıplama) · kuantum (havada ışınlanma) · gevşeme (senin dışında her şey yavaşlar) |
 | **24 penguen + 10 iz** | 5 nadirlik seviyesi, 240 kombin |
 | **4 elmas penguen** | Tek yetenek taşıyan tek tür: zıplama · hız · süzülme · mıknatıs |
 | **9 market eşyası** | 3'ü penguenin *ne yapabildiğini* değiştiriyor |
@@ -89,7 +90,17 @@ verdiğin bir zıplama kararını havada tartışma hakkı.
 Bir skua tepeden dalıp pengueni kapıyor. Bölümün parçası değil, **yönetmen
 olayı**: ezberlediğin parkurun dokuzuncu turda hâlâ seni korkutabilmesinin tek
 yolu. Buzun üstünde bir gölge beliriyor ve yaklaştıkça daha hızlı atıyor.
+Kapılmak da son değil: iki saniyen var ve **zıplama tuşuna hızlıca beş kez**
+basarsan kuşun elinden kurtuluyorsun.
 → [ayrıntı](#pusu-kutup-kuşu)
+
+### 🐟 Yüklü balıklar, zıplama tuşunun üç yeni anlamı
+Oyunun tek düğmesi var, o yüzden yeni bir fiil eklemenin tek dürüst yolu o
+düğmenin ne demek olduğunu birkaç saniyeliğine değiştirmek. Üç renk, üç cevap:
+turuncu **yay** bir tek zıplamayı devleştiriyor, mor **kuantum** havadayken seni
+üç buçuk gövde ileri ışınlıyor, turkuaz **gevşeme** sen havadayken senin dışında
+her şeyi üçte bir hıza düşürüyor.
+→ [ayrıntı](#yüklü-balıklar)
 
 ### 🐧 Gardırop, 24 penguen, 10 iz
 Ninja, Kral, Astronot, Altın, Korsan, Ateş, Siber, Yılbaşı, Frak, Kâşif, Dalgıç,
@@ -139,6 +150,7 @@ hedef var ve **gün boyunca birikiyorlar**: tek turda hepsini yapman gerekmiyor.
 | [Kar Topu](#kar-topu-hizalama) | Hizalama, nişan kilidi, kaçış, dördüncü bölümün fiili |
 | [Zorluk eğrisi](#zorluk-eğrisi) | Rampa tasarımı |
 | [Buz türleri](#buz-türleri) · [Tehlikeler](#tehlikeler) | Oyun içi her mekanik |
+| [Yüklü balıklar](#yüklü-balıklar) · [Çürük balıklar](#çürük-balıklar) | Zıplama tuşunun anlamını değiştiren üç renk ve dört lanet |
 | [Pusu mekanikleri](#pusu-mekanikleri-buzun-tuzakları) · [Kutup kuşu](#pusu-kutup-kuşu) | Ani ölüm olayları |
 | [Ekonomi ve market](#ekonomi-ve-market) | Balık nasıl kazanılır, neye harcanır |
 | [Koleksiyon](#koleksiyon) | 24 penguen, 10 iz, nadirlikler |
@@ -610,6 +622,61 @@ kazandığı süre çok daha fazla, eğer bir buçuk kat hızda inişlerini
 tutturabilirsen. Doğrulayıcı hem erişilebilir olduğunu hem de yol üstünde
 durmadığını kontrol ediyor.
 
+## Yüklü balıklar
+
+Yeşil çürük balık uzun süre oyundaki en ilginç şeydi ve sebebi şu: oyuncuya
+verebileceğin başka her şey bir *sayı*, sayı ise fiil değil. Yön algısını ters
+çevirmek fiildi.
+
+Üç yüklü balık aynı fikrin iyi tarafı. Hepsi zıplama tuşunun ne demek olduğunu
+birkaç saniyeliğine değiştiriyor, çünkü tek düğmeli bir oyuna ikinci düğme
+eklemeden fiil eklemenin başka yolu yok.
+
+| | Renk | Süre | Zıplama tuşu ne oluyor | Ödül |
+|---|---|---|---|---|
+| **Yay** | Turuncu | 7 sn | Bir sonraki zıplama iki katı güçte. Tek zıplama. | 14 |
+| **Kuantum** | Mor | 6,5 sn | Havada bas: üç buçuk gövde ileri ışınlanıyorsun. | 16 |
+| **Gevşeme** | Turkuaz | 5,5 sn | Sen havadayken senin dışında her şey %34 hızda. | 16 |
+
+Üçünün de bir kancası var, ve kancalar tesadüf değil:
+
+- **Yay harcanmazsa kendi kendine boşalıyor.** Sessizce buharlaşan bir yay
+  balığı bedava hediye yapardı; oysa bunların hepsi *saati işleyen bir karar*
+  olmalı. Yanlış anda yutulan bir yay seni senin seçmediğin bir yere fırlatıyor.
+  Ayağının altındaki halka daralarak bunu söylüyor.
+- **Kuantum havada bir kez.** Yoksa uçmak olurdu, uçmak da bu oyunun sahip
+  olduğu bir fiil değil. Hızını koruduğu için asla yükseltmiyor, sadece taşıyor:
+  hiçbir zıplamanın yetişemeyeceği bir boşluğu geçebiliyor ama kendi başına bir
+  metre bile tırmanamıyor. Duvarın içine de sokmuyor, çünkü ışınlanma
+  adım adım süpürülüyor ve son *boş* nokta kazanıyor.
+- **Gevşeme yerde çalışmıyor.** Genel bir ağır çekim düğmesi her bölümü
+  kolaylaştırır ve hiçbirini ilginçleştirmez. Havaya bağlı olunca tek bir an
+  için alet oluyor: gayzerin, fokun ve boşluğun aynı anda geldiği zıplama.
+  Su altında da çalışmıyor, çünkü orada düğme zaten derinlik kumandası.
+
+**Hiçbiri gerekli değil.** Bütün bölümler hiçbir şeye sahip olmayan ve hiçbir
+şey toplamayan bir penguene göre kanıtlanıyor; yüklü balıklar hız balığı gibi
+ana hattın dışında duruyor. `charged-fish.mjs` bunu tek tek ölçüyor: hiçbiri
+buzun içinde değil, hiçbiri koşu hattının bir gövde yakınında değil.
+
+## Çürük balıklar
+
+Hız balığının karşı ağırlığı ve "her şeyi topla"nın bedava strateji olmaktan
+çıkmasının sebebi. Bunlar hattın *üstünde* duruyor, yani kaçınmak bir zıplamaya
+veya bir sapmaya mal oluyor.
+
+| | Renk | Süre | Ne oluyor |
+|---|---|---|---|
+| **Ağırlaşma** | Kurşuni mor | 5 sn | Zıplama %22, hız %18 düşüyor |
+| **Cilalı** | Yeşil | 4,2 sn | Bütün buz cilalı buz gibi davranıyor: duramıyorsun |
+| **Sersemleme** | Yeşil | 3,2 sn | Sol sağ oluyor |
+| **Körlük** | Yeşil | 4 sn | Görüş alanı kapanıyor |
+
+Cilalı olan dördüncüsü ve tek farkı şu: diğer üçü *pengueni* değiştiriyor, bu
+**zeminin ne olduğunu** değiştiriyor. Hızın, zıplaman, menzilin aynı kalıyor;
+hiç düşünmediğin tek şeyi kaybediyorsun, durabilmeyi. Alçak tavanlı tünellerde
+ve fokların üstünde bunun bedelini oyun sana ayrıca açıklamıyor.
+
 ## Tehlikeler
 
 - **Buz sarkıtı**: altından geçince titrer, sonra düşer.
@@ -919,6 +986,23 @@ Adaleti koruyan kurallar:
 - iki dalış arasında bekleme süresi var;
 - kapılırsan bölümü değil, kontrol noktasını kaybediyorsun;
 - kolay modda sıklığı yarıya iniyor, uyarı uzuyor, kapatılmıyor.
+
+### Kapılmak son değil
+
+Eskiden kuş seni kapardı ve iş biterdi: bir saniye havada taşınma, sonra ölüm,
+ve arada yapabileceğin hiçbir şey yok. Cevap veremediğin bir pusu, üstüne uzun
+bir animasyon giydirilmiş yazı-turadır.
+
+Artık **boğuşma**. Kuş seni bölümden çıkarana kadar 2,1 saniyen var ve tek
+yapman gereken her zaman yapabildiğin şey: düğmeye basmak. Beş iyi basış seni
+kurtarıyor. Basışlar arasında kavrama geri sıkıştığı için beşi *hızlı* olmak
+zorunda; yavaş tıklamak sönümlemeyle yarışır ve asla yetişmez. Kuşun etrafında
+kapanan halka ne kadar yaklaştığını söylüyor.
+
+Kurtulmak güvende olmak değil. Kuşun kendi momentumuyla, yana ve yukarı
+savrularak çıkıyorsun, o an altında ne varsa onun üstüne, ki bu çoğu zaman
+deniz. Seni en yakın buza nazikçe bırakan bir kurtuluş, bütün olayı fazladan
+adımı olan bir formaliteye çevirirdi.
 
 12. bölümden önce hiç görünmüyor: oyuncu önce oyunu öğrenmeli.
 

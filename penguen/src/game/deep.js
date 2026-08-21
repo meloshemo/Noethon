@@ -24,7 +24,8 @@
  *      apart than a lungful can carry you, with margin.
  */
 
-import { PENGUIN, SWIM, swimReach, breathRange } from './config.js';
+import { PENGUIN, SWIM, swimReach, breathRange, CHARGED } from './config.js';
+import { nudgeClear } from '../core/util.js';
 
 /**
  * How much of a lungful a stretch between two air holes may spend.
@@ -89,6 +90,8 @@ export class Deep {
     this.hazards = [];
     this.fish = [];
     this.speedFish = [];
+    /** Coil, quantum and slack. Always off the running line, never required. */
+    this.chargedFish = [];
     this.rotFish = [];
     this.checkpoints = [];
     this.zones = [];
@@ -541,6 +544,7 @@ export class Deep {
     };
     if (kind === 'speed') this.speedFish.push(item);
     else if (kind === 'normal') this.fish.push(item);
+    else if (CHARGED[kind]) this.chargedFish.push({ ...item, kind });
     else this.rotFish.push({ ...item, kind });
     return this;
   }
@@ -587,6 +591,19 @@ export class Deep {
       hazards: this.hazards,
       fish: this.fish,
       speedFish: this.speedFish,
+      /**
+       * Moved clear of the ice as the very last thing the composer does.
+       *
+       * Not at the moment each one is placed, which is where this lived first
+       * and where it did not work: a chapter that builds its perches or its
+       * ceilings after the pickups would have the fish checked against a level
+       * that was not finished yet. Level seventy-six put a slack fish exactly
+       * on a rival's perch that way. Done here, every block that will ever
+       * exist already does.
+       */
+      chargedFish: this.chargedFish.map((f) =>
+        nudgeClear(f, [...this.floes, ...(this.terrain ?? [])]),
+      ),
       rotFish: this.rotFish,
       checkpoints: this.checkpoints,
       zones: this.zones,

@@ -189,6 +189,45 @@ export class Audio {
     this._noise({ dur: 0.2, gain: 0.07, filter: 2600, q: 2.4, delay: 0.02 });
   }
 
+  /**
+   * One thrash against the bird's grip.
+   *
+   * Short, dry and slightly different every time, because it is heard five
+   * times in two seconds and a sound played that fast at one pitch stops
+   * registering as effort and starts registering as a bug.
+   */
+  flap() {
+    const up = 0.9 + Math.random() * 0.4;
+    this._noise({ dur: 0.09, gain: 0.13, filter: 1400 * up, q: 1.1 });
+    this._tone({ freq: 300 * up, slide: -140, dur: 0.08, type: 'square', gain: 0.06 });
+  }
+
+  /**
+   * Swallowing a charged fish.
+   *
+   * A bell rather than a zap: the speed fish is a shove and these are a
+   * *permission*, and the ear should be told which one it just got.
+   */
+  chargedFish() {
+    this.music?.duck(0.4);
+    this._tone({ freq: 520, slide: 1050, dur: 0.26, type: 'triangle', gain: 0.15 });
+    this._tone({ freq: 1040, dur: 0.42, type: 'sine', gain: 0.1, delay: 0.06 });
+    this._tone({ freq: 1560, dur: 0.34, type: 'sine', gain: 0.05, delay: 0.1 });
+  }
+
+  /** The blink landing — a clean, hollow pop with no tail on it. */
+  blink() {
+    this._tone({ freq: 1500, slide: -900, dur: 0.09, type: 'sine', gain: 0.13 });
+    this._noise({ dur: 0.07, gain: 0.08, filter: 5200, q: 3 });
+  }
+
+  /** The coil letting go. Low, and much bigger than a jump. */
+  uncoil() {
+    this._tone({ freq: 140, slide: 620, dur: 0.24, type: 'sawtooth', gain: 0.15 });
+    this._tone({ freq: 70, slide: 300, dur: 0.3, type: 'square', gain: 0.08, delay: 0.02 });
+    this._noise({ dur: 0.2, gain: 0.1, filter: 1200, q: 0.9 });
+  }
+
   /** The back motor firing. */
   rocket() {
     this._noise({ dur: 0.34, gain: 0.14, filter: 900, q: 0.8 });

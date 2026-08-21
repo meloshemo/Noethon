@@ -41,6 +41,35 @@ export function fingerprint(str) {
   return (h >>> 0).toString(36);
 }
 
+/**
+ * Move a pickup out of any ice it happens to be standing in.
+ *
+ * Levels are composed from plans rather than by hand, so "a fish a jump above
+ * that floe" is a height, not a place: the same line puts it in clear air on
+ * one level and inside a tunnel roof on the next. Rather than tuning each
+ * placement by eye and having it drift the next time the geometry moves, the
+ * offer is simply pushed until it is in the open.
+ *
+ * Up is tried before down at every distance, because up is the direction that
+ * is reliably further from the route — a pickup nudged downward can land back
+ * on the running line, which for a rotten fish is a trap and for a charged one
+ * is a gift nobody chose to take.
+ */
+export function nudgeClear(item, solids, w = 38, h = 30, step = 16, tries = 16) {
+  const clash = (y) =>
+    solids.some((s) => s.solid !== false && rectsOverlap({ x: item.x - 4, y: y - 4, w, h }, s));
+  if (!clash(item.y)) return item;
+  for (let i = 1; i <= tries; i++) {
+    for (const dy of [-i * step, i * step]) {
+      if (!clash(item.y + dy)) {
+        item.y = Math.round(item.y + dy);
+        return item;
+      }
+    }
+  }
+  return item;
+}
+
 export function makeRng(seed) {
   let a = seed >>> 0;
   return function next() {

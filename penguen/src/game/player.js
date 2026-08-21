@@ -6,8 +6,13 @@
  * exactly what the early levels need.
  */
 
-import { PHYS, PENGUIN, BOOST, ROT, GEAR, CLIMB, SWIM, WIND, breathFor } from './config.js';
+import {
+  PHYS, PENGUIN, BOOST, COIL, QUANTUM, SLACK, ROT, GEAR, CLIMB, SWIM, WIND, breathFor,
+} from './config.js';
 import { clamp, damp, rectsOverlap } from '../core/util.js';
+
+/** Every rotten kind, in one place, so no decay loop can quietly forget one. */
+const CURSES = ['heavy', 'slick', 'dizzy', 'blind'];
 
 export class Player {
   constructor() {
@@ -27,8 +32,26 @@ export class Player {
     this.glideBonus = 0;
     /** Speed-fish charge: seconds remaining. */
     this.charge = 0;
-    /** Rotten-fish curses: { heavy, dizzy, blind } → seconds remaining. */
-    this.curse = { heavy: 0, dizzy: 0, blind: 0 };
+    /**
+     * The charged fish: seconds remaining on each.
+     *
+     * These three are the whole point of the colours. The game has one button,
+     * so the only honest way to add a verb is to change what that button means
+     * for a few seconds, rather than to ask the player for a second button.
+     */
+    this.coil = 0;
+    this.quantum = 0;
+    this.slack = 0;
+    /** True while a coil is wound and unspent. */
+    this.coilArmed = false;
+    /** One blink per airborne stretch, so it can never become flight. */
+    this.quantumUsed = false;
+    /** Counts down after a blink, so the world can draw where you were. */
+    this.blinked = 0;
+    /** Set for one frame when the coil releases, so the world can hear it. */
+    this.uncoiled = false;
+    /** Rotten-fish curses: { heavy, slick, dizzy, blind } → seconds left. */
+    this.curse = { heavy: 0, slick: 0, dizzy: 0, blind: 0 };
     /** Afterimages, so the boost reads as speed rather than as a colour. */
     this.trail = [];
     /**
@@ -86,7 +109,14 @@ export class Player {
     this.jumpedThisFrame = false;
     this.launched = 0;
     this.charge = 0;
-    this.curse = { heavy: 0, dizzy: 0, blind: 0 };
+    this.coil = 0;
+    this.quantum = 0;
+    this.slack = 0;
+    this.coilArmed = false;
+    this.quantumUsed = false;
+    this.blinked = 0;
+    this.uncoiled = false;
+    this.curse = { heavy: 0, slick: 0, dizzy: 0, blind: 0 };
     this.trail.length = 0;
     for (const p of this.history) {
       p.x = x;
@@ -192,7 +222,7 @@ export class Player {
   }
 
   get cursed() {
-    return this.curse.heavy > 0 || this.curse.dizzy > 0 || this.curse.blind > 0;
+    return CURSES.some((k) => this.curse[k] > 0);
   }
 
   /** Swallowed a speed fish. Refreshes rather than stacks. */
@@ -204,6 +234,63 @@ export class Player {
 
   get charged() {
     return this.charge > 0;
+  }
+
+  /**
+   * Swallowed one of the charged fish.
+   *
+   * All three refresh rather than stack, like every other pickup, and all
+   * three are deliberately short: a fish is a sentence, not a paragraph.
+   */
+  chargeFish(kind) {
+    if (kind === 'coil') {
+      this.coil = Math.max(this.coil, COIL.duration);
+      this.coilArmed = true;
+      this.squashX = 1.18;
+      this.squashY = 0.84;
+    } else if (kind === 'quantum') {
+      this.quantum = Math.max(this.quantum, QUANTUM.duration);
+      if (this.onGround) this.quantumUsed = false;
+      this.squashX = 0.86;
+      this.squashY = 1.16;
+    } else if (kind === 'slack') {
+      this.slack = Math.max(this.slack, SLACK.duration);
+      this.squashX = 0.9;
+      this.squashY = 1.12;
+    }
+  }
+
+  /**
+   * What the rest of the world runs at, right now.
+   *
+   * The slack fish does not slow the penguin, and it does not slow time on the
+   * ground — it slows everything else, and only while you are in the air. That
+   * makes it a fish about a single jump: leap into a wall of falling seracs and
+   * the seracs nearly stop while you do not. Standing under it does nothing at
+   * all, which is what keeps it from being a difficulty switch.
+   */
+  get worldRate() {
+    // Not underwater, for the reason given on `_swim`: down there the button
+    // is already the depth control and the penguin is never on the ground, so
+    // none of the three fish can mean anything without meaning it constantly.
+    if (this.submerged) return 1;
+    return this.slack > 0 && !this.onGround && !this.clinging ? SLACK.rate : 1;
+  }
+
+  /**
+   * Is the body clear of every solid, if it stood at this x?
+   *
+   * Only the blink asks. It is the guard that keeps a teleport from posting a
+   * penguin through a wall, which is the one thing a mechanic like this must
+   * never do to a game whose levels are proved solvable by geometry.
+   */
+  _clearAt(x, y, solids) {
+    const box = { x, y, w: this.w, h: this.h };
+    for (const f of solids) {
+      if (!f.solid) continue;
+      if (rectsOverlap(box, { x: f.x, y: f.y, w: f.w, h: f.h })) return false;
+    }
+    return true;
   }
 
   get box() {
@@ -241,7 +328,11 @@ export class Player {
       return;
     }
 
-    const slippery = this.groundFloe?.slippery;
+    // Slick is the fourth curse, and it is the only one that changes what the
+    // ground *is* rather than what the penguin is. Every floe underfoot
+    // behaves like polished ice, so speed, jump and reach are all untouched
+    // and the penguin loses the one thing it never thinks about: stopping.
+    const slippery = this.groundFloe?.slippery || this.curse.slick > 0;
     // Crampons pull the slip factor back toward normal ground friction.
     const slipFactor = PHYS.slipFriction + (1 - PHYS.slipFriction) * this.boost.grip;
     const accel = this.onGround ? PHYS.groundAccel : PHYS.airAccel;
@@ -251,9 +342,14 @@ export class Player {
 
     this.launched = Math.max(0, this.launched - dt);
     this.charge = Math.max(0, this.charge - dt);
-    for (const k of ['heavy', 'dizzy', 'blind']) {
+    this.quantum = Math.max(0, this.quantum - dt);
+    this.slack = Math.max(0, this.slack - dt);
+    this.blinked = Math.max(0, this.blinked - dt);
+    this.uncoiled = false;
+    for (const k of CURSES) {
       this.curse[k] = Math.max(0, this.curse[k] - dt);
     }
+    if (this.onGround) this.quantumUsed = false;
     // Dizzy swaps the controls. Done here rather than at the input layer so it
     // applies to touch, keyboard and gamepad without any of them knowing.
     if (this.curse.dizzy > 0) intent = { ...intent, axis: -intent.axis };
@@ -331,16 +427,41 @@ export class Player {
     this.buffer = Math.max(0, this.buffer - dt);
     this.coyote = this.onGround ? PHYS.coyoteTime * (tuning.coyote ?? 1) : Math.max(0, this.coyote - dt);
 
-    if (this.buffer > 0 && this.coyote > 0) {
-      this.vy = this.jumpVelocity;
+    /**
+     * The coil.
+     *
+     * A held spring rather than a stat. While it is wound, the next jump — one
+     * jump — leaves the ice at roughly twice the usual speed, and the wind-up
+     * is spent whether that jump cleared anything or not.
+     *
+     * And if it is never spent, it goes off by itself. That is deliberate: a
+     * spring that quietly evaporated would make the fish a free gift, and
+     * every charged fish is meant to be a decision with a clock on it. Swallow
+     * a coil at the wrong moment and it will throw you somewhere you did not
+     * choose. If it runs out in mid-air it stays wound until the ice is back
+     * underfoot, because a spring needs something to push against.
+     */
+    this.coil = Math.max(0, this.coil - dt);
+    const springing = this.coilArmed && this.coil <= 0 && this.onGround;
+    if ((this.buffer > 0 && this.coyote > 0) || springing) {
+      const wound = this.coilArmed;
+      this.vy = this.jumpVelocity * (wound ? COIL.jump : 1);
+      this.coilArmed = false;
       this.buffer = 0;
       this.coyote = 0;
       this.onGround = false;
       this.groundFloe = null;
-      this.squashX = 0.78;
-      this.squashY = 1.25;
+      this.squashX = wound ? 0.64 : 0.78;
+      this.squashY = wound ? 1.5 : 1.25;
       this.jumpedThisFrame = true;
-      events?.onJump?.();
+      this.uncoiled = wound;
+      // A spring that goes off by itself is not the player's jump, so the
+      // variable-height cut must not touch it. Without this the release was
+      // shaved to a third the moment it fired, because a player who never
+      // pressed the button is by definition not holding it — the involuntary
+      // launch was being punished for being involuntary.
+      if (springing) this.kickGrace = Math.max(this.kickGrace, 0.28);
+      events?.onJump?.(wound);
     }
 
     // --- The wall ------------------------------------------------------
@@ -401,6 +522,50 @@ export class Player {
     }
     if (this.onGround) this.stamina = Math.min(this.staminaMax, this.stamina + CLIMB.regen * dt);
 
+    /**
+     * The blink.
+     *
+     * Press the button in mid-air and the penguin is simply somewhere else,
+     * three and a bit bodies further along, carrying every bit of the velocity
+     * it already had. Keeping the velocity is what stops this being a second
+     * jump: it moves you across and never up, so a blink can cross a gap no
+     * jump can reach and still cannot gain a single metre of height by itself.
+     *
+     * It is swept rather than teleported. The destination is walked toward in
+     * quarter-body steps and the last clear one wins, so a blink into a cliff
+     * puts the penguin against the cliff instead of inside it.
+     */
+    this.blinkedThisFrame = false;
+    if (
+      this.quantum > 0 &&
+      intent.jumpPressed &&
+      !this.onGround &&
+      !this.clinging &&
+      !this.jumpedThisFrame &&
+      !this.quantumUsed
+    ) {
+      const step = this.w * 0.25;
+      const want = QUANTUM.bodies * this.w;
+      let moved = 0;
+      while (moved < want) {
+        const next = Math.min(step, want - moved);
+        if (!this._clearAt(this.x + this.facing * (moved + next), this.y, floes)) break;
+        moved += next;
+      }
+      if (moved > 0) {
+        for (let i = 0; i < 5; i++) {
+          const back = moved * (1 - i / 5);
+          this.trail.push({ x: this.x + this.facing * (moved - back), y: this.y, f: this.facing, life: 0.3 });
+        }
+        this.x += this.facing * moved;
+        this.quantumUsed = true;
+        this.blinked = 0.28;
+        this.blinkedThisFrame = true;
+        this.buffer = 0;
+        events?.onBlink?.();
+      }
+    }
+
     // --- Gear ---------------------------------------------------------
     // Both meters refill only on the ground: gear turns a jump you already
     // committed to into one you can still argue with, never into flight.
@@ -421,6 +586,7 @@ export class Player {
       !this.onGround &&
       !this.clinging &&
       !this.jumpedThisFrame &&
+      !this.blinkedThisFrame &&
       this.rocketLeft > 0 &&
       this.rocketCool <= 0
     ) {
@@ -597,6 +763,14 @@ export class Player {
    *
    * What it *does* share is the collision solver, so ice is ice: the same
    * boxes, resolved on the same two passes, in the same order.
+   *
+   * None of the three charged fish works down here, and that is a decision
+   * rather than an oversight. All three are re-readings of the jump button,
+   * and underwater that button is already the depth control: holding it is how
+   * you sink. A blink fired on every dive would not be a tool, it would be a
+   * twitch. So the sea gets no charged fish, and the levels below the ice are
+   * composed knowing it — their pressure is the lungful, and the answer to a
+   * lungful has to be the route you chose, not a fish you found.
    */
   _swim(dt, intent, floes, events) {
     this.onGround = false;
@@ -606,7 +780,10 @@ export class Player {
     this.gliding = false;
 
     this.charge = Math.max(0, this.charge - dt);
-    for (const k of ['heavy', 'dizzy', 'blind']) {
+    this.quantum = Math.max(0, this.quantum - dt);
+    this.slack = Math.max(0, this.slack - dt);
+    this.blinked = Math.max(0, this.blinked - dt);
+    for (const k of CURSES) {
       this.curse[k] = Math.max(0, this.curse[k] - dt);
     }
     if (this.curse.dizzy > 0) intent = { ...intent, axis: -intent.axis };

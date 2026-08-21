@@ -91,6 +91,14 @@ const BRAWL_PLANS = [
       a.heckler({ at: 0.86, up: 0.6, phase: 0.3 });
       a.heckler({ at: 0.52, up: 0.56, phase: 0.2 });
       a.scatterFish(3);
+      // Slack, over the thin ice.
+      //
+      // This chapter is one long argument about time: every rival is a clock
+      // and the only safe place is between two of them. Slack does not make
+      // the snowballs miss, it makes the space between two beats wide enough
+      // to walk through — but only while you are off the ice, which on a level
+      // where the ice is going anyway is a very odd promise to make.
+      a.charged(0.2, 'slack', 0.36);
     },
   },
   {
@@ -147,6 +155,13 @@ const BRAWL_PLANS = [
       a.duel({ guardAt: 0.64, guardUp: 0.24, standAt: 0.9, shooterUp: 0.42, period: 2.0, phase: 0.5 });
       a.heckler({ at: 0.5, up: 0.58, period: 1.7, phase: 0.25 });
       a.scatterFish(3);
+      // The blink, in the middle of the crossfire.
+      //
+      // Everything on this level throws faster than you can walk between
+      // throws. A blink is three and a bit bodies of ground that costs no
+      // time at all, and there is exactly one of them, so it buys one gap and
+      // then you are back to walking.
+      a.charged(0.5, 'quantum', 0.4);
     },
   },
   {
@@ -210,6 +225,13 @@ const BRAWL_PLANS = [
       a.duel({ guardAt: 0.72, guardUp: 0.29, standAt: 0.44, shooterUp: 0.47, phase: 0 });
       a.heckler({ at: 0.5, up: 0.6, phase: 0 });
       a.scatterFish(3);
+      // A coil on the level where every rival throws on the same beat.
+      //
+      // When everything arrives at once there is no gap to walk into, only a
+      // volley to be above. The coil clears it. What the level does not tell
+      // you is that the spring goes off by itself if you sit on it, and a
+      // penguin flung upward on somebody else's count comes down on it too.
+      a.charged(0.42, 'coil', 0.44);
       a.checkpointAt(0.34);
     },
   },
@@ -249,6 +271,14 @@ const BRAWL_PLANS = [
       a.thinIce({ at: 0.7, w: 150 });
       a.scatterFish(3);
       a.fishAt(0.6, 0.34, 'speed');
+      // The last level in the game puts all three in the air at once, over an
+      // arena with five rivals on one clock. Every one of them is reachable
+      // and none of them is on the way to anywhere. Whatever a player has
+      // learned about these fish in fifty levels, this is where they get to
+      // find out whether they were right.
+      a.charged(0.24, 'coil', 0.46);
+      a.charged(0.5, 'quantum', 0.52);
+      a.charged(0.78, 'slack', 0.46);
       a.checkpointAt(0.2);
     },
   },
