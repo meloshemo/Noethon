@@ -5,6 +5,39 @@ değiştiği yeterli. En yeni en üstte.
 
 ---
 
+## Zorluk ölçülmeye başladı, ve ölçü kötü haber verdi
+
+"Bu bölüm kolay" bir kanaattir, ta ki biri bir sayı üretene kadar. Projede
+zaten bir sayı vardı ve yanlış olanıydı: bir boşluk erişimin içindedir ya da
+değildir, ve bu, oraya ulaşmanın emek isteyip istemediği hakkında hiçbir şey
+söylemez.
+
+Alet çözücülerin kendisi çıktı. İlk buldukları yolda durmalarına izin
+verilmezse **kaç yol olduğunu** söylüyorlar. Yüz tuş dizisinin yaptığı bir adım
+cömerttir, ikisinin yaptığı bir adım duvardır, ve ikisi de eşit derecede
+geçilebilirdir: zorluk, adaletsizlik ölçülmeden ölçülüyor.
+
+`tools/difficulty.mjs` ilk koşuşunda kendini ödedi:
+
+- **Chapter I eksi %53 eğimliydi.** Kolaylaşıyordu.
+- **Chapter III tek konusunu hiç tehdit etmiyordu.** Ciğerler hiçbir bölümde
+  üçte birin altına inmiyordu.
+- **Chapter II** hedeflenen rampanın üçte birinde ilerliyordu.
+- **Chapter IV**'ün eğimi doğruydu, üç bölüm onu görmezden geliyordu.
+
+Dördünün de artık tek bir sütuna sığan bir zorluk eğrisi var: `tight`,
+`effort`, `breath`, `heat`. Değerler tahminle değil çözücüye sorularak
+dolduruldu.
+
+Yol boyunca öğrenilen iki şey dosyada duruyor. Birincisi: **yanlış şeyi ölçmek
+hiçbir şey öğretmez.** Dağda tolerans denendi, iki kez, ve iki kez hiçbir şey
+göstermedi; tırmanan kişinin hissettiği şey barın kendisi. İkincisi:
+**emniyet ağları sessizce tavan olabiliyor.** Denizde nefes deliği açan
+otomatik kural bütçenin %45'inde tetikleniyordu, yani bütçeyi yükseltmek
+hiçbir şeyi değiştirmiyordu.
+
+---
+
 ## Kaydedilmiş bir nokta, altındaki zeminden uzun yaşamamalı
 
 Açılışlar düzeldikten sonra hata hâlâ duruyordu ve belirtisi başkaydı: oyun

@@ -425,6 +425,7 @@ tools/
   bundle.mjs               tek dosyaya düzleştirme
   lint.mjs                 proje kuralları
   test.mjs                 hepsini koşan tek komut
+  difficulty.mjs           ölçülen zorluk eğrisi (testi düşürmez, alet)
   mirror.mjs               bağımsız depoya kopyalama
 docs/
   GIZLILIK.md · PRIVACY.md          gizlilik, iki dilde
@@ -501,6 +502,46 @@ Oyunun en çok emek verilen kısmı bu. Kural:
 Penguen büyüyor: 1. bölümde ölçek 1,00, 31'de 1,58, 76'da 1,62. Daha ağır
 zıplıyor ve daha geniş yer istiyor, o yüzden her boşluk **o bölümdeki** erişime
 göre ölçülüyor, sabit bir piksele göre değil.
+
+### Zorluk ölçülüyor, tartışılmıyor
+
+"Bu bölüm kolay" bir kanaattir, ta ki biri bir sayı üretene kadar. Bu projede
+zaten bir sayı vardı ve yanlış olanıydı: bir boşluk erişimin içindedir ya da
+değildir, ve bu, oraya ulaşmanın *emek* isteyip istemediği hakkında hiçbir şey
+söylemez.
+
+Alet çözücülerin kendisi çıktı. İşleri "bir yol var mı" sorusuna cevap vermek;
+ilk buldukları yolda durmalarına izin verilmezse **kaç yol olduğunu** söylüyorlar.
+Yüz farklı tuş dizisinin yaptığı bir adım cömerttir, ikisinin yaptığı bir adım
+duvardır, ve ikisi de eşit derecede geçilebilirdir. Mesele bu: zorluk,
+adaletsizlik ölçülmeden ölçülüyor.
+
+Her chapter'ın ayrıca kendi gerilim kaynağı var ve onun kendi okuması:
+
+| Chapter | Ne ölçülüyor | Neden bu |
+|---|---|---|
+| I · Sahanlık | tolerans | Bir sıçrayışı kaç tuş dizisi yapabiliyor |
+| II · Zirve | kalan kol gücü | Tırmanan kişinin hissettiği şey bar, tekmenin hassasiyeti değil |
+| III · Buz Altı | en az nefes | Chapter'ın konusu zaten bu |
+| IV · Kar Topu | en yakın top | Hattan çıkmak için ne kadar zaman kaldığı |
+
+`node tools/difficulty.mjs` dördünü birden koşuyor ve eğriyi olması gereken
+şekle karşı çiziyor. İlk koşuşunda kendini ödedi:
+
+- **Chapter I eksi %53 eğimliydi.** Kolaylaşıyordu. 1–11. bölümler 27–31'den
+  zordu ve chapter'ın en bağışlayıcı bölümü 28'di.
+- **Chapter III tek konusunu hiç tehdit etmiyordu.** Ciğerler hiçbir bölümde
+  üçte birin altına inmiyordu, final yarım nefesle bitiyordu.
+- **Chapter II hedeflenen rampanın üçte birinde** ilerliyordu.
+- **Chapter IV'ün eğimi doğruydu**, üç bölüm onu görmezden geliyordu.
+
+Her chapter'ın artık tek bir sayıdan ibaret bir zorluk sütunu var: sahanlıkta
+`tight` (boşluk çarpanı), dağda `effort` (baca yüksekliği çarpanı), denizde
+`breath` (bir nefeste harcanabilecek ciğer oranı), arenada `heat` (atış
+temposu). Bu sütunlar tahminle değil, çözücüye sorularak dolduruldu: bir bölüm
+çözücünün reddettiği yere kadar sertleştirilip bir adım geri alınıyor. Üç bölüm
+komşularından belirgin biçimde daha yumuşak, çünkü fizik daha fazlasını
+vermiyor ve bu, dosyada üzeri örtülecek değil yazılacak bir bilgi.
 
 Ayrıca oyuncunun tarafında olan şeyler:
 
@@ -1468,6 +1509,7 @@ anlatmak değil, olan bir şeyi olduğundan iyi anlatmaktır.
 | Çevrimdışı | Servis çalışanı + tek dosya sürümü (732 KB) |
 | Girdi | Klavye, dokunmatik, gamepad |
 | Test | 15 node + paketleme + 8 tarayıcı paketi, hepsi tek komutta |
+| Zorluk | Ölçülen eğri: `node tools/difficulty.mjs` |
 
 ### Yok, ve neden
 
