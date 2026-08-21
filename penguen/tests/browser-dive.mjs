@@ -131,7 +131,12 @@ ok('tırmanış suda değil', tower.sub === false, tower.axis);
 
 /* 7 ------------------------------------------------------------------ */
 console.log('\n7) Bir dalış gerçekten oynanıyor');
-await start(52);
+// The chapter's own teaching level, and deliberately so: it is the one dive
+// whose opening is plain corridor, which is what makes it the honest place to
+// assert that the verb works. Later dives open with a current or a slot, and a
+// bot that only knows "hold right and press down" is being asked a question
+// about the level rather than about the verb.
+await start(47);
 // You have to dive to get out of the entry hole: the ice is a ceiling and the
 // hole is the one gap in it. That is the chapter teaching its own verb in the
 // first second, and it is worth asserting rather than working around.

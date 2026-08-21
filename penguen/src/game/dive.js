@@ -16,6 +16,16 @@ import { scaleForLevel } from './config.js';
 /** The dives start here, straight off the summit of the mountain. */
 export const DIVE_FROM = 47;
 
+/**
+ * `breath` is the chapter's difficulty curve, written down.
+ *
+ * It is how much of one lungful the composer may spend between two air holes,
+ * and it climbs from just under half at the first dive to almost all of one at
+ * the last. Two levels step *back* down it on purpose — 51 and 55, where a
+ * leopard seal arrives — because a new thing to be frightened of should not
+ * turn up on the tightest breath in the chapter. A curve with no rhythm is a
+ * ramp, and a ramp is a thing you climb rather than a thing you play.
+ */
 const DIVE_PLANS = [
   {
     name: 'İlk Nefes',
@@ -23,15 +33,18 @@ const DIVE_PLANS = [
     en: { name: 'First Breath', subtitle: 'It is quiet under the ice' },
     target: 34,
     depth: 500,
+    breath: 0.56,
+    /* Only the corridor. Two slots, both wide, both roughly where the swimmer
+       already is: the level is here to say "press to go down, let go to come
+       up" and then get out of the way. */
     build: (d) => {
       d.mouth();
       d.open({ len: 340 });
-      d.gate({ at: 0.55, gap: 200 });
+      d.gate({ at: 0.55, gap: 210 });
       d.open({ len: 300 });
-      d.gate({ at: 0.4, gap: 200 });
+      d.gate({ at: 0.45, gap: 205 });
       d.hole();
-      d.open({ len: 300 });
-      d.gate({ at: 0.6, gap: 190 });
+      d.stretch({ gap: 200, len: 300 });
       d.surfaceOut();
       d.scatterFish(3);
       d.checkpointAt(5);
@@ -41,20 +54,21 @@ const DIVE_PLANS = [
     name: 'Aşağı Bas',
     subtitle: 'Yukarısı bedava, aşağısı değil',
     en: { name: 'Press Down', subtitle: 'Going up is free, going down is not' },
-    target: 38,
-    depth: 540,
+    target: 40,
+    depth: 560,
+    breath: 0.61,
+    /* The asymmetry, stated. Every slot is near the bed, so the whole level is
+       paid for in the expensive direction and the rises are the rests. */
     build: (d) => {
       d.mouth();
-      d.gate({ at: 0.75, gap: 175 });
+      d.gate({ at: 0.78, gap: 190 });
       d.open({ len: 260 });
-      d.gate({ at: 0.25, gap: 175 });
+      d.gate({ at: 0.82, gap: 180 });
       d.hole();
-      d.gate({ at: 0.78, gap: 170 });
-      d.open({ len: 240 });
-      d.gate({ at: 0.3, gap: 170 });
+      d.gate({ at: 0.85, gap: 175 });
+      d.stretch({ gap: 180, from: 0.62 });
       d.surfaceOut();
-      d.scatterFish(3);
-      d.fishAt(3, 70, 'speed');
+      d.scatterFish(3, 40);
       d.checkpointAt(4);
     },
   },
@@ -62,17 +76,20 @@ const DIVE_PLANS = [
     name: 'Dar Geçit',
     subtitle: 'Buz sarkıyor',
     en: { name: 'Narrow Passage', subtitle: 'The ice hangs low' },
-    target: 42,
+    target: 44,
     depth: 560,
+    breath: 0.65,
+    /* Three slots at the same height, close together. Nothing to think about
+       and no room to be wrong: the first level that is about the line rather
+       than about the plan. */
     build: (d) => {
       d.mouth();
-      d.gate({ at: 0.6, gap: 150 });
-      d.gate({ at: 0.35, gap: 150 });
+      d.gate({ at: 0.5, gap: 168 });
+      d.gate({ at: 0.5, gap: 160 });
+      d.stretch({ gap: 154, from: 0.44 });
       d.hole();
-      d.gate({ at: 0.7, gap: 140 });
-      d.gate({ at: 0.4, gap: 140 });
-      d.open({ len: 280 });
-      d.gate({ at: 0.62, gap: 140 });
+      d.gate({ at: 0.5, gap: 152 });
+      d.stretch({ gap: 156, from: 0.4 });
       d.surfaceOut();
       d.scatterFish(3);
       d.checkpointAt(4);
@@ -83,22 +100,20 @@ const DIVE_PLANS = [
     subtitle: 'Bir sonraki delik uzakta',
     en: { name: 'Long Breath', subtitle: 'The next hole is far' },
     target: 46,
-    depth: 560,
+    depth: 540,
+    breath: 0.71,
+    /* Nothing in the way at all. The obstacle is the distance, and this is the
+       level that tells you the ceiling of ice is itself the hazard. */
     build: (d) => {
       d.mouth();
-      d.gate({ at: 0.5, gap: 170 });
-      d.open({ len: 360 });
-      d.gate({ at: 0.72, gap: 165 });
       d.open({ len: 320 });
-      d.gate({ at: 0.3, gap: 165 });
-      d.open({ len: 240 });
+      d.stretch({ gap: 200, len: 360, from: 0.4 });
       d.hole();
-      d.gate({ at: 0.55, gap: 160 });
-      d.open({ len: 300 });
+      d.stretch({ gap: 195, len: 340, from: 0.34 });
       d.surfaceOut();
-      d.scatterFish(3);
-      d.fishAt(4, 60, 'speed');
-      d.checkpointAt(7);
+      d.scatterFish(3, 30);
+      d.fishAt(3, 70, 'speed');
+      d.checkpointAt(3);
     },
   },
   {
@@ -106,21 +121,22 @@ const DIVE_PLANS = [
     subtitle: 'Yalnız değilsin',
     en: { name: 'Leopard Seal', subtitle: 'You are not alone' },
     target: 48,
-    depth: 560,
+    depth: 580,
+    breath: 0.69,
+    /* A new thing to be frightened of, so the breath steps back down. The seal
+       gets open water on both sides: it has to be something you see coming and
+       swim around, not something you meet inside a slot. */
     build: (d) => {
       d.mouth();
-      d.gate({ at: 0.5, gap: 180 });
-      d.open({ len: 380 });
-      d.seal({ span: 260 });
-      d.gate({ at: 0.68, gap: 165 });
-      d.hole();
-      d.open({ len: 360 });
-      d.seal({ span: 280, speed: 148 });
-      d.gate({ at: 0.34, gap: 165 });
       d.open({ len: 300 });
+      d.seal({ span: 300, speed: 140 });
+      d.hole();
+      d.gate({ at: 0.6, gap: 175 });
+      d.seal({ span: 340, speed: 155 });
+      d.stretch({ gap: 175 });
       d.surfaceOut();
       d.scatterFish(3);
-      d.checkpointAt(5);
+      d.checkpointAt(4);
     },
   },
   {
@@ -128,22 +144,21 @@ const DIVE_PLANS = [
     subtitle: 'Su seni taşıyor',
     en: { name: 'The Current', subtitle: 'The water carries you' },
     target: 50,
-    depth: 580,
+    depth: 560,
+    breath: 0.75,
+    /* With you, then against you, and the against half is placed where the
+       lungs are already low: a current is only interesting when it costs air
+       rather than time. */
     build: (d) => {
       d.mouth();
-      d.gate({ at: 0.55, gap: 175 });
-      d.open({ len: 320 });
-      d.current({ power: 150, band: 0.55 });
-      d.gate({ at: 0.3, gap: 170 });
+      d.current({ power: 190, band: 0.45 });
+      d.gate({ at: 0.35, gap: 172 });
       d.hole();
-      d.open({ len: 320 });
-      d.current({ power: -160, band: 0.6 });
-      d.gate({ at: 0.7, gap: 170 });
-      d.open({ len: 280 });
+      d.current({ power: -210, band: 0.55 });
+      d.stretch({ gap: 170, from: 0.42 });
       d.surfaceOut();
       d.scatterFish(3);
-      d.fishAt(6, 60, 'speed');
-      d.checkpointAt(5);
+      d.checkpointAt(3);
     },
   },
   {
@@ -151,42 +166,45 @@ const DIVE_PLANS = [
     subtitle: 'Yukarı, aşağı, yukarı',
     en: { name: 'Sawtooth', subtitle: 'Up, down, up' },
     target: 52,
-    depth: 580,
+    depth: 600,
+    breath: 0.78,
+    /* Top, bottom, top, bottom. The distance is ordinary and the level is not,
+       because in this chapter depth is the thing that costs. */
     build: (d) => {
       d.mouth();
-      d.gate({ at: 0.75, gap: 155 });
-      d.gate({ at: 0.25, gap: 155 });
+      d.gate({ at: 0.2, gap: 168 });
+      d.gate({ at: 0.8, gap: 166 });
+      d.gate({ at: 0.22, gap: 164 });
       d.hole();
-      d.gate({ at: 0.72, gap: 150 });
-      d.gate({ at: 0.28, gap: 150 });
-      d.hole();
-      d.gate({ at: 0.74, gap: 150 });
-      d.gate({ at: 0.3, gap: 150 });
+      d.gate({ at: 0.82, gap: 162 });
+      d.gate({ at: 0.24, gap: 162 });
+      d.stretch({ gap: 165, from: 0.26 });
       d.surfaceOut();
-      d.scatterFish(3);
+      d.scatterFish(3, 50);
       d.checkpointAt(5);
     },
   },
   {
     name: 'Buzul Karnı',
     subtitle: 'Tavan alçalıyor',
-    en: { name: 'The Glacier\'s Belly', subtitle: 'The ceiling comes down' },
+    en: { name: "The Glacier's Belly", subtitle: 'The ceiling comes down' },
     target: 54,
-    depth: 600,
+    depth: 620,
+    breath: 0.82,
+    /* The ceiling never lifts. Every slot is a squeeze and they are all near
+       the bed, so the whole level is swum in the expensive half of the water
+       with no room to drift. */
     build: (d) => {
       d.mouth();
-      d.gate({ at: 0.62, gap: 165 });
-      d.open({ len: 300 });
-      d.gate({ at: 0.8, gap: 150 });
+      d.gate({ at: 0.72, gap: 156 });
+      d.gate({ at: 0.76, gap: 152 });
       d.hole();
-      d.gate({ at: 0.84, gap: 145 });
-      d.open({ len: 280 });
-      d.gate({ at: 0.5, gap: 145 });
-      d.gate({ at: 0.82, gap: 140 });
+      d.gate({ at: 0.8, gap: 150 });
+      d.gate({ at: 0.78, gap: 148 });
+      d.stretch({ gap: 152, from: 0.66 });
       d.surfaceOut();
-      d.scatterFish(3);
-      d.fishAt(3, -60, 'speed');
-      d.checkpointAt(5);
+      d.scatterFish(3, 40);
+      d.checkpointAt(4);
     },
   },
   {
@@ -195,19 +213,22 @@ const DIVE_PLANS = [
     en: { name: 'The Pack', subtitle: 'Two leopards, one corridor' },
     target: 56,
     depth: 600,
+    breath: 0.8,
+    /* Two of them, and a slot between: you cannot outrun the second one on the
+       line that got you past the first. Breath steps down again, because the
+       question here is the seals. */
     build: (d) => {
       d.mouth();
-      d.gate({ at: 0.5, gap: 175 });
-      d.open({ len: 340 });
-      d.seal({ span: 300, speed: 140 });
-      d.gate({ at: 0.7, gap: 160 });
+      d.seal({ span: 320, speed: 165 });
+      d.gate({ at: 0.4, gap: 160 });
+      d.seal({ span: 360, speed: 175 });
       d.hole();
-      d.seal({ span: 280, speed: 155 });
-      d.gate({ at: 0.32, gap: 160 });
-      d.seal({ span: 240, speed: 165 });
+      d.seal({ span: 340, speed: 170 });
+      d.stretch({ gap: 162, from: 0.36 });
       d.surfaceOut();
       d.scatterFish(3);
-      d.checkpointAt(5);
+      d.fishAt(4, 60, 'speed');
+      d.checkpointAt(4);
     },
   },
   {
@@ -215,20 +236,21 @@ const DIVE_PLANS = [
     subtitle: 'Akıntı ve dar geçit birlikte',
     en: { name: 'Black Water', subtitle: 'A current and a squeeze at once' },
     target: 58,
-    depth: 600,
+    depth: 620,
+    breath: 0.8,
+    /* The two things that take your line away, at the same time. A slot is a
+       precise place to be, and a current is the water deciding where you are. */
     build: (d) => {
       d.mouth();
-      d.gate({ at: 0.6, gap: 160 });
-      d.current({ power: 170, band: 0.62 });
-      d.gate({ at: 0.28, gap: 150 });
+      d.current({ power: -200, band: 0.4 });
+      d.gate({ at: 0.34, gap: 152 });
+      d.stretch({ gap: 150, from: 0.52 });
       d.hole();
-      d.gate({ at: 0.72, gap: 150 });
-      d.current({ power: -170, band: 0.62 });
-      d.gate({ at: 0.35, gap: 145 });
-      d.open({ len: 300 });
+      d.current({ power: -220, band: 0.6 });
+      d.gate({ at: 0.7, gap: 150 });
+      d.stretch({ gap: 152, from: 0.36 });
       d.surfaceOut();
       d.scatterFish(3);
-      d.fishAt(6, 60, 'speed');
       d.checkpointAt(4);
     },
   },
@@ -237,22 +259,21 @@ const DIVE_PLANS = [
     subtitle: 'Delikler seyrek',
     en: { name: 'Two Lungs', subtitle: 'The holes are far apart' },
     target: 62,
-    depth: 600,
+    depth: 580,
+    breath: 0.87,
+    /* Exactly two breaths in the whole level, and both of them are earned. The
+       name is the level: you get two lungfuls and the sea is longer than two
+       lungfuls' worth of comfortable swimming. */
     build: (d) => {
       d.mouth();
-      d.gate({ at: 0.55, gap: 165 });
-      d.open({ len: 380 });
-      d.gate({ at: 0.75, gap: 155 });
-      d.open({ len: 380 });
-      d.gate({ at: 0.3, gap: 155 });
+      d.stretch({ gap: 165, len: 320, from: 0.3 });
       d.hole();
-      d.gate({ at: 0.68, gap: 150 });
-      d.open({ len: 380 });
-      d.gate({ at: 0.32, gap: 150 });
-      d.open({ len: 340 });
+      d.gate({ at: 0.7, gap: 160 });
+      d.stretch({ gap: 162, len: 300, from: 0.34 });
       d.surfaceOut();
-      d.scatterFish(3);
-      d.checkpointAt(7);
+      d.scatterFish(3, 40);
+      d.fishAt(2, 80, 'speed');
+      d.checkpointAt(2);
     },
   },
   {
@@ -261,19 +282,22 @@ const DIVE_PLANS = [
     en: { name: 'Fishbone', subtitle: 'The icicles crowd in' },
     target: 64,
     depth: 620,
+    breath: 0.84,
+    /* No open water anywhere. Slot after slot, alternating shallow and deep,
+       so there is never a stretch in which to settle and never a moment the
+       line is not being asked for. */
     build: (d) => {
       d.mouth();
-      d.gate({ at: 0.7, gap: 145 });
-      d.gate({ at: 0.35, gap: 145 });
-      d.gate({ at: 0.72, gap: 140 });
+      d.gate({ at: 0.3, gap: 150 });
+      d.gate({ at: 0.66, gap: 148 });
+      d.gate({ at: 0.28, gap: 146 });
+      d.gate({ at: 0.7, gap: 146 });
       d.hole();
-      d.gate({ at: 0.3, gap: 140 });
-      d.gate({ at: 0.74, gap: 138 });
-      d.gate({ at: 0.36, gap: 138 });
-      d.gate({ at: 0.68, gap: 138 });
+      d.gate({ at: 0.32, gap: 144 });
+      d.gate({ at: 0.72, gap: 144 });
+      d.stretch({ gap: 146, len: 200, from: 0.3 });
       d.surfaceOut();
       d.scatterFish(3);
-      d.fishAt(4, 60, 'speed');
       d.checkpointAt(5);
     },
   },
@@ -283,40 +307,44 @@ const DIVE_PLANS = [
     en: { name: 'Leopard and Current', subtitle: 'You drift while you flee' },
     target: 66,
     depth: 620,
+    breath: 0.9,
+    /* Being hunted takes a line; a current takes it back. Everything the last
+       eleven levels taught, arriving together, on eleven percent of a lung. */
     build: (d) => {
       d.mouth();
-      d.gate({ at: 0.55, gap: 160 });
-      d.current({ power: 175, band: 0.6 });
-      d.seal({ span: 280, speed: 150 });
-      d.gate({ at: 0.3, gap: 150 });
+      d.current({ power: -210, band: 0.5 });
+      d.seal({ span: 340, speed: 180 });
+      d.gate({ at: 0.38, gap: 148 });
       d.hole();
-      d.gate({ at: 0.7, gap: 150 });
-      d.current({ power: -175, band: 0.6 });
-      d.seal({ span: 300, speed: 160 });
-      d.gate({ at: 0.36, gap: 148 });
+      d.current({ power: -230, band: 0.55 });
+      d.seal({ span: 360, speed: 185 });
+      d.stretch({ gap: 150, from: 0.42 });
       d.surfaceOut();
       d.scatterFish(3);
-      d.checkpointAt(5);
+      d.fishAt(5, 70, 'speed');
+      d.checkpointAt(4);
     },
   },
   {
     name: 'Dipteki Yol',
     subtitle: 'Tavan tamamen kapandı',
     en: { name: 'The Road on the Bottom', subtitle: 'The ceiling has closed entirely' },
-    target: 68,
-    depth: 640,
+    target: 70,
+    depth: 660,
+    breath: 0.9,
+    /* Pinned to the seabed from end to end. The cheap direction is gone: there
+       is no rising to rest, only the button and the dark. */
     build: (d) => {
       d.mouth();
-      d.gate({ at: 0.78, gap: 150 });
-      d.gate({ at: 0.84, gap: 142 });
-      d.open({ len: 300 });
+      d.gate({ at: 0.84, gap: 146 });
+      d.gate({ at: 0.86, gap: 144 });
+      d.gate({ at: 0.88, gap: 142 });
       d.hole();
-      d.gate({ at: 0.86, gap: 140 });
-      d.seal({ span: 240, speed: 155 });
-      d.gate({ at: 0.8, gap: 140 });
+      d.current({ power: -200, band: 0.78 });
+      d.gate({ at: 0.86, gap: 142 });
+      d.stretch({ gap: 144, from: 0.74 });
       d.surfaceOut();
-      d.scatterFish(3);
-      d.fishAt(5, -70, 'speed');
+      d.scatterFish(3, 30);
       d.checkpointAt(4);
     },
   },
@@ -324,32 +352,35 @@ const DIVE_PLANS = [
     name: 'Açık Deniz',
     subtitle: 'Buzun bittiği yer',
     en: { name: 'Open Sea', subtitle: 'Where the ice ends' },
-    target: 74,
-    depth: 640,
+    target: 78,
+    depth: 660,
+    breath: 0.96,
+    /* The wall of the chapter, and it is meant to be one. Two seals, two
+       currents, slots at both ends of the column and the longest unbreathed
+       swim in the game. There is an answer and it is a narrow one: this is the
+       level to lose an evening to. */
     build: (d) => {
       d.mouth();
-      d.gate({ at: 0.6, gap: 155 });
-      d.current({ power: 180, band: 0.6 });
-      d.gate({ at: 0.3, gap: 148 });
-      d.seal({ span: 300, speed: 160 });
+      d.current({ power: -210, band: 0.45 });
+      d.gate({ at: 0.26, gap: 142 });
+      d.seal({ span: 340, speed: 185 });
+      d.gate({ at: 0.8, gap: 140 });
       d.hole();
-      d.gate({ at: 0.75, gap: 145 });
-      d.gate({ at: 0.32, gap: 145 });
-      d.current({ power: -180, band: 0.62 });
-      d.hole();
-      d.seal({ span: 300, speed: 170 });
-      d.gate({ at: 0.66, gap: 142 });
+      d.gate({ at: 0.24, gap: 140 });
+      d.current({ power: -240, band: 0.62 });
+      d.seal({ span: 360, speed: 195 });
+      d.stretch({ gap: 136, len: 190, from: 0.24 });
       d.surfaceOut();
       d.scatterFish(3);
-      d.fishAt(8, 60, 'speed');
-      d.checkpointAt(6);
+      d.fishAt(6, 80, 'speed');
+      d.checkpointAt(5);
     },
   },
 ];
 
 function composeDive(plan, id) {
   const scale = scaleForLevel(id);
-  const d = new Deep({ scale, depth: plan.depth ?? 560 });
+  const d = new Deep({ scale, depth: plan.depth ?? 560, breath: plan.breath });
   try {
     plan.build(d);
   } catch (err) {

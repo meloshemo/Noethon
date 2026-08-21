@@ -66,7 +66,10 @@ for (const def of DIVE_LEVELS) {
   for (let i = 1; i < breaths.length; i++) {
     const swim = breaths[i] - breaths[i - 1];
     longestSwim = Math.max(longestSwim, swim);
-    if (swim > lung * 0.8) {
+    // The fairness line, not the difficulty dial. The composer's own budget is
+    // per level and climbs across the chapter; this is the point past which
+    // there is no room left for a player who takes a slightly wrong line.
+    if (swim > lung * 0.95) {
       bad(def, `${Math.round(swim)}px nefessiz, bir ciğer ${Math.round(lung)}px`);
     }
   }

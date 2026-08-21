@@ -26,8 +26,24 @@
 
 import { PENGUIN, SWIM, swimReach, breathRange } from './config.js';
 
-/** How much of a lungful a stretch between two air holes may spend. */
-const BREATH_BUDGET = 0.72;
+/**
+ * How much of a lungful a stretch between two air holes may spend.
+ *
+ * This used to be one number for the whole chapter, and one number for a whole
+ * chapter is one level played fifteen times. Measured, it meant the lungs never
+ * dropped below a third on any dive in the game and the finale finished with
+ * nearly half a breath left — in the chapter whose entire subject is running
+ * out of air.
+ *
+ * It is a per-level dial now. The plans set it, and it is the chapter's
+ * difficulty curve written down in one column of numbers.
+ *
+ * The ceiling does not move. Past it there is no margin left for a player who
+ * takes a wrong line, and a dive with no margin has to be swum perfectly rather
+ * than well.
+ */
+const BREATH_DEFAULT = 0.72;
+const BREATH_CEILING = 0.96;
 /**
  * Margin on the coupled swim reach.
  *
@@ -45,8 +61,20 @@ export class Deep {
   /**
    * @param {{scale?:number, depth?:number}} opts depth = the water column
    */
-  constructor({ scale = 1, depth = 560 } = {}) {
+  constructor({ scale = 1, depth = 560, breath = BREATH_DEFAULT } = {}) {
     this.scale = scale;
+    this.budget = Math.min(BREATH_CEILING, breath);
+    /**
+     * When the safety net cuts a hole, as a fraction of the budget.
+     *
+     * Late rather than early. It exists so a plan cannot forget the chapter's
+     * one promise, not so a plan cannot ask a hard question — and at 0.45 it
+     * was quietly doing the second, which is why raising the budget used to
+     * change nothing at all.
+     */
+    this.hold = 0.88;
+    /** A stretch has been laid and not yet paid for with a breath. */
+    this.owedBreath = false;
     this.penguinH = PENGUIN.h * scale;
     this.penguinW = PENGUIN.w * scale;
     /** Water column: surface at 0, seabed at `depth`. */
@@ -79,7 +107,7 @@ export class Deep {
 
   /** How far a lungful is allowed to carry the route between two holes. */
   get breathReach() {
-    return breathRange(this.scale) * BREATH_BUDGET;
+    return breathRange(this.scale) * this.budget;
   }
 
   /** How far sideways the swimmer travels while changing depth by `dy`. */
@@ -169,12 +197,116 @@ export class Deep {
    * necessary.
    */
   _keepBreathing() {
-    if (this.x - this.lastAir > this.breathReach * 0.45) this.hole({ lead: 140 });
+    if (this.swimSince > this.breathReach * this.hold) this.hole({ lead: 140 });
+    return this;
+  }
+
+  /**
+   * How far the swimmer actually swims for the current breath.
+   *
+   * Along the route, not along the level. A budget counted in x-distance is a
+   * budget nobody pays: a corridor of slots at alternating depths makes the
+   * penguin travel half as far again as the level is wide, and two dives were
+   * composed inside their budget and drowned two hundred pixels from the exit
+   * because of it. Diagonals cost what diagonals cost.
+   */
+  get swimSince() {
+    let total = 0;
+    for (let i = this.route.length - 1; i > 0; i--) {
+      const here = this.route[i];
+      const prev = this.route[i - 1];
+      total += Math.hypot(here.x - prev.x, here.y - prev.y);
+      if (prev.tag === 'air' || prev.tag === 'start') break;
+    }
+    // Whatever corridor has been laid past the last node counts too.
+    const last = this.route[this.route.length - 1];
+    if (last) total += Math.max(0, this.x - last.x);
+    return total;
+  }
+
+  /** A stretch spends a whole breath, so only a breath may follow it. */
+  _breathOwed() {
+    if (this.owedBreath) throw new Error('stretch() sonrası hole() ya da surfaceOut() gelmeli');
+  }
+
+  /**
+   * How much corridor a surfacing piece needs, starting from depth `lane`.
+   *
+   * `hole` and `surfaceOut` both build the same approach — drop to just under
+   * the ice, then rise through it — so the length they will add is knowable
+   * before they are called, which is what lets `stretch` leave room for it.
+   */
+  surfaceRunFrom(lane) {
+    const surface = 74;
+    const under = surface + this.penguinH * 1.3;
+    const drop = Math.max(0, this.reachFor(under - lane));
+    const rise = Math.max(0, this.reachFor(40 - under));
+    // The mouth of the hole counts: it is sized from the swimmer, not from the
+    // 250px a doorway would be, and the difference is what put one stretch
+    // eighteen pixels over its budget.
+    return Math.max(220, drop + rise + 90) + Math.max(250, this.penguinW * 7);
+  }
+
+  /**
+   * The reserve a stretch must leave.
+   *
+   * Measured from the *deepest* the line could be when the stretch ends rather
+   * than from where it is now: the loop decides to add one more slot while the
+   * line is shallow, the slot puts it on the bed, and the climb out is suddenly
+   * longer than the room left for it.
+   */
+  get surfaceRun() {
+    return this.surfaceRunFrom(this.depth - 74);
+  }
+
+  /**
+   * Swim until the lungs are `of` of the way down, then come up.
+   *
+   * The budget is a ceiling, and a ceiling nobody reaches is decoration. A plan
+   * can ask for the spend directly here: `of` is the fraction of one lungful
+   * this stretch costs, the composer fills the corridor until it costs that,
+   * and the piece that ends it is a breath. This is where the tension of the
+   * chapter actually lives.
+   */
+  stretch({ of = null, gap = null, len = 280, from = 0.3 } = {}) {
+    // Spending the whole budget is the default, because the budget *is* the
+    // level's difficulty and a stretch that quietly asks for less than it was
+    // given is a dial wired to nothing. A plan says `of` only to ask for less.
+    const lung = breathRange(this.scale);
+    const target = lung * Math.min(of ?? this.budget, this.budget);
+    // Off while the stretch is being laid, or the net cuts a hole in the middle
+    // of the very thing being measured.
+    const net = this.hold;
+    this.hold = Infinity;
+    let n = 0;
+    while (this.swimSince + len + this.surfaceRun < target && n < 20) {
+      // Alternating open water and slots, and the slots wander up and down the
+      // column so the cost is depth as well as distance.
+      if (n % 2 === 1) this.gate({ at: from + ((n * 0.19) % 0.46), gap });
+      else this.open({ len });
+      n++;
+    }
+    // Top up with the real cost of getting out from where the line actually
+    // ended. The loop above reserves for the deepest it *could* have ended,
+    // which is the only safe assumption while it is still adding slots and is
+    // far too pessimistic once it has stopped: without this, a stretch asked
+    // for nine tenths of a lung and spent three quarters.
+    let fill = 0;
+    // The slack is the diagonal the surfacing piece itself swims: it drops to
+    // just under the ice and then rises through it, and neither leg is
+    // horizontal. Cheaper to keep a little back than to be eighteen pixels over
+    // and refused.
+    while (this.swimSince + 150 + this.surfaceRunFrom(this.lane) + 90 < target && fill++ < 12) {
+      this.open({ len: 150 });
+    }
+    this.hold = net;
+    this.owedBreath = true;
     return this;
   }
 
   /** Open water: no obstacle, just corridor. The rests between the questions. */
   open({ len = 300, margin = 74 } = {}) {
+    this._breathOwed();
     const top = margin;
     const bottom = this.depth - margin;
     const mid = this.x + len / 2;
@@ -197,6 +329,7 @@ export class Deep {
    * survivable — the composer works out and refuses when it does not fit.
    */
   gate({ at = 0.5, gap = null, len = 120, lead = null } = {}) {
+    this._breathOwed();
     const slot = Math.max(this.minGap, gap ?? this.minGap + 40);
     // The slot narrows the corridor; it never reaches past it.
     //
@@ -273,13 +406,14 @@ export class Deep {
     this.air.push({ x: Math.round(x + 8), y: -40, w: w - 16, h: 110 });
     this.x += w;
 
-    const swum = this.x - this.lastAir;
+    const swum = this.swimSince;
     if (swum > this.breathReach) {
       throw new Error(
         `nefes arası çok uzun: ${Math.round(swum)}px, bir ciğer ${Math.round(this.breathReach)}px`,
       );
     }
     this.lastAir = this.x;
+    this.owedBreath = false;
     this._node(x + w / 2, 40, 148, 'air');
     return this;
   }
@@ -306,6 +440,7 @@ export class Deep {
 
   /** The way out: a hole with daylight over it. */
   surfaceOut({ len = 240 } = {}) {
+    this.owedBreath = false;
     const surface = 74;
     const under = surface + this.penguinH * 1.3;
     const dropNeed = Math.max(0, this.reachFor(under - this.lane));
@@ -326,7 +461,7 @@ export class Deep {
     this._lid(x, len);
     this.air.push({ x: Math.round(x + 10), y: -40, w: len - 20, h: 110 });
     this.x += len;
-    const swum = this.x - this.lastAir;
+    const swum = this.swimSince;
     if (swum > this.breathReach) {
       throw new Error(
         `çıkışa nefes yetmiyor: ${Math.round(swum)}px, bir ciğer ${Math.round(this.breathReach)}px`,
@@ -350,6 +485,7 @@ export class Deep {
    * in which "wait for it to turn, then go" is a real decision.
    */
   seal({ span = 220, at = null, speed = 128 } = {}) {
+    this._breathOwed();
     const top = 74;
     const bottom = this.depth - top;
     const len = Math.round(span * 2 + 220);
@@ -376,6 +512,7 @@ export class Deep {
 
   /** A current: a band of water that pushes, so a line has to be fought for. */
   current({ power = 150, band = 0.5, len = null } = {}) {
+    this._breathOwed();
     const node = this.route[this.route.length - 1];
     const height = Math.round(this.depth * band);
     this.zones.push({
