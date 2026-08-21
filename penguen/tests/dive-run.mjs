@@ -111,7 +111,14 @@ function trySwim(def, { look, band, start, fear }, probe = {}) {
           `vy${Math.round(p.vy)} nefes${p.breath.toFixed(1)} ${world.status}`,
       );
     }
-    if (world.status === 'won') return true;
+    if (world.status === 'won') {
+      // How much air was left over, and how close it ever got to none. A dive
+      // finished with half a lung is a dive that never asked anything.
+      probe.spare = Math.max(probe.spare ?? 0, p.breath / p.breathMax);
+      probe.lowest = Math.min(probe.lowest ?? 1, probe.low ?? 1);
+      return true;
+    }
+    probe.low = Math.min(probe.low ?? 1, p.breath / p.breathMax);
     if (world.status === 'dying') {
       probe.death = probe.death ?? {
         x: Math.round(cx),
@@ -165,7 +172,14 @@ for (const def of suite) {
     probe.trace = true;
     probe.log = [];
   }
+  probe.low = 1;
   const found = solve(def, probe);
+  if (process.argv.includes('--measure')) {
+    console.log(
+      `MEASURE ${def.id} ${(probe.lowest ?? 1).toFixed(4)} ${(probe.spare ?? 0).toFixed(4)} ${found ? 1 : 0}`,
+    );
+    continue;
+  }
   if (probe.trace) console.log(probe.log.slice(-70).join('\n'));
   if (found) {
     if (process.argv.includes('--list')) console.log(`GECTI ${def.id} ${def.name}`);

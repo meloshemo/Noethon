@@ -100,6 +100,7 @@ function tryWin(def, { park, flee }, probe = {}) {
   let waited = 0;
   let lastX = 0;
   let stuckFor = 0;
+  let nearest = 999;
 
   /**
    * Which way to run, given a preference and the walls.
@@ -183,13 +184,24 @@ function tryWin(def, { park, flee }, probe = {}) {
     world.update(STEP, { axis, jumpHeld: jump, jumpPressed: jump });
     t += STEP;
     probe.knockouts = world.brawlKnockouts;
+    // The nearest a snowball ever got. An arena nothing came close in is an
+    // arena that never asked anything.
+    for (const ball of world.snowballs) {
+      const dx = ball.x - (p.x + p.w / 2);
+      const dy = ball.y - (p.y + p.h / 2);
+      nearest = Math.min(nearest, Math.hypot(dx, dy));
+    }
     if (probe.trace && i % 20 === 0) {
       probe.log.push(
         `${t.toFixed(1)} x${Math.round(cx)} ${phase}${step} hedef${entry ? entry.stand.x : '-'} ` +
           `düşen${world.brawlKnockouts} top${world.snowballs.length} ${world.status}`,
       );
     }
-    if (world.status === 'won') return true;
+    if (world.status === 'won') {
+      probe.time = Math.min(probe.time ?? Infinity, t);
+      probe.closest = Math.min(probe.closest ?? 999, nearest);
+      return true;
+    }
     if (world.status === 'dying') {
       probe.death = { x: Math.round(cx), step, phase };
       return false;
@@ -232,6 +244,12 @@ for (const def of suite) {
     probe.log = [];
   }
   const found = solve(def, probe);
+  if (process.argv.includes('--measure')) {
+    console.log(
+      `MEASURE ${def.id} ${(probe.closest ?? 999).toFixed(1)} ${(probe.time ?? 0).toFixed(1)} ${found ? 1 : 0}`,
+    );
+    continue;
+  }
   if (probe.trace) console.log(probe.log.slice(-70).join('\n'));
   if (found) {
     if (process.argv.includes('--list')) console.log(`GECTI ${def.id} ${def.name}`);

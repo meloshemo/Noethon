@@ -333,38 +333,62 @@ const DELAYS = [0, 0.06, 0.12, 0.2, 0.3, 0.42, 0.6, 0.8];
 const HOLDS = [0.5, 0.34, 0.22, 0.15, 0.1];
 const MODES = ['kick', 'creep'];
 
+/**
+ * Measure mode (`--measure`).
+ *
+ * Run the search without letting it stop at the first answer and it reports
+ * *how many* answers there are. That fraction is the closest thing this project
+ * has to a number for difficulty, and it means the same thing in every chapter:
+ * a step a hundred inputs can do is generous, a step two can do is a wall, and
+ * both are equally passable. Collected by `tools/difficulty.mjs`.
+ */
+const MEASURE = process.argv.includes('--measure');
+
 function solveStep(def, solids, a, b, probe = {}) {
+  let ok = 0;
+  let tried = 0;
+  let hit = null;
   if (b.via === 'jump') {
     for (const from of FROMS) {
       for (const delay of DELAYS) {
         for (const hold of HOLDS) {
+          tried++;
           if (tryJump(def, solids, a, b, { from, delay, hold })) {
-            return { from, delay, hold };
+            hit ??= { from, delay, hold };
+            if (!MEASURE) return hit;
+            ok++;
           }
         }
       }
     }
-    return null;
+    probe.width = tried ? ok / tried : 0;
+    return hit;
   }
   for (const from of FROMS) {
     for (const delay of DELAYS) {
       for (const mode of MODES) {
         for (const first of [1, -1]) {
+          tried++;
           if (tryWall(def, solids, a, b, { from, delay, mode, first }, probe)) {
-            return { from, delay, mode, first };
+            hit ??= { from, delay, mode, first };
+            if (!MEASURE) return hit;
+            ok++;
           }
         }
       }
     }
   }
-  return null;
+  probe.width = tried ? ok / tried : 0;
+  return hit;
 }
 
 /* ------------------------------------------------------------------ */
 
-console.log('Tırmanışlar gerçek fizikle deneniyor...\n');
-console.log('(Sadece yayındaki bölümler. climb.js\'te ship:false olanlar,');
-console.log(' bu çözücü bir yol bulana kadar oyuna girmiyor.)\n');
+if (!MEASURE) {
+  console.log('Tırmanışlar gerçek fizikle deneniyor...\n');
+  console.log('(Sadece yayındaki bölümler. climb.js\'te ship:false olanlar,');
+  console.log(' bu çözücü bir yol bulana kadar oyuna girmiyor.)\n');
+}
 
 let failed = 0;
 let held = 0;
@@ -382,6 +406,7 @@ for (const def of suite) {
   const solids = solidsOf(def);
   const route = def.route;
   const bad = [];
+  const widths = [];
   for (let i = 1; i < route.length; i++) {
     steps++;
     const probe = {};
@@ -391,8 +416,15 @@ for (const def of suite) {
       probe.log = [];
     }
     const found = solveStep(def, solids, route[i - 1], route[i], probe);
+    if (MEASURE && found) widths.push(probe.width ?? 1);
     if (probe.trace) console.log(probe.log.slice(-60).join('\n'));
     if (!found) bad.push(`${i}. adım (${route[i].via}) yapılamıyor: y ${route[i - 1].y} → ${route[i].y} (en yüksek ${probe.best ?? '-'})`);
+  }
+  if (MEASURE) {
+    const tight = widths.length ? Math.min(...widths) : 0;
+    const mean = widths.length ? widths.reduce((n, v) => n + v, 0) / widths.length : 0;
+    console.log(`MEASURE ${def.id} ${tight.toFixed(4)} ${mean.toFixed(4)} ${widths.length}`);
+    continue;
   }
   if (!bad.length && process.argv.includes('--list')) console.log(`GECTI ${def.id} ${def.name}`);
   if (bad.length) {
@@ -402,6 +434,8 @@ for (const def of suite) {
     for (const line of bad) console.log(`    ${line}`);
   }
 }
+
+if (MEASURE) process.exit(0);
 
 console.log(`\n${steps} adım denendi, ${((Date.now() - t0) / 1000).toFixed(1)} sn`);
 if (held) console.log(`${held} adım, henüz yayına girmemiş planlarda.`);
