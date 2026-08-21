@@ -191,6 +191,11 @@ function tryWin(def, { park, flee }, probe = {}) {
       const dy = ball.y - (p.y + p.h / 2);
       nearest = Math.min(nearest, Math.hypot(dx, dy));
     }
+    // Recorded as it happens rather than only on the attempt that won. How
+    // dangerous an arena is does not depend on which try came good, and an
+    // arena solved on the first pass used to report that nothing came near it
+    // simply because nothing had been thrown yet.
+    probe.closest = Math.min(probe.closest ?? 999, nearest);
     if (probe.trace && i % 20 === 0) {
       probe.log.push(
         `${t.toFixed(1)} x${Math.round(cx)} ${phase}${step} hedef${entry ? entry.stand.x : '-'} ` +
@@ -199,7 +204,6 @@ function tryWin(def, { park, flee }, probe = {}) {
     }
     if (world.status === 'won') {
       probe.time = Math.min(probe.time ?? Infinity, t);
-      probe.closest = Math.min(probe.closest ?? 999, nearest);
       return true;
     }
     if (world.status === 'dying') {

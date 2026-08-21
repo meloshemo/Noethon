@@ -64,8 +64,24 @@ export class Course {
   /**
    * @param {{x?:number, y?:number, scale?:number, seed?:number}} opts
    */
-  constructor({ x = WALL + BACK, y = SEA_LEVEL, scale = 1 } = {}) {
+  constructor({ x = WALL + BACK, y = SEA_LEVEL, scale = 1, tight = 1 } = {}) {
     this.scale = scale;
+    /**
+     * How much of the penguin's reach this level's gaps are allowed to use,
+     * relative to what the plan asked for.
+     *
+     * The plans write gaps as fractions of reach, which is what makes an
+     * impossible one impossible to write. What it does not do is give the
+     * chapter a curve: measured, chapter one sloped at *minus* fifty-three
+     * percent — levels one to eleven were harder than twenty-seven to
+     * thirty-one, and the most forgiving level in the chapter was the twenty
+     * eighth. This multiplies every gap a plan asks for, so one number per
+     * level is the whole ramp.
+     *
+     * The hard cap stays where it was: past `budget.distance` in the validator
+     * a jump stops being a jump you can miss and make again.
+     */
+    this.tight = Math.min(1.45, Math.max(0.7, tight));
     this.reach = reachFor(scale);
     /** Right edge of the last thing placed, and its surface height. */
     this.x = x;
@@ -121,7 +137,7 @@ export class Course {
 
   /** A gap as a fraction of the penguin's real reach. */
   gapOf(fraction, maxHeight = Infinity) {
-    return Math.round(reachFor(this.scale, maxHeight).distance * fraction);
+    return Math.round(reachFor(this.scale, maxHeight).distance * fraction * this.tight);
   }
 
   /** A rise as a fraction of the penguin's real jump height. */

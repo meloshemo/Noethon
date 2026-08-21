@@ -72,7 +72,21 @@ const SLOPE_MAX =
 const SLOPE_MIN = 0.1;
 
 export class Arena {
-  constructor({ scale = 1, width = 1360, height = 560 } = {}) {
+  constructor({ scale = 1, width = 1360, height = 560, heat = 1 } = {}) {
+    /**
+     * How fast this arena throws, as a multiple of the chapter's own cadence.
+     *
+     * Below one is quicker, because a period is the gap between throws. It is
+     * the only honest dial this chapter has: everything else about an arena is
+     * a *shape*, and a shape either has an answer or it does not. Cadence can
+     * be turned up without turning an answer into a coin flip — the line is
+     * still there, there is just less of it.
+     *
+     * The floor is a fairness line. `BRAWL.aim` is how long the wind-up lasts,
+     * and a cadence shorter than that means the next ball is aimed before you
+     * could possibly have left the last one's line.
+     */
+    this.heat = Math.max(0.62, heat);
     this.scale = scale;
     this.width = width;
     this.height = height;
@@ -116,7 +130,7 @@ export class Arena {
       w: RIVAL_W,
       h: RIVAL_H,
       guard: Boolean(opts.guard),
-      period: opts.period ?? BRAWL.period,
+      period: (opts.period ?? BRAWL.period) * this.heat,
       phase: opts.phase ?? (this.rivals.length * 0.37) % 1,
     };
     this.rivals.push(rival);
@@ -153,7 +167,7 @@ export class Arena {
     const perchTop = this.groundY - this.height * guardUp;
     const guard = this._perch(gx, perchTop, {
       guard: true,
-      period: period ?? BRAWL.period * 1.15,
+      period: (period ?? BRAWL.period * 1.15) * this.heat,
       phase,
     });
     this._duels.push({
@@ -161,7 +175,7 @@ export class Arena {
       guardUp,
       standAt,
       shooterUp,
-      period: period ?? BRAWL.period,
+      period: (period ?? BRAWL.period) * this.heat,
       phase,
     });
     return this;

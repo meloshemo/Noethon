@@ -254,7 +254,7 @@ const CLIMB_PLANS = [
     subtitle: 'İki mola, bir nefes',
     en: { name: 'High Shaft', subtitle: 'Two rests, one breath' },
     target: 86,
-    effort: 0.881,
+    effort: 0.872,
     build: (t) => {
       t.base({ w: 225 });
       t.steps({ n: 2, rise: 0.6, w: 132 });

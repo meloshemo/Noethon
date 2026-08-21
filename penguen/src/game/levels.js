@@ -38,6 +38,16 @@ export const GROUND_Y = SEA_LEVEL;
  * @typedef {{name:string, subtitle:string, target:number, build:(c:Course)=>void}} Plan
  * @type {Plan[]}
  */
+/**
+ * `tight` is the chapter's difficulty curve, written down.
+ *
+ * Every gap a plan asks for is multiplied by it. The plans state gaps as
+ * fractions of the penguin's real reach, which is what makes an impossible one
+ * impossible to write — but it is not a curve, and measured, this chapter had
+ * none. It sloped at *minus* fifty-three percent: levels one to eleven were
+ * harder than twenty-seven to thirty-one, and the most forgiving level in the
+ * whole chapter was the twenty-eighth.
+ */
 const PLANS = [
   /* ---------------------------------------------------- 1-3 · verbs */
   {
@@ -45,6 +55,7 @@ const PLANS = [
     subtitle: 'Buzul kıyısı',
     en: { name: 'First Steps', subtitle: 'The edge of the glacier' },
     target: 30,
+    tight: 0.8,
     signs: [{ dx: 90, dy: -96, text: 'Yürü: ← →  •  Zıpla: BOŞLUK' }],
     build: (c) => {
       c.shelf({ n: 4, gap: 0.3, w: 230 });
@@ -57,6 +68,7 @@ const PLANS = [
     subtitle: 'Buzlar seyreliyor',
     en: { name: 'Open Water', subtitle: 'The floes are thinning' },
     target: 36,
+    tight: 0.817,
     build: (c) => {
       c.shelf({ n: 3, gap: 0.46, w: 180, wave: 22 });
       c.slope({ n: 2, rise: 0.34, gap: 0.4, w: 170 });
@@ -70,6 +82,7 @@ const PLANS = [
     subtitle: 'Yukarı, aşağı',
     en: { name: 'Steps', subtitle: 'Up, then down' },
     target: 42,
+    tight: 0.833,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 190 });
       c.slope({ n: 4, rise: 0.46, gap: 0.44, w: 135 });
@@ -86,6 +99,7 @@ const PLANS = [
     subtitle: 'Ayağının altında',
     en: { name: 'The Crack', subtitle: 'Right under your feet' },
     target: 46,
+    tight: 0.85,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 180 });
       c.slope({ n: 3, rise: 0.42, gap: 0.44, w: 155 });
@@ -100,6 +114,7 @@ const PLANS = [
     subtitle: 'Fren yok',
     en: { name: 'Polished Ice', subtitle: 'No brakes' },
     target: 50,
+    tight: 0.867,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 175 });
       c.slope({ n: 4, rise: 0.42, gap: 0.46, w: 145, type: 'slip' });
@@ -114,6 +129,7 @@ const PLANS = [
     subtitle: 'Bekle, sonra geç',
     en: { name: 'Melting Ground', subtitle: 'Wait, then cross' },
     target: 54,
+    tight: 0.883,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.42, w: 180 });
       c.slope({ n: 2, rise: 0.5, gap: 0.46, w: 160 });
@@ -131,6 +147,7 @@ const PLANS = [
     subtitle: 'Buz da yolculuk eder',
     en: { name: 'The Current', subtitle: 'Ice travels too' },
     target: 56,
+    tight: 0.9,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 180 });
       for (let i = 0; i < 4; i++) {
@@ -147,6 +164,7 @@ const PLANS = [
     subtitle: 'Bastığın an kaçar',
     en: { name: 'Falling Ice', subtitle: 'Gone the moment you land' },
     target: 58,
+    tight: 0.917,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 175 });
       c.shelf({ n: 4, gap: 0.54, w: 128, types: ['fall', 'solid'] });
@@ -165,6 +183,7 @@ const PLANS = [
     subtitle: 'Kıta yükseliyor',
     en: { name: 'The Slope', subtitle: 'The continent rises' },
     target: 62,
+    tight: 0.933,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.42, w: 175 });
       c.slope({ n: 6, rise: 0.58, gap: 0.48, w: 120 });
@@ -180,6 +199,7 @@ const PLANS = [
     subtitle: 'Altında dip yok',
     en: { name: 'The Rift', subtitle: 'There is no bottom to it' },
     target: 64,
+    tight: 0.95,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.42, w: 175 });
       c.slope({ n: 3, rise: 0.5, gap: 0.46, w: 150 });
@@ -197,6 +217,7 @@ const PLANS = [
     subtitle: 'Tavan alçak',
     en: { name: 'Ice Tunnel', subtitle: 'The ceiling is low' },
     target: 66,
+    tight: 0.967,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 175 });
       c.slope({ n: 2, rise: -0.4, gap: 0.44, w: 160 });
@@ -213,6 +234,7 @@ const PLANS = [
     subtitle: 'Yukarıdan düşen',
     en: { name: 'Icicles', subtitle: 'Coming down from above' },
     target: 68,
+    tight: 0.983,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 175 });
       c.slope({ n: 2, rise: 0.46, gap: 0.44, w: 155 });
@@ -228,6 +250,7 @@ const PLANS = [
     subtitle: 'Yolun üstünde',
     en: { name: 'Seals', subtitle: 'Right on the route' },
     target: 68,
+    tight: 1.0,
     build: (c) => {
       c.shelf({ n: 3, gap: 0.44, w: 180 });
       c.seal(c.at(0.35), { speed: 82 });
@@ -248,6 +271,7 @@ const PLANS = [
     subtitle: 'Göründüğü gibi değil',
     en: { name: 'False Ground', subtitle: 'Not what it looks like' },
     target: 68,
+    tight: 1.017,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 170 });
       c.slope({ n: 3, rise: 0.5, gap: 0.46, w: 150 });
@@ -268,6 +292,7 @@ const PLANS = [
     subtitle: 'Rüzgâr geri itiyor',
     en: { name: 'Storm Coast', subtitle: 'The wind pushes you back' },
     target: 72,
+    tight: 1.033,
     build: (c) => {
       c.shelf({ n: 3, gap: 0.42, w: 175 });
       const from = c.x;
@@ -289,6 +314,7 @@ const PLANS = [
     subtitle: 'Her balık iyi balık değil',
     en: { name: 'Rotten Bait', subtitle: 'Not every fish is a good fish' },
     target: 70,
+    tight: 1.05,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.44, w: 170 });
       c.slope({ n: 4, rise: 0.52, gap: 0.46, w: 145 });
@@ -308,6 +334,7 @@ const PLANS = [
     subtitle: 'Aşağısı çok aşağı',
     en: { name: 'Cliff Road', subtitle: 'A very long way down' },
     target: 74,
+    tight: 1.067,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 170 });
       c.summit({ height: 260, steps: 3, w: 180 });
@@ -325,6 +352,7 @@ const PLANS = [
     subtitle: 'Tam inerken',
     en: { name: 'Vanishing Ice', subtitle: 'Just as you land' },
     target: 72,
+    tight: 1.083,
     build: (c) => {
       c.shelf({ n: 3, gap: 0.44, w: 170 });
       for (let i = 0; i < 4; i++) {
@@ -349,6 +377,7 @@ const PLANS = [
     subtitle: 'Buz tıslamaya başlarsa',
     en: { name: 'Geyser', subtitle: 'If the ice starts hissing' },
     target: 76,
+    tight: 1.1,
     build: (c) => {
       c.shelf({ n: 3, gap: 0.42, w: 170 });
       for (let i = 0; i < 4; i++) {
@@ -366,6 +395,7 @@ const PLANS = [
     subtitle: 'Boşluklara dikkat',
     en: { name: 'Killer Whale', subtitle: 'Mind the gaps' },
     target: 78,
+    tight: 1.117,
     build: (c) => {
       c.shelf({ n: 3, gap: 0.44, w: 170 });
       for (let i = 0; i < 4; i++) {
@@ -393,6 +423,7 @@ const PLANS = [
     subtitle: 'Kıtanın tepesi',
     en: { name: 'The Peak', subtitle: 'The top of the continent' },
     target: 84,
+    tight: 1.133,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 170 });
       c.summit({ height: 280, steps: 4, w: 175 });
@@ -410,6 +441,7 @@ const PLANS = [
     subtitle: 'Işık yok',
     en: { name: 'Deep Tunnel', subtitle: 'No light' },
     target: 82,
+    tight: 1.15,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 170 });
       c.slope({ n: 2, rise: -0.42, gap: 0.44, w: 155 });
@@ -429,6 +461,7 @@ const PLANS = [
     subtitle: 'Alçak ve kötü niyetli',
     en: { name: 'Trap Tunnel', subtitle: 'Low, and out to get you' },
     target: 84,
+    tight: 1.167,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.42, w: 165 });
       c.slope({ n: 4, rise: 0.52, gap: 0.46, w: 140 });
@@ -447,6 +480,7 @@ const PLANS = [
     subtitle: 'Biri diğerini tetikler',
     en: { name: 'Geyser Chain', subtitle: 'One sets off the next' },
     target: 86,
+    tight: 1.183,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.42, w: 165 });
       for (let i = 0; i < 5; i++) {
@@ -466,6 +500,7 @@ const PLANS = [
     subtitle: 'Yokuş yukarı, rüzgâra karşı',
     en: { name: 'Windward Slope', subtitle: 'Uphill, into the wind' },
     target: 88,
+    tight: 1.2,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 165 });
       const from = c.x;
@@ -488,6 +523,7 @@ const PLANS = [
     subtitle: 'Tünelin altında su',
     en: { name: 'Underground River', subtitle: 'Water beneath the tunnel' },
     target: 90,
+    tight: 1.217,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 160 });
       c.slope({ n: 3, rise: -0.44, gap: 0.44, w: 155 });
@@ -505,6 +541,7 @@ const PLANS = [
     subtitle: 'Yukarısı da güvenli değil',
     en: { name: 'Brittle Summit', subtitle: 'The top is no safer' },
     target: 92,
+    tight: 1.233,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 160 });
       c.summit({ height: 270, steps: 4, w: 160 });
@@ -522,6 +559,7 @@ const PLANS = [
     subtitle: 'İn, çık, in',
     en: { name: 'Glacier Maze', subtitle: 'Down, up, down' },
     target: 96,
+    tight: 1.25,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 160 });
       c.tunnel({ n: 6, headroom: 106, gap: 0.48, w: 135, icicles: 4 });
@@ -541,6 +579,7 @@ const PLANS = [
     subtitle: 'Sudan ve buzdan',
     en: { name: 'Hunters', subtitle: 'From the water and the ice' },
     target: 98,
+    tight: 1.267,
     build: (c) => {
       c.shelf({ n: 3, gap: 0.44, w: 160 });
       for (let i = 0; i < 4; i++) {
@@ -562,6 +601,7 @@ const PLANS = [
     subtitle: 'Her şey aynı anda',
     en: { name: 'The Last Storm', subtitle: 'Everything at once' },
     target: 102,
+    tight: 1.283,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 155 });
       const from = c.x;
@@ -586,6 +626,7 @@ const PLANS = [
     subtitle: 'Salı görüyorsun',
     en: { name: 'The Road North', subtitle: 'You can see the raft' },
     target: 108,
+    tight: 1.3,
     build: (c) => {
       c.shelf({ n: 2, gap: 0.4, w: 155 });
       c.summit({ height: 290, steps: 4, w: 155 });
@@ -611,7 +652,7 @@ const PLANS = [
 /** Compose every plan once, at module load. */
 export const LEVELS = PLANS.map((plan, i) => {
   const id = i + 1;
-  const course = new Course({ scale: scaleForLevel(id) });
+  const course = new Course({ scale: scaleForLevel(id), tight: plan.tight });
   plan.build(course);
   const def = course.build({
     id,
