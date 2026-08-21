@@ -53,11 +53,39 @@ const BUDGET = {
   creep: 0.6,
 };
 
+/**
+ * How hard this particular climb leans on the bar.
+ *
+ * The three numbers above were the whole chapter's difficulty, which is to say
+ * the chapter had none: fifteen climbs all allowed to spend the same fraction
+ * of the same arms. Measured, the chapter sloped at a third of what it should.
+ *
+ * `effort` multiplies them per level. One is the old chapter. Past one the
+ * shafts get taller for the same pair of arms, which is the only thing this
+ * chapter can make harder without changing what it is about.
+ *
+ * The ceiling is the fairness line: a climb allowed the *whole* bar is a climb
+ * that has to be done without one wasted grab, and a chapter of those is not
+ * difficult, it is a stopwatch.
+ */
+const EFFORT_CEILING = 1.6;
+
+/**
+ * The most of one bar a single shaft may ever ask for, whatever its effort.
+ *
+ * Deliberately a little under the line the validator holds, so the validator
+ * stays an independent check rather than an echo: if these two ever meet, the
+ * second one has stopped being able to disagree with the first.
+ */
+const LEAN_CAP = 0.9;
+const leanOn = (base, effort) => Math.min(LEAN_CAP, base * effort);
+
 export class Tower {
   /**
    * @param {{scale?:number, width?:number}} opts inner span of the shaft
    */
-  constructor({ scale = 1, width = 520 } = {}) {
+  constructor({ scale = 1, width = 520, effort = 1 } = {}) {
+    this.effort = Math.min(EFFORT_CEILING, Math.max(0.6, effort));
     this.scale = scale;
     this.reach = reachFor(scale);
     this.penguinW = PENGUIN.w * scale;
@@ -464,7 +492,17 @@ export class Tower {
     if (gain <= 12) {
       throw new Error(`baca çok geniş: ${inner}px, tekme ${Math.round(gain)}px kazandırıyor`);
     }
-    const ceiling = (rests + 1) * Math.max(budget.kicked, budget.creep) * BUDGET.kick;
+    const ceiling = (rests + 1) * Math.max(budget.kicked, budget.creep) * leanOn(BUDGET.kick, this.effort);
+    // The plan says how tall this shaft is *for the chapter's easiest climb*;
+    // the level's effort says how much taller it is here. A plan does not get
+    // to write a number that means two different things in two levels, and a
+    // dial that raises a ceiling nobody reaches raises nothing at all.
+    height = Math.round(height * this.effort);
+    // Below this a shaft stops being a shaft: the two faces are shorter than
+    // the penguin's own jump, one of them degenerates, and what the level
+    // contains is a step with decoration on it. An easy chimney is still a
+    // chimney.
+    height = Math.max(height, Math.round(this.reach.height * 1.35));
     if (height > ceiling) {
       throw new Error(`baca çok yüksek: ${height}px, ${rests} molayla sınır ${Math.round(ceiling)}px`);
     }
@@ -634,7 +672,15 @@ export class Tower {
         w: 44,
         h: 34,
         fall: height,
-        period: 4.2,
+        // The gap between falls is derived from the drop, not typed.
+        //
+        // A serac in a tall shaft spends longer in the air than one in a short
+        // shaft, so a fixed four-second cycle quietly turned into "dangerous
+        // two fifths of the time" the moment the shafts grew — and a hazard you
+        // cannot wait out is not a hazard, it is a wall. The rule the validator
+        // holds is that the dangerous share stays waitable; this is the
+        // composer keeping it rather than being caught breaking it.
+        period: Math.max(4.2, +(((Math.sqrt((2 * height) / 2000) + 0.4) / 0.3).toFixed(2))),
         warn: 0.4,
         // Asleep until the penguin is properly into the shaft. Below this it
         // is a shadow overhead, which is the warning that the shaft has one.
@@ -684,7 +730,8 @@ export class Tower {
    */
   face({ height = 200, side = null, exit = 160 } = {}) {
     const budget = climbBudget(this.scale, this.width);
-    const ceiling = budget.creep * BUDGET.creep;
+    const ceiling = budget.creep * leanOn(BUDGET.creep, this.effort);
+    height = Math.round(height * this.effort);
     if (height > ceiling) {
       throw new Error(`duvar çok yüksek: ${height}px, tırmanma sınırı ${Math.round(ceiling)}px`);
     }
@@ -907,6 +954,8 @@ export class Tower {
     return {
       ...meta,
       axis: 'up',
+      /** How hard this climb leans on the bar, for the validator to allow for. */
+      effort: this.effort,
       worldW: this.width + WALL_T * 2 + 40,
       worldH,
       waterY,

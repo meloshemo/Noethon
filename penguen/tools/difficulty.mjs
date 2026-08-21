@@ -52,10 +52,19 @@ const CHAPTERS = [
     from: 32,
     to: 46,
     script: 'tests/climb-run.mjs',
-    metric: 'tolerans',
-    read: (tight, mean) => mean,
-    format: (v) => v.toFixed(3),
-    want: [0.5, 0.12],
+    /**
+     * Arms rather than inputs.
+     *
+     * Tolerance was the obvious reading and the wrong one here: how precise a
+     * single kick has to be is dominated by how coarsely the solver happens to
+     * sweep, and the number sat at a third whatever the chapter did. What a
+     * climber actually feels is the bar, so this is the lowest it ever gets on
+     * the hardest step of the climb — the mountain's version of breath.
+     */
+    metric: 'kalan kol gücü',
+    read: (tight, spare) => spare,
+    format: (v) => `%${Math.round(v * 100)}`,
+    want: [0.75, 0.06],
     easier: 'up',
   },
   {

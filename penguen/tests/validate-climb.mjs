@@ -43,6 +43,24 @@ let warnings = 0;
 const BUDGET = { jump: 0.86, rise: 0.87, kick: 0.72, creep: 0.7, shard: 0.35 };
 
 /**
+ * What a level's `effort` does to the two stamina lines above.
+ *
+ * `kick` and `creep` are comfort rather than fairness: at 0.72 a shaft must fit
+ * inside under three quarters of a bar, so you top out with a quarter spare.
+ * Taking that spare away is precisely what makes a climb hard, and a chapter
+ * where every level keeps the same quarter is a chapter with no curve — which
+ * is exactly what the difficulty tool found.
+ *
+ * So the two of them scale with the level's own effort, up to a line that does
+ * not move. Past `HARD_CAP` there is no bar left for a player who grabs a
+ * moment late, and a climb with no bar left has to be done perfectly rather
+ * than well. Everything else here stays where it was: reach and rise are
+ * fairness, not comfort, and they are not for sale.
+ */
+const HARD_CAP = 0.94;
+const leanOn = (base, def) => Math.min(HARD_CAP, base * (def.effort ?? 1));
+
+/**
  * How far a kick off a wall carries, landing `rise` pixels higher.
  *
  * A kick is not a jump: it starts with the sideways speed already at full and
@@ -105,7 +123,7 @@ function validate(def) {
       const gain = kickGain(scale, c.inner);
       if (gain <= 12) fail(`${i}. baca çok geniş: tekme ${Math.round(gain)}px kazandırıyor`);
       const budget = climbBudget(scale, c.inner);
-      const perBreath = Math.max(budget.kicked, budget.creep) * BUDGET.kick;
+      const perBreath = Math.max(budget.kicked, budget.creep) * leanOn(BUDGET.kick, def);
       const stretches = c.rests + 1;
       const tallest = c.height / stretches;
       if (tallest > perBreath) {
@@ -153,7 +171,7 @@ function validate(def) {
 
     if (b.via === 'creep' && b.climbHeight) {
       const budget = climbBudget(scale, def.worldW);
-      const ceiling = budget.creep * BUDGET.creep;
+      const ceiling = budget.creep * leanOn(BUDGET.creep, def);
       if (b.climbHeight > ceiling) {
         fail(`${i}. duvar bir bara sığmıyor: ${b.climbHeight}px > ${Math.round(ceiling)}px`);
       }
