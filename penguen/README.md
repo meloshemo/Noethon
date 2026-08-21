@@ -248,7 +248,7 @@ geçmez, hata verip durur.
 
 ## Testler
 
-Tek komut, 23 paket (15 node + paketleme + 7 tarayıcı), kendi sunucusunu
+Tek komut, 24 paket (15 node + paketleme + 8 tarayıcı), kendi sunucusunu
 kurup kapatıyor ve portu doluysa bir yanına kayıyor:
 
 ```bash
@@ -286,6 +286,7 @@ node tests/browser-layout.mjs    # üç boyutta taşma ve hizalama
 node tests/browser-climb.mjs     # tutunma, tırmanma, tekme, bar
 node tests/browser-dive.mjs      # dalma, yükselme, nefes, delik
 node tests/browser-brawl.mjs     # nişan, atış, çarpma, kilitli çıkış
+node tests/browser-session.mjs   # yarım kalan koşu geri geliyor mu, bayatı atılıyor mu
 node tests/browser-lang.mjs      # dil değişince her ekran gerçekten çevriliyor mu
 node tests/browser-bundle.mjs    # tek dosya sürümü file:// üzerinden gerçekten açılıyor mu
 ```
@@ -331,7 +332,7 @@ kontrol eder, biri tutmazsa derleme düşer.
 çeşit bozuk yapıştırma sessizce reddediliyor mu, isim değişikliği koşuyu koruyor
 mu diye bakar.
 
-Tarayıcı tarafı yedi paket, hepsi `playwright` ile gerçek Chromium'da:
+Tarayıcı tarafı sekiz paket, hepsi `playwright` ile gerçek Chromium'da:
 
 | Paket | Ne ölçüyor |
 |---|---|
@@ -340,6 +341,7 @@ Tarayıcı tarafı yedi paket, hepsi `playwright` ile gerçek Chromium'da:
 | `browser-climb` | Tutunma, asılı kalmanın azar azar, tırmanmanın iki katından fazla, tekmenin bir çırpıda tüketmesi, barın yalnızca yerde dolması, sahanlıkta tutunmanın olmaması |
 | `browser-dive` | Bırakınca yükselme, basınca inme, suda karadan hızlı olma, nefesin bitmesi ve delikte dolması |
 | `browser-brawl` | Nişan alıp atma, kar topunun ilk değdiği şeyde durması, oyuncuyu öldürmesi, ölünce arenanın sıfırlanması, kilitli çıkışın gerçekten kilitli olması |
+| `browser-session` | Yarım kalan koşunun geri gelmesi, başka bir şekle ait olanın atılması, boşluktaki noktanın ölüm döngüsü kurmaması |
 | `browser-lang` | Dil değişince sekiz ekranın her birinde diğer dilden harf kalmaması ve seçimin yeniden açılışta hatırlanması |
 | `browser-bundle` | `dist/pengu.html`'in **sunucusuz**, `file://` üzerinden açılması, bölüm bestelemesi ve kronometrenin dönmesi |
 
@@ -417,7 +419,7 @@ tests/
   brawl-run.mjs            IV. chapter çözücüsü
   economy.mjs              ekonomi dengesi simülasyonu
   ghost.mjs                paylaşım kodu çözücüsü
-  browser-*.mjs            kimlik, düzen, tırmanma, yüzme, kar topu, diller
+  browser-*.mjs            kimlik, düzen, tırmanma, yüzme, kar topu, koşu, diller, paket
 tools/
   serve.mjs                bağımlılıksız statik sunucu
   bundle.mjs               tek dosyaya düzleştirme
@@ -1422,6 +1424,17 @@ duraklatınca, ölünce ve `pagehide`'da. Geri geldiğinde ana ekrandaki düğme
 noktasında, aynı süreyle, aynı ölüm ve balık sayısıyla başlıyorsun. Kayıt 36
 saat sonra kendini siliyor, bölümü bitirince de siliniyor.
 
+Kayıtla birlikte bölümün **şeklinin parmak izi** de saklanıyor, çünkü bir
+koordinat yalnızca onu üreten bölümde bir koordinattır. Bölüm değişirse aynı
+iki sayı açık denizi gösterebiliyor: oyun açılır açılmaz penguen gökten
+düşüyor, ölüyor ve ölünce aynı noktaya geri konuyor. Sonsuza kadar, kaydı
+silmekten başka çıkışı olmadan. Parmak izi tutmazsa oturum atılıyor; tutsa
+bile nokta hâlâ bir zeminin üstünde mi diye bakılıyor.
+
+Aynı emniyet ağı oyun içinde de var: her yeniden doğuşta nokta *o an*
+basılabilir mi diye kontrol ediliyor. Sürüklenmiş bir buzun üstündeki kontrol
+noktası ya da erimiş bir zemin, ölüm döngüsü kuramıyor.
+
 > Bu özellik yazılırken **gerçekten bozuktu** ve testle bulundu: başlık ekranı
 > UI kurucusunda, yani `game` nesnesi var olmadan önce çiziliyordu, bu yüzden
 > yarım kalmış koşuyu bilmesine imkân yoktu ve "Devam et" hiç görünmüyordu.
@@ -1454,7 +1467,7 @@ anlatmak değil, olan bir şeyi olduğundan iyi anlatmaktır.
 | Kayıt | Tek sürümlü JSON, ileri göç, dosyaya aktarma, tek tuşla silme |
 | Çevrimdışı | Servis çalışanı + tek dosya sürümü (732 KB) |
 | Girdi | Klavye, dokunmatik, gamepad |
-| Test | 15 node + paketleme + 7 tarayıcı paketi, hepsi tek komutta |
+| Test | 15 node + paketleme + 8 tarayıcı paketi, hepsi tek komutta |
 
 ### Yok, ve neden
 

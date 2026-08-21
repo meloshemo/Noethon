@@ -25,6 +25,22 @@ export function rectsOverlap(a, b) {
  * Deterministic pseudo-random generator (mulberry32).
  * Used by the level generator so a given level number always looks the same.
  */
+/**
+ * A short, stable fingerprint of a string.
+ *
+ * FNV-1a, 32 bits, printed in base 36. Not a security hash and not trying to
+ * be: it exists so a saved coordinate can be told apart from a coordinate that
+ * belonged to a level shaped differently.
+ */
+export function fingerprint(str) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return (h >>> 0).toString(36);
+}
+
 export function makeRng(seed) {
   let a = seed >>> 0;
   return function next() {

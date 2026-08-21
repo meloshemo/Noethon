@@ -5,6 +5,39 @@ değiştiği yeterli. En yeni en üstte.
 
 ---
 
+## Kaydedilmiş bir nokta, altındaki zeminden uzun yaşamamalı
+
+Açılışlar düzeldikten sonra hata hâlâ duruyordu ve belirtisi başkaydı: oyun
+açılır açılmaz penguen **gökten düşüyor** ve anında eleniyordu.
+
+Sebep şuydu. "Devam et" daha önceki bir koşudan kaydedilmiş bir koordinatı geri
+yüklüyor ve o koordinata körü körüne güveniyordu. Bir koordinat yalnızca onu
+üreten bölümde bir koordinattır; bölümün açılışı düzeltilince aynı iki sayı
+açık denizi göstermeye başladı. Penguen oraya konuyor, düşüyor, ölüyor ve ölünce
+**yine aynı noktaya** konuyordu. Her açılışta, sonsuza kadar, kaydı silmekten
+başka çıkışı olmadan.
+
+Hiçbir kural çiğnenmediği için hiçbir şey fark etmiyordu: nokta, artık var
+olmayan bir bölüm için kusursuz bir noktaydı.
+
+- Oturum artık bölümün **şeklinin parmak izini** taşıyor. Tutmazsa oturum
+  teklif bile edilmiyor, kayıttan siliniyor.
+- Parmak izi tutsa bile nokta **bir zeminin üstünde mi** diye bakılıyor.
+  Sürüklenmiş bir buz ya da erimiş bir zemin, geçerli bir noktayı geçersiz bir
+  yere çevirebiliyor.
+- Aynı kontrol her yeniden doğuşta da yapılıyor: bozuk bir nokta nereden gelirse
+  gelsin ölüm döngüsü kuramıyor, bölümün başına düşülüyor.
+
+Yanında küçük bir şey daha: başlık düğmesi 76. bölümden sonra "Bölüm 84"
+diyordu, yani var olmayan bir bölüm. Üç ekran doğru kuralı zaten biliyordu,
+dördüncüsü bilmiyordu; artık tek yerden geliyor.
+
+`tests/browser-session.mjs` dört yolu birden sürüyor: geçerli oturum geri
+geliyor mu, bayat olan atılıyor mu, boşluktaki nokta ölüm döngüsü kuruyor mu ve
+sonsuz mod doğru adlandırılıyor mu.
+
+---
+
 ## Bölümlerin bir arkası oldu, açılışlar saniyeyle ölçülüyor
 
 31. bölüm başlar başlamaz öldürüyordu. Sebebi bir boşluk değildi: doğuş noktası

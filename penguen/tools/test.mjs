@@ -43,6 +43,7 @@ const BROWSER_SUITES = [
   ['tests/browser-climb.mjs', 'tırmanma mekaniği'],
   ['tests/browser-dive.mjs', 'yüzme mekaniği'],
   ['tests/browser-brawl.mjs', 'kar topu mekaniği'],
+  ['tests/browser-session.mjs', 'yarım kalan koşu'],
   ['tests/browser-lang.mjs', 'diller'],
   ['tests/browser-bundle.mjs', 'tek dosya sürümü'],
 ];

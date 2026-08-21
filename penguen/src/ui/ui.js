@@ -217,12 +217,12 @@ export class UI {
     const session = this.game?.pendingSession ?? null;
     this._session = session;
     if (session) {
-      const where = session.daily ? t('title.daily') : t('ui.levelN', { n: session.level });
+      const where = session.daily ? t('title.daily') : levelLabel(session.level);
       this.el.playLabel.textContent = t('pause.resume');
       this.el.playSub.textContent = `${where} · ${formatRecord(session.elapsed ?? 0)}`;
     } else {
       this.el.playLabel.textContent = isNew ? t('id.start') : t('pause.resume');
-      this.el.playSub.textContent = t('ui.levelN', { n: next });
+      this.el.playSub.textContent = levelLabel(next);
     }
 
     const stars = Object.values(this.save.levels).reduce((s, l) => s + (l.stars ?? 0), 0);
@@ -923,8 +923,7 @@ export class UI {
 
       const num = document.createElement('span');
       num.className = 'level__num';
-      num.textContent =
-        id > CRAFTED_LEVELS ? t('ui.endlessN', { n: id - CRAFTED_LEVELS }) : t('ui.levelN', { n: id });
+      num.textContent = levelLabel(id);
 
       const name = document.createElement('span');
       name.className = 'level__name';
@@ -1033,10 +1032,7 @@ export class UI {
 
   updateHud(world, levelId, runDeaths) {
     if (this.el.hud.hidden) return;
-    this.el.hudLevel.textContent =
-      levelId > CRAFTED_LEVELS
-        ? t('ui.endlessN', { n: levelId - CRAFTED_LEVELS })
-        : t('ui.levelN', { n: levelId });
+    this.el.hudLevel.textContent = levelLabel(levelId);
     this.el.hudName.textContent = loc(world.def);
     this.el.hudFish.textContent = `${world.fishTaken}/${world.fish.length}`;
     this.el.hudDeaths.textContent = String(world.deaths + runDeaths);
@@ -1949,6 +1945,19 @@ function escapeHtml(s) {
 export function levelName(id) {
   const def = getLevel(id);
   return (def && loc(def)) || t('ui.levelN', { n: id });
+}
+
+/**
+ * "Bölüm 7" or "Sonsuz 3", the same way everywhere.
+ *
+ * The title screen used to say "Bölüm 84" once somebody got past the crafted
+ * set, which is a level that does not exist. Three other screens already knew
+ * the rule; this is the fourth, and now they share it.
+ */
+function levelLabel(id) {
+  return id > CRAFTED_LEVELS
+    ? t('ui.endlessN', { n: id - CRAFTED_LEVELS })
+    : t('ui.levelN', { n: id });
 }
 
 /** Number and date formatting follows the chosen language, not the browser. */

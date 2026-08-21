@@ -823,6 +823,25 @@ export class World {
     }
   }
 
+  /**
+   * Is this point a place a penguin could be standing?
+   *
+   * Not "is there something nearby": the surface has to be *at* the point, the
+   * way a floe's top is at the height of the feet on it. Merely overlapping
+   * some solid is how a coordinate a few pixels inside a floe passes for one on
+   * top of it, and a coordinate inside a floe is a penguin falling out of it.
+   */
+  standable(x, y) {
+    const half = this.player.w / 2;
+    for (const f of this.solids) {
+      if (!f.solid) continue;
+      if (Math.abs(f.y - y) > 6) continue;
+      if (Math.min(x + half, f.x + f.w) - Math.max(x - half, f.x) <= 2) continue;
+      return true;
+    }
+    return false;
+  }
+
   _respawn() {
     this.status = 'playing';
     this.shields = this.maxShields;
@@ -848,6 +867,18 @@ export class World {
     this.skuaCooldown = AMBUSH.grace;
     this.boostsTaken = 0;
     this.rottenTaken = 0;
+    // Last line of defence against a death loop.
+    //
+    // A respawn point is a coordinate, and coordinates outlive the ground they
+    // were taken from: a checkpoint on ice that has since drifted, a point
+    // restored from a save written before the level changed shape. Land in one
+    // and you fall, and falling puts you back at the same place, for ever. The
+    // floes have just been reset, so if it is not standable now it never will
+    // be, and the start of the level always is.
+    if (!this.standable(this.respawn.x, this.respawn.y)) {
+      this.respawn = { ...this.def.spawn };
+      this.player.reset(this.respawn.x, this.respawn.y);
+    }
     this.particles.puff(this.respawn.x, this.respawn.y, 10);
     this._centerCamera();
   }

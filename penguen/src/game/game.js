@@ -16,6 +16,7 @@ import { encodeRun, decodeRun } from './ghost.js';
 import { newlyEarned, getSkin } from './skins.js';
 import { weekKey, scoreRun, tierFor } from './league.js';
 import { dailyObjectives, applyRun } from './daily.js';
+import { fingerprint } from '../core/util.js';
 
 /** Fixed physics step — decoupled from the display refresh rate. */
 const STEP = 1 / 120;
@@ -122,6 +123,9 @@ export class Game {
     Storage.saveSession(this.save, {
       level: this.levelId,
       daily: this.dailyRun,
+      // What shape the level was when this point meant something. Without it
+      // the coordinate outlives the ground it was standing on.
+      stamp: levelStamp(w.def),
       x: Math.round(w.respawn.x),
       y: Math.round(w.respawn.y),
       elapsed: +w.elapsed.toFixed(2),
@@ -132,7 +136,27 @@ export class Game {
 
   /** Is there an interrupted attempt to offer? */
   get pendingSession() {
-    return Storage.takeSession(this.save);
+    const s = Storage.takeSession(this.save);
+    if (!s) return null;
+    // A saved point is only a point on the level that produced it. Change the
+    // level and the same two numbers can name open water, which is what turned
+    // "Devam et" into a penguin falling out of the sky on every launch and
+    // dying there for ever, because dying put it back at the same place.
+    const def = s.daily ? this._dailyDef() : getLevel(s.level);
+    if (!def || s.stamp !== levelStamp(def)) {
+      Storage.clearSession(this.save);
+      return null;
+    }
+    return s;
+  }
+
+  /** Today's generated level, for checking a stored daily session against. */
+  _dailyDef() {
+    try {
+      return generateDailyLevel(todayKey());
+    } catch {
+      return null;
+    }
   }
 
   /**
@@ -149,8 +173,12 @@ export class Game {
     else this.startLevel(s.level);
     const w = this.world;
     if (!w) return false;
-    w.respawn = { x: s.x, y: s.y };
-    w.player.reset(s.x, s.y);
+    // Belt as well as braces. The stamp says the level is the same shape; this
+    // says the point is still standing on it. A checkpoint saved on ice that
+    // has since melted or drifted is a legal point in an illegal place.
+    const at = w.standable(s.x, s.y) ? { x: s.x, y: s.y } : { ...w.def.spawn };
+    w.respawn = { ...at };
+    w.player.reset(at.x, at.y);
     w.elapsed = s.elapsed ?? 0;
     w.deaths = s.deaths ?? 0;
     w.fishTaken = 0;
@@ -657,3 +685,18 @@ export class Game {
     this.ui.persist();
   }
 }
+
+/**
+ * A short fingerprint of a level's shape.
+ *
+ * Every floe that can be stood on, plus where the level starts. Enough that a
+ * coordinate saved before the ground moved can be told apart from one saved
+ * after, and cheap enough to compute on every save.
+ */
+function levelStamp(def) {
+  if (!def) return '';
+  let s = `${def.id}:${Math.round(def.spawn?.x ?? 0)},${Math.round(def.spawn?.y ?? 0)}`;
+  for (const f of def.floes ?? []) s += `|${f.x},${f.y},${f.w},${f.type}`;
+  return fingerprint(s);
+}
+
