@@ -72,6 +72,18 @@ const BRAWL_PLANS = [
       a.duel({ guardAt: 0.36, guardUp: 0.18, standAt: 0.1, shooterUp: 0.34 });
       a.duel({ guardAt: 0.64, guardUp: 0.24, standAt: 0.9, shooterUp: 0.42, phase: 0.45 });
       a.pillar({ at: 0.24, w: 40, h: 110 });
+      // The first lobber, on the level named after the rock.
+      //
+      // This level's whole lesson used to be "there is no line from
+      // everywhere", and a player who learned it went and stood behind the
+      // pillar and stayed there. The lesson is now the harder half of the same
+      // sentence: there is no line from everywhere, and there is no *safe
+      // place* either. This one throws over the rock.
+      //
+      // It is slow, deliberately. An arc takes twice as long as a flat shot,
+      // so the thing that takes away the free answer hands back the seconds to
+      // deal with it — and its whole path is drawn while it winds up.
+      a.lobber({ at: 0.16, up: 0.44, phase: 0.25 });
       a.scatterFish(3);
     },
   },
@@ -141,6 +153,12 @@ const BRAWL_PLANS = [
       a.duel({ guardAt: 0.68, guardUp: 0.25, standAt: 0.92, shooterUp: 0.43, phase: 0.5 });
       a.pillar({ at: 0.22, w: 36, h: 100 });
       a.pillar({ at: 0.8, w: 36, h: 92 });
+      // Two pillars and two lobbers, one over each. Between them the arena has
+      // no standing answer left at all: the flat throwers own the open floor,
+      // the arcs own the cover, and the only thing that works is to keep
+      // moving between the two — which is what this level is called.
+      a.lobber({ at: 0.3, up: 0.5, phase: 0.15 });
+      a.lobber({ at: 0.74, up: 0.46, phase: 0.65 });
       a.scatterFish(3);
     },
   },
@@ -268,6 +286,10 @@ const BRAWL_PLANS = [
       a.heckler({ at: 0.5, up: 0.68, period: 1.9, phase: 0.1 });
       a.heckler({ at: 0.92, up: 0.54, period: 1.9, phase: 0.45 });
       a.pillar({ at: 0.16, w: 36, h: 96 });
+      // And one arc in the last fight of the game, over the one piece of cover
+      // in it. Five throwers on the same clock make standing still lethal
+      // already; this makes hiding lethal too.
+      a.lobber({ at: 0.34, up: 0.6, period: 2.4, phase: 0.3 });
       a.thinIce({ at: 0.7, w: 150 });
       a.scatterFish(3);
       a.fishAt(0.6, 0.34, 'speed');

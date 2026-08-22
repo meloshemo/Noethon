@@ -26,6 +26,7 @@ Toplam yük tek dosyada 732 KB ve çevrimdışı çalışıyor.
 | **Uyarlanan müzik** | Tek tema, beş kostüm; beş katman olan bitene göre geliyor |
 | **10 buz türü** | sağlam · çatlak · cilalı · eriyen · sürüklenen · düşen · tuzak · **sahte** · kaçan · gayzer |
 | **6 tehlike** | sarkıt · fok · fırtına kuşağı · yükselen hava sütunu · orka · serak |
+| **3 yeni fiil** | **sessiz alan** (yerçekimi yarıya iner) · **sallanan buz** (ipin ucunda sarkaç) · **kavisli atış** (siperin üstünden) |
 | **2 pusu** | Bölümün planlamadığı anda dalan kutup kuşu · bayrağa 100 px kala kopan buzul |
 | **4 çürük balık etkisi** | ağırlaşma · **ayak tutmaması** · ters kontrol · körlük |
 | **3 yüklü balık** | yay (tek dev zıplama) · kuantum (havada ışınlanma) · gevşeme (senin dışında her şey yavaşlar) |
@@ -151,6 +152,7 @@ hedef var ve **gün boyunca birikiyorlar**: tek turda hepsini yapman gerekmiyor.
 | [Zorluk eğrisi](#zorluk-eğrisi) | Rampa tasarımı |
 | [Buz türleri](#buz-türleri) · [Tehlikeler](#tehlikeler) | Oyun içi her mekanik |
 | [Yüklü balıklar](#yüklü-balıklar) · [Çürük balıklar](#çürük-balıklar) | Zıplama tuşunun anlamını değiştiren üç renk ve dört lanet |
+| [Sessiz alan](#sessiz-alan-yerçekiminin-değiştiği-yer) · [Sallanan buz](#sallanan-buz-ipin-ucundaki-sarkaç) · [Kavisli atış](#kavisli-atış-siperin-üstünden) | Üç bölümün üç yeni fiili |
 | [Pusu mekanikleri](#pusu-mekanikleri-buzun-tuzakları) · [Kutup kuşu](#pusu-kutup-kuşu) | Ani ölüm olayları |
 | [Ekonomi ve market](#ekonomi-ve-market) | Balık nasıl kazanılır, neye harcanır |
 | [Koleksiyon](#koleksiyon) | 24 penguen, 10 iz, nadirlikler |
@@ -621,6 +623,92 @@ Hep ana hattın dışında duruyor, yani almak bir bahis: sapmanın maliyeti var
 kazandığı süre çok daha fazla, eğer bir buçuk kat hızda inişlerini
 tutturabilirsen. Doğrulayıcı hem erişilebilir olduğunu hem de yol üstünde
 durmadığını kontrol ediyor.
+
+## Sessiz alan: yerçekiminin değiştiği yer
+
+Oyundaki bütün sayılar tek bir sayıya göre ölçülüyor: yerçekimi. Sessiz alan
+onu değiştiren tek şey.
+
+İçeride yerçekimi normalin **%42'si**, son hız da onunla birlikte düşüyor. Yani
+menzil iki yöne birden ikiye katlanıyor ve penguen havada **bir buçuk saniye**
+kalıyor:
+
+| | Yatay | Dikey | Havada |
+|---|---|---|---|
+| Dışarıda | 213 px | 141 px | 0,66 sn |
+| İçeride | 507 px | 337 px | 1,58 sn |
+
+Rüzgâr bir zıplamanın *nereye* düşeceğini değiştiriyor, gayzer *nasıl
+başladığını*; bu **zıplamanın ne olduğunu** değiştiriyor.
+
+Tek bir açıklıkta iki imkânsızlık birden var, çünkü yarım bir sessiz alanın
+içine girmeye değmez: karşıya geçiş hiçbir zıplamanın yetişemeyeceği kadar
+geniş, öbür taraftaki raf hiçbir zıplamanın çıkamayacağı kadar yüksek, ve ikisini
+de aynı hava cebi çözüyor. Bu onu bir *yer* yapıyor, bir güç değil: alıp
+taşımıyorsun, içine girip duruyorsun ve oradayken bacaklarının anlamı değişiyor.
+
+Kenarı yumuşak bir geçiş değil, keskin parlak bir çizgi — çünkü yerçekimi bir
+sınırda değişir, bir gradyan boyunca değil, ve nerede başladığını yanlış
+hesaplayan oyuncu kendi gözlerinden değil çizimden yanılmış olurdu. İçindeki kar
+normalin beşte bir hızıyla düşüyor, ve o kontrast mekanizmayı tek kelime
+kullanmadan anlatıyor.
+
+**Dağda sessiz alan yok, ve bu bir karar.** Beş yüz piksellik bir uçuş altı yüz
+piksellik bir şaftın içine sığmıyor; yay bir sonraki rafın içinden geçip karşı
+duvarın dibine iniyor, ve sığdırmanın tek yolu çevresindeki her adımı kendi
+sınırına dayamak. Sebep, fiilin duracağı yere yazıldı.
+
+## Sallanan buz: ipin ucundaki sarkaç
+
+Dağın kendi yeni fiili, ve sahanlığınkinin tam tersi. Sessiz alan beş yüz piksel
+açık gökyüzü istiyor ve dağda hiç yok; sarkaç ise asılacak bir tavan ve geçilecek
+dar bir boşluk istiyor, ki bir şaft **zaten budur**.
+
+Periyot bir ayar değil: **`2π√(L/g)`**, o ip boyundaki gerçek sarkaç periyodu.
+Bu göründüğünden önemli, çünkü hızı yazılmış bir sabit olan sallanan platform
+sadece eğri yollu bir platformdur; hızı boyundan gelen ise **sarkaçtır**, ve
+insanlar sarkaçları doğru okur — hayatları boyunca izlediler. Uzun ip yavaş,
+kısa ip hızlı, kimseye söylemeye gerek yok.
+
+İp şaftın genişliğine göre kesiliyor. Kalkış rafı, iniş rafı ve buzun kendisi
+paylarını aldıktan sonra geriye ne kalıyorsa yay o, ve periyot boydan geldiği
+için **dar şaft kısa ve hızlı ip, geniş şaft uzun ve yavaş ip** veriyor. Kimse
+seçmedi, fizik verdi.
+
+Kanıt yerleşimin içinde: kalkış rafı yayın yakın ucuna, iniş rafı uzak ucuna
+sıradan bir zıplama mesafesinde — ikisi de buzun **bir an için durduğu** uçlarda
+ölçülü. Yani hiç durmayan bir şeyin geçilebilirliği duran aritmetikle
+kanıtlanıyor, ve ucunu bekleyen oyuncudan asla göremeyeceği bir zamanlama
+istenmiyor. Hızlı ortasından binmek daha çabuk ve çok daha zor; hiçbir zaman
+gerekli değil.
+
+## Kavisli atış: siperin üstünden
+
+Kar topu bölümü baştan sona **görüş hatlarından** kurulu, ve görüş hatlarından
+kurulu bir bölümün tek bir statik cevabı var: bir şeyin arkasına geç. Oyuncu
+bunu bir kez öğrendiğinde kaya bütün fikrin sert karşıtı oluyor ve on beş
+bölümün dördü soru sormayı bırakıyor.
+
+Kavisli atış kayanın üstünden geçiyor. Aynı atıcı, aynı hazırlık, aynı işaret —
+sadece elden bir açıyla çıkıp yerçekimiyle iniyor, yani duvar olan siper artık
+**terk edilmesi gereken bir yer**.
+
+Takas bilinçli ve adaleti sağlayan şey o: kavis düz atıştan çok daha yavaş.
+
+| | Uçuş | Kaçış penceresi |
+|---|---|---|
+| Düz atış (600 px) | 1,11 sn | 1,73 sn |
+| Kavis (600 px) | 1,49 sn | 2,11 sn |
+
+Yani bedava cevabı elinden alıyor ve karşılığını **saniyeyle ödüyor**. Üstelik
+hazırlık boyunca çizilen işaret düz bir çizgi değil, topun gerçekten izleyeceği
+**yayın kendisi** artı yere inecek noktanın halkası — çünkü kavisli bir atış için
+düz çizgi yardımcı olmamakla kalmaz, yalan söyler: topun aşacağı kayayı gösterir.
+
+Açık zeminde tek başına duran bir kavis sadece yavaş bir kar topudur ve düz
+atıştan kesinlikle daha naziktir. O yüzden hep siperle **eşleştiriliyor**: bir
+tarafta düz atıcı, öbür tarafta kavisli atıcı, ve birinin cevabı öbüründe seni
+öldüren şey.
 
 ## Yüklü balıklar
 

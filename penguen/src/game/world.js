@@ -583,7 +583,7 @@ export class World {
     for (const r of this.rivals) {
       const shot = r.update(dt, this.player, speed);
       if (!shot) continue;
-      this.snowballs.push(new Snowball(r.hand, shot));
+      this.snowballs.push(new Snowball(r.hand, shot, r.lobs));
       this.audio.jump?.();
       this.particles.puff(r.hand.x, r.hand.y, 4);
     }

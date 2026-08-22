@@ -133,6 +133,7 @@ export class Arena {
       w: RIVAL_W,
       h: RIVAL_H,
       guard: Boolean(opts.guard),
+      lobs: Boolean(opts.lobs),
       period: (opts.period ?? BRAWL.period) * this.heat,
       phase: opts.phase ?? (this.rivals.length * 0.37) % 1,
     };
@@ -323,6 +324,29 @@ export class Arena {
    * out *every* stand-spot is not a harder level, it is a locked door, and the
    * arena would rather have a shorter rock than no way through.
    */
+  /**
+   * A thrower who arcs it over the top.
+   *
+   * The arena is built out of sight-lines, and a chapter built out of
+   * sight-lines has exactly one static answer: stand behind something. Once a
+   * player works that out, a pillar is a hard counter to the whole idea and
+   * four of these fifteen levels stop asking anything.
+   *
+   * A lobber goes over the pillar. Same wind-up, same tell, same locked aim —
+   * it simply leaves the hand at an angle and comes down under gravity, so the
+   * cover that was a wall becomes a thing you have to leave, on a clock.
+   *
+   * It is deliberately paired with cover rather than used alone. On an open
+   * floor a lob is just a slow snowball and strictly kinder than a flat one;
+   * standing between a flat thrower on one side and a lobber on the other is
+   * the actual question, because the answer to each is the thing that kills
+   * you in the other.
+   */
+  lobber({ at = 0.5, up = 0.5, period = BRAWL.period, phase = null } = {}) {
+    this._perch(this.width * at, this.groundY - this.height * up, { period, phase, lobs: true });
+    return this;
+  }
+
   pillar({ at = 0.5, w = 38, h = 150 } = {}) {
     this._pillars.push({ at, w, h });
     return this;

@@ -5,6 +5,64 @@ değiştiği yeterli. En yeni en üstte.
 
 ---
 
+## Üç bölüme üç yeni fiil, çünkü sorun tembellik değil kelime yokluğuydu
+
+Bölümlerin birbirine benzemesi bir kanaatti; ölçüldü ve sayı çıktı. Her bölümün
+kullandığı besteci fiillerini çıkarıp karşılaştırınca:
+
+| Bölüm | Kaç fiil | %80+ aynı çift |
+|---|---|---|
+| I (1–31) | 17 | 30 |
+| II (32–46) | **7** | **50** |
+| IV (62–76) | **4** | **22** |
+
+Bu tembel besteleme değil, **söyleyecek kelime yokluğu**. On beş bölümü dört
+fiille birbirinden ayıramazsın. Cevap bölümleri karıştırmak değil, fiil eklemek.
+
+- **Sessiz alan** (sahanlık): içeride yerçekimi %42'ye iniyor, menzil iki yöne
+  birden ikiye katlanıyor, penguen havada bir buçuk saniye kalıyor. Oyunda
+  bütün öteki sayıların ölçüldüğü sayıyı değiştiren tek şey.
+- **Sallanan buz** (dağ): ipin ucunda bir buz kütlesi, periyodu `2π√(L/g)` —
+  yani ipin boyundan geliyor, bir ayardan değil. Uçlarda duruyor, ortada
+  penguenden hızlı geçiyor.
+- **Kavisli atış** (arena): kayanın üstünden aşan kar topu. Bölümün tek statik
+  cevabı olan "siperin arkasına geç"i elinden alıyor ve karşılığını saniyeyle
+  ödüyor, çünkü kavis düz atıştan çok daha yavaş.
+
+Ölçüm sonrası: dağda 50 → 37, arenada 4 → 5 fiil.
+
+### Kanıtlar üçünü de öğrenmek zorunda kaldı, ve bu gerçek hatalar açığa çıkardı
+
+Çözücüler dünyayı `World` kurmak yerine kendileri modelliyor — hızlı, ve tam da
+çürüyen türden bir tekrar:
+
+- **Yerçekimini sabit sanıyorlardı.** Sessiz alanı olan her bölümü geçilemez
+  ilan ettiler. Artık yerçekimi terimi dünyanın kendi çağırdığı `hushAt`
+  fonksiyonundan geliyor.
+- **Geometriyi fotoğraf sanıyorlardı.** Buzlar bestecinin koyduğu yerde durur ve
+  hiç kımıldamazdı. Sarkaç, konumu mekanizmanın kendisi olan ilk şey, o yüzden
+  fotoğrafın film olması gerekti.
+- **Kar toplarını hep düz sanıyorlardı.** Kavisli atış eklenince iki arena
+  kazanılamaz oldu: çözücü yayın kafasının üstünden geçtiğini görüp "bir şey
+  gelmiyor" dedi ve tepesine inerken bekledi.
+- **Tırmanış çözücüsünün en uzun basılı tutması yarım saniyeydi**, çünkü o
+  bölümdeki her zıplama üçte iki saniyede biter. Oyuncunun bariz biçimde
+  yapacağı şeyi — basılı tutmaya devam etmeyi — ifade edemiyordu.
+
+### Ve iki şey bilerek yapılmadı
+
+**Dağda sessiz alan yok.** Beş yüz piksellik uçuş altı yüz piksellik şafta
+sığmıyor; sığdırmanın tek yolu çevresindeki her adımı sınırına dayamak, ki bu
+tam da bu dosyanın uzun uğraşla temizlediği kırılganlık. Sebep, fiilin duracağı
+yere yazıldı.
+
+**Her adımın iki yanını hesaplayıp ucuz olanı seçen sürüm çöpe atıldı.** Sınıra
+dayanmış bir adımı kurtarıyordu, ve on iki sağlam adımı yeniden yönlendiriyordu;
+iki bölüm daha yukarıda çözülemez oldu. Buradaki geometri bir zincir. Yerel
+olarak daha iyi ve genel olarak kanıtsız olan şey daha iyi değildir.
+
+---
+
 ## Zıplama tuşu dört şey demeye başladı
 
 Yeşil çürük balık uzun süre oyundaki en ilginç pikaptı ve sebebi tek cümleyle

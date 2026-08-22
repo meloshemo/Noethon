@@ -15,6 +15,7 @@
  */
 
 import { World } from '../src/game/world.js';
+import { BRAWL } from '../src/game/config.js';
 import { BRAWL_LEVELS, BRAWL_DRAFTS } from '../src/game/brawl.js';
 
 const STEP = 1 / 120;
@@ -40,11 +41,21 @@ function inbound(ball, p, move = { axis: 0, jump: false }, horizon = 0.95) {
   const SPEED = 300;
   const V0 = 700;
   const G = 2400;
-  const steps = 12;
+  // A lobbed ball falls, and predicting it as a straight line predicts it
+  // arriving somewhere it never goes. This solver called two arenas
+  // unwinnable on exactly that mistake: it watched an arc sail over its head,
+  // decided nothing was coming, and stood there while it came down.
+  //
+  // A lob also hangs in the air for well over a second, so the horizon has to
+  // stretch to match or the ball is invisible until it is already falling on
+  // the penguin's head, which is far too late to walk out from under.
+  const arc = ball.lobbed ? BRAWL.lobGravity : 0;
+  const look = ball.lobbed ? Math.max(horizon, 1.9) : horizon;
+  const steps = ball.lobbed ? 24 : 12;
   for (let i = 1; i <= steps; i++) {
-    const t = (horizon * i) / steps;
+    const t = (look * i) / steps;
     const bx = ball.x + ball.vx * t;
-    const by = ball.y + ball.vy * t;
+    const by = ball.y + ball.vy * t + 0.5 * arc * t * t;
     const px = p.x + move.axis * SPEED * t;
     const lift = move.jump ? Math.max(0, V0 * t - 0.5 * G * t * t) : 0;
     const py = p.y - lift;

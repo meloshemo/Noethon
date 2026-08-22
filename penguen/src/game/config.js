@@ -904,6 +904,28 @@ export const BRAWL = {
   range: 1250,
   /** How much of a body a shot must cover to count as lined up. */
   hitFrac: 0.55,
+  /**
+   * The lob.
+   *
+   * Every snowball in this chapter travels in a straight line, and that one
+   * fact hands the arena a single static answer: stand behind something. A
+   * pillar is a hard counter to a mechanic built entirely out of sight-lines,
+   * and once a player finds that out, four of the fifteen levels stop being
+   * about anything.
+   *
+   * A lobbed shot goes over it. Same thrower, same wind-up, same tell — it
+   * simply leaves the hand at an angle and comes down under gravity, so cover
+   * that was a wall is now a thing you have to *leave*.
+   *
+   * The trade is deliberate and it is what keeps it fair: an arc is much
+   * slower than a line, so a lob gives the player far more time to react than
+   * a flat shot ever does. It takes away the free answer and pays for it in
+   * seconds. `dodgeWindow` measures the real flight either way, so a level's
+   * fairness proof does not need to know which kind it is looking at.
+   */
+  lobGravity: 900,
+  /** How high over the straight line the arc peaks, as a fraction of range. */
+  lobArc: 0.42,
 };
 
 /**
@@ -914,6 +936,35 @@ export const BRAWL = {
  */
 export function dodgeWindow(distance) {
   return BRAWL.windup + distance / BRAWL.speed;
+}
+
+/**
+ * The opening velocity of a lobbed snowball, and how long it stays up.
+ *
+ * Given where it leaves the hand and where it has to arrive, there is one free
+ * choice — how high to throw it — and that is `lobArc`, an apex set as a
+ * fraction of the range so a long lob is a high one and a short lob is a
+ * gentle toss. Everything else follows from wanting it to land on the target:
+ * pick the flight time from the rise, and the horizontal speed is the distance
+ * divided by it.
+ *
+ * Returned with the flight time, because a lob's fairness lives there. A flat
+ * shot is over in a fifth of a second and this takes the best part of two, so
+ * a level containing one is measured against the number this hands back rather
+ * than against `BRAWL.speed`.
+ */
+export function lobShot(from, to) {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const range = Math.max(1, Math.abs(dx));
+  const g = BRAWL.lobGravity;
+  // Apex measured above the higher of the two ends, so the arc always clears
+  // whatever is between them even when the throw is uphill.
+  const rise = Math.max(60, range * BRAWL.lobArc) + Math.max(0, -dy);
+  const up = Math.sqrt(2 * g * rise);
+  // Time to come back down to the target's height, from the apex.
+  const time = up / g + Math.sqrt((2 * (rise + dy)) / g);
+  return { vx: dx / time, vy: -up, time, rise };
 }
 
 /** Assist mode is offered after this many deaths on the same level. */

@@ -5,7 +5,9 @@
  * `{x, y, w, h}` box that the collision code in level.js consumes.
  */
 
-import { ICE, STORM, BRAWL, WIND, SWING, windAt, swingAt, tailWindow, lullWindow } from './config.js';
+import {
+  ICE, STORM, BRAWL, WIND, SWING, windAt, swingAt, lobShot, tailWindow, lullWindow,
+} from './config.js';
 import { clamp, easeOutCubic, lerp } from '../core/util.js';
 
 /* ------------------------------------------------------------------ */
@@ -655,6 +657,8 @@ export class Rival {
     /** Offset into the cycle, so a room full of rivals is not a volley. */
     this.phase = def.phase ?? 0;
     this.facing = def.facing ?? -1;
+    /** Throws over cover instead of through it. */
+    this.lobs = def.lobs ?? false;
     this.skin = def.skin ?? 'rival';
     this.reset();
   }
@@ -730,20 +734,32 @@ export class Rival {
  * a rival, the player, or ice.
  */
 export class Snowball {
-  constructor(from, to) {
-    const dx = to.x - from.x;
-    const dy = to.y - from.y;
-    const len = Math.hypot(dx, dy) || 1;
+  constructor(from, to, lobbed = false) {
     this.x = from.x;
     this.y = from.y;
-    this.vx = (dx / len) * BRAWL.speed;
-    this.vy = (dy / len) * BRAWL.speed;
     this.r = BRAWL.radius;
-    this.life = 3.2;
     this.dead = false;
     this.spin = 0;
     /** Where it came from, so a thrower never shoots itself. */
     this.origin = from;
+    /** A lob falls; a flat shot does not. */
+    this.lobbed = lobbed;
+    if (lobbed) {
+      const shot = lobShot(from, to);
+      this.vx = shot.vx;
+      this.vy = shot.vy;
+      // Long enough for the whole arc plus a margin, rather than the flat
+      // shot's fixed three seconds: a lob that expired at its apex would be a
+      // threat that evaporates, which is worse than no threat at all.
+      this.life = shot.time * 1.6 + 0.6;
+      return;
+    }
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    const len = Math.hypot(dx, dy) || 1;
+    this.vx = (dx / len) * BRAWL.speed;
+    this.vy = (dy / len) * BRAWL.speed;
+    this.life = 3.2;
   }
 
   get box() {
@@ -751,9 +767,12 @@ export class Snowball {
   }
 
   update(dt) {
+    if (this.lobbed) this.vy += BRAWL.lobGravity * dt;
     this.x += this.vx * dt;
     this.y += this.vy * dt;
-    this.spin += dt * 14;
+    // A lob tumbles rather than spins: it is in the air four times as long, and
+    // at flat-shot spin speed it reads as a drill bit.
+    this.spin += dt * (this.lobbed ? 5 : 14);
     this.life -= dt;
     if (this.life <= 0) this.dead = true;
   }
