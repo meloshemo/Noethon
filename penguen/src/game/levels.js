@@ -459,6 +459,21 @@ const PLANS = [
       c.shelf({ n: 2, gap: 0.4, w: 170 });
       c.slope({ n: 2, rise: -0.42, gap: 0.44, w: 155 });
       c.tunnel({ n: 10, headroom: 106, gap: 0.5, w: 130, icicles: 6, types: ['solid', 'crack'] });
+      // The first hush in the game, and it comes straight out of the dark.
+      //
+      // Ten floes of low ceiling with icicles coming down, then the tunnel
+      // opens and the far side is impossibly far and impossibly high, and the
+      // air between them is full of snow that has forgotten how to fall. There
+      // is no sign and no tutorial. The player walks in, jumps because there is
+      // nothing else to do, and goes five hundred pixels.
+      //
+      // Everything about the placement is about that one moment. It is on a
+      // quiet level rather than a busy one, so nothing else is competing for
+      // attention; it is after a tunnel, so the contrast between a hundred
+      // pixels of headroom and an open sky is as wide as the chapter can make
+      // it; and it is level twenty-two, by which point the player is certain
+      // they know exactly how far this penguin jumps.
+      c.hush({});
       c.slope({ n: 4, rise: 0.46, gap: 0.44, w: 150 });
       c.landing();
       c.scatterFish(3, 60);
@@ -528,6 +543,15 @@ const PLANS = [
       // visible from the ledge you are standing on.
       c.updraft({ w: 175 });
       c.shelf({ n: 2, gap: 0.48, w: 150, types: ['crack', 'solid'] });
+      // Rising air and dead air, on the same level, twenty seconds apart.
+      //
+      // They are opposites and the level is built so that you find that out.
+      // The column gives you height while the world keeps pulling normally, so
+      // the answer is to be *in* it at the right moment. The hollow takes the
+      // pulling away, so the answer is to be in it at all. One is a thing you
+      // time and the other is a place you stand, and putting them back to back
+      // is the cheapest way to teach both.
+      c.hush({});
       c.cliff({ drop: 400, ledges: 4 });
       c.landing();
       c.scatterFish(3, 60);
@@ -671,6 +695,11 @@ const PLANS = [
         c.hazard({ kind: 'orca', x: before + 20, y: WATER - 30, w: 76, h: 60, period: 2.6 + i * 0.2, height: 270 });
       }
       c.crevasse({ pillars: 4, gap: 0.66, depth: 300 });
+      // And once more at the very end, with everything already spent. By now
+      // the player knows what the pale air means, so this is not a discovery —
+      // it is a rest that does not feel like one, four seconds of hanging in
+      // the sky at the end of the longest level on the shelf.
+      c.hush({});
       c.landing({ w: 250 });
       c.scatterFish(3, 58);
       c.temptation(0.45, 'dizzy');

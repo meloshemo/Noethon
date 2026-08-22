@@ -24,8 +24,8 @@
  */
 
 import {
-  reachFor, reachWithWind, riseWithLift, crossableGap, openingWidth,
-  OPENING, PHYS, PENGUIN, ICE, STORM, WIND, CHARGED,
+  reachFor, reachInHush, reachWithWind, riseWithLift, crossableGap, openingWidth,
+  OPENING, PHYS, PENGUIN, ICE, STORM, WIND, HUSH, CHARGED,
 } from './config.js';
 import { nudgeClear } from '../core/util.js';
 
@@ -366,6 +366,77 @@ export class Course {
 
 
   /**
+   * A hollow where the air has gone still, and gravity with it.
+   *
+   * The third member of the family that `windGap` and `updraft` started, and
+   * the strangest of the three. Those two hand the penguin something from
+   * outside — a shove, a lift. This one takes something away: inside the
+   * hollow the world pulls at a little over four tenths of its usual strength,
+   * and a jump that clears two hundred pixels clears five.
+   *
+   * Built as one span with both impossibilities in it at once, because half a
+   * hush is not worth walking into. The gap across is wider than any jump can
+   * cross and the shelf on the far side is higher than any jump can reach, and
+   * the same pocket answers both. That is what makes it a *place* rather than
+   * a power-up: you do not pick the hush up and carry it, you go and stand in
+   * it and it changes what your legs mean while you are there.
+   *
+   * The ceiling is deliberately generous. In the pocket the penguin is in the
+   * air for over a second and a half, and a roof low enough to clip that arc
+   * would turn the most spectacular jump in the game into a bump.
+   */
+  hush({ w = 200, gap = 0.86, rise = 0.62, gravity = HUSH.gravity } = {}) {
+    const body = PENGUIN.w * this.scale;
+    const plain = crossableGap(this.scale);
+    const quiet = reachInHush(this.scale, Infinity, gravity);
+
+    /**
+     * Drop to an altitude that has room for the arc.
+     *
+     * The jump this hollow makes possible is over three hundred pixels tall,
+     * and the sky in this game is not infinite. Placed wherever the cursor
+     * happened to be, the pocket's roof clipped the very arc it existed to
+     * allow — the validator caught it on the first level it was tried on, and
+     * the fix belongs here rather than in the plan: a mechanic that only works
+     * at certain heights should find its own height, not ask fifteen level
+     * authors to remember one.
+     *
+     * Descending is free. Nothing in the game limits how far a penguin may
+     * fall onto ice it can see, which is exactly why this is the direction the
+     * composer is allowed to move in on its own.
+     */
+    const needY = CEILING + Math.round(quiet.full * 1.08) + 70;
+    const entryY = clampY(Math.max(this.y, needY));
+    const from = this.put(this.gapOf(0.3), Math.max(w, body * 3.4), entryY, 'solid');
+    // Comfortably past what a jump can do outside, comfortably inside what it
+    // can do within. Both margins are wide: this is a mechanic that has to
+    // read as impossible from the near side and as easy from inside.
+    const across = Math.round(Math.min(plain * 1.9, (quiet.distance - body) * gap));
+    const up = Math.round(Math.min(this.reach.height * 2.1, quiet.full * rise));
+
+    const landing = this.put(across, Math.max(w, body * 3.6), clampY(from.y - up), 'solid');
+    const left = from.x + from.w;
+    const right = landing.x + landing.w;
+    const top = Math.min(from.y, landing.y) - Math.round(quiet.full * 0.9) - 60;
+    this.zone(left - 30, right - left + 60, clampY(top), from.y + 90, 'hush');
+    this.zones[this.zones.length - 1].gravity = gravity;
+
+    this.hushes = this.hushes ?? [];
+    this.hushes.push({
+      from: left,
+      to: landing.x,
+      across,
+      up,
+      gravity,
+      plain: Math.round(plain),
+      plainRise: Math.round(this.reach.height),
+      quiet: Math.round(quiet.distance),
+      quietRise: Math.round(quiet.full),
+    });
+    return this;
+  }
+
+  /**
    * A shelf too high to jump to, and a column of rising air under it.
    *
    * The sibling of `windGap`: one buys distance, this one buys height. The
@@ -647,6 +718,8 @@ export class Course {
       /** Gaps that only the tailwind crosses, for the validator to prove. */
       windGaps: this.windGaps ?? [],
       updrafts: this.updrafts ?? [],
+      /** Hollows where gravity is halved, for the validator to prove twice. */
+      hushes: this.hushes ?? [],
     };
   }
 }

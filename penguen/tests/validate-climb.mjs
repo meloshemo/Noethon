@@ -32,8 +32,7 @@ import {
   reachFor,
   reachAt,
   kickGain,
-  climbBudget,
-} from '../src/game/config.js';
+  climbBudget, reachInHush} from '../src/game/config.js';
 import { CLIMB_LEVELS, CLIMB_FROM } from '../src/game/climb.js';
 
 let failures = 0;
@@ -114,6 +113,42 @@ function validate(def) {
           `${i}. adım çok uzak: ${Math.round(gap)}px, ` +
             `${Math.round(rise)}px yükselirken erişim ${Math.round(allowed)}px`,
         );
+      }
+      continue;
+    }
+
+    /**
+     * A step taken inside a band of dead air.
+     *
+     * The one step in this chapter that does not happen under this chapter's
+     * gravity, so it is the one step measured against different arithmetic —
+     * and it has to fail two ways rather than one. Too small and the band is
+     * decoration bolted over a step anybody could take; too big and it is a
+     * wall with a promise painted on it.
+     */
+    if (b.via === 'hush') {
+      const pocket = (def.zones ?? []).find(
+        (z) => z.kind === 'hush' && z.top <= b.y && z.bottom >= a.y,
+      );
+      if (!pocket) {
+        fail(`${i}. adım sessiz alanın içinde değil`);
+        continue;
+      }
+      const quiet = reachInHush(scale, Infinity, pocket.gravity);
+      if (rise <= reach.height * 1.25) {
+        fail(
+          `${i}. sessiz adım sessiz alansız da çıkılıyor: ${Math.round(rise)}px, ` +
+            `normal zıplama ${Math.round(reach.height)}px`,
+        );
+      }
+      if (rise > quiet.full * BUDGET.rise) {
+        fail(
+          `${i}. sessiz adım sessiz alanda bile çıkılmıyor: ${Math.round(rise)}px, ` +
+            `içeride ${Math.round(quiet.full)}px`,
+        );
+      }
+      if (gap > quiet.distance * BUDGET.jump * 0.6) {
+        fail(`${i}. sessiz adım çok uzak: ${Math.round(gap)}px`);
       }
       continue;
     }

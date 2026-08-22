@@ -20,7 +20,7 @@
  */
 
 import { Player } from '../src/game/player.js';
-import { scaleForLevel } from '../src/game/config.js';
+import { scaleForLevel, hushAt} from '../src/game/config.js';
 import { CLIMB_LEVELS, CLIMB_DRAFTS } from '../src/game/climb.js';
 
 const STEP = 1 / 120;
@@ -112,7 +112,7 @@ function tryJump(def, solids, a, b, { from, delay, hold }) {
     if (held && jumpedAt !== null && t - jumpedAt > hold) held = false;
 
     const axis = p.onGround ? dir : Math.sign(targetX - cx) || 0;
-    p.update(STEP, { axis, jumpHeld: held, jumpPressed: pressed, push: 0 }, solids, TUNING);
+    p.update(STEP, { axis, jumpHeld: held, jumpPressed: pressed, push: 0, gravity: hushAt(def.zones, p.x + p.w / 2, p.y + p.h / 2) }, solids, TUNING);
     t += STEP;
 
     if (drowned(p, def)) return false;
@@ -274,7 +274,7 @@ function tryWall(def, solids, a, b, { from, delay, mode, first }, probe = {}) {
       // fails: the wall is reachable, the arms are not.
       if (p.stamina < p.staminaMax * 0.92) {
         axis = 0;
-        p.update(STEP, { axis: 0, jumpHeld: false, jumpPressed: false, push: 0 }, solids, TUNING);
+        p.update(STEP, { axis: 0, jumpHeld: false, jumpPressed: false, push: 0, gravity: hushAt(def.zones, p.x + p.w / 2, p.y + p.h / 2) }, solids, TUNING);
         t += STEP;
         continue;
       }
@@ -311,7 +311,7 @@ function tryWall(def, solids, a, b, { from, delay, mode, first }, probe = {}) {
       jumpHeld = t < holdUntil;
     }
 
-    p.update(STEP, { axis, jumpHeld, jumpPressed, push: 0 }, solids, TUNING);
+    p.update(STEP, { axis, jumpHeld, jumpPressed, push: 0, gravity: hushAt(def.zones, p.x + p.w / 2, p.y + p.h / 2) }, solids, TUNING);
     floor = Math.min(floor, p.staminaFrac);
     t += STEP;
 
@@ -344,7 +344,14 @@ const FROMS = [0.15, 0.3, 0.5, 0.7, 0.85];
 const DELAYS = [0, 0.06, 0.12, 0.2, 0.3, 0.42, 0.6, 0.8];
 // Including some very short ones: a clipped jump has a much lower arc, and
 // under a ledge that is the only jump that fits.
-const HOLDS = [0.5, 0.34, 0.22, 0.15, 0.1];
+// The long one is for the hush. Every other jump in this chapter is over in
+// two thirds of a second, so half a second of hold was effectively "all the
+// way up"; inside a band of dead air the same jump lasts a second and a half,
+// and half a second of hold is a jump cut two thirds of the way through the
+// climb. The first hush tower was declared unsolvable by thirteen pixels for
+// exactly that reason — the search could not express the input a player would
+// obviously use, which is to keep holding it.
+const HOLDS = [1.1, 0.5, 0.34, 0.22, 0.15, 0.1];
 const MODES = ['kick', 'creep'];
 
 /**

@@ -9,7 +9,10 @@
  * large sample of generated ones, and fails loudly on anything impossible.
  */
 
-import { PHYS, PENGUIN, ICE, WIND, windAt, tailWindow, lullWindow, reachWithWind, riseWithLift, crossableGap, scaleForLevel, reachFor, CRAFTED_LEVELS } from '../src/game/config.js';
+import {
+  PHYS, PENGUIN, ICE, WIND, HUSH, windAt, tailWindow, lullWindow, reachWithWind, riseWithLift,
+  reachInHush, crossableGap, scaleForLevel, reachFor, CRAFTED_LEVELS,
+} from '../src/game/config.js';
 import { LEVELS, WATER_Y } from '../src/game/levels.js';
 import { CRAFTED_TOTAL, CHAPTERS } from '../src/game/chapters.js';
 import { generateLevel } from '../src/game/generator.js';
@@ -62,6 +65,11 @@ function check(def, { tutorial = false } = {}) {
   // Same for a shelf that only the rising air reaches.
   const updrafts = def.updrafts ?? [];
   const overLift = new Set(updrafts.map((g) => `${g.from}:${g.to}`));
+  // And for the hollow where gravity itself is different, which is exempt
+  // from both the distance rule and the height rule at once — it is the only
+  // thing in the game that breaks two limits with one idea.
+  const hushes = def.hushes ?? [];
+  const overHush = new Set(hushes.map((g) => `${g.from}:${g.to}`));
 
   if (!floes.length) return fail('hiç buz yok');
   if (def.spawn.x < floes[0].x || def.spawn.x > floes[0].x + floes[0].w) {
@@ -78,11 +86,12 @@ function check(def, { tutorial = false } = {}) {
     const gap = b.x - (a.x + a.w) - assistA - assistB;
     const rise = a.y - b.y + (b.type === 'move' ? Math.abs(b.ay ?? 0) : 0);
 
-    const windCrossed = overWind.has(`${a.x + a.w}:${b.x}`);
+    const hushCrossed = overHush.has(`${a.x + a.w}:${b.x}`);
+    const windCrossed = overWind.has(`${a.x + a.w}:${b.x}`) || hushCrossed;
     if (!windCrossed && gap > reach.distance * budget.distance) {
       fail(`${i}→${i + 1} arası ${Math.round(gap)}px, erişim ${Math.round(reach.distance * budget.distance)}px`);
     }
-    const liftCrossed = overLift.has(`${a.x + a.w}:${b.x}`);
+    const liftCrossed = overLift.has(`${a.x + a.w}:${b.x}`) || hushCrossed;
     if (!liftCrossed && rise > reach.height * budget.rise) {
       fail(`${i}→${i + 1} yükselişi ${Math.round(rise)}px, tırmanış sınırı ${Math.round(reach.height * budget.rise)}px`);
     }
@@ -294,6 +303,51 @@ function check(def, { tutorial = false } = {}) {
       const ledge = floes.find((f) => f.x === g.to);
       if (ledge && column.y > ledge.y - 20) {
         fail(`sütun iniş buzuna kadar çıkmıyor (${column.y} > ${ledge.y})`);
+      }
+    }
+  }
+
+  // --- the hush -------------------------------------------------------
+  //
+  // The strictest gate in the file, because this is the only mechanic that
+  // suspends two rules at once. Four things have to be true and all four have
+  // to be true together, or the hollow is either a free pass or a wall:
+  //
+  //   the gap is genuinely uncrossable outside it,
+  //   the shelf is genuinely unreachable outside it,
+  //   both are comfortably inside what the pocket gives,
+  //   and the pocket actually covers the whole crossing, with room overhead
+  //   for the arc it makes possible.
+  for (const g of hushes) {
+    const quiet = reachInHush(scale, Infinity, g.gravity);
+    if (g.gravity < HUSH.floor) {
+      fail(`sessiz alan fazla hafif: ${g.gravity} < ${HUSH.floor}`);
+    }
+    if (g.across <= plainGap * 1.25) {
+      fail(`sessiz alan boşluğu dışarıdan da geçiliyor: ${g.across}px, normal ${Math.round(plainGap)}px`);
+    }
+    if (g.up <= reach.height * 1.25) {
+      fail(`sessiz alan rafına dışarıdan da çıkılıyor: ${g.up}px, normal ${Math.round(reach.height)}px`);
+    }
+    if (g.across > (quiet.distance - PENGUIN.w * scale) * 0.92) {
+      fail(`sessiz alanda bile geçilmiyor: ${g.across}px, içeride ${Math.round(quiet.distance)}px`);
+    }
+    if (g.up > quiet.full * 0.82) {
+      fail(`sessiz alanda bile çıkılmıyor: ${g.up}px, içeride ${Math.round(quiet.full)}px`);
+    }
+    const pocket = (def.zones ?? []).find(
+      (z) => z.kind === 'hush' && z.x <= g.from && z.x + z.w >= g.to,
+    );
+    if (!pocket) {
+      fail(`sessiz alan geçişi kapsamıyor (${g.from}→${g.to})`);
+    } else {
+      // The arc inside the pocket is over a second and a half long and more
+      // than three hundred pixels tall. A ceiling that clips it would turn the
+      // most spectacular jump in the game into a bump against a roof.
+      const floor = Math.max(...floes.filter((f) => f.x >= g.from - 260 && f.x <= g.to + 260).map((f) => f.y), 0);
+      const room = floor - pocket.top;
+      if (room < quiet.full * 0.95) {
+        fail(`sessiz alanın tavanı yayı kesiyor: ${Math.round(room)}px, yay ${Math.round(quiet.full)}px`);
       }
     }
   }

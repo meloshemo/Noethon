@@ -87,6 +87,90 @@ export function reachFor(scale, maxHeight = Infinity) {
   return { distance: speed * (tUp + tDown), height, full };
 }
 
+/**
+ * The hush.
+ *
+ * A pocket of still, dense, freezing air trapped in a hollow, and the only
+ * thing in the game that changes the number every other number is measured
+ * against. Inside it gravity is less than half what it is outside, so the
+ * penguin does not jump higher because it is stronger — it jumps higher
+ * because the world stopped pulling so hard.
+ *
+ * This is a bigger idea than it looks. Wind changes where a jump lands; a
+ * geyser changes how a jump starts; the hush changes *what a jump is*. Reach
+ * roughly doubles in both directions at once, which means a hush can hold a
+ * gap no penguin can cross and a shelf no penguin can reach, in the same
+ * hollow, and both are fair because both are visible from outside.
+ *
+ * Why it is not simply "easy mode in a box": you have to be *inside* it for it
+ * to work, its edge is drawn, and the arc it gives you is long enough that
+ * committing to one is a decision you cannot take back halfway. A jump that
+ * takes a second and a half to land is a jump you have to aim.
+ *
+ * The floor is a real limit and not taste. Below about a third, the fall back
+ * down takes so long that the level stops being a platformer and starts being
+ * a slow descent through a room, and every hazard in it becomes trivial
+ * because you are simply never where it is.
+ */
+export const HUSH = {
+  /** What gravity runs at inside the pocket. */
+  gravity: 0.42,
+  /** Nothing under this: below it the game stops being a platformer. */
+  floor: 0.34,
+  /**
+   * Terminal velocity is scaled too.
+   *
+   * Without this a penguin that entered the pocket already falling fast kept
+   * that speed all the way through, and the hush read as broken exactly when
+   * the player most needed it: on the way in from above.
+   */
+  fall: 0.55,
+};
+
+/**
+ * Reach inside a hush pocket.
+ *
+ * The same derivation as `reachFor`, with gravity scaled. Written as its own
+ * function rather than a parameter with a default, because every call site
+ * that measures a level has to say out loud which physics it is measuring in.
+ */
+export function reachInHush(scale, maxHeight = Infinity, factor = HUSH.gravity) {
+  const g = Math.max(HUSH.floor, factor);
+  const v = Math.abs(PHYS.jumpVelocity) * (1 - PENGUIN.jumpPenaltyPerScale * (scale - 1));
+  const speed = PHYS.moveSpeed * (1 - PENGUIN.speedPenaltyPerScale * (scale - 1));
+  const full = (v * v) / (2 * PHYS.gravityUp * g);
+  const height = Math.max(0, Math.min(full, maxHeight));
+  const tUp = Math.sqrt((2 * height) / (PHYS.gravityUp * g));
+  const tDown = Math.sqrt((2 * height) / (PHYS.gravityDown * g));
+  return { distance: speed * (tUp + tDown), height, full, hang: tUp + tDown };
+}
+
+/**
+ * Is this point inside a hush pocket, and how strong is it?
+ *
+ * Lives here, next to the physics it changes, because three separate pieces of
+ * code need the answer and they must never disagree: the world that runs the
+ * game, and the two solvers that prove the levels can be finished. Those
+ * solvers model the world's forces themselves rather than instantiating it,
+ * which is fast and which is exactly the kind of duplication that rots — the
+ * first hush level was declared uncrossable by a solver that had simply never
+ * been told gravity could change.
+ *
+ * Measured at the middle of the body rather than by overlap. A pocket that
+ * switched on the instant a wingtip crossed the line would stutter at the
+ * boundary, and a player aiming a jump with two different gravities in it has
+ * been handed a coin flip.
+ */
+export function hushAt(zones, cx, cy) {
+  if (!zones) return 1;
+  for (const z of zones) {
+    if (z.kind !== 'hush') continue;
+    if (cx < z.x || cx > z.x + z.w || cy < z.top || cy > z.bottom) continue;
+    return Math.max(HUSH.floor, z.gravity ?? HUSH.gravity);
+  }
+  return 1;
+}
+
 /** Timings for the different ice behaviours (seconds). */
 export const ICE = {
   /** "crack": time between first touch and collapse. */

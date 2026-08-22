@@ -11,8 +11,8 @@ import { Floe, Hazard, Fish, Checkpoint, Rival, Snowball } from './entities.js';
 import { Player } from './player.js';
 import { GhostRecorder, Ghost } from './ghost.js';
 import {
-  VIEW, VIEW_LIMITS, ASSIST, ICE, STORM, WIND, SWIM, BRAWL, BOOST, CHARGED, ROT, REWARDS, AMBUSH, COLLAPSE,
-  scaleForLevel, upgradeEffect,
+  VIEW, VIEW_LIMITS, ASSIST, ICE, STORM, WIND, SWIM, BRAWL, BOOST, CHARGED, ROT, REWARDS, AMBUSH, COLLAPSE, HUSH,
+  hushAt, scaleForLevel, upgradeEffect,
 } from './config.js';
 import { WATER_Y } from './levels.js';
 import { getSkin } from './skins.js';
@@ -192,6 +192,10 @@ export class World {
      */
     this.skua = null;
     this.skuaCooldown = AMBUSH.grace;
+    /** Gravity multiplier from a hush pocket this frame, or 0 for none. */
+    this.hushed = 0;
+    this._wasHushed = false;
+    this._toldHush = false;
     this.skuasDodged = 0;
     this.skuaGrabs = 0;
     /** Grabs the chick fought its way out of. A mission asks for these. */
@@ -450,6 +454,34 @@ export class World {
       }
     }
 
+    /**
+     * The hush.
+     *
+     * A hollow of still, dense air where gravity runs at well under half. It
+     * is read here, once, and handed to the player as a single multiplier,
+     * because the player has no business knowing what a zone is — it knows how
+     * to fall, and this tells it how hard.
+     *
+     * Tested against the middle of the body rather than the whole box on
+     * purpose. Overlap would flick the pocket on the instant a wingtip crossed
+     * the line and off again a frame later, and a gravity that stutters at the
+     * boundary is far worse than one that switches a body-width late: the
+     * player would be aiming a jump with two different physics in it.
+     */
+    const g = hushAt(this.zones, this.player.centerX, this.player.y + this.player.h / 2);
+    this.hushed = g < 1 ? g : 0;
+    if (this.hushed && !this._wasHushed) {
+      this.audio.hush?.();
+      // Once per level, not once per entry. Told again on every crossing it
+      // would be nagging, and the whole point of the pocket is that it teaches
+      // itself the moment the first jump goes twice as far as it should.
+      if (!this._toldHush) {
+        this._toldHush = true;
+        this.showHint(t('world.hush'), 1.8);
+      }
+    }
+    this._wasHushed = Boolean(this.hushed);
+
     // Currents. A band of moving water, and the only reason the sea has a wind
     // system at all — but it is not wind: it pushes a *swimmer*, so there is no
     // ground factor and the down parka does nothing about it. You do not shrug
@@ -474,7 +506,7 @@ export class World {
       }
     }
 
-    this.player.update(dt, { ...intent, push, lift }, this.solids, this.tuning, {
+    this.player.update(dt, { ...intent, push, lift, gravity: this.hushed || 1 }, this.solids, this.tuning, {
       onJump: (wound) => {
         if (wound) {
           this.audio.uncoil?.();

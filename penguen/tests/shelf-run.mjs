@@ -25,7 +25,7 @@
  */
 
 import { Player } from '../src/game/player.js';
-import { WIND, windAt, scaleForLevel, PHYS, PENGUIN } from '../src/game/config.js';
+import { WIND, windAt, scaleForLevel, PHYS, PENGUIN, hushAt} from '../src/game/config.js';
 import { LEVELS } from '../src/game/levels.js';
 
 const STEP = 1 / 120;
@@ -67,10 +67,21 @@ function landedOn(p, target) {
   return overlap > 2;
 }
 
-/** The wind the world would be applying at this instant and place. */
+/**
+ * Everything the world would be doing to the penguin at this instant.
+ *
+ * This is a second implementation of what `World.update` works out for real,
+ * which is a duplication worth being nervous about — and the hush proved it.
+ * A pocket where gravity halves was added, every level containing one was
+ * declared uncrossable, and the levels were fine: the solver had simply never
+ * been told gravity could be anything but one number. The gravity term now
+ * comes from `hushAt` in the config, which is the same function the world
+ * itself calls, so that particular drift cannot happen twice.
+ */
 function forcesAt(def, p, t, dir) {
   let push = 0;
   let lift = 0;
+  const gravity = hushAt(def.zones, p.x + p.w / 2, p.y + p.h / 2);
   const box = { x: p.x, y: p.y, w: p.w, h: p.h };
   for (const h of def.hazards ?? []) {
     if (h.kind !== 'storm' && h.kind !== 'gust') continue;
@@ -86,7 +97,7 @@ function forcesAt(def, p, t, dir) {
     const factor = p.onGround ? (still ? WIND.dugIn : WIND.ground) : 1;
     push += (h.power ?? WIND.power) * signed * (h.dir ?? 1) * factor;
   }
-  return { push, lift };
+  return { push, lift, gravity };
 }
 
 /**
@@ -113,8 +124,13 @@ function tryHop(def, solids, a, b, { start, phase, delay, hold }, centred = fals
     }
     if (held && jumpedAt !== null && elapsed - jumpedAt > hold) held = false;
 
-    const { push, lift } = forcesAt(def, p, t, dir);
-    p.update(STEP, { axis: dir, jumpHeld: held, jumpPressed: wantJump, push, lift }, solids, TUNING);
+    const { push, lift, gravity } = forcesAt(def, p, t, dir);
+    p.update(
+      STEP,
+      { axis: dir, jumpHeld: held, jumpPressed: wantJump, push, lift, gravity },
+      solids,
+      TUNING,
+    );
     t += STEP;
     elapsed += STEP;
 

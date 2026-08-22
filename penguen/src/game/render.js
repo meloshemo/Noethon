@@ -617,6 +617,70 @@ export class Renderer {
     if (!world.zones?.length) return;
     const view = this._viewBounds(world);
 
+    /**
+     * The hush, drawn behind everything.
+     *
+     * It has one job and it is a hard one: to say "the rules are different in
+     * here" from across a level, to a player who has never seen one, without a
+     * word of text. Three things do the work together.
+     *
+     * The edge is a hard, bright line rather than a fade, because a soft edge
+     * would be a lie — gravity changes at a boundary, not over a gradient, and
+     * a player who misjudges where the pocket starts has been misled by the
+     * drawing rather than by their own eyes.
+     *
+     * The air inside is full of snow that has stopped falling properly. Motes
+     * drift down at a fraction of the speed of everything else on screen, and
+     * that contrast is the mechanic stated without naming it: whatever is in
+     * here is not being pulled the way you are used to.
+     *
+     * And the colour is cold and pale rather than dark. Every other zone in
+     * this game closes in on you — the tunnel goes black, the crevasse goes
+     * blue-black. This one opens up.
+     */
+    for (const z of world.zones) {
+      if (z.kind !== 'hush') continue;
+      if (z.x + z.w < view.left || z.x > view.right) continue;
+      const h = z.bottom - z.top;
+
+      const g = ctx.createLinearGradient(0, z.top, 0, z.bottom);
+      g.addColorStop(0, 'rgba(196,232,255,0.16)');
+      g.addColorStop(0.5, 'rgba(168,214,255,0.09)');
+      g.addColorStop(1, 'rgba(150,200,250,0.03)');
+      ctx.fillStyle = g;
+      ctx.fillRect(z.x, z.top, z.w, h);
+
+      ctx.save();
+      ctx.strokeStyle = 'rgba(214,242,255,0.5)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([10, 8]);
+      ctx.lineDashOffset = -time * 14;
+      ctx.strokeRect(z.x, z.top, z.w, h);
+      ctx.setLineDash([]);
+
+      if (!this.reducedMotion) {
+        ctx.beginPath();
+        ctx.rect(z.x, z.top, z.w, h);
+        ctx.clip();
+        // Deterministic, so the same hollow looks the same every attempt: a
+        // level you are learning must not be redecorated between tries.
+        const rng = makeRng(Math.round(z.x * 31 + z.top));
+        ctx.fillStyle = 'rgba(232,248,255,0.55)';
+        for (let i = 0; i < 46; i++) {
+          const bx = z.x + rng() * z.w;
+          const drift = Math.sin(time * 0.5 + i) * 9;
+          // A fifth of the speed of falling snow, and never resetting with a
+          // jump: it just keeps coming down, forever, slowly.
+          const by = z.top + ((rng() * h + time * 15 + i * 7) % h);
+          const r = 1.1 + rng() * 1.5;
+          ctx.beginPath();
+          ctx.arc(bx + drift, by, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+    }
+
     for (const z of world.zones) {
       if (z.kind !== 'tunnel') continue;
       if (z.x + z.w < view.left || z.x > view.right) continue;

@@ -26,7 +26,9 @@
  * designer meant you to wall-jump here" from quietly becoming "nobody can pass".
  */
 
-import { reachFor, reachAt, climbBudget, kickGain, openingWidth, CLIMB, PENGUIN, CHARGED } from './config.js';
+import {
+  reachFor, reachAt, climbBudget, kickGain, openingWidth, CLIMB, PENGUIN, CHARGED,
+} from './config.js';
 import { nudgeClear } from '../core/util.js';
 
 /** Thickness of an ice wall. Thick enough to read as the mountain, not a line. */
@@ -261,16 +263,33 @@ export class Tower {
    * flat hop that now has to climb ninety pixels. A jump cannot do both, so the
    * span is re-derived once the real rise is known.
    */
-  _step(dir, w, dy, type, via = 'jump') {
+  _step(dir, w, dy, type, via = 'jump', { across = null, ceiling = this.maxRise, cushion = 0 } = {}) {
+    /**
+     * Settle on a side and a height together.
+     *
+     * The span is derived from the rise, and the rise gets pushed up by
+     * whatever the step has to clear, which makes the span wrong again — so
+     * this iterates until the two agree. Two passes was not always enough: the
+     * last one could place a ledge sized for a rise it no longer had.
+     *
+     * It does *not* look at whether the other side of the shaft would be
+     * cheaper, and that is a deliberate refusal rather than an omission. A
+     * version that costed both sides and took the shorter climb was written,
+     * measured and thrown away: it did rescue one step that had been forced up
+     * against the physical limit of a jump, and it re-routed a dozen steps
+     * that were perfectly fine, and two levels higher up the chapter stopped
+     * being solvable. The geometry here is a chain. Moving one link moves
+     * every link above it, so a change that is locally better and globally
+     * unproven is not better.
+     *
+     * The step that needed rescuing got margin a different way, at the plan
+     * level, where the consequences are visible to whoever writes it.
+     */
     let rise = dy;
     let slot = null;
-    // Iterate until the two agree: the span is derived from the rise, and the
-    // rise can be pushed up by whatever the step has to clear, which then makes
-    // the span wrong again. Two passes was not always enough — the last one
-    // could place a ledge sized for a rise it no longer had.
     for (let pass = 0; pass < 5; pass++) {
-      slot = this._stepSlot(dir, this.reachRising(rise) * 0.9, w, rise);
-      const needed = this._clearRise(slot.cx, slot.w, slot.dy ?? rise);
+      slot = this._stepSlot(dir, (across ?? this.reachRising(rise)) * 0.9, w, rise);
+      const needed = this._clearRise(slot.cx, slot.w, slot.dy ?? rise, ceiling, cushion);
       if (needed <= rise + 0.5) break;
       rise = needed;
     }
@@ -322,7 +341,7 @@ export class Tower {
    * there is not, the step climbs higher instead, and if the jump cannot climb
    * that high the plan is wrong and says so.
    */
-  _clearRise(cx, w, dy) {
+  _clearRise(cx, w, dy, ceiling = this.maxRise, cushion = 0) {
     // Head-room, not a squeeze. A quarter of a body over the penguin's head
     // sounds like clearance and is not: the arc of the jump *onto* a ledge
     // rises far above the ledge itself, so anything within about two thirds of
@@ -339,20 +358,40 @@ export class Tower {
       const gapTo = other.y - (this.y - dy) - 20;
       // A column head is not something you can stand under at all: the ledge
       // has to clear it outright, not merely leave headroom over it.
+      //
+      // The cushion, and why it is not simply always on: this works out the
+      // rise that leaves exactly the clearance `_place` demands, and then both
+      // numbers get rounded, separately, in different directions — so landing
+      // on exactly the limit threw about half the time. A pixel of slack fixes
+      // that, and a pixel of slack applied everywhere broke two other levels.
+      // Fifteen towers were composed, measured and tuned against this
+      // arithmetic, and moving every ledge in the chapter by one pixel moved
+      // two steps that were sitting on the very edge of what a jump can do
+      // onto the wrong side of it.
+      //
+      // So the caller asks for it. The one step that needs it is the hush
+      // step, whose two-hundred-pixel rise goes looking for room in a way no
+      // ordinary step ever does. Everything else keeps the numbers it was
+      // proved against, which is the only reason the proof means anything.
       if (other.climb && gapTo > -34 && gapTo < clearance - 20) {
-        need = Math.max(need, this.y - other.y + clearance);
+        need = Math.max(need, this.y - other.y + clearance + cushion);
         continue;
       }
       if (gapTo > -34 && gapTo < clearance - 20) {
-        need = Math.max(need, this.y - other.y + clearance);
+        need = Math.max(need, this.y - other.y + clearance + cushion);
       }
     }
-    if (need > this.maxRise + 0.5) {
+    // The ceiling is a parameter rather than `this.maxRise` because one step
+    // in this chapter does not happen under this chapter's gravity. A hush
+    // step is measured against what a jump does inside the band, and passing
+    // the limit in is the only way this guard can stay strict for every other
+    // step while being right about that one.
+    if (need > ceiling + 0.5) {
       throw new Error(
-        `basamak ${Math.round(need)}px yükselmeli ama zıplama ${Math.round(this.maxRise)}px`,
+        `basamak ${Math.round(need)}px yükselmeli ama zıplama ${Math.round(ceiling)}px`,
       );
     }
-    return Math.round(need);
+    return cushion > 0 ? Math.ceil(need) : Math.round(need);
   }
 
   _place(cx, y, w, type = 'solid', via = 'jump', extra = {}) {
@@ -432,15 +471,34 @@ export class Tower {
     return block;
   }
 
-  zone(y, height, kind) {
+  zone(y, height, kind, extra = {}) {
     this.zones.push({
       x: -WALL_T,
       w: this.width + WALL_T * 2,
       top: Math.round(y),
       bottom: Math.round(y + height),
       kind,
+      ...extra,
     });
   }
+
+  /**
+   * There is no hush on the mountain, and that is a decision.
+   *
+   * One was built, placed on the longest shaft in the chapter, and taken back
+   * out. The reason is a number: inside a hush pocket the penguin is airborne
+   * for a second and a half at full running speed, which is about five hundred
+   * pixels of travel. The mountain is six hundred pixels wide. There is
+   * nowhere to put that flight — the arc goes up through whatever ledge the
+   * composer places next and comes down past the far wall, and the only way to
+   * make it fit is to pin every surrounding step against its own limit, which
+   * is precisely the fragility this file spent a long time removing.
+   *
+   * So the shelf keeps it. A mechanic that needs five hundred pixels of open
+   * sky belongs where there is five hundred pixels of open sky, and a chapter
+   * about how much your arms have left does not actually want a free lift.
+   */
+
 
   hazard(def) {
     this.hazards.push(def);

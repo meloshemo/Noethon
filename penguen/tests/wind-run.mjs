@@ -22,7 +22,7 @@
  */
 
 import { Player } from '../src/game/player.js';
-import { WIND, windAt, scaleForLevel } from '../src/game/config.js';
+import { WIND, windAt, scaleForLevel, hushAt} from '../src/game/config.js';
 import { LEVELS } from '../src/game/levels.js';
 
 const STEP = 1 / 120;
@@ -86,7 +86,15 @@ function tryCross(def, solids, storm, a, b, { phase, from, delay, hold }, windy)
       push = (storm.power ?? WIND.power) * signed * (storm.dir ?? 1) * factor;
     }
 
-    p.update(STEP, { axis: dir, jumpHeld: held, jumpPressed: wantJump, push }, solids, TUNING);
+    // Gravity comes from the same shared function the world uses, so a wind
+    // level that ever gains a hush pocket cannot be silently mismodelled here.
+    const gravity = hushAt(def.zones, p.x + p.w / 2, p.y + p.h / 2);
+    p.update(
+      STEP,
+      { axis: dir, jumpHeld: held, jumpPressed: wantJump, push, gravity },
+      solids,
+      TUNING,
+    );
     t += STEP;
 
     if (p.y > def.waterY - p.h * 0.35) return false;
@@ -147,7 +155,13 @@ function tryRise(def, solids, column, a, b, { from, delay, hold }, windy) {
       box.y < column.y + column.h;
     const lift = windy && inside && !p.onGround ? (column.power ?? WIND.lift) : 0;
 
-    p.update(STEP, { axis: dir, jumpHeld: held, jumpPressed: wantJump, lift }, solids, TUNING);
+    const gravity = hushAt(def.zones, p.x + p.w / 2, p.y + p.h / 2);
+    p.update(
+      STEP,
+      { axis: dir, jumpHeld: held, jumpPressed: wantJump, lift, gravity },
+      solids,
+      TUNING,
+    );
     t += STEP;
 
     if (p.y > def.waterY - p.h * 0.35) return false;

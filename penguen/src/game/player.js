@@ -7,7 +7,7 @@
  */
 
 import {
-  PHYS, PENGUIN, BOOST, COIL, QUANTUM, SLACK, ROT, GEAR, CLIMB, SWIM, WIND, breathFor,
+  PHYS, PENGUIN, BOOST, COIL, QUANTUM, SLACK, ROT, GEAR, CLIMB, SWIM, WIND, HUSH, breathFor,
 } from './config.js';
 import { clamp, damp, rectsOverlap } from '../core/util.js';
 
@@ -126,6 +126,8 @@ export class Player {
     this.gliding = false;
     /** Inside a rising column this frame — drawn, and read by the HUD. */
     this.lifted = false;
+    /** What gravity ran at last frame. 1 everywhere but inside a hush. */
+    this.gravityScale = 1;
     this.glideLeft = this.glideMax;
     this.rocketLeft = this.rocketMax;
     this.burn = 0;
@@ -625,8 +627,24 @@ export class Player {
       this.vy *= 1 - (1 - PHYS.jumpCut) * Math.min(1, dt * 30);
     }
 
-    const g = this.vy < 0 ? PHYS.gravityUp : PHYS.gravityDown;
-    this.vy = Math.min(PHYS.maxFall, this.vy + g * dt);
+    /**
+     * Gravity, which is no longer a constant.
+     *
+     * `intent.gravity` is 1 everywhere in the game except inside a hush
+     * pocket, where it is a little under a half. That single multiplier is the
+     * deepest change anything in this codebase makes: wind moves where a jump
+     * lands and a geyser changes how one starts, but this changes what a jump
+     * *is*. Reach roughly doubles in both directions at once.
+     *
+     * Terminal velocity is scaled with it. Without that, a penguin that
+     * dropped into the pocket already falling kept the speed it arrived with
+     * and the hush appeared not to work at the exact moment it was needed —
+     * on the way in from above, which is how most players meet one.
+     */
+    this.gravityScale = intent.gravity ?? 1;
+    const g = (this.vy < 0 ? PHYS.gravityUp : PHYS.gravityDown) * this.gravityScale;
+    const cap = PHYS.maxFall * (this.gravityScale < 1 ? HUSH.fall : 1);
+    this.vy = Math.min(cap, this.vy + g * dt);
     if (this.gliding) this.vy = Math.min(this.vy, PHYS.maxFall * GEAR.wings.fallFactor);
 
     // Holding on replaces gravity outright. Hanging still costs; creeping

@@ -228,6 +228,21 @@ export class Audio {
     this._noise({ dur: 0.2, gain: 0.1, filter: 1200, q: 0.9 });
   }
 
+  /**
+   * Stepping into the hush.
+   *
+   * Almost nothing: a low sine that swells and goes, and the music ducked
+   * under it. The pocket is a place where the world stops pushing, so the
+   * honest sound for it is the sound of something being taken away rather
+   * than something arriving.
+   */
+  hush() {
+    this.music?.duck(0.45);
+    this._tone({ freq: 130, dur: 0.7, type: 'sine', gain: 0.09 });
+    this._tone({ freq: 196, dur: 0.55, type: 'sine', gain: 0.05, delay: 0.08 });
+    this._noise({ dur: 0.5, gain: 0.05, filter: 420, q: 0.5 });
+  }
+
   /** The back motor firing. */
   rocket() {
     this._noise({ dur: 0.34, gain: 0.14, filter: 900, q: 0.8 });
