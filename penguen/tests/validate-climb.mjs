@@ -153,6 +153,47 @@ function validate(def) {
       continue;
     }
 
+    /**
+     * Riding a slab that hangs on a rope.
+     *
+     * Proved at the two ends of the arc, where the slab is momentarily
+     * stationary, and nowhere else. That is not a shortcut — it is the honest
+     * statement of what the level promises: a player who waits for the swing
+     * to stop can always get on and always get off, so the crossing needs no
+     * timing the player cannot see. Riding through the fast middle is quicker
+     * and much harder, and it is never required.
+     *
+     * The step onto the near end is measured from wherever the climb was
+     * standing; the step off the far end is measured by the ordinary rules,
+     * because this node's own x *is* the far end.
+     */
+    if (b.via === 'swing' && b.swing) {
+      const nearGap = Math.max(
+        0,
+        b.swing.nearX - b.w / 2 > a.x + a.w
+          ? b.swing.nearX - b.w / 2 - (a.x + a.w)
+          : a.x - (b.swing.nearX + b.w / 2),
+      );
+      if (rise > reach.height * BUDGET.rise) {
+        fail(`${i}. sallanan buza çıkılamıyor: ${Math.round(rise)}px yükseliş`);
+      }
+      const allowed = reachAt(scale, Math.max(0, rise)) * BUDGET.jump;
+      if (nearGap > allowed) {
+        fail(
+          `${i}. sallanan buzun yakın ucu çok uzak: ${Math.round(nearGap)}px, ` +
+            `erişim ${Math.round(allowed)}px`,
+        );
+      }
+      // A rope shorter than this reads as a wobble rather than a swing, and a
+      // sweep the penguin can simply jump across is decoration.
+      if (b.swing.period < 0.9) fail(`${i}. sallanan buz fazla hızlı: ${b.swing.period} sn`);
+      const sweep = Math.abs(b.swing.farX - b.swing.nearX);
+      if (sweep < reach.distance * 0.5) {
+        fail(`${i}. sallanan buzun yayı çok kısa: ${Math.round(sweep)}px`);
+      }
+      continue;
+    }
+
     if (b.via === 'kick' && b.chimney) {
       const c = b.chimney;
       const gain = kickGain(scale, c.inner);

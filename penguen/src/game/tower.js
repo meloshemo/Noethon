@@ -27,7 +27,8 @@
  */
 
 import {
-  reachFor, reachAt, climbBudget, kickGain, openingWidth, CLIMB, PENGUIN, CHARGED,
+  reachFor, reachAt, climbBudget, kickGain, openingWidth, swingPeriod, swingAt,
+  CLIMB, PENGUIN, SWING, CHARGED,
 } from './config.js';
 import { nudgeClear } from '../core/util.js';
 
@@ -480,6 +481,228 @@ export class Tower {
       kind,
       ...extra,
     });
+  }
+
+  /**
+   * A slab of ice hanging on a rope across the shaft.
+   *
+   * The mountain's new verb, and it is deliberately the opposite of the one
+   * the shelf got. A hush needs five hundred pixels of open sky and the
+   * mountain has none; a pendulum needs a ceiling to hang from and a narrow
+   * space to cross, which is what a shaft *is*.
+   *
+   * Everything about the timing comes from the rope. The period is the real
+   * small-angle period of a pendulum of that length, so a long rope is slow
+   * and a short one is quick and nobody has to be told which — players have
+   * been reading pendulums since they were children. It is nearly still at the
+   * two ends of the arc and fastest through the bottom, so the move is
+   * obvious: step on at the end, ride, step off at the other end.
+   *
+   * The proof is built into the placement. The launch ledge sits within an
+   * ordinary jump of the arc's near end, and the landing ledge within an
+   * ordinary jump of its far end — both measured at the extremes, where the
+   * slab is momentarily stationary. So the crossing is provable with static
+   * arithmetic even though the thing itself never stops moving, and a player
+   * who waits for the ends is never asked for timing they cannot see.
+   *
+   * Riding the middle is faster and much harder: at the bottom of a long arc
+   * the slab is moving at five hundred pixels a second, well past what the
+   * penguin can walk, and staying on it is the skill on offer.
+   */
+  pendulum({ len = 260, w = 120, rise = 0.52, angle = SWING.maxAngle } = {}) {
+    /**
+     * The verb brings its own launch ledge, hard against one wall.
+     *
+     * A swing needs the width of the shaft, and the climb almost never happens
+     * to be standing at the edge of it — so the first thing this does is step
+     * across to the wall it came from and start there. Left to the plan, every
+     * level that wanted a pendulum would have had to hand-place a ledge in the
+     * right corner first, and getting it slightly wrong produces a rope that
+     * sweeps a body's width, which is not a swing, it is a wobble.
+     */
+    const pad = w / 2 + 30;
+    const launchW = Math.max(this.minWidth, w * 0.9);
+    const side = this.cx <= this.width / 2 ? 1 : -1;
+    const corner = side > 0 ? launchW / 2 + 24 : this.width - launchW / 2 - 24;
+    const stepIn = Math.round(Math.min(this.maxRise * 0.6, this.reach.height * 0.42));
+
+    /**
+     * Walk to the corner, do not teleport to it.
+     *
+     * The first version dropped the launch ledge straight into the corner with
+     * `_place`, which puts a ledge anywhere at all — including three hundred
+     * pixels from the one the penguin is standing on. The solver caught it the
+     * same minute: a step nobody could take, in service of a swing nobody
+     * could reach.
+     *
+     * So it takes ordinary steps toward the wall, each one sized by the same
+     * reach arithmetic every other step in this chapter uses, until it is
+     * there or until stepping stops making progress. Getting to the corner is
+     * part of the level rather than a favour the composer does itself.
+     */
+    for (let i = 0; i < 3; i++) {
+      const before = this.cx;
+      // `-side`: the swing sweeps toward `side`, so the ledge it launches
+      // from is at the opposite wall and that is the way to walk.
+      this._step(-side, launchW, stepIn, 'solid', 'jump');
+      if (Math.abs(this.cx - corner) < launchW * 0.6) break;
+      if (Math.abs(this.cx - before) < 8) break;
+    }
+    const from = this.floes[this.floes.length - 1];
+    const launchCx = from.x + from.w / 2;
+
+    /**
+     * The arc is fitted to the room, not the other way round.
+     *
+     * A rope of a given length wants to sweep a given width, and a shaft is
+     * only six hundred pixels across. Asking for the full arc and hoping put
+     * the far end of the swing outside the mountain on the first tower that
+     * used one. So the sweep is clamped to whatever space is actually to hand
+     * — and because the period comes from the *length*, clamping the sweep
+     * narrows the arc without touching the timing, which is exactly the knob
+     * you want: the same slab, the same rhythm, a shorter journey.
+     */
+    /**
+     * The rope is cut to fit the shaft, not chosen and hoped for.
+     *
+     * A three-hundred pixel rope wants to sweep two hundred and forty pixels.
+     * A shaft is six hundred wide, and once the launch ledge, the landing
+     * ledge and the slab itself have taken their share there is often half
+     * that left — so asking for the full arc and clamping it produced a swing
+     * of a hundred and twenty pixels, which the penguin can simply jump.
+     *
+     * Instead the sweep is measured from the room that actually exists and the
+     * length follows from it. Because the period comes from the length, that
+     * makes a cramped shaft give a short fast rope and an open one a long slow
+     * rope, entirely on its own — which is both physically true and exactly
+     * the difficulty curve you would have chosen by hand.
+     *
+     * If there is not enough room for a swing worth crossing, that is a fault
+     * in the plan and it says so at build time rather than shipping a slab
+     * that swings a body's width.
+     */
+    const landW = Math.max(this.minWidth, w * 0.9);
+    const room =
+      (side > 0 ? this.width - pad - launchCx : launchCx - pad) - landW - w - 70;
+    const spread = room / 2;
+    const minSweep = this.reach.distance * 0.75;
+    if (spread * 2 < minSweep) {
+      throw new Error(
+        `sallanan buza yer yok: ${Math.round(spread * 2)}px yay, en az ${Math.round(minSweep)}px gerek`,
+      );
+    }
+    const swept = Math.min(angle, SWING.maxAngle);
+    len = Math.max(SWING.minLength, spread / Math.sin(swept));
+
+    /**
+     * The near end of the arc stops beside the launch ledge, not over it.
+     *
+     * Over it was the first design and it cannot work: a slab directly above
+     * the penguin's head is a ceiling, and the jump onto it ends against its
+     * underside every time. The solver said so immediately and it was right —
+     * you cannot step onto something you are standing under.
+     *
+     * Beside it, at a short hop and a modest rise, the move is the one anybody
+     * would guess: wait for the swing to come to you and stop, hop across.
+     */
+    // Low enough to step onto from the ledge beside it. `rise` used to run up
+    // against `maxRise`, which is the ceiling for a jump between two *ledges*
+    // — but this hop lands on a slab that is barely wider than the penguin,
+    // and asking for the full height as well made the arrival a coin flip.
+    const slabY =
+      this.y - Math.round(Math.min(this.maxRise * 0.62, this.reach.height * rise));
+    const nearX = launchCx + side * (from.w / 2 + w / 2 + 24);
+    const pivotX = nearX + side * spread;
+    const pivotY = slabY - Math.round(Math.cos(swept) * len);
+    const farX = nearX + side * spread * 2;
+
+    const slab = {
+      x: Math.round(nearX - w / 2),
+      y: Math.round(slabY),
+      w: Math.round(w),
+      type: 'swing',
+      pivotX: Math.round(pivotX),
+      pivotY: Math.round(pivotY),
+      ropeLen: Math.round(len),
+      ropeAngle: +swept.toFixed(4),
+      phase: side > 0 ? 0.75 : 0.25,
+    };
+    this.floes.push(slab);
+    /**
+     * The route node sits at the *far* end of the arc, not where the slab is
+     * drawn at rest.
+     *
+     * The route is a list of places the penguin stands, in order, and after
+     * riding a swing the place it stands is the far end — that is the whole
+     * point of getting on. Recording the slab's resting position instead made
+     * the validator measure the next step from the wrong side of the arc and
+     * declare a hundred-and-eighty-pixel jump where the player makes a thirty
+     * pixel one.
+     *
+     * The near end travels along in `swing` so the step *onto* it can still be
+     * checked, which is the other half of the same proof.
+     */
+    this.route.push({
+      x: Math.round(farX - w / 2),
+      y: Math.round(slabY),
+      w: Math.round(w),
+      type: 'swing',
+      via: 'swing',
+      i: this.floes.length - 1,
+      swing: {
+        nearX: Math.round(nearX),
+        farX: Math.round(farX),
+        len: Math.round(len),
+        period: +swingPeriod(len).toFixed(2),
+      },
+    });
+    // The pivot is the highest thing this verb adds, so the mountain grows to
+    // the rope's anchor rather than to the slab hanging off it.
+    this.top = Math.min(this.top, pivotY - 20);
+
+    /**
+     * And the ledge the slab delivers you to, beside the far end rather than
+     * over it.
+     *
+     * Above was tried first and it is wrong twice. Geometrically, a ledge over
+     * the arc has to clear the slab by a full body, which on a grown penguin
+     * is more height than a jump has — the first level that used one failed to
+     * build at all. And in the hand it is wrong too: a swing carries you
+     * *across*. Asking the player to also gain height at the moment they step
+     * off turns a legible move into a scramble.
+     *
+     * So the step off is a short hop sideways at a gentle rise, taken at the
+     * end of the arc where the slab is barely moving. Clear of the whole
+     * sweep, not merely of where the slab happens to start.
+     */
+    const rise2 = Math.round(Math.min(this.maxRise * 0.55, this.reach.height * 0.38));
+    const landCx = farX + side * (w / 2 + 30 + landW / 2);
+    const landY = slabY - rise2;
+    const carry = Math.abs(landCx - side * landW / 2 - (farX + side * w / 2));
+    const allowed = reachAt(this.scale, rise2) * 0.86;
+    if (carry > allowed) {
+      throw new Error(
+        `sallanan buzdan iniş çok uzak: ${Math.round(carry)}px, ${rise2}px yükselirken erişim ${Math.round(allowed)}px`,
+      );
+    }
+    this._place(landCx, landY, landW, 'solid', 'jump');
+    this.cx = landCx;
+    this.y = landY;
+
+    this.swings = this.swings ?? [];
+    this.swings.push({
+      pivotX: Math.round(pivotX),
+      pivotY: Math.round(pivotY),
+      len: Math.round(len),
+      spread: Math.round(spread),
+      period: +swingPeriod(len).toFixed(2),
+      nearX: Math.round(nearX),
+      farX: Math.round(farX),
+      slabY: Math.round(slabY),
+      w: Math.round(w),
+      fromY: Math.round(from.y),
+    });
+    return this;
   }
 
   /**
@@ -1007,6 +1230,12 @@ export class Tower {
     const shift = -this.top + TOP_MARGIN;
     const move = (o) => {
       o.y += shift;
+      // A hanging slab's anchor is a second y living on the same object, and
+      // the whole mountain gets shifted down at the end so its top lands at a
+      // sensible margin. Missing this left one rope anchored seventeen hundred
+      // pixels above the sky, and the slab it held drawn at the right height
+      // by pure coincidence of the resting angle.
+      if (o.pivotY !== undefined) o.pivotY += shift;
       return o;
     };
     for (const f of this.floes) move(f);
@@ -1038,6 +1267,8 @@ export class Tower {
       floes: this.floes,
       terrain: this.terrain,
       zones: this.zones,
+      /** Hanging slabs, for the validator to prove both ends of the arc. */
+      swings: this.swings ?? [],
       hazards: this.hazards,
       fish: this.fish,
       speedFish: this.speedFish,

@@ -913,6 +913,54 @@ export class Renderer {
       }
     }
 
+    /**
+     * The rope, and the thing it is tied to.
+     *
+     * Without them a hanging slab is a floating platform on a curved path, and
+     * a player has no way to know it will slow at the ends and race through
+     * the middle. With them it is a pendulum, and everybody already knows what
+     * a pendulum does — the drawing is doing the teaching that would otherwise
+     * need a sign.
+     *
+     * Two ropes rather than one, from the two upper corners of the slab, so it
+     * reads as hanging rather than as skewered. And the anchor is drawn as a
+     * spike driven into the rock overhead, because a rope tied to nothing is
+     * the one thing that would make the whole idea look like a bug.
+     */
+    if (f.type === 'swing') {
+      const topY = y + 2;
+      ctx.save();
+      ctx.strokeStyle = 'rgba(214,232,248,0.7)';
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      for (const sgn of [-1, 1]) {
+        ctx.beginPath();
+        ctx.moveTo(f.pivotX, f.pivotY);
+        ctx.lineTo(cx + sgn * (w / 2 - 10), topY);
+        ctx.stroke();
+      }
+      // The anchor.
+      ctx.fillStyle = '#4a5568';
+      ctx.beginPath();
+      ctx.moveTo(f.pivotX - 13, f.pivotY - 5);
+      ctx.lineTo(f.pivotX + 13, f.pivotY - 5);
+      ctx.lineTo(f.pivotX, f.pivotY + 8);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#8fa4bd';
+      ctx.beginPath();
+      ctx.arc(f.pivotX, f.pivotY - 4, 3.4, 0, Math.PI * 2);
+      ctx.fill();
+      // A shackle where the ropes meet the ice, so the eye follows them down.
+      ctx.fillStyle = 'rgba(160,190,220,0.85)';
+      for (const sgn of [-1, 1]) {
+        ctx.beginPath();
+        ctx.arc(cx + sgn * (w / 2 - 10), topY, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
     if (f.type === 'move') {
       ctx.fillStyle = 'rgba(255,255,255,0.5)';
       const dir = Math.abs(f.ax) > Math.abs(f.ay);

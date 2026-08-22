@@ -35,6 +35,7 @@ const NODE_SUITES = [
   ['tests/brawl-run.mjs', 'arena çözücüsü'],
   ['tests/charged-fish.mjs', 'yüklü balıklar'],
   ['tests/hush.mjs', 'sessiz alan'],
+  ['tests/pendulum.mjs', 'sallanan buz'],
   ['tests/economy.mjs', 'ekonomi dengesi'],
   ['tests/ghost.mjs', 'hayalet kodlaması'],
 ];

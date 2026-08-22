@@ -5,7 +5,7 @@
  * `{x, y, w, h}` box that the collision code in level.js consumes.
  */
 
-import { ICE, STORM, BRAWL, WIND, windAt, tailWindow, lullWindow } from './config.js';
+import { ICE, STORM, BRAWL, WIND, SWING, windAt, swingAt, tailWindow, lullWindow } from './config.js';
 import { clamp, easeOutCubic, lerp } from '../core/util.js';
 
 /* ------------------------------------------------------------------ */
@@ -37,6 +37,13 @@ export class Floe {
 
     // Movement path (type: 'move')
     this.ax = def.ax ?? 0;
+    // The rope (type: 'swing'). Length decides the period, so it is the only
+    // thing a level author picks.
+    this.pivotX = def.pivotX ?? def.x;
+    this.pivotY = def.pivotY ?? 0;
+    this.ropeLen = def.ropeLen ?? 200;
+    this.ropeAngle = def.ropeAngle ?? SWING.maxAngle;
+    this.angle = 0;
     this.ay = def.ay ?? 0;
     this.period = def.period ?? 3;
     this.phase = def.phase ?? 0;
@@ -161,6 +168,33 @@ export class Floe {
   update(dt, time, ctxFx) {
     this.dx = 0;
     this.dy = 0;
+
+    /**
+     * A slab hanging on a rope.
+     *
+     * Not a moving platform with a curved path: a pendulum. It is fastest at
+     * the bottom of the arc and it hangs almost still at the ends, and those
+     * two facts are the whole reason it is worth having — the timing is
+     * legible on sight to anybody who has ever watched a swing, so a player
+     * knows to step on at the moment it stops without having to be told, and
+     * knows that the middle of the arc is where it will run away from them.
+     *
+     * `dx`/`dy` are the frame's movement, which is how a rider gets carried:
+     * the player adds them to its own position while it is standing here. Down
+     * near the bottom of a long arc that is a real shove, and staying on
+     * during it is the skill the thing is asking for.
+     */
+    if (this.type === 'swing') {
+      const prevX = this.x;
+      const prevY = this.y;
+      const at = swingAt(this.ropeLen, this.ropeAngle, this.phase, time);
+      this.angle = at.angle;
+      this.x = this.pivotX - this.w / 2 + at.dx;
+      this.y = this.pivotY + at.dy;
+      this.dx = this.x - prevX;
+      this.dy = this.y - prevY;
+      return;
+    }
 
     if (this.type === 'move') {
       const prevX = this.x;

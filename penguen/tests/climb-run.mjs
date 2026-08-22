@@ -20,7 +20,7 @@
  */
 
 import { Player } from '../src/game/player.js';
-import { scaleForLevel, hushAt} from '../src/game/config.js';
+import { scaleForLevel, hushAt, swingAt} from '../src/game/config.js';
 import { CLIMB_LEVELS, CLIMB_DRAFTS } from '../src/game/climb.js';
 
 const STEP = 1 / 120;
@@ -44,6 +44,33 @@ function solidsOf(def) {
     type: 'rock',
   }));
   return [...floes, ...rock];
+}
+
+/**
+ * Move every hanging slab to where it would be at time `t`.
+ *
+ * The solvers model the world's forces rather than instantiating a `World`,
+ * and until now they modelled its *geometry* as a photograph: floes sat where
+ * the composer put them and never moved. A pendulum is the first thing in the
+ * game whose position is the mechanic, so the photograph had to become a film.
+ *
+ * Done by mutating the same objects the player is colliding against, which is
+ * what makes riding work: the player reads `dx`/`dy` off the floe it is
+ * standing on and adds them to its own position, exactly as it does in the
+ * real game. Set those to zero and the slab would slide out from under the
+ * penguin instead of carrying it.
+ */
+function swingTo(solids, t) {
+  for (const f of solids) {
+    if (f.type !== 'swing') continue;
+    const prevX = f.x;
+    const prevY = f.y;
+    const at = swingAt(f.ropeLen, f.ropeAngle, f.phase ?? 0, t);
+    f.x = f.pivotX - f.w / 2 + at.dx;
+    f.y = f.pivotY + at.dy;
+    f.dx = f.x - prevX;
+    f.dy = f.y - prevY;
+  }
 }
 
 function makePlayer(def, x, surfaceY) {
@@ -112,6 +139,7 @@ function tryJump(def, solids, a, b, { from, delay, hold }) {
     if (held && jumpedAt !== null && t - jumpedAt > hold) held = false;
 
     const axis = p.onGround ? dir : Math.sign(targetX - cx) || 0;
+    swingTo(solids, t);
     p.update(STEP, { axis, jumpHeld: held, jumpPressed: pressed, push: 0, gravity: hushAt(def.zones, p.x + p.w / 2, p.y + p.h / 2) }, solids, TUNING);
     t += STEP;
 
@@ -142,6 +170,55 @@ function tryJump(def, solids, a, b, { from, delay, hold }) {
  * A single face has no second wall to bounce off, so it is creeping all the way
  * and then pulling over the top.
  */
+/**
+ * One attempt at riding a slab that hangs on a rope.
+ *
+ * Deliberately the dullest possible way to do it, because that is what is
+ * being proved. The penguin walks to the edge nearest the arc, waits for the
+ * slab to swing over and *stop*, steps on, and then stands still while the
+ * rope carries it. No timing through the fast middle, no jumping between
+ * moving things — if this passes, a player who simply waits can cross.
+ *
+ * `wait` is how long it loiters before stepping on, swept across a whole
+ * period so that every phase of the swing gets tried. `hold` is the length of
+ * the hop onto the slab.
+ */
+function trySwing(def, solids, a, b, { wait, hold }) {
+  const slab = solids.find((f) => f.type === 'swing' && Math.abs(f.pivotX - (b.swingPivot ?? f.pivotX)) < 1);
+  if (!slab) return false;
+  const nearX = b.swing.nearX;
+  const farX = b.swing.farX;
+  const side = Math.sign(farX - nearX) || 1;
+  // Start at the end of the launch ledge the arc comes to.
+  const p = makePlayer(def, side > 0 ? a.x + a.w * 0.72 : a.x + a.w * 0.28, a.y);
+  let t = 0;
+  let jumped = false;
+
+  for (let i = 0; i < 1600; i++) {
+    swingTo(solids, t);
+    const onSlab = p.groundFloe === slab;
+    // Ride: once aboard, do nothing at all and let the rope work.
+    const axis = onSlab ? 0 : Math.sign(nearX - (p.x + p.w / 2)) || 0;
+    const press = !jumped && !onSlab && t >= wait;
+    if (press) jumped = true;
+    const held = jumped && !onSlab && t - wait < hold;
+    p.update(
+      STEP,
+      { axis, jumpHeld: held, jumpPressed: press, push: 0, gravity: hushAt(def.zones, p.x + p.w / 2, p.y + p.h / 2) },
+      solids,
+      TUNING,
+    );
+    t += STEP;
+    if (drowned(p, def)) return false;
+    // Arrived: standing on the slab with the slab at the far end of its arc.
+    if (onSlab && Math.abs(slab.x + slab.w / 2 - farX) < 10) return true;
+    // Fell off and landed back where it started: that attempt is spent.
+    if (jumped && !onSlab && p.onGround && t - wait > 1.2) return false;
+    if (t > 12) return false;
+  }
+  return false;
+}
+
 function tryWall(def, solids, a, b, { from, delay, mode, first }, probe = {}) {
   // The lowest the arms ever got on a step that worked.
   //
@@ -274,6 +351,7 @@ function tryWall(def, solids, a, b, { from, delay, mode, first }, probe = {}) {
       // fails: the wall is reachable, the arms are not.
       if (p.stamina < p.staminaMax * 0.92) {
         axis = 0;
+        swingTo(solids, t);
         p.update(STEP, { axis: 0, jumpHeld: false, jumpPressed: false, push: 0, gravity: hushAt(def.zones, p.x + p.w / 2, p.y + p.h / 2) }, solids, TUNING);
         t += STEP;
         continue;
@@ -311,6 +389,7 @@ function tryWall(def, solids, a, b, { from, delay, mode, first }, probe = {}) {
       jumpHeld = t < holdUntil;
     }
 
+    swingTo(solids, t);
     p.update(STEP, { axis, jumpHeld, jumpPressed, push: 0, gravity: hushAt(def.zones, p.x + p.w / 2, p.y + p.h / 2) }, solids, TUNING);
     floor = Math.min(floor, p.staminaFrac);
     t += STEP;
@@ -369,6 +448,23 @@ function solveStep(def, solids, a, b, probe = {}) {
   let ok = 0;
   let tried = 0;
   let hit = null;
+  if (b.via === 'swing') {
+    // A whole period of waits, so no phase of the swing is assumed.
+    const period = b.swing?.period ?? 1.8;
+    for (let k = 0; k < 24; k++) {
+      for (const hold of [0.16, 0.26, 0.4]) {
+        tried++;
+        const wait = (k / 24) * period * 2;
+        if (trySwing(def, solids, a, b, { wait, hold })) {
+          hit ??= { wait, hold };
+          if (!MEASURE) return hit;
+          ok++;
+        }
+      }
+    }
+    probe.width = tried ? ok / tried : 0;
+    return hit;
+  }
   if (b.via === 'jump') {
     for (const from of FROMS) {
       for (const delay of DELAYS) {

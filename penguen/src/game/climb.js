@@ -135,7 +135,18 @@ const CLIMB_PLANS = [
       // Tall enough that creeping cannot do it — the nub halfway is the whole
       // reason it is passable, and finding it is the level.
       t.chimney({ height: 380, rests: 1 });
-      t.traverse({ n: 3, w: 118 });
+      // A slab of ice hanging on a rope, halfway up the longest chimney in the
+      // chapter, and the first one the player meets.
+      //
+      // Placed here because this level is already about patience: the shaft
+      // above it is four hundred pixels with one rest in it, and a player who
+      // has just spent an arm getting this far is in exactly the frame of mind
+      // to stand still and watch something swing. The lesson is that it stops
+      // at the ends, and nothing on this level punishes waiting to find out.
+      //
+      // The rope is cut to the width of the shaft, so its period is whatever
+      // that width makes it. Nobody chose the timing.
+      t.pendulum({ w: 130 });
       t.steps({ n: 2, rise: 0.6, w: 135 });
       t.crown({ w: 250 });
       t.scatterFish(3, 58);
@@ -237,7 +248,15 @@ const CLIMB_PLANS = [
       t.steps({ n: 2, rise: 0.6, w: 135 });
       t.gale({ height: 420, power: 170, period: 3.2 });
       t.chimney({ height: 290 });
-      t.traverse({ n: 3, w: 120 });
+      // The same slab, in a shaft that is also a pipe.
+      //
+      // Four levels after the player learned that a swing stops at the ends,
+      // this one puts a gale through it. The wind does not move the rope — a
+      // rope is not a penguin — but it very much moves anything standing on
+      // the slab, so the ride that was a free crossing becomes a place where
+      // you have to lean into the beat and hope you picked the right end to
+      // step on from.
+      t.pendulum({ w: 130 });
       t.face({ height: 180, side: -1, exit: 160 });
       t.steps({ n: 2, rise: 0.58, w: 135 });
       t.crown({ w: 250 });

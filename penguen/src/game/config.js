@@ -171,6 +171,52 @@ export function hushAt(zones, cx, cy) {
   return 1;
 }
 
+/**
+ * A hanging slab of ice, and how long it takes to swing.
+ *
+ * The period is not a dial. It is `2π√(L/g)`, the actual small-angle period of
+ * a pendulum, worked out from the length of the rope and the gravity this game
+ * already uses — so a level author chooses how long the rope is and the timing
+ * follows from that, the way `reachFor` makes a gap either possible or not
+ * rather than either fun or not.
+ *
+ * This matters more than it sounds. A swinging platform whose speed is a typed
+ * constant is a moving platform with a curved path; one whose speed comes from
+ * its length is a *pendulum*, and players read pendulums correctly on sight
+ * because they have been watching them their whole lives. A long rope is slow
+ * and a short rope is quick, and nobody has to be told.
+ *
+ * Small-angle is a real approximation and it is kept honest by capping the
+ * swing at thirty-five degrees, where the true period is under two percent
+ * longer than this formula says. Past that the two drift apart, and a
+ * platform that arrives late by a tenth of a second is a platform that lies.
+ */
+export const SWING = {
+  /** Widest the arc may be, in radians, for the small-angle period to hold. */
+  maxAngle: 0.61,
+  /** Shortest rope worth drawing: below this it reads as a wobble. */
+  minLength: 110,
+};
+
+export function swingPeriod(len) {
+  return 2 * Math.PI * Math.sqrt(Math.max(SWING.minLength, len) / PHYS.gravityDown);
+}
+
+/**
+ * Where a hanging slab is, and how fast, at a given moment.
+ *
+ * One definition, called by the entity that draws it, the composer that places
+ * it and the validator that proves you can ride it — the same discipline that
+ * `windAt` and `hushAt` are under, and for the same reason: three pieces of
+ * code that each work out a moving platform's position separately will
+ * eventually disagree about where it is.
+ */
+export function swingAt(len, angle, phase, time) {
+  const t = (time / swingPeriod(len) + phase) * Math.PI * 2;
+  const th = Math.min(SWING.maxAngle, angle) * Math.sin(t);
+  return { dx: Math.sin(th) * len, dy: Math.cos(th) * len, angle: th };
+}
+
 /** Timings for the different ice behaviours (seconds). */
 export const ICE = {
   /** "crack": time between first touch and collapse. */
