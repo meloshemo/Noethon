@@ -392,6 +392,52 @@ function check(def, { tutorial = false } = {}) {
     }
   }
 
+  /**
+   * --- the menace dial has a floor -------------------------------------
+   *
+   * `menace` speeds up everything that moves, and it exists because the
+   * geometric dial ran out — the widest gap on the last levels is already
+   * exactly what a running jump clears, so the only honest way left to make
+   * them harder is to give the player less time rather than more distance.
+   *
+   * Less time has a floor, and this is it. None of these rules is about
+   * whether a level is hard; they are about whether the hazard is a clock the
+   * player can read or a coin flip with an animation on it:
+   *
+   *   an icicle's warning must stay long enough to walk a body out from under;
+   *   a seal must stay slower than the penguin, or being on the same floe as
+   *     one is death regardless of what you do;
+   *   an orca must stay under water longer than it takes to cross its gap.
+   *
+   * Nothing here checks a distance, because `menace` never changes one. That
+   * is the whole reason it was chosen over widening the ice.
+   */
+  const menace = def.menace ?? 1;
+  if (menace > 1.35) fail(`hız çarpanı fazla yüksek: ${menace}`);
+  const bodyOut = (PENGUIN.w * scale) / PHYS.moveSpeed;
+  for (const h of def.hazards ?? []) {
+    if (h.kind === 'icicle') {
+      const warn = 0.42 / menace;
+      if (warn < bodyOut * 1.35) {
+        fail(`sarkıt uyarısı çok kısa: ${warn.toFixed(2)} sn, kaçış ${(bodyOut * 1.35).toFixed(2)} sn`);
+      }
+    }
+    if (h.kind === 'seal') {
+      const speed = (h.speed ?? 70) * menace;
+      if (speed > PHYS.moveSpeed * 0.72) {
+        fail(`fok penguenden hızlı: ${Math.round(speed)} px/sn, yürüyüş ${PHYS.moveSpeed}`);
+      }
+    }
+    if (h.kind === 'orca') {
+      const period = (h.period ?? 3.2) / menace;
+      // Time to walk the gap it surfaces in, plus the jump over it.
+      const cross = (h.w ?? 76) / PHYS.moveSpeed + reach.distance / PHYS.moveSpeed;
+      if (period < cross) {
+        fail(`orka döngüsü çok kısa: ${period.toFixed(2)} sn, geçiş ${cross.toFixed(2)} sn`);
+      }
+    }
+  }
+
   // --- the speed fish -------------------------------------------------
   for (const f of def.speedFish ?? []) {
     const ok = floes.some((p) => {

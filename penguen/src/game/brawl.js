@@ -30,7 +30,7 @@ const BRAWL_PLANS = [
     subtitle: 'Yolu bir penguen tutuyor',
     en: { name: 'The One in the Doorway', subtitle: 'A penguin is holding the way' },
     target: 30,
-    heat: 0.932,
+    heat: 0.8,
     build: (a) => {
       a.sign('Yukarıdaki sana atıyor.\nAradaki penguenin arkasına geç.');
       a.duel({ guardAt: 0.52, guardUp: 0.18, standAt: 0.2, shooterUp: 0.34 });
@@ -67,7 +67,7 @@ const BRAWL_PLANS = [
     subtitle: 'Her yerden hat yok',
     en: { name: 'The Rock', subtitle: 'There is no line from everywhere' },
     target: 50,
-    heat: 1.3,
+    heat: 1.05,
     build: (a) => {
       a.duel({ guardAt: 0.36, guardUp: 0.18, standAt: 0.1, shooterUp: 0.34 });
       a.duel({ guardAt: 0.64, guardUp: 0.24, standAt: 0.9, shooterUp: 0.42, phase: 0.45 });
@@ -212,7 +212,7 @@ const BRAWL_PLANS = [
     subtitle: 'Kaya, ince buz, ve onlar',
     en: { name: 'The Glacier\'s Mouth', subtitle: 'Rock, thin ice, and them' },
     target: 86,
-    heat: 0.7,
+    heat: 0.52,
     build: (a) => {
       a.duel({ guardAt: 0.32, guardUp: 0.17, standAt: 0.07, shooterUp: 0.33 });
       a.duel({ guardAt: 0.54, guardUp: 0.23, standAt: 0.84, shooterUp: 0.4, phase: 0.4 });
@@ -249,7 +249,7 @@ const BRAWL_PLANS = [
     subtitle: 'Hepsi birlikte atıyor',
     en: { name: 'All at Once', subtitle: 'They all throw together' },
     target: 92,
-    heat: 0.7,
+    heat: 0.55,
     build: (a) => {
       a.duel({ guardAt: 0.3, guardUp: 0.17, standAt: 0.06, shooterUp: 0.33, phase: 0 });
       a.duel({ guardAt: 0.54, guardUp: 0.23, standAt: 0.84, shooterUp: 0.4, phase: 0 });
@@ -289,7 +289,7 @@ const BRAWL_PLANS = [
     subtitle: 'Bütün koloni yolunu kesti',
     en: { name: 'The Colony\'s End', subtitle: 'The whole colony blocked the way' },
     target: 116,
-    heat: 0.7,
+    heat: 0.65,
     build: (a) => {
       a.duel({ guardAt: 0.26, guardUp: 0.15, standAt: 0.04, shooterUp: 0.3, period: 2.2 });
       a.duel({ guardAt: 0.4, guardUp: 0.2, standAt: 0.68, shooterUp: 0.36, period: 2.2, phase: 0.2 });

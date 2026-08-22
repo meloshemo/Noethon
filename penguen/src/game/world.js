@@ -280,8 +280,29 @@ export class World {
     return { coyote: this.assist ? ASSIST.coyoteTime : 1 };
   }
 
+  /**
+   * How fast the level's hazards run, as a multiple.
+   *
+   * The chapter's own difficulty dials turned out to be at their ceiling. On
+   * the shelf, `tight` widens gaps until the widest one is exactly what a
+   * running jump clears, and level thirty-one has been sitting on that edge
+   * for a while — push it a further five percent and the composer produces a
+   * gap the penguin physically cannot cross, which is not a hard level, it is
+   * a broken one.
+   *
+   * So the last third of the chapter gets harder a different way. `menace`
+   * speeds up everything that moves: seals patrol faster, icicles fall sooner,
+   * whales surface on a shorter clock. None of that touches a single distance,
+   * so every geometric proof in `tests/` stays exactly as true as it was, and
+   * the levels stop being about whether you *can* make the jump and start
+   * being about whether you can make it *now*.
+   *
+   * Assist still wins over it, because the point of easy mode is fewer things
+   * happening at once and a menace dial that survived it would be a lie.
+   */
   get hazardSpeed() {
-    return this.assist ? ASSIST.hazardSpeed : 1;
+    if (this.assist) return ASSIST.hazardSpeed;
+    return this.def.menace ?? 1;
   }
 
   /** Vertical camera bounds — negative on screens taller than the level. */

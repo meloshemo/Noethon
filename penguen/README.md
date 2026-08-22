@@ -710,6 +710,50 @@ atıştan kesinlikle daha naziktir. O yüzden hep siperle **eşleştiriliyor**: 
 tarafta düz atıcı, öbür tarafta kavisli atıcı, ve birinin cevabı öbüründe seni
 öldüren şey.
 
+## Balık: neden daha yavaş geliyor
+
+Bir para birimi ancak isteyecek bir şey kaldığı sürece ilginç. Ölçüldüğünde bu
+para birimi fazla hızlı ödüyordu: iyi bir oyuncu marketin yarısına **uzun bir
+hafta sonunda** sahip oluyordu. Bu cömertlik değil, ekonominin **bitmesi** — o
+noktadan sonra toplanan her balık hiçbir şey etmiyor ve market oynamak için bir
+sebep olmaktan çıkıyor.
+
+Rutin gelir kabaca yarıya indi, orta seviye kostümler %70 civarı pahalandı:
+
+| | Önce | Sonra |
+|---|---|---|
+| İlk market eşyası | 4 dk | 4 dk |
+| Marketin yarısı | 16 saat | **24 saat** |
+| Marketin tamamı | 34 saat / 80 gün | **49 saat / 116 gün** |
+| Bütün kostümler | 40 saatte ulaşılamadı | **115 saat / 273 gün** |
+
+İlk alım hâlâ ilk on dakikada, çünkü erken harcayamadığın bir para birimi de
+hiç gerçek olmuyor. Değişen şey ondan sonraki eğim.
+
+Simülatörün ufku 40 saatten 220 saate çıktı, ve bunun sebebi yazmaya değer:
+ödemeler düşünce son iki kilometre taşı koşunun dışında kaldı, ve
+`Infinity < 20 saat` diye okunan bir kontrol hiçbir şey ifade etmeden geçer. Bu,
+çalışan bir ekonomiyi kanıtlamak yerine bozuk olanı gizleyen türden bir yeşil
+tiktir.
+
+### İkiye katlama teklifi
+
+Bölüm sonunda, kazanç ekrandayken: **balığını iki katına çıkar.** Ödüllü videonun
+dürüst kısmının tamamı burada — sadece kayda değer bir kazançta çıkan bir teklif,
+günde üç hak, ve yalnızca sonuna kadar izleyene bir kez ödeyen bir ödeme.
+
+**Burada reklam ağı yok.** SDK yok, hesap yok, izin akışı yok, para yok.
+`src/core/rewarded.mjs` bir dikiş yeri: içindeki varsayılan sağlayıcı beş
+saniyelik bir sayaç, hiçbir ağa dokunmuyor, ve buton bunu **açıkça yazıyor**.
+Gerçek bir sağlayıcı takmak tek bir metot yazmak demek:
+
+```js
+setProvider({ available: () => boolean, show: () => Promise<boolean> })
+```
+
+Günlük sınır bir detay değil, tasarımın kendisi: sınırsız bir katlama bonus
+değil ekonominin ta kendisi olurdu, ve ekonomi az önce bilerek yavaşlatıldı.
+
 ## Çukur: derinliğin bedeli
 
 Buz altındaki on beş bölüm baştan sona **bir ciğer** üzerine kurulu, ve bugüne
@@ -742,6 +786,31 @@ Bir de şu var: **çukur göründüğünden uzundur.** Bölümdeki her kural bir
 yerine soğuk sudan geçen bir bacak gerçekte olduğu kadar uzun sayılıyor. Bütün
 eski kurallar dokunulmadan çalışıyor, ve okunuşu da doğru: çukur sadece acıtmaz,
 **daha uzaktır**.
+
+## Zorluk: geometri tavana vurdu, o yüzden zaman kısaldı
+
+Bölümlerin zorluk kadranı ölçüldü ve **tavana vurmuş** çıktı. Sahanlıkta `tight`
+boşlukları, en genişi tam olarak koşarak atlanabilecek kadar açıyor — 31. bölüm
+bir süredir o kenarda duruyor, ve %5 daha zorlarsan besteci penguenin fiziksel
+olarak geçemeyeceği bir boşluk üretiyor. O zor bölüm değil, bozuk bölüm.
+
+Zirvede de aynı: `effort`'u %3 artırmak iki tırmanış adımını çözülemez yapıyor.
+
+O yüzden son üçte bir farklı bir yoldan zorlaştı: **`menace`**. Hareket eden her
+şeyi hızlandırıyor — foklar daha hızlı devriye geziyor, sarkıtlar daha erken
+düşüyor, orkalar daha kısa saatte çıkıyor. **Tek bir mesafeye dokunmuyor**, yani
+`tests/` içindeki bütün geometrik kanıtlar aynen geçerli kalıyor, ve bölümler
+"bu atlayışı yapabilir miyim" olmaktan çıkıp "**şimdi** yapabilir miyim" oluyor.
+
+Bölüm sırasından türetiliyor, elle yazılmıyor: ilk üçte ikide hiç yok, son
+bölümde %25. Kolay modda devre dışı, çünkü kolay modun anlamı aynı anda daha az
+şey olması.
+
+Ve tabanı var, doğrulayıcıda:
+
+- sarkıt uyarısı, altından bir gövde çıkacak kadar uzun kalmalı;
+- fok penguenden yavaş kalmalı, yoksa aynı buzda olmak ne yaparsan yap ölüm;
+- orka, boşluğu geçmenin sürdüğünden uzun süre suyun altında kalmalı.
 
 ## Yüklü balıklar
 
@@ -1107,6 +1176,29 @@ Adaleti koruyan kurallar:
 - iki dalış arasında bekleme süresi var;
 - kapılırsan bölümü değil, kontrol noktasını kaybediyorsun;
 - kolay modda sıklığı yarıya iniyor, uyarı uzuyor, kapatılmıyor.
+
+### Kuş avlanmayı öğrendi
+
+Tek dalış, tek sabit nokta, tek kaçış: bu yürüyerek kazanılan bir yazı-turadır.
+Artık üç ayrı geliş var, ve hangisinin geldiği kararını vermeden önce okunabiliyor:
+
+| | Ne yapıyor | Cevabı |
+|---|---|---|
+| **Kilitli** | Gölge çıkınca nişan kilitleniyor | Kımılda, ıskalar |
+| **Şaşırtma** | Dalıyor, son anda vazgeçiyor, dönüp öbür taraftan tekrar geliyor | Iskaladı diye rahatlama |
+| **Avcı** | Boyunca nişan alıyor, kaçış yok | Boğuşma |
+
+**Avcı kaçınılmaz ve bu bilerek öyle.** Cevabı yana adım değil, boğuşma — bu
+yüzden uyarısı daha uzun ve gölgesi kehribar rengi, kuşun kendisi de kahverengi.
+Kaçamayacağın bir şeyin *geldiğini görebildiğin* bir şey olması gerekiyor.
+
+**24. bölümden sonra ikili geliyorlar**, ikincisi bir vuruş sonra **ters taraftan**
+— çünkü tek kuşun cevabı kaçmak, ve kaçmanın bir yönü var. Asla iki avcı birden:
+o bir soru değil, infaz. Ve asla ikisi birden taşımıyor.
+
+Saldırı sıklığı iki katına çıktı, bekleme süresi 6,5 saniyeden 3,8'e indi.
+Karışım bölüme göre değişiyor: 12'de her zaman sade dalış, sahanlığın sonunda
+dörtte biri avcı.
 
 ### Kapılmak son değil
 

@@ -33,6 +33,24 @@ import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
+/**
+ * The bands moved, and they moved in one direction.
+ *
+ * Every one of these was set when the chapters were first measured, and what
+ * they described was a game that could be finished comfortably. Played, it is
+ * finished *too* comfortably — so the ends of all four curves were pulled in
+ * and the starts pulled down a little with them.
+ *
+ * The starts moved least on purpose. A first level that punishes is not a hard
+ * game, it is a game nobody reaches the hard part of; what makes a run
+ * memorable is the last third, and that is where the numbers moved most. The
+ * end of every chapter is now inside the range where a single mistake ends the
+ * attempt.
+ *
+ * What did *not* move is the floor under all of it: every level is still
+ * proved finishable by a solver driving the real physics with no equipment and
+ * no pickups. Hard is a number here. Impossible is a build failure.
+ */
 const CHAPTERS = [
   {
     name: 'I · Buz Sahanlığı',
@@ -53,7 +71,7 @@ const CHAPTERS = [
      * tool report failure at the thing it cannot measure rather than at the
      * thing the chapter is doing. Measured range, measured target.
      */
-    want: [0.5, 0.28],
+    want: [0.42, 0.22],
     easier: 'up',
   },
   {
@@ -73,7 +91,7 @@ const CHAPTERS = [
     metric: 'kalan kol gücü',
     read: (tight, spare) => spare,
     format: (v) => `%${Math.round(v * 100)}`,
-    want: [0.75, 0.06],
+    want: [0.62, 0.03],
     easier: 'up',
   },
   {
@@ -84,7 +102,7 @@ const CHAPTERS = [
     metric: 'en az nefes',
     read: (low) => low,
     format: (v) => `%${Math.round(v * 100)}`,
-    want: [0.5, 0.06],
+    want: [0.4, 0.02],
     easier: 'up',
   },
   {
@@ -95,7 +113,7 @@ const CHAPTERS = [
     metric: 'en yakın top',
     read: (close) => close,
     format: (v) => `${Math.round(v)}px`,
-    want: [110, 26],
+    want: [95, 16],
     easier: 'up',
   },
 ];

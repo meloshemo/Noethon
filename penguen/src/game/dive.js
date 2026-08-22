@@ -101,7 +101,7 @@ const DIVE_PLANS = [
     en: { name: 'Long Breath', subtitle: 'The next hole is far' },
     target: 46,
     depth: 540,
-    breath: 0.71,
+    breath: 0.78,
     /* Nothing in the way at all. The obstacle is the distance, and this is the
        level that tells you the ceiling of ice is itself the hazard. */
     build: (d) => {

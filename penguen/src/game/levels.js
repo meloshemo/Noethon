@@ -717,6 +717,32 @@ const PLANS = [
   },
 ];
 
+/**
+ * How fast a level's hazards run, from where it sits in the chapter.
+ *
+ * Derived rather than typed, because a per-level number would be thirty-one
+ * more things to keep in step with a curve that already exists.
+ *
+ * It exists because the geometric dial ran out. `tight` widens gaps until the
+ * widest is exactly what a running jump clears, and the last few levels have
+ * been sitting on that edge for a while: push it five percent further and the
+ * composer produces a gap the penguin physically cannot cross, which is not a
+ * hard level, it is a broken one.
+ *
+ * Speeding up what *moves* costs no distance at all. Seals patrol faster,
+ * icicles fall sooner, whales surface on a shorter clock — every proof in
+ * `tests/` measures reach and stays exactly as true as it was, and the levels
+ * stop being about whether you can make the jump and start being about
+ * whether you can make it now. Flat through the two thirds that teach, then
+ * climbing to a quarter faster by the last one.
+ */
+export function menaceFor(id, total) {
+  const at = (id - 1) / Math.max(1, total - 1);
+  const from = 0.62;
+  if (at <= from) return 1;
+  return +(1 + 0.25 * ((at - from) / (1 - from))).toFixed(3);
+}
+
 /** Compose every plan once, at module load. */
 export const LEVELS = PLANS.map((plan, i) => {
   const id = i + 1;
@@ -730,6 +756,7 @@ export const LEVELS = PLANS.map((plan, i) => {
     intro: null,
     target: plan.target,
   });
+  def.menace = menaceFor(id, PLANS.length);
   // Signs are placed relative to the spawn, which the composer decides.
   def.signs = (plan.signs ?? []).map((s) => ({
     x: def.spawn.x + (s.dx ?? 0),
