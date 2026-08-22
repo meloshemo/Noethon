@@ -870,6 +870,82 @@ export function breathFor(scale) {
 }
 
 /**
+ * The trench.
+ *
+ * Under the ice, depth is free. The corridor decides where the swimmer goes
+ * and the clock counts seconds, and it costs exactly the same to spend one of
+ * them scraping the seabed as hugging the roof — which means fifteen levels
+ * built around a lungful have never once made depth itself a decision.
+ *
+ * A trench charges for it. It is a band of cold black water at the bottom of
+ * the level, and inside it a lungful runs out more than twice as fast. The
+ * drain is not flat: it grows with how far below the lip you are, the way
+ * pressure does, so hugging the top of a trench costs a little and lying on
+ * its floor costs everything. That gradient is the whole skill — the corridor
+ * decides how deep you *must* go, and everything below that line is a choice.
+ *
+ * It is a pacing instrument as much as a hazard. A stretch through a trench is
+ * the same distance and a third of the air, so the composer's budget treats a
+ * trench as *longer than it looks* — which is exactly what it feels like.
+ */
+export const TRENCH = {
+  /** What a lungful costs at the very bottom, as a multiple. */
+  drain: 2.6,
+  /** How dark and cold it looks. Read only by the renderer. */
+  tint: '#04121f',
+};
+
+/**
+ * How fast the lungs are emptying at this point, as a multiple of one.
+ *
+ * One definition, called by the world that runs the game, the composer that
+ * budgets the corridor and the validator that proves a lungful is enough — the
+ * same discipline `windAt` and `hushAt` are under, and for the same reason.
+ * Three pieces of code that each work out a drain rate separately will
+ * eventually disagree, and the one that disagrees quietly is the one that
+ * ships a level nobody can finish.
+ */
+/**
+ * What one leg of a swim really costs in air.
+ *
+ * The obvious cheap version — tag each route node with the rate in force where
+ * it sits — is what was written first, and it is wrong in a way that passes
+ * every check and then drowns somebody. A trench is a *place*, and a leg of the
+ * route enters it, crosses it and leaves it; charging the whole leg at the rate
+ * measured at one end either overcharges the approach or, far worse,
+ * undercharges the swim out. Level sixty passed its validator and could not be
+ * finished.
+ *
+ * So the leg is sampled. Same function the world calls every frame, evaluated
+ * along the line rather than at a point, which makes the composer's budget, the
+ * validator's proof and the running game agree by construction instead of by
+ * everybody being careful.
+ */
+export function swimCost(zones, a, b, samples = 12) {
+  const dist = Math.hypot(b.x - a.x, b.y - a.y);
+  if (!dist) return 0;
+  let total = 0;
+  for (let i = 0; i < samples; i++) {
+    const t = (i + 0.5) / samples;
+    total += (dist / samples) * trenchDrainAt(zones, a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
+  }
+  return total;
+}
+
+export function trenchDrainAt(zones, cx, cy) {
+  if (!zones) return 1;
+  let worst = 1;
+  for (const z of zones) {
+    if (z.kind !== 'trench') continue;
+    if (cx < z.x || cx > z.x + z.w) continue;
+    if (cy < z.top) continue;
+    const depth = Math.min(1, (cy - z.top) / Math.max(1, z.bottom - z.top));
+    worst = Math.max(worst, 1 + depth * ((z.drain ?? TRENCH.drain) - 1));
+  }
+  return worst;
+}
+
+/**
  * Kar topu — the chapter's fourth verb, and the only one you do not perform.
  *
  * Every other chapter gave the penguin something to do: jump, hold on, dive.

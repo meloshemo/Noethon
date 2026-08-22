@@ -24,7 +24,7 @@
  *      apart than a lungful can carry you, with margin.
  */
 
-import { PENGUIN, SWIM, swimReach, breathRange, CHARGED } from './config.js';
+import { PENGUIN, SWIM, swimReach, breathRange, swimCost, TRENCH, CHARGED } from './config.js';
 import { nudgeClear } from '../core/util.js';
 
 /**
@@ -218,7 +218,17 @@ export class Deep {
     for (let i = this.route.length - 1; i > 0; i--) {
       const here = this.route[i];
       const prev = this.route[i - 1];
-      total += Math.hypot(here.x - prev.x, here.y - prev.y);
+      /**
+       * A trench is longer than it looks, and that is the whole accounting.
+       *
+       * Everything in this chapter measures a lungful in *distance* — the
+       * budget, the automatic air holes, the validator's stretch check, all of
+       * it. Rather than teaching four separate pieces of code about a second
+       * currency, a leg through cold water is charged as the longer swim it
+       * really is. Every existing rule then works untouched, and it reads
+       * correctly too: a trench does not merely hurt, it is *further*.
+       */
+      total += swimCost(this.zones, prev, here);
       if (prev.tag === 'air' || prev.tag === 'start') break;
     }
     // Whatever corridor has been laid past the last node counts too.
@@ -305,6 +315,87 @@ export class Deep {
     this.hold = net;
     this.owedBreath = true;
     return this;
+  }
+
+  /**
+   * A trench: cold black water, and air that runs out in it.
+   *
+   * The sea's new verb, and it exists because of something the other seven do
+   * not do. `open` and `gate` decide where the swimmer may go; the clock counts
+   * seconds; and until now it cost precisely the same to spend one of them on
+   * the seabed as under the roof. Fifteen levels about a lungful, and depth
+   * itself was free.
+   *
+   * Here it is not. The seabed drops away, the corridor's only line runs down
+   * into the dark, and every metre below the lip empties the lungs faster —
+   * smoothly, the way pressure works, so the top of the trench is nearly free
+   * and the floor is ruinous. The corridor decides how deep the swimmer *must*
+   * go and everything below that is a choice, which is the first real choice
+   * this chapter has offered about the vertical.
+   *
+   * `dip` is how far down the line is driven as a fraction of the trench's own
+   * depth. At the default the swimmer is charged about twice; a plan that wants
+   * cruelty asks for more and pays for it in corridor, because the budget
+   * charges the trench as the longer swim it really is.
+   */
+  trench({ len = 380, at = 0.62, dip = 0.62, drain = TRENCH.drain } = {}) {
+    this._breathOwed();
+    const top = 74;
+    const bed = this.depth - 74;
+
+    /**
+     * The cold band is the bottom of the water the corridor already has, not a
+     * hole cut below it.
+     *
+     * The first version dug a trench into the seabed, and the arithmetic threw
+     * it straight out: a swimmer coming through at roof height had five
+     * hundred pixels to descend, which under this chapter's own fairness rule
+     * needs seven hundred pixels of run to make — so a three-hundred-pixel
+     * piece became a four-thousand-pixel one and ate three lungfuls.
+     *
+     * Which was the right answer to the wrong question. The sea already has a
+     * bottom and the corridor already spans the whole column; the cold does not
+     * need new geometry, it needs a *line* across the one that exists. So the
+     * band starts partway down and everything below it costs air, and the
+     * swimmer's descent into it is an ordinary change of depth the composer
+     * already knows how to make room for.
+     */
+    const lip = Math.round(top + (bed - top) * at);
+    const floor = Math.round(lip + (bed - lip) * dip);
+    const down = Math.max(0, this.reachFor(floor - this.lane));
+    const flat = Math.max(this.penguinW * 3, len - down - 100);
+    len = Math.round(down + flat + 100);
+    const x0 = this.x;
+
+    this._span(len, top, bed);
+    this.zones.push({
+      kind: 'trench',
+      x: Math.round(x0),
+      w: Math.round(len),
+      top: lip,
+      bottom: Math.round(bed),
+      drain,
+    });
+
+    // Down into the cold, then along it. Coming back up is the next piece's
+    // business, which is exactly the tension: a plan that follows a trench with
+    // another deep piece has asked for something very hard.
+    const cost = 1 + dip * (drain - 1);
+    this._node(x0 + down, floor, bed - top, 'trench');
+    this._node(x0 + down + flat, floor, bed - top, 'trench');
+
+    this.trenches = this.trenches ?? [];
+    this.trenches.push({
+      from: Math.round(x0),
+      to: Math.round(x0 + len),
+      lip,
+      floor,
+      bed: Math.round(bed),
+      dip,
+      drain,
+      cost: +cost.toFixed(2),
+    });
+    return this._keepBreathing();
   }
 
   /** Open water: no obstacle, just corridor. The rests between the questions. */
@@ -607,6 +698,8 @@ export class Deep {
       rotFish: this.rotFish,
       checkpoints: this.checkpoints,
       zones: this.zones,
+      /** Cold bands, for the validator to charge the lungs properly. */
+      trenches: this.trenches ?? [],
       route: this.route,
     };
   }

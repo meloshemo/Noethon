@@ -12,7 +12,7 @@ import { Player } from './player.js';
 import { GhostRecorder, Ghost } from './ghost.js';
 import {
   VIEW, VIEW_LIMITS, ASSIST, ICE, STORM, WIND, SWIM, BRAWL, BOOST, CHARGED, ROT, REWARDS, AMBUSH, COLLAPSE, HUSH,
-  hushAt, scaleForLevel, upgradeEffect,
+  hushAt, trenchDrainAt, scaleForLevel, upgradeEffect,
 } from './config.js';
 import { WATER_Y } from './levels.js';
 import { getSkin } from './skins.js';
@@ -192,6 +192,8 @@ export class World {
      */
     this.skua = null;
     this.skuaCooldown = AMBUSH.grace;
+    /** How fast the lungs are emptying, as a multiple. 1 outside a trench. */
+    this.drain = 1;
     /** Gravity multiplier from a hush pocket this frame, or 0 for none. */
     this.hushed = 0;
     this._wasHushed = false;
@@ -677,7 +679,17 @@ export class World {
       }
       return;
     }
-    p.breath -= dt;
+    /**
+     * Cold black water costs more air than the same distance of open sea.
+     *
+     * Read from the middle of the body and scaled by how far below the trench
+     * lip that is, so hugging the top of one is cheap and lying on its floor
+     * is ruinous. Kept on the world rather than the player because it is a
+     * property of *where you are*, not of what you are — the same reason the
+     * hush lives here.
+     */
+    this.drain = trenchDrainAt(this.zones, p.centerX, p.y + p.h / 2);
+    p.breath -= dt * this.drain;
     if (p.breath <= 0) {
       p.breath = 0;
       this.die('breath');

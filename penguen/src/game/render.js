@@ -683,6 +683,72 @@ export class Renderer {
       ctx.restore();
     }
 
+    /**
+     * The trench: cold black water with a visible lip.
+     *
+     * The lip is the whole drawing. Below it a lungful runs out more than
+     * twice as fast, and that rate grows smoothly with depth — so the one
+     * thing a player must be able to see is *where it starts*, and after that
+     * how much further down they have gone. A soft gradient with no line in it
+     * would hide the only decision the band offers.
+     *
+     * So: a hard, cold line across the water, and the dark deepening under it
+     * in bands rather than a smooth wash, because bands can be counted and a
+     * wash cannot. Motes drift *up* out of it, which is the one visual cue the
+     * sea has for cold, and they are slow.
+     */
+    for (const z of world.zones) {
+      if (z.kind !== 'trench') continue;
+      if (z.x + z.w < view.left || z.x > view.right) continue;
+      const h = z.bottom - z.top;
+
+      ctx.save();
+      const g = ctx.createLinearGradient(0, z.top, 0, z.bottom);
+      g.addColorStop(0, 'rgba(4,18,31,0.12)');
+      g.addColorStop(0.45, 'rgba(3,14,26,0.42)');
+      g.addColorStop(1, 'rgba(2,9,18,0.74)');
+      ctx.fillStyle = g;
+      ctx.fillRect(z.x, z.top, z.w, h);
+
+      // Counted bands, so a swimmer can tell a third of the way down from two.
+      ctx.strokeStyle = 'rgba(120,180,220,0.10)';
+      ctx.lineWidth = 1;
+      for (let i = 1; i < 4; i++) {
+        const y = z.top + (h * i) / 4;
+        ctx.beginPath();
+        ctx.moveTo(z.x, y);
+        ctx.lineTo(z.x + z.w, y);
+        ctx.stroke();
+      }
+
+      // The lip.
+      ctx.strokeStyle = 'rgba(150,210,245,0.5)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([14, 10]);
+      ctx.lineDashOffset = time * 10;
+      ctx.beginPath();
+      ctx.moveTo(z.x, z.top);
+      ctx.lineTo(z.x + z.w, z.top);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      if (!this.reducedMotion) {
+        ctx.beginPath();
+        ctx.rect(z.x, z.top, z.w, h);
+        ctx.clip();
+        const rng = makeRng(Math.round(z.x * 17 + z.top));
+        ctx.fillStyle = 'rgba(170,215,245,0.4)';
+        for (let i = 0; i < 30; i++) {
+          const bx = z.x + rng() * z.w;
+          const by = z.bottom - ((rng() * h + time * 22 + i * 11) % h);
+          ctx.beginPath();
+          ctx.arc(bx + Math.sin(time * 0.7 + i) * 5, by, 1 + rng() * 1.4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+    }
+
     for (const z of world.zones) {
       if (z.kind !== 'tunnel') continue;
       if (z.x + z.w < view.left || z.x > view.right) continue;
@@ -2143,7 +2209,7 @@ export class Renderer {
    * faster as it empties, and it is always on: unlike a grip, breath is never
    * something you have plenty of down here.
    */
-  _breath(ctx, p, time) {
+  _breath(ctx, p, time, drain = 1) {
     const frac = clamp(p.breathFrac, 0, 1);
     const w = p.w * 1.6;
     const x = p.x + p.w / 2 - w / 2;
@@ -2154,6 +2220,22 @@ export class Renderer {
     const low = frac < 0.28;
     ctx.fillStyle = low ? '#ff8a94' : '#8ff0d8';
     ctx.fillRect(x, y, w * frac, 4);
+    /**
+     * In cold water the bar itself says so.
+     *
+     * The trench's drain is smooth and depth-dependent, so a swimmer needs to
+     * know not only that they are being charged extra but roughly how much —
+     * and the only honest place to put that is on the thing being spent. The
+     * bar gains a cold outline that thickens with the rate, and it pulses at
+     * the rate rather than at a fixed speed, so two-and-a-half times as fast
+     * looks two-and-a-half times as urgent.
+     */
+    if (drain > 1.02) {
+      const bite = clamp((drain - 1) / 1.6, 0, 1);
+      ctx.strokeStyle = `rgba(150,214,255,${0.45 + 0.4 * Math.abs(Math.sin(time * 3 * drain))})`;
+      ctx.lineWidth = 1 + bite * 1.6;
+      ctx.strokeRect(x - 1.5, y - 1.5, w + 3, 7);
+    }
     if (low && !this.reducedMotion) {
       ctx.globalAlpha = 0.3 + 0.4 * Math.sin(time * (10 + (1 - frac) * 22));
       ctx.fillStyle = '#ffe3e7';
@@ -2675,7 +2757,7 @@ export class Renderer {
     ctx.restore();
 
     this._grip(ctx, p, body, time);
-    if (p.submerged) this._breath(ctx, p, time);
+    if (p.submerged) this._breath(ctx, p, time, world.drain ?? 1);
 
     // A skin's own glow — always on, unlike the speed boost's.
     if (skin.aura && !this.reducedMotion) {

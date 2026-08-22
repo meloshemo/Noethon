@@ -9,7 +9,7 @@
  */
 
 import { DIVE_LEVELS } from '../src/game/dive.js';
-import { PENGUIN, SWIM, swimReach, breathRange, breathFor } from '../src/game/config.js';
+import { PENGUIN, SWIM, swimReach, breathRange, breathFor, swimCost } from '../src/game/config.js';
 import { rectsOverlap } from '../src/core/util.js';
 
 let fails = 0;
@@ -56,15 +56,44 @@ for (const def of DIVE_LEVELS) {
     }
   }
 
-  // 3. No stretch between two breaths is longer than a lungful, with margin.
-  //    Measured along the route, not as the crow flies — the crow is not the
-  //    one running out of air.
+  /**
+   * 3. No stretch between two breaths is longer than a lungful, with margin.
+   *    Measured along the route, not as the crow flies — the crow is not the
+   *    one running out of air.
+   *
+   *    And measured in *air* rather than in pixels wherever the two differ.
+   *    Cold water empties the lungs faster, so a segment through a trench is
+   *    charged as the longer swim it really is. Getting this wrong is the
+   *    quietest possible failure: the geometry is fine, every rule passes, and
+   *    the level simply cannot be finished by anybody.
+   */
   const breaths = [0];
   for (const r of route) if (r.tag === 'air' || r.tag === 'start') breaths.push(r.x);
   breaths.push(route[route.length - 1].x);
   const lung = breathRange(scale);
+  /**
+   * Distance from a to b, charged at whatever the lungs are actually paying.
+   *
+   * `swimCost` samples along each leg using the same function the world calls
+   * every frame, so this cannot drift from the running game — which it did,
+   * once, in the way that matters: level sixty passed here and drowned in the
+   * solver, because a leg was being charged at the rate measured at one end
+   * instead of the rate along the whole of it.
+   */
+  const airCost = (from, to) => {
+    let total = 0;
+    for (let k = 1; k < route.length; k++) {
+      const p = route[k - 1];
+      const q = route[k];
+      if (q.x <= from || p.x >= to) continue;
+      const span = Math.min(q.x, to) - Math.max(p.x, from);
+      const full = Math.max(1, q.x - p.x);
+      total += (swimCost(def.zones, p, q) * span) / full;
+    }
+    return total;
+  };
   for (let i = 1; i < breaths.length; i++) {
-    const swim = breaths[i] - breaths[i - 1];
+    const swim = Math.max(breaths[i] - breaths[i - 1], airCost(breaths[i - 1], breaths[i]));
     longestSwim = Math.max(longestSwim, swim);
     // The fairness line, not the difficulty dial. The composer's own budget is
     // per level and climbs across the chapter; this is the point past which

@@ -168,15 +168,20 @@ const DIVE_PLANS = [
     target: 52,
     depth: 600,
     breath: 0.78,
-    /* Top, bottom, top, bottom. The distance is ordinary and the level is not,
-       because in this chapter depth is the thing that costs. */
+    /* Top, bottom, top, bottom — and this is the level where that finally
+       means something. The comment here used to claim depth was the thing that
+       cost, and it was not true: the clock ran at one second per second
+       wherever the swimmer was. The first cold band is on the second descent,
+       so the sentence the level was already telling itself becomes true
+       halfway through it. */
     build: (d) => {
       d.mouth();
       d.gate({ at: 0.2, gap: 168 });
       d.gate({ at: 0.8, gap: 166 });
       d.gate({ at: 0.22, gap: 164 });
       d.hole();
-      d.gate({ at: 0.82, gap: 162 });
+      d.trench({ at: 0.66, dip: 0.5, len: 320 });
+      d.hole();
       d.gate({ at: 0.24, gap: 162 });
       d.stretch({ gap: 165, from: 0.26 });
       d.surfaceOut();
@@ -331,14 +336,18 @@ const DIVE_PLANS = [
     en: { name: 'The Road on the Bottom', subtitle: 'The ceiling has closed entirely' },
     target: 70,
     depth: 660,
-    breath: 0.9,
-    /* Pinned to the seabed from end to end. The cheap direction is gone: there
-       is no rising to rest, only the button and the dark. */
+    breath: 0.82,
+    /* Pinned to the seabed from end to end, and now the seabed is the cold.
+       The cheap direction is gone twice over: there is no rising to rest,
+       because the slots are all at the bottom, and there is no resting at the
+       bottom, because the bottom is where the air goes. The two halves of that
+       sentence used to be one half. */
     build: (d) => {
       d.mouth();
       d.gate({ at: 0.84, gap: 146 });
       d.gate({ at: 0.86, gap: 144 });
-      d.gate({ at: 0.88, gap: 142 });
+      d.hole();
+      d.trench({ at: 0.58, dip: 0.72, len: 380 });
       d.hole();
       d.current({ power: -200, band: 0.78 });
       d.gate({ at: 0.86, gap: 142 });
