@@ -199,7 +199,13 @@ const CLIMB_PLANS = [
       // Cracking ice on a climb is a different animal: the ledge you were
       // going to rest on is the one that gives way, so the bar has to be
       // spent before you know whether you can afford it.
-      t.traverse({ n: 3, w: 120, types: ['solid', 'crack'] });
+      // The rope again, and this time the ledge you leave from is cracking.
+      //
+      // Second appearance, and the escalation is not the swing — it is what is
+      // under it. On the level where every place to rest is on a fuse, the one
+      // solid thing in the shaft is a slab hanging on a rope, and it will only
+      // be where you need it every other second.
+      t.pendulum({ w: 130 });
       t.face({ height: 170, side: 1, exit: 165 });
       t.steps({ n: 2, rise: 0.58, w: 135 });
       t.crown({ w: 250 });
@@ -297,7 +303,15 @@ const CLIMB_PLANS = [
       t.steps({ n: 2, rise: 0.6, w: 132 });
       t.chimney({ height: 420, rests: 2, hazard: 'shards' });
       t.traverse({ n: 3, w: 118 });
-      t.chimney({ height: 320 });
+// A rope in the second shaft, on the tallest tower in the chapter.
+      //
+      // Level forty-two is the one that spends the most stamina, and this is
+      // placed *after* the long chimney has taken it: the swing gets you
+      // across the upper shaft without asking for an arm you no longer have.
+      // Not a gift — you still have to be on it at the right moment, and the
+      // rope here is short, which by this chapter's own arithmetic means it is
+      // quick.
+      t.pendulum({ w: 126 });
       t.face({ height: 175, side: 1, exit: 160 });
       t.crown({ w: 245 });
       t.scatterFish(3, 58);
@@ -321,7 +335,13 @@ const CLIMB_PLANS = [
       // ledge you were about to rest on simply is not there.
       t.traverse({ n: 3, w: 125, types: ['solid', 'fake'] });
       t.chimney({ height: 330 });
-      t.traverse({ n: 3, w: 120, types: ['fake', 'solid'] });
+      // And once more where the ice lies.
+      //
+      // By this level the player has ridden three of these and knows the rule:
+      // wait for the end, step on, ride. What this one adds is that the ledge
+      // the swing delivers you to may not be there. The rope never lies —
+      // everything around it does.
+      t.pendulum({ w: 130 });
       t.face({ height: 180, side: -1, exit: 160 });
       t.steps({ n: 2, rise: 0.58, w: 132 });
       t.crown({ w: 245 });

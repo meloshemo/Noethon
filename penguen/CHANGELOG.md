@@ -5,6 +5,61 @@ değiştiği yeterli. En yeni en üstte.
 
 ---
 
+## Ölçüm aleti kalıcı oldu, ve dördüncü fiil geldi
+
+`tools/variety.mjs` artık projenin bir parçası. Her bölümün gerçekten çağırdığı
+besteci fiillerini okuyup, aynı bölümdeki kaç çift bölümün neredeyse aynı
+kelime dağarcığını kullandığını sayıyor. Yeni bir mekanik eklemeden önce ve
+ekledikten sonra çalıştırılıyor.
+
+Bir uyarı da dosyanın içine yazıldı: bestecinin değişken adı `build: (x) =>`
+içinden **okunuyor**, tahmin edilmiyor. Önceki sürüm olası adları listeliyordu,
+dalış bölümü bestecisine `d` diyor, ve oyunun **en tekrarlı bölümü** sıfır fiil
+bildirip kusursuz göründü. Sessizce boş dönebilen bir ölçüm, ölçüm olmamasından
+kötüdür, çünkü ona inanılır.
+
+Sayılar, bu turdan önce ve sonra:
+
+| Bölüm | Önce | Sonra |
+|---|---|---|
+| I (1–31) | %6 | %6 |
+| II (32–46) | %48 | **%15** |
+| III (47–61) | %60 | **%33** |
+| IV (62–76) | %21 | **%16** |
+
+### Çukur
+
+Dalış bölümünün eksiği, kendi bölüm yorumlarının zaten iddia ettiği şeydi.
+Derinlik bedavaydı. Artık su sütununun dibi soğuk ve bir ciğeri iki buçuk katı
+hızla tüketiyor, üstelik basınç gibi derinlikle artan bir eğimle.
+
+Yolda çıkan üç hatanın üçüncüsü en öğreticisi:
+
+- İlk sürüm deniz tabanına çukur kazıyordu. Bölümün kendi adalet kuralı bunu
+  anında reddetti: tavan hizasındaki bir yüzücünün beş yüz piksel inmesi
+  gerekiyordu, ki bu yedi yüz piksel koşu ister — üç yüz piksellik bir parça
+  dört bine çıkıp üç ciğer yedi.
+- **Çukur göründüğünden uzundur.** Bölümdeki her kural bir ciğeri mesafeyle
+  ölçüyor, o yüzden soğuk sudan geçen bacak gerçekte olduğu kadar uzun
+  sayılıyor. Bütün eski kurallar dokunulmadan çalışıyor.
+- O maliyet ilk olarak **düğüm başına etiket** olarak yazılmıştı: her rota
+  düğümü, durduğu yerdeki hızı taşıyor. Her kontrolden geçiyor ve oyuncuyu
+  boğuyor. Çukur bir *yer*, ve bir bacak ona girip çıkıyor; bacağı tek ucundan
+  fiyatlamak çıkış yolunu ucuza sayıyor. 60. bölüm tertemiz doğrulanıp
+  bitirilemiyordu. `swimCost` artık bacak boyunca örnekliyor, hem de dünyanın
+  her karede çağırdığı fonksiyonla.
+
+Ve bir dördüncüsü, tek tek bölüm ayarlamaktan kurtaran: **plan ideal bir yüzüşü
+fiyatlıyordu.** Rota çizimi çukurun dudağına yapışır, kusursuz derinlik tutar,
+hiç aşmaz. Kimse öyle yüzmez. Buz altında duramaz ve asılı kalamazsın, yani
+gerçek bir penguen kendi çizgisinin biraz altındadır — ve eğim olduğu için
+"biraz" bütün geçiş boyunca birikir. `TRENCH.sag` artık her fiyatı, kendi
+planının bu kadar altında yüzen biri için veriyor. İki bölüm elle ayarlanmıştı;
+ikisi de bir sonraki değişiklikte yine bozulacaktı, çünkü hata o bölümlerde
+değildi.
+
+---
+
 ## Üç bölüme üç yeni fiil, çünkü sorun tembellik değil kelime yokluğuydu
 
 Bölümlerin birbirine benzemesi bir kanaatti; ölçüldü ve sayı çıktı. Her bölümün

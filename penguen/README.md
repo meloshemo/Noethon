@@ -26,7 +26,7 @@ Toplam yük tek dosyada 732 KB ve çevrimdışı çalışıyor.
 | **Uyarlanan müzik** | Tek tema, beş kostüm; beş katman olan bitene göre geliyor |
 | **10 buz türü** | sağlam · çatlak · cilalı · eriyen · sürüklenen · düşen · tuzak · **sahte** · kaçan · gayzer |
 | **6 tehlike** | sarkıt · fok · fırtına kuşağı · yükselen hava sütunu · orka · serak |
-| **3 yeni fiil** | **sessiz alan** (yerçekimi yarıya iner) · **sallanan buz** (ipin ucunda sarkaç) · **kavisli atış** (siperin üstünden) |
+| **4 yeni fiil** | **sessiz alan** (yerçekimi yarıya iner) · **sallanan buz** (ipin ucunda sarkaç) · **kavisli atış** (siperin üstünden) · **çukur** (derinlik nefese mal olur) |
 | **2 pusu** | Bölümün planlamadığı anda dalan kutup kuşu · bayrağa 100 px kala kopan buzul |
 | **4 çürük balık etkisi** | ağırlaşma · **ayak tutmaması** · ters kontrol · körlük |
 | **3 yüklü balık** | yay (tek dev zıplama) · kuantum (havada ışınlanma) · gevşeme (senin dışında her şey yavaşlar) |
@@ -152,7 +152,7 @@ hedef var ve **gün boyunca birikiyorlar**: tek turda hepsini yapman gerekmiyor.
 | [Zorluk eğrisi](#zorluk-eğrisi) | Rampa tasarımı |
 | [Buz türleri](#buz-türleri) · [Tehlikeler](#tehlikeler) | Oyun içi her mekanik |
 | [Yüklü balıklar](#yüklü-balıklar) · [Çürük balıklar](#çürük-balıklar) | Zıplama tuşunun anlamını değiştiren üç renk ve dört lanet |
-| [Sessiz alan](#sessiz-alan-yerçekiminin-değiştiği-yer) · [Sallanan buz](#sallanan-buz-ipin-ucundaki-sarkaç) · [Kavisli atış](#kavisli-atış-siperin-üstünden) | Üç bölümün üç yeni fiili |
+| [Sessiz alan](#sessiz-alan-yerçekiminin-değiştiği-yer) · [Sallanan buz](#sallanan-buz-ipin-ucundaki-sarkaç) · [Kavisli atış](#kavisli-atış-siperin-üstünden) · [Çukur](#çukur-derinliğin-bedeli) | Dört bölümün dört yeni fiili |
 | [Pusu mekanikleri](#pusu-mekanikleri-buzun-tuzakları) · [Kutup kuşu](#pusu-kutup-kuşu) | Ani ölüm olayları |
 | [Ekonomi ve market](#ekonomi-ve-market) | Balık nasıl kazanılır, neye harcanır |
 | [Koleksiyon](#koleksiyon) | 24 penguen, 10 iz, nadirlikler |
@@ -709,6 +709,39 @@ Açık zeminde tek başına duran bir kavis sadece yavaş bir kar topudur ve dü
 atıştan kesinlikle daha naziktir. O yüzden hep siperle **eşleştiriliyor**: bir
 tarafta düz atıcı, öbür tarafta kavisli atıcı, ve birinin cevabı öbüründe seni
 öldüren şey.
+
+## Çukur: derinliğin bedeli
+
+Buz altındaki on beş bölüm baştan sona **bir ciğer** üzerine kurulu, ve bugüne
+kadar derinliğin kendisi bedavaydı. Koridor nereye gideceğine karar veriyordu,
+saat saniyede bir saniye sayıyordu, ve o saniyelerden birini dipte sürünerek
+harcamakla tavana yapışarak harcamak tamamen aynı fiyattaydı. 53. bölümün kendi
+yorumu "bu bölümde asıl maliyet derinliktir" diyordu ve **doğru değildi**.
+
+Artık öyle. Çukur, su sütununun dibindeki soğuk siyah bir kuşak, ve içinde bir
+ciğer iki buçuk katı hızla tükeniyor. Düz bir anahtar değil, **basınç gibi
+derinlikle artan bir eğim**:
+
+| Kuşağın neresinde | Tüketim |
+|---|---|
+| Dudağın üstünde | ×1,00 |
+| Dörtte bir aşağıda | ×1,40 |
+| Yarısında | ×1,80 |
+| Dipte | ×2,60 |
+
+Koridor **ne kadar derine inmek zorunda olduğuna** karar veriyor; onun altındaki
+her piksel senin kararın. Bölümün dikey eksende sunduğu ilk gerçek seçim bu.
+
+Çizimde tek bir şey kritik: **dudak**. Yumuşak bir geçiş, kuşağın sunduğu tek
+kararı gizlerdi. O yüzden suyun üstünde sert soğuk bir çizgi, altında sayılabilir
+bantlar hâlinde koyulaşan karanlık, ve nefes çubuğunun kendisi soğuk bir çerçeve
+alıp **tüketim hızında** yanıp sönüyor.
+
+Bir de şu var: **çukur göründüğünden uzundur.** Bölümdeki her kural bir ciğeri
+*mesafeyle* ölçüyor, o yüzden dört ayrı yere ikinci bir para birimi öğretmek
+yerine soğuk sudan geçen bir bacak gerçekte olduğu kadar uzun sayılıyor. Bütün
+eski kurallar dokunulmadan çalışıyor, ve okunuşu da doğru: çukur sadece acıtmaz,
+**daha uzaktır**.
 
 ## Yüklü balıklar
 

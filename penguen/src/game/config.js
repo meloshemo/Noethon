@@ -893,6 +893,27 @@ export const TRENCH = {
   drain: 2.6,
   /** How dark and cold it looks. Read only by the renderer. */
   tint: '#04121f',
+  /**
+   * How far below its own line a real swimmer sits, as a fraction of the band.
+   *
+   * The route is a drawing of the best possible swim: it hugs the lip of the
+   * trench, holds a perfect depth and never overshoots. Nobody swims like
+   * that. Under the ice you cannot stop and cannot hover, so a penguin
+   * crossing a cold band is always a little deeper than the line through it,
+   * and a little deeper is not a little more expensive — the drain is a
+   * gradient, so it compounds over the whole crossing.
+   *
+   * Two levels validated clean and drowned in the solver before this existed.
+   * Both were tuned by hand and both would have gone wrong again the next time
+   * anything moved, because the fault was never in those levels: planning was
+   * pricing an ideal swim and the sea was charging for a real one.
+   *
+   * So every price the composer and the validator quote is for a swimmer
+   * sagging this far below their own plan. It is the same near-worst-case
+   * discipline the shelf uses when it assumes a landing three quarters of the
+   * way into a floe rather than dead centre.
+   */
+  sag: 0.2,
 };
 
 /**
@@ -927,9 +948,22 @@ export function swimCost(zones, a, b, samples = 12) {
   let total = 0;
   for (let i = 0; i < samples; i++) {
     const t = (i + 0.5) / samples;
-    total += (dist / samples) * trenchDrainAt(zones, a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
+    const x = a.x + (b.x - a.x) * t;
+    const y = a.y + (b.y - a.y) * t;
+    total += (dist / samples) * trenchDrainAt(zones, x, y + sagAt(zones, x));
   }
   return total;
+}
+
+/** How far a real swimmer sits below the plan here, in pixels. */
+function sagAt(zones, cx) {
+  if (!zones) return 0;
+  for (const z of zones) {
+    if (z.kind !== 'trench') continue;
+    if (cx < z.x || cx > z.x + z.w) continue;
+    return (z.bottom - z.top) * TRENCH.sag;
+  }
+  return 0;
 }
 
 export function trenchDrainAt(zones, cx, cy) {

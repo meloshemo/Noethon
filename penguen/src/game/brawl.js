@@ -137,7 +137,14 @@ const BRAWL_PLANS = [
       a.duel({ guardAt: 0.34, guardUp: 0.18, standAt: 0.08, shooterUp: 0.34 });
       a.duel({ guardAt: 0.66, guardUp: 0.24, standAt: 0.92, shooterUp: 0.42, phase: 0.4 });
       a.heckler({ at: 0.5, up: 0.6, phase: 0.15 });
-      a.heckler({ at: 0.5, up: 0.36, phase: 0.7 });
+      // Crossfire used to have a hole in the middle of it: two lines crossing
+      // leaves a spot where neither one is, and the level's own name promised
+      // something it did not deliver. A block of rock in the centre and a
+      // thrower who arcs over it close that spot from both directions at once
+      // — one owns the open floor, the other owns the shadow behind the rock,
+      // and the only ground left is the ground you are crossing.
+      a.pillar({ at: 0.5, w: 38, h: 108 });
+      a.lobber({ at: 0.5, up: 0.36, phase: 0.7 });
       a.scatterFish(3);
       a.fishAt(0.5, 0.16, 'speed');
     },
@@ -227,7 +234,13 @@ const BRAWL_PLANS = [
       a.duel({ guardAt: 0.66, guardUp: 0.25, standAt: 0.92, shooterUp: 0.43, phase: 0.5 });
       a.heckler({ at: 0.5, up: 0.62, phase: 0.1 });
       a.heckler({ at: 0.5, up: 0.4, phase: 0.4 });
-      a.heckler({ at: 0.84, up: 0.6, phase: 0.75 });
+      // The third watcher is the one that changes the level. Two flat lines
+      // and a rock is a puzzle with an answer; two flat lines, a rock, and
+      // somebody dropping them in behind it is a puzzle whose answer keeps
+      // moving. This is the last arena before the two that end the game, and
+      // it is where the player should stop believing in safe corners.
+      a.pillar({ at: 0.8, w: 36, h: 100 });
+      a.lobber({ at: 0.84, up: 0.6, phase: 0.75 });
       a.scatterFish(3);
     },
   },
