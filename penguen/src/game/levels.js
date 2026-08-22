@@ -359,10 +359,10 @@ const PLANS = [
     build: (c) => {
       c.shelf({ n: 3, gap: 0.44, w: 170 });
       for (let i = 0; i < 4; i++) {
-        // The snap floe hangs low and inviting beside the real route, which is
-        // the only reason anybody ever lands on one.
-        const bait = { x: c.x + c.gapOf(0.32), y: c.y + 48, w: 92, type: 'snap' };
-        c.floes.push(bait);
+        // The snap floe hangs low and inviting *in the gap*, which is the only
+        // reason anybody ever lands on one — and the only place it can go
+        // without firing under the floe you were aiming for.
+        c.bait();
         c.put(c.gapOf(0.56), 160, c.y);
       }
       c.slope({ n: 4, rise: 0.48, gap: 0.44, w: 150 });

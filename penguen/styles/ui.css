@@ -1726,6 +1726,38 @@ kbd {
   margin-top: var(--s-2);
 }
 
+/*
+ * The doubling offer.
+ *
+ * Warmer than everything around it and directly under the number it is
+ * offering to change, because that is the whole pitch: the player has just
+ * been paid, the figure is on screen, and this says it could be twice that.
+ * It sits above the shop button — one changes the number, the other spends it,
+ * and that is the order those two decisions happen in.
+ */
+.payout__double {
+  width: 100%;
+  margin-top: var(--s-3);
+  background: linear-gradient(180deg, #f6c453, #e0a327);
+  color: #221703;
+  border-color: #c8901c;
+  font-weight: 700;
+}
+
+.payout__double:hover:not(:disabled) {
+  background: linear-gradient(180deg, #ffd873, #eeb134);
+}
+
+.payout__double:disabled {
+  opacity: 0.75;
+  cursor: default;
+}
+
+.payout__double .btn__sub {
+  color: #4a3a12;
+  font-weight: 500;
+}
+
 /* The shop's opening line is context, not content: it should never be the
    tallest thing above the fold. */
 .screen--shop .screen__lede {

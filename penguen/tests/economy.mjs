@@ -139,7 +139,16 @@ function simulate() {
 
   // A hard stop: if a milestone is not reached in this much play it is
   // effectively unreachable, and saying so is more useful than looping.
-  const LIMIT_MINUTES = 60 * 40;
+  /**
+   * How long the simulated player is followed for.
+   *
+   * Forty hours was enough while the shop could be finished in thirty-three of
+   * them. Once the payouts came down, both of the last two milestones fell off
+   * the end of the run and printed "unreachable" — and an assertion that reads
+   * `Infinity < 20 hours` passes without meaning anything, which is the sort of
+   * green tick that hides a broken economy rather than proving a working one.
+   */
+  const LIMIT_MINUTES = 60 * 220;
 
   while (hits.size < MILESTONES.length && minutes < LIMIT_MINUTES) {
     // Start of a play day: the daily and its objectives come first, the way
@@ -201,7 +210,7 @@ for (const m of MILESTONES) {
   const hitsFor = totals.get(m.name);
   if (!hitsFor?.length) {
     rows.push({ name: m.name, minutes: Infinity, days: Infinity, level: 0 });
-    console.log(`  ${m.name.padEnd(42)} ulaşılamadı (40 saat oynandı)`);
+    console.log(`  ${m.name.padEnd(42)} ulaşılamadı (220 saat oynandı)`);
     continue;
   }
   const mins = median(hitsFor.map((h) => h.minutes));
@@ -230,15 +239,39 @@ if (gear.minutes < 90) problems.push(`Planör Kanat çok ucuz: ${Math.round(gear
 
 // Half the shop is the mid-game. Reaching it in one sitting is too fast.
 const half = find('marketin yarısı');
-if (half.minutes < 60 * 8) problems.push(`Marketin yarısı çok hızlı: ${(half.minutes / 60).toFixed(1)} saat (en az 8 saat olmalı)`);
-
-// And the whole thing should be a long-term goal measured in weeks of play,
-// not an afternoon. This is the assertion the whole file exists for.
-const all = find('marketteki her şey');
-if (all.minutes < 60 * 20) {
-  problems.push(`Market çok çabuk bitiyor: ${(all.minutes / 60).toFixed(1)} saat (en az 20 saat olmalı)`);
+if (half.minutes < 60 * 18) {
+  problems.push(`Marketin yarısı çok hızlı: ${(half.minutes / 60).toFixed(1)} saat (en az 18 saat olmalı)`);
 }
-if (all.days < 40) problems.push(`Market ${all.days} günde bitiyor (en az 40 gün olmalı)`);
+
+/**
+ * And the whole thing is a long-term goal measured in months of play.
+ *
+ * This is the assertion the file exists for, and the numbers in it went up
+ * because the old ones had stopped meaning anything: a good player owned half
+ * the shop in a long weekend, which is an economy that has finished rather
+ * than an economy that is generous. Every fish picked up after that is worth
+ * nothing, and a currency worth nothing is not a reason to play.
+ */
+const all = find('marketteki her şey');
+if (all.minutes < 60 * 45) {
+  problems.push(`Market çok çabuk bitiyor: ${(all.minutes / 60).toFixed(1)} saat (en az 45 saat olmalı)`);
+}
+if (all.days < 90) problems.push(`Market ${all.days} günde bitiyor (en az 90 gün olmalı)`);
+
+/**
+ * The wardrobe is the long tail, and it has to actually have one.
+ *
+ * Costumes are the thing players say they want, so they are the thing worth
+ * making them wait for — and the thing that makes the end-of-level offer to
+ * double a haul worth taking. If everything wearable can be bought inside the
+ * same fortnight as the shop, there is nothing left to double toward.
+ */
+const wardrobe = find('market + satın alınabilir kozmetikler');
+if (wardrobe.minutes < 60 * 90) {
+  problems.push(
+    `Kostümler çok çabuk bitiyor: ${(wardrobe.minutes / 60).toFixed(1)} saat (en az 90 saat olmalı)`,
+  );
+}
 
 // And the point of the monument: even a player who owns literally everything
 // still has somewhere to put a fish. This is the assertion that says the

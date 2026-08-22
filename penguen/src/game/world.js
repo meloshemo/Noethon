@@ -190,7 +190,15 @@ export class World {
      * memorised can still ambush you on the ninth run. null when there is no
      * bird in the sky.
      */
-    this.skua = null;
+    /**
+     * Birds in the air. At most two, and only ever one of them holding you.
+     *
+     * A list rather than a single bird, because a pair is the whole point of
+     * the late shelf: one dive is a question about your reflexes and two
+     * arriving a beat apart from opposite sides is a question about where you
+     * chose to be standing.
+     */
+    this.skuas = [];
     this.skuaCooldown = AMBUSH.grace;
     /** How fast the lungs are emptying, as a multiple. 1 outside a trench. */
     this.drain = 1;
@@ -971,7 +979,7 @@ export class World {
     // A collapse that already happened does not happen twice on the same
     // attempt — the shock is the mechanic, and a repeat is just a wall.
     this.collapse = null;
-    this.skua = null;
+    this.skuas.length = 0;
     this.skuaCooldown = AMBUSH.grace;
     this.boostsTaken = 0;
     this.chargedTaken = 0;
@@ -1052,20 +1060,43 @@ export class World {
   _updateSkua(dt, intent) {
     if (!this.ambushes || this.status !== 'playing') return;
 
-    if (!this.skua) {
+    if (!this.skuas.length) {
       this.skuaCooldown -= dt;
       if (this.skuaCooldown > 0) return;
       // Assist mode halves the frequency rather than switching it off: the
       // point of easy mode is fewer surprises, not a different game.
       const rate = AMBUSH.rate * (this.assist ? 0.5 : 1);
       if (Math.random() > rate * dt) return;
-      this._launchSkua();
+      this._launchHunt();
       return;
     }
 
-    const s = this.skua;
-    s.t += dt;
+    // Only one bird may be holding the chick. A second one arriving while the
+    // first is carrying would be two struggles at once, which is not harder,
+    // it is incoherent.
+    const held = this.skuas.some((s) => s.state === 'carry');
 
+    for (let i = this.skuas.length - 1; i >= 0; i--) {
+      const s = this.skuas[i];
+      // The second bird of a pair waits its beat off-screen. Drawn already, so
+      // the player can see it coming and pick a side.
+      if (s.delay > 0) {
+        s.delay -= dt;
+        s.x = s.fromX;
+        s.y = s.fromY;
+        continue;
+      }
+      s.t += dt;
+      const done = this._flySkua(s, dt, intent, held);
+      if (done) this.skuas.splice(i, 1);
+    }
+    if (!this.skuas.length) this.skuaCooldown = AMBUSH.cooldown;
+  }
+
+  /**
+   * One bird, one frame. Returns true when it is finished with.
+   */
+  _flySkua(s, dt, intent, held) {
     if (s.state === 'warn') {
       // Fly in along a straight line to the strike point.
       const k = clamp(s.t / s.warn, 0, 1);
@@ -1075,17 +1106,55 @@ export class World {
         s.state = 'strike';
         s.t = 0;
       }
-      return;
+      return false;
     }
 
     if (s.state === 'strike') {
-      // Through the strike point and out the other side.
       const k = clamp(s.t / AMBUSH.dive, 0, 1);
+
+      /**
+       * A hunter steers all the way down.
+       *
+       * The strike point stops being a place and becomes a *direction*: it
+       * leans toward wherever the chick actually is, hard, for the whole dive.
+       * Walking out from under it does not work and is not meant to — the
+       * answer to a hunter is the struggle, not the sidestep, and that is why
+       * it announces itself with a longer shadow and a different colour before
+       * it ever leaves the sky. A thing you cannot dodge has to be a thing you
+       * can see coming.
+       */
+      if (s.kind === 'hunt' && !s.hit) {
+        const want = this.player.centerX;
+        s.targetX += clamp(want - s.targetX, -AMBUSH.huntTurn * dt, AMBUSH.huntTurn * dt);
+        s.targetY += clamp(
+          this.player.y + this.player.h * 0.4 - s.targetY,
+          -AMBUSH.huntTurn * dt,
+          AMBUSH.huntTurn * dt,
+        );
+      }
+
       s.x = s.targetX + s.dir * 240 * k;
       s.y = s.targetY - 120 * k * k + 40 * k;
 
+      /**
+       * The pull-out.
+       *
+       * A feint reaches the strike point and does not take it. It climbs away,
+       * wheels round, and comes back from the side the player is no longer
+       * watching — the first pass is free and the second one is not. What it
+       * costs the player is the habit of relaxing the moment a dive misses.
+       */
+      if (s.kind === 'feint' && !s.hit && s.t >= AMBUSH.dive * 0.62) {
+        s.state = 'wheel';
+        s.t = 0;
+        s.kind = 'lock';
+        s.wheeled = true;
+        this.audio.screech?.();
+        return false;
+      }
+
       const box = { x: s.x - 26, y: s.y - 18, w: 52, h: 36 };
-      if (!s.hit && this.player.alive && rectsOverlap(this.player.box, box)) {
+      if (!s.hit && !held && this.player.alive && rectsOverlap(this.player.box, box)) {
         s.hit = true;
         s.state = 'carry';
         s.t = 0;
@@ -1099,12 +1168,33 @@ export class World {
         // spends the first one working out that there is something to do has
         // already lost it.
         this.showHint(t('world.shakeFree'), AMBUSH.carry);
+        // Whatever else is in the sky goes home. Two birds is a question about
+        // where you stand, not a pile-on once the answer is in.
+        for (const other of this.skuas) if (other !== s) other.leaving = true;
       } else if (s.t >= AMBUSH.dive) {
         this.skuasDodged++;
-        this.skua = null;
-        this.skuaCooldown = AMBUSH.cooldown;
+        return true;
       }
-      return;
+      return false;
+    }
+
+    if (s.state === 'wheel') {
+      // Climbing away and turning, in full view, before it comes back.
+      const k = clamp(s.t / AMBUSH.wheel, 0, 1);
+      s.y -= 300 * dt;
+      s.x += s.dir * 200 * dt;
+      if (k >= 1) {
+        // Back from the other side, aimed where the chick is now.
+        s.dir = -s.dir;
+        s.targetX = clamp(this.player.centerX, this.spawn.x, this.worldW - 40);
+        s.targetY = this.player.y + this.player.h * 0.4;
+        s.fromX = s.x;
+        s.fromY = s.y;
+        s.warn = Math.max(0.3, AMBUSH.warn * 0.62);
+        s.state = 'warn';
+        s.t = 0;
+      }
+      return false;
     }
 
     if (s.state === 'carry') {
@@ -1145,23 +1235,24 @@ export class World {
       if (s.wrest >= AMBUSH.shakes) {
         this.player.alive = true;
         this.player.launch(s.dir * 150, -210);
-        this.skua = null;
-        this.skuaCooldown = AMBUSH.cooldown;
         this.skuasEscaped++;
         this.audio.screech?.();
         this.particles.burstIce(this.player.centerX, this.player.y, 10, 12);
         this.shake(5);
         this.showHint(t('world.wrestled'), 1.4);
-        return;
+        return true;
       }
 
       if (s.t >= AMBUSH.carry) {
-        this.skua = null;
-        this.skuaCooldown = AMBUSH.cooldown;
         this.die('skua');
+        return true;
       }
+      return false;
     }
+
+    return true;
   }
+
 
   /**
    * The collapse at the flag.
@@ -1240,21 +1331,53 @@ export class World {
     }
   }
 
-  _launchSkua() {
+  /**
+   * Decide what is coming, and send it.
+   *
+   * The mix is the difficulty curve for this whole event, and it moves with
+   * the level rather than being one number for the game. Level twelve gets a
+   * plain locked dive almost every time, because the shadow has to mean
+   * something before it can lie. By the end of the shelf a quarter of them are
+   * hunters that cannot be dodged and a third arrive in pairs.
+   */
+  _launchHunt() {
+    const id = this.def.id ?? 1;
+    // How far through the crafted levels this one is, 0 at the first ambush.
+    const ramp = clamp((id - AMBUSH.fromLevel) / 20, 0, 1);
+    const roll = Math.random();
+    let kind = 'lock';
+    if (roll < AMBUSH.huntChance * ramp) kind = 'hunt';
+    else if (roll < AMBUSH.huntChance * ramp + AMBUSH.feintChance * ramp) kind = 'feint';
+
+    this._launchSkua({ kind });
+    // A second bird, from the other side, a beat later. Never two hunters:
+    // that is not a question, it is an execution.
+    if (id >= AMBUSH.pairFrom && kind !== 'hunt' && Math.random() < AMBUSH.pairChance * ramp) {
+      this._launchSkua({ kind: 'lock', delay: AMBUSH.pairGap, mirror: true });
+    }
+  }
+
+  _launchSkua({ kind = 'lock', delay = 0, mirror = false } = {}) {
     const p = this.player;
     // Aim where the penguin is going, not where it is: a bird that dives at
     // your current position is dodged by simply continuing to walk.
-    const warn = Math.max(0.34, AMBUSH.warn + (this.radar ?? 0)) * (this.assist ? 1.35 : 1);
+    const base = kind === 'hunt' ? AMBUSH.huntWarn : AMBUSH.warn;
+    const warn = Math.max(0.34, base + (this.radar ?? 0)) * (this.assist ? 1.35 : 1);
     const lead = clamp(p.vx * warn * 0.8, -180, 180);
     const targetX = clamp(p.centerX + lead, this.spawn.x, this.worldW - 40);
     const targetY = p.y + p.h * 0.4;
-    const dir = p.vx >= 0 ? 1 : -1;
+    // The second of a pair comes from the opposite side, which is the entire
+    // reason it is worth having: the answer to one bird is to run, and running
+    // has a direction.
+    const dir = mirror ? (p.vx >= 0 ? -1 : 1) : p.vx >= 0 ? 1 : -1;
 
-    this.skua = {
+    const bird = {
       state: 'warn',
+      kind,
       t: 0,
       warn,
       dir,
+      delay,
       targetX,
       targetY,
       // Comes in high and behind, so it crosses the screen into the strike.
@@ -1263,12 +1386,30 @@ export class World {
       x: 0,
       y: 0,
       hit: false,
+      wheeled: false,
+      leaving: false,
       /** How far through twisting free the chick is. Decays between presses. */
       wrest: 0,
       /** One thrash, drawn. Purely so the struggle is visible from outside. */
       jolt: 0,
     };
+    bird.x = bird.fromX;
+    bird.y = bird.fromY;
+    this.skuas.push(bird);
     this.audio.screech?.();
+    return bird;
+  }
+
+  /**
+   * The bird that matters right now.
+   *
+   * The one holding the chick if there is one, otherwise whichever arrived
+   * first. Kept because most of the game only ever asks "is something on me" —
+   * the music's heat, a mission's counter, a test setting up a struggle — and
+   * none of that wants to know a flock exists.
+   */
+  get skua() {
+    return this.skuas.find((s) => s.state === 'carry') ?? this.skuas[0] ?? null;
   }
 
   /** The attempt as recorded, ready to be encoded into a share code. */

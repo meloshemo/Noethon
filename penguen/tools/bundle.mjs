@@ -27,6 +27,7 @@ const STYLES = ['styles/tokens.css', 'styles/base.css', 'styles/ui.css'];
 /** Dependency order, leaves first. */
 const MODULES = [
   'src/core/util.js',
+  'src/core/rewarded.mjs',
   'src/core/i18n.js',
   'src/core/storage.js',
   'src/core/particles.js',

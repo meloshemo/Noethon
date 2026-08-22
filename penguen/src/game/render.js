@@ -1926,11 +1926,26 @@ export class Renderer {
    * corner of an eye by someone who is busy landing a jump.
    */
   _skuaShadow(ctx, world, time) {
-    const s = world.skua;
-    if (!s || s.state !== 'warn') return;
+    for (const s of world.skuas ?? []) this._oneShadow(ctx, s, time);
+  }
+
+  /**
+   * The shadow on the ice, per bird.
+   *
+   * A hunter's is drawn differently on purpose. Its dive cannot be dodged, so
+   * the only fair thing left is to make it unmistakable *before* it starts:
+   * the ring is amber rather than red, it does not shrink toward a point
+   * because there is no point to shrink to, and it pulses slowly instead of
+   * accelerating. Everything about it says "this one is coming to you".
+   */
+  _oneShadow(ctx, s, time) {
+    if (!s || s.state !== 'warn' || s.delay > 0) return;
+    const hunter = s.kind === 'hunt';
     const k = Math.min(1, s.t / s.warn);
-    const r = 34 * (1 - k * 0.55);
-    const beat = 0.35 + 0.65 * Math.abs(Math.sin(time * (7 + k * 26)));
+    const r = hunter ? 40 : 34 * (1 - k * 0.55);
+    const beat = hunter
+      ? 0.5 + 0.5 * Math.abs(Math.sin(time * 5))
+      : 0.35 + 0.65 * Math.abs(Math.sin(time * (7 + k * 26)));
 
     ctx.save();
     ctx.globalAlpha = (0.28 + 0.5 * k) * beat;
@@ -1939,7 +1954,7 @@ export class Renderer {
     ctx.ellipse(s.targetX, s.targetY + 22, r, r * 0.34, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.globalAlpha = 0.5 + 0.4 * k;
-    ctx.strokeStyle = '#ff6b81';
+    ctx.strokeStyle = hunter ? '#ffbe55' : '#ff6b81';
     ctx.lineWidth = 2;
     ctx.setLineDash([5, 5]);
     ctx.beginPath();
@@ -1953,8 +1968,25 @@ export class Renderer {
    * The skua itself: a big dark gull, wings back, coming down fast.
    */
   _skua(ctx, world, time) {
-    const s = world.skua;
+    for (const s of world.skuas ?? []) this._oneSkua(ctx, s, time);
+  }
+
+  _oneSkua(ctx, s, time) {
     if (!s) return;
+    // The second of a pair waits off-screen for half a second. Drawn while it
+    // waits, faintly, because a bird you cannot see is not a warning — and the
+    // whole reason for a pair is that the player gets to pick a side.
+    if (s.delay > 0) {
+      ctx.save();
+      ctx.globalAlpha = 0.4;
+      ctx.fillStyle = '#2b3444';
+      ctx.beginPath();
+      ctx.ellipse(s.x, s.y, 22, 7, s.dir * 0.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      return;
+    }
+    const hunter = s.kind === 'hunt';
     const diving = s.state !== 'warn';
     const flap = diving ? 0.9 : Math.sin(time * 14) * 0.55;
     // Big. A skua that reads as a sparrow is not frightening.
@@ -1966,8 +1998,10 @@ export class Renderer {
     // Tilt into the dive.
     ctx.rotate(diving ? 0.5 : 0.16 * Math.sin(time * 6));
 
-    // Wings — swept back hard on the strike.
-    ctx.fillStyle = '#2b3444';
+    // Wings — swept back hard on the strike. A hunter is paler and browner,
+    // the colour its own shadow is drawn in, so the thing on the ice and the
+    // thing in the sky are recognisably the same bird.
+    ctx.fillStyle = hunter ? '#5a4a34' : '#2b3444';
     for (const sgn of [-1, 1]) {
       ctx.beginPath();
       ctx.moveTo(0, -2);
@@ -1977,7 +2011,7 @@ export class Renderer {
       ctx.fill();
     }
     // Body and head
-    ctx.fillStyle = '#3a4557';
+    ctx.fillStyle = hunter ? '#6e5b3e' : '#3a4557';
     ctx.beginPath();
     ctx.ellipse(0, 0, w * 0.42, w * 0.2, 0, 0, Math.PI * 2);
     ctx.fill();

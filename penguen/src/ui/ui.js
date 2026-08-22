@@ -14,6 +14,7 @@ import { ALL_LEVELS as LEVELS, CHAPTERS, chapterOf, startsChapter } from '../gam
 import { Storage, todayKey } from '../core/storage.js';
 import { cleanName, nameProblem, suggestName, titleFor, ensureProfile, profileLine } from '../game/profile.js';
 import { ensureMissions } from '../game/missions.js';
+import { canDouble, doubleUp, watchesLeft, isHouseProvider } from '../core/rewarded.mjs';
 import { shareText, withName } from '../game/ghost.js';
 import { SKINS, TRAILS, RARITY, getSkin, getTrail, skinStatus, newlyEarned, drawPortrait, perkText } from '../game/skins.js';
 import { standing, weekKey } from '../game/league.js';
@@ -1434,6 +1435,49 @@ export class UI {
           ? `<p class="payout__missions">${t('ui.missionsDone', { list: result.missionsDone.join(' · ') })}</p>`
           : ''
       }`;
+
+    /**
+     * The offer to double it, at the one moment the number is on screen.
+     *
+     * Placed above the shop button on purpose: this is the choice that changes
+     * the number, and the shop is where the number gets spent. It only appears
+     * when there is a haul worth doubling and a watch left today, so it is an
+     * offer rather than a fixture — and it says out loud that the countdown is
+     * a placeholder, because a button that promises an advertisement and shows
+     * five seconds of nothing is a lie told to the person reading the code as
+     * much as to the player.
+     */
+    if (canDouble(this.save, result.coins) && !result.doubled) {
+      const offer = document.createElement('button');
+      offer.className = 'btn btn--gold payout__double';
+      offer.type = 'button';
+      offer.innerHTML =
+        `<span>${t('ui.doubleFish', { n: result.coins })}</span>` +
+        `<small class="btn__sub">${
+          isHouseProvider() ? t('ui.doubleHouse') : t('ui.doubleLeft', { n: watchesLeft(this.save) })
+        }</small>`;
+      offer.addEventListener('click', async () => {
+        if (offer.disabled) return;
+        offer.disabled = true;
+        this.audio.ui();
+        const label = offer.querySelector('span');
+        const bonus = await doubleUp(this.save, result.coins, (left) => {
+          label.textContent = t('ui.doubleWatching', { n: left });
+        });
+        if (bonus > 0) {
+          Storage.addCoins(this.save, bonus);
+          result.coins += bonus;
+          result.doubled = true;
+          result.breakdown.push({ label: t('ui.doubleRow'), value: bonus });
+          this.audio.charge?.();
+          this._renderPayout(result);
+          this.refreshWallet();
+        } else {
+          offer.remove();
+        }
+      });
+      box.append(offer);
+    }
 
     // A door to the shop, at the one moment the player has just been paid and
     // can see the number. It only appears when the money would actually buy

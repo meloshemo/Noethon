@@ -622,13 +622,52 @@ export const AMBUSH = {
   /** How long the dive itself takes, from off-screen to the strike point. */
   dive: 0.42,
   /** Never twice inside this window. */
-  cooldown: 6.5,
+  cooldown: 3.8,
   /** Grace after a spawn or respawn — never ambushed while getting your bearings. */
-  grace: 2.4,
+  grace: 2.2,
   /** Chance per second of an attack, once everything else allows it. */
-  rate: 0.18,
+  rate: 0.4,
   /** The earliest level an ambush can happen at all. */
   fromLevel: 12,
+
+  /**
+   * The bird learned to hunt.
+   *
+   * One dive, one fixed strike point, one dodge — that is what a skua was, and
+   * it is a coin flip you win by walking. Real skuas do not work like that:
+   * they come in, look, pull out, and come back from a direction you are no
+   * longer watching. So this one has three ways of arriving, and which one is
+   * coming is readable before it commits.
+   *
+   *   `lock`  — the original. Aim locked when the shadow appears; move and it
+   *             misses. Still the most common, because it is the one that
+   *             teaches the shadow means something.
+   *   `feint` — comes in, pulls up at the last moment, wheels round and dives
+   *             again from the other side. The first pass is free and the
+   *             second one is not, and the player who relaxed after dodging is
+   *             the one it takes.
+   *   `hunt`  — re-aims all the way down. Dodging does not work on this one at
+   *             all, and it is not supposed to: the answer to a hunter is the
+   *             struggle, not the sidestep. It gets a longer warning and a
+   *             different shadow, because a thing you cannot dodge has to be a
+   *             thing you can *see coming*.
+   *
+   * The mix shifts with the level. Early on it is almost always a plain lock;
+   * by the end of the shelf a third of them are hunters and pairs are routine.
+   */
+  feintChance: 0.3,
+  huntChance: 0.26,
+  /** A hunter's warning is longer, because there is no dodging it. */
+  huntWarn: 1.15,
+  /** How hard a hunter can steer while diving, in pixels per second. */
+  huntTurn: 620,
+  /** Seconds between a feint's pull-out and its second, committed dive. */
+  wheel: 0.85,
+  /** Two birds at once, from this level on, and this often. */
+  pairFrom: 24,
+  pairChance: 0.3,
+  /** The second bird of a pair comes this long after the first. */
+  pairGap: 0.55,
   /**
    * Being carried.
    *
@@ -1154,23 +1193,42 @@ export const STAR_RULES = {
  * coming back. A shop with only one income source stops mattering fast.
  */
 export const REWARDS = {
+  /**
+   * What a fish is worth, and why it is worth less than it was.
+   *
+   * A currency is only interesting while there is something left to want, and
+   * measured against the shop this one was paying out far too quickly: a good
+   * player owned half the shop inside a long weekend. That is not generosity,
+   * it is the economy ending — from that point every fish picked up is worth
+   * nothing and the shop stops being a reason to play.
+   *
+   * So the routine income is roughly halved. Nothing is *removed*: clearing,
+   * starring, going deathless and the dailies all still pay, and the first
+   * purchase still lands inside the first ten minutes, because a currency you
+   * cannot spend early never becomes real either. What changed is the slope
+   * after that — a costume is now a week rather than an afternoon.
+   *
+   * The floor under all of it is `tests/economy.mjs`, which plays the campaign
+   * on paper and fails the build if the first purchase drifts out of reach or
+   * the last one drifts into a single sitting.
+   */
   /** Per fish picked up in a level. */
-  perFish: 3,
+  perFish: 2,
   /** The speed fish pays extra — it is harder to reach and easy to skip. */
-  perBoost: 10,
+  perBoost: 6,
   /** First time a level is cleared. */
-  firstClear: 12,
+  firstClear: 8,
   /** Per new star earned (never paid twice for the same star). */
-  perStar: 8,
+  perStar: 5,
   /** Clearing without a single death. */
-  flawless: 15,
+  flawless: 9,
   /** Daily challenge completion. */
-  daily: 40,
+  daily: 26,
   /** Bonus per consecutive day, capped. */
-  streakStep: 5,
-  streakCap: 50,
+  streakStep: 4,
+  streakCap: 36,
   /** Each of the day's objectives, the first time it is ticked off. */
-  dailyObjective: 30,
+  dailyObjective: 16,
 };
 
 /**

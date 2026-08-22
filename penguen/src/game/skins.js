@@ -636,7 +636,7 @@ export const SKINS = [
       ctx.restore();
       santaHat(ctx, g);
     },
-    unlock: { kind: 'coins', cost: 520, freeInDecember: true },
+    unlock: { kind: 'coins', cost: 900, freeInDecember: true },
   },
 
   /* ---------------------------------------------------- the wardrobe */
@@ -654,7 +654,7 @@ export const SKINS = [
       bowTie(ctx, g);
       topHat(ctx, g);
     },
-    unlock: { kind: 'coins', cost: 750 },
+    unlock: { kind: 'coins', cost: 1300 },
   },
   {
     id: 'explorer',
@@ -733,7 +733,7 @@ export const SKINS = [
       ctx.fillRect(g.cx - g.w * 0.3, g.headY + g.h * 0.15, g.w * 0.6, g.h * 0.07);
       ctx.restore();
     },
-    unlock: { kind: 'coins', cost: 980 },
+    unlock: { kind: 'coins', cost: 1700 },
   },
   {
     id: 'rockstar',
@@ -927,7 +927,7 @@ export const SKINS = [
       crystals(ctx, g);
     },
     aura: 'rgba(124,232,255,0.34)',
-    unlock: { kind: 'coins', cost: 6500 },
+    unlock: { kind: 'coins', cost: 9500 },
   },
   {
     id: 'jet',
@@ -950,7 +950,7 @@ export const SKINS = [
       visor(ctx, g, '#101a2e', 'rgba(255,160,60,0.9)');
     },
     aura: 'rgba(255,140,60,0.24)',
-    unlock: { kind: 'coins', cost: 7200 },
+    unlock: { kind: 'coins', cost: 10500 },
   },
   {
     id: 'albatross',
@@ -990,7 +990,7 @@ export const SKINS = [
       ctx.restore();
     },
     aura: 'rgba(220,240,255,0.22)',
-    unlock: { kind: 'coins', cost: 8000 },
+    unlock: { kind: 'coins', cost: 11500 },
   },
   {
     id: 'emperor',
@@ -1019,7 +1019,7 @@ export const SKINS = [
       crown(ctx, g);
     },
     aura: 'rgba(255,208,90,0.26)',
-    unlock: { kind: 'coins', cost: 9000 },
+    unlock: { kind: 'coins', cost: 13000 },
   },
 ];
 
@@ -1095,7 +1095,7 @@ export const TRAILS = [
     blurb: 'Buzu yakarak geç.',
     en: { name: 'Sparks', blurb: 'Burn the ice as you pass.' },
     color: '#ffd23f',
-    unlock: { kind: 'coins', cost: 560 },
+    unlock: { kind: 'coins', cost: 950 },
     paint: (ctx, hist, g, time) => {
       ctx.globalCompositeOperation = 'lighter';
       hist.forEach((p, i) => {
@@ -1138,7 +1138,7 @@ export const TRAILS = [
     blurb: 'Kimse sormadı ama işte.',
     en: { name: 'Hearts', blurb: 'Nobody asked, but here they are.' },
     color: '#ff5f8d',
-    unlock: { kind: 'coins', cost: 640 },
+    unlock: { kind: 'coins', cost: 1100 },
     paint: (ctx, hist, g, time) => {
       ctx.fillStyle = '#ff5f8d';
       hist.forEach((p, i) => {

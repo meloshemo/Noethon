@@ -269,6 +269,68 @@ export class Course {
     return this;
   }
 
+  /**
+   * A low, inviting ledge that is not there when you land on it.
+   *
+   * The `snap` floe used to be written straight into `this.floes` by the one
+   * plan that wanted one, and that plan put it forty-eight pixels below the
+   * route and thirty-nine pixels *under* the floe the player actually lands
+   * on. The result was a piece of ice nobody could see shattering under the
+   * player's feet every time they landed correctly — the trigger does not need
+   * you to touch it, only to be falling toward it, and the real floe above was
+   * close enough to count.
+   *
+   * So the bait gets a verb, and the verb owes the route two things: it sits
+   * in the gap rather than under the landing, and it clears everything already
+   * placed by a real margin. It is bait, which means it has to be *seen* and
+   * chosen. Ice that vanishes out of sight is not a trap, it is a rumour.
+   */
+  bait({ w = 92, dy = 54, at = 0.3, ledge = 150 } = {}) {
+    /**
+     * The line steps up, and the bait hangs in the gap below it.
+     *
+     * Both halves are needed and neither is optional.
+     *
+     * The bait has to be *below* the route or it is not bait — the validator
+     * refuses a snap floe level with its neighbours, and rightly: a trap you
+     * cannot tell apart from the way forward is a dice roll rather than a
+     * decision. But the sea is ninety pixels under the shelf and these levels
+     * run along the shelf, so there is usually nowhere lower to put one. So
+     * the route rises by the same amount instead, which costs the player about
+     * a third of a jump and makes the bait genuinely low.
+     *
+     * And it has to be *in the gap*, clear of everything already placed. This
+     * verb exists because the one plan that wanted bait wrote it straight into
+     * the floe list forty-eight pixels below the route and thirty-nine pixels
+     * under the floe the player actually lands on — and a snap floe does not
+     * need to be touched, only fallen toward. Every correct landing shattered
+     * a piece of ice nobody could see. Both neighbours are checked now, in
+     * both directions, because the same fault facing backwards is the same
+     * fault.
+     */
+    const room = clampY(this.y + dy) - this.y;
+    if (room < dy) this.y = clampY(this.y - (dy - room));
+    // A ledge at the raised height, so the bait has a high neighbour on *both*
+    // sides. Lifting only the far side left the first one still level with the
+    // shelf behind it.
+    const step = this.put(this.gapOf(0.26), ledge, this.y, 'solid');
+
+    const gap = this.gapOf(at);
+    const x = Math.round(this.x + gap);
+    const y = clampY(step.y + dy);
+    const CLEAR = 26;
+    const width = Math.max(48, Math.min(w, this.gapOf(0.56) - gap - CLEAR));
+    const floe = { x, y, w: Math.round(width), type: 'snap' };
+    for (const other of this.floes) {
+      if (other.x + other.w <= floe.x || other.x >= floe.x + floe.w) continue;
+      // Anything overhead, or level with it, and the bait is not placed at all.
+      if (other.y <= floe.y + PENGUIN.h * this.scale * 1.6) return this;
+    }
+    this.floes.push(floe);
+    this._track(floe.y, 20);
+    return this;
+  }
+
   checkpoint(floe = this.floes[this.floes.length - 1]) {
     this.checkpoints.push({ x: Math.round(floe.x + floe.w / 2 - 12), y: floe.y });
   }
