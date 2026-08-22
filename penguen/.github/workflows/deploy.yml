@@ -46,6 +46,20 @@ jobs:
           node-version: '20'
       - name: Tek dosya sürümünü üret
         run: node tools/bundle.mjs dist/pengu.html
+      # This step needs one setting turned on by hand, once, per repository:
+      #
+      #   Settings → Pages → Build and deployment → Source: GitHub Actions
+      #
+      # Until somebody does, it fails with "Get Pages site failed ... Not
+      # Found" while every other job stays green — which is the worst shape a
+      # deploy can have, because from the commit list it looks like it worked.
+      # Thirty-two runs failed here before anyone read the log.
+      #
+      # `enablement: true` was tried and is not a way round it: the action then
+      # asks the API to create the site and gets "Resource not accessible by
+      # integration", because creating a Pages site needs admin rights the
+      # workflow's own token is not allowed to hold. That is a deliberate limit
+      # on GitHub's side, not a misconfiguration here.
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
