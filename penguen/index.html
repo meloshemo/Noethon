@@ -553,45 +553,59 @@
 
       <!-- Level complete -->
       <section class="screen screen--sheet" data-name="complete" hidden>
+        <!--
+          Three columns, because on a phone held sideways there are three
+          hundred and ninety pixels of height and this card wants seven
+          hundred: the payout, the doubling offer and "Sıradaki bölüm" all sat
+          below the fold. Sideways the three stand side by side; everywhere
+          else they stack and the card looks exactly as it always did.
+        -->
         <div class="sheet sheet--win">
-          <p class="sheet__kicker" id="winKicker">Bölüm tamam</p>
-          <h2 class="sheet__title" id="winTitle">İlk Adımlar</h2>
+          <div class="win__half">
+            <p class="sheet__kicker" id="winKicker">Bölüm tamam</p>
+            <h2 class="sheet__title" id="winTitle">İlk Adımlar</h2>
 
-          <div class="stars" id="winStars" role="img" data-i18n-aria="stat.stars" aria-label="Yıldızlar">
-            <span class="star" data-i="0"></span>
-            <span class="star" data-i="1"></span>
-            <span class="star" data-i="2"></span>
+            <div class="stars" id="winStars" role="img" data-i18n-aria="stat.stars" aria-label="Yıldızlar">
+              <span class="star" data-i="0"></span>
+              <span class="star" data-i="1"></span>
+              <span class="star" data-i="2"></span>
+            </div>
+
+            <dl class="results">
+              <div><dt data-i18n="stat.time">Süre</dt><dd id="winTime">·</dd></div>
+              <div><dt data-i18n="stat.fish">Balık</dt><dd id="winFish">·</dd></div>
+              <div><dt data-i18n="stat.tries">Deneme</dt><dd id="winDeaths">·</dd></div>
+              <div><dt data-i18n="stat.best">Rekor</dt><dd id="winBest">·</dd></div>
+            </dl>
           </div>
 
-          <dl class="results">
-            <div><dt data-i18n="stat.time">Süre</dt><dd id="winTime">·</dd></div>
-            <div><dt data-i18n="stat.fish">Balık</dt><dd id="winFish">·</dd></div>
-            <div><dt data-i18n="stat.tries">Deneme</dt><dd id="winDeaths">·</dd></div>
-            <div><dt data-i18n="stat.best">Rekor</dt><dd id="winBest">·</dd></div>
-          </dl>
-
-          <div class="payout" id="winPayout"></div>
-          <div class="rewards" id="winRewards" hidden></div>
-
-          <div class="share" id="winShare" hidden>
-            <p class="share__rank" id="winRank"></p>
-            <label class="share__name" id="shareName" hidden>
-              <span class="field__label" data-i18n="id.name">Adın</span>
-              <input class="field__input" id="shareNameInput" type="text" maxlength="14"
-                     data-i18n-ph="win.you" placeholder="Sen" autocomplete="off" spellcheck="false" />
-            </label>
-            <button class="btn btn--share" id="shareBtn" type="button">
-              <span data-i18n="win.share">Kodunu paylaş</span>
-              <small class="btn__sub" data-i18n="win.shareSub">arkadaşın hayaletinle yarışsın</small>
-            </button>
+          <div class="win__half">
+            <div class="payout" id="winPayout"></div>
           </div>
 
-          <p class="sheet__hint" id="winHint"></p>
+          <div class="win__half">
+            <div class="rewards" id="winRewards" hidden></div>
 
-          <div class="sheet__actions">
-            <button class="btn btn--primary" id="nextBtn" data-i18n="win.next">Sıradaki bölüm</button>
-            <button class="btn" id="againBtn" data-i18n="win.again">Tekrar oyna</button>
-            <button class="btn btn--ghost" id="winMenuBtn" data-i18n="pause.menu">Ana menü</button>
+            <div class="share" id="winShare" hidden>
+              <p class="share__rank" id="winRank"></p>
+              <label class="share__name" id="shareName" hidden>
+                <span class="field__label" data-i18n="id.name">Adın</span>
+                <input class="field__input" id="shareNameInput" type="text" maxlength="14"
+                       data-i18n-ph="win.you" placeholder="Sen" autocomplete="off" spellcheck="false" />
+              </label>
+              <button class="btn btn--share" id="shareBtn" type="button">
+                <span data-i18n="win.share">Kodunu paylaş</span>
+                <small class="btn__sub" data-i18n="win.shareSub">arkadaşın hayaletinle yarışsın</small>
+              </button>
+            </div>
+
+            <p class="sheet__hint" id="winHint"></p>
+
+            <div class="sheet__actions">
+              <button class="btn btn--primary" id="nextBtn" data-i18n="win.next">Sıradaki bölüm</button>
+              <button class="btn" id="againBtn" data-i18n="win.again">Tekrar oyna</button>
+              <button class="btn btn--ghost" id="winMenuBtn" data-i18n="pause.menu">Ana menü</button>
+            </div>
           </div>
         </div>
       </section>

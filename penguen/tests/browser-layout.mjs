@@ -36,6 +36,15 @@ const SCREENS = [
   ['settings', 'Ayarlar'],
   ['profile', 'Kimlik'],
   ['legal', 'Yasal'],
+  // The five that only appear mid-run, and so were the five nobody checked.
+  // The win card is the screen a player sees more than any other except the
+  // game itself, and it had grown a rewarded-video offer since this file was
+  // written without ever being measured at a phone.
+  ['intro', 'Karşılama'],
+  ['identity', 'Ad sorma'],
+  ['pause', 'Duraklatma'],
+  ['assist', 'Yardım teklifi'],
+  ['complete', 'Bölüm sonu'],
 ];
 
 const b = await launch();
@@ -75,6 +84,20 @@ for (const [label, width, height] of SIZES) {
         settings: () => (u._syncSettings(), u.showScreen('settings')),
         profile: () => (u.buildProfile(), u.showScreen('profile')),
         legal: () => u.showScreen('legal'),
+        intro: () => u.showScreen('intro'),
+        identity: () => u.showScreen('identity'),
+        // Driven through the real code paths rather than posed: a win card
+        // built from a made-up result would be a picture of a screen that
+        // cannot happen.
+        pause: () => {
+          window.__pengu.startLevel(3);
+          window.__pengu.togglePause();
+        },
+        assist: () => u.offerAssist(),
+        complete: () => {
+          window.__pengu.startLevel(3);
+          window.__pengu._onWin();
+        },
       })[n]();
     }, name);
 
@@ -138,12 +161,52 @@ for (const [label, width, height] of SIZES) {
         })
         .filter((m) => m && (m.h < 28 || m.w < 28));
 
+      /*
+       * The other direction, which nothing here was looking at.
+       *
+       * A screen that is too wide announces itself — a chip hangs off the
+       * edge and the checks above catch it. A screen that is too *tall* looks
+       * perfect and simply cuts the bottom off, and the bottom is where the
+       * button is. That is exactly how "Oyna" ended up below the fold on a
+       * sideways phone: the logo alone was taking two hundred and seventy of
+       * three hundred and ninety pixels.
+       *
+       * So: whatever this screen's main action is has to be on the screen,
+       * unless it is inside something the player can scroll to reach it.
+       */
+      const stage = document.querySelector('.stage').getBoundingClientRect();
+      const scrollableY = (el) => {
+        for (let n = el.parentElement; n && n !== document.body; n = n.parentElement) {
+          const st = getComputedStyle(n);
+          if ((st.overflowY === 'auto' || st.overflowY === 'scroll')
+            && n.scrollHeight > n.clientHeight + 1) return true;
+        }
+        return false;
+      };
+      const action = screen.querySelector('.btn--primary:not(:disabled), .btn--xl:not(:disabled)')
+        ?? screen.querySelector('.btn:not(:disabled)');
+      // On a list — the shop, the level grid — scrolling to the bottom is the
+      // design, so a button below the fold there is not a fault. On a card it
+      // is: a win card you have to scroll to leave is a win card that does not
+      // fit, and the whole point of the card is the button at the end of it.
+      const isCard = screen.classList.contains('screen--sheet')
+        || screen.classList.contains('screen--title')
+        || screen.classList.contains('screen--intro');
+      let sunk = '';
+      if (action && (isCard || !scrollableY(action))) {
+        const r = action.getBoundingClientRect();
+        if (r.bottom > stage.bottom + 1 || r.top < stage.top - 1) {
+          sunk = `${action.className}:${Math.round(r.top)}..${Math.round(r.bottom)} / ${Math.round(stage.bottom)}`;
+        }
+      }
+
       return {
         docSpill: Math.round(doc.scrollWidth - vw),
         spills: spills.slice(0, 3),
         ragged,
         small: small.length,
         smallest: small.slice(0, 2).map((m) => `${m.el}:${Math.round(m.w)}×${Math.round(m.h)}`),
+        sunk,
       };
     });
 
@@ -152,6 +215,7 @@ for (const [label, width, height] of SIZES) {
     if (name === 'shop' || name === 'skins') {
       ok(`${human}: kart düğmeleri hizalı`, report.ragged === 0, `${report.ragged} sıra kaçık`);
     }
+    ok(`${human}: ana düğme ekranın içinde`, report.sunk === '', report.sunk);
     ok(
       `${human}: dokunulacak kadar büyük`,
       report.small === 0,

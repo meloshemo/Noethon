@@ -1093,6 +1093,113 @@ kbd {
   border-color: rgba(92, 225, 166, 0.4);
 }
 
+/*
+ * The win card, in three columns.
+ *
+ * Measured, the card is nine hundred and fifty pixels tall: a title, a star
+ * row, four results, a payout box that is a total *and* a breakdown *and* a
+ * doubling offer *and* a way to the shop, a league box, a hint, and three
+ * stacked buttons. Nowhere had that much height. Not a phone held sideways
+ * (390), not a phone held upright (844), not a desktop, where the stage is a
+ * 16:9 card inside the window and only 693 pixels tall. So on every device the
+ * player finished a level and had to scroll to find "Sıradaki bölüm".
+ *
+ * The fix is width, where there is any: past 44rem of stage the three blocks
+ * stand side by side and the card is 331 tall. A phone held upright has no
+ * width to trade, so there the buttons go into a row and the numbers tighten,
+ * which is the hundred and fifty pixels it was over by.
+ */
+.win__half {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-4);
+  width: 100%;
+  min-width: 0;
+}
+
+@container stage (min-width: 44rem) {
+  .sheet--win {
+    width: min(100%, 62rem);
+    flex-direction: row;
+    align-items: stretch;
+    gap: var(--s-5);
+    padding: var(--s-4) var(--s-5);
+  }
+  .sheet--win .win__half {
+    flex: 1 1 0;
+    gap: var(--s-3);
+    justify-content: center;
+  }
+  /* The two that carry boxes need a little more of the width than the score. */
+  .sheet--win .win__half:not(:first-child) {
+    flex-grow: 1.15;
+  }
+}
+
+/*
+ * Everything below is about fitting, and applies whichever way the card is
+ * laid out — a narrow phone needs it to fit in one column, a sideways one
+ * needs the columns to be short.
+ */
+.sheet--win .sheet__actions {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.sheet--win .sheet__actions .btn {
+  width: auto;
+  flex: 1 1 8rem;
+  /* Side by side in a third of a card, the default padding wrapped "Sıradaki
+     bölüm" onto two lines. The words matter more than the air around them. */
+  padding-inline: 0.9em;
+}
+
+.sheet--win .results dd {
+  white-space: nowrap;
+}
+
+/*
+ * One column and no width to trade: tighten the spacing instead. Without this
+ * the card is nine hundred and eighteen pixels against a phone's eight hundred
+ * and forty-four, and the buttons are under the fold on the most common screen
+ * the game has.
+ */
+@container stage (max-width: 44rem) {
+  .sheet--win {
+    gap: var(--s-3);
+    padding: var(--s-4);
+  }
+  .sheet--win .win__half {
+    gap: var(--s-3);
+  }
+}
+
+@container stage ((max-height: 620px) or (max-width: 44rem)) {
+  .sheet--win .payout {
+    gap: var(--s-1);
+    padding: var(--s-2) var(--s-3);
+  }
+  .sheet--win .payout__total {
+    font-size: var(--fs-md);
+  }
+  .sheet--win .payout__double {
+    margin-top: var(--s-2);
+  }
+  /* Three lines of small print turned the button into a lozenge. */
+  .sheet--win .payout__double .btn__sub {
+    font-size: var(--fs-3xs);
+  }
+  .sheet--win .results {
+    gap: var(--s-2);
+    padding: var(--s-2) 0;
+  }
+  .sheet--win .results dt {
+    font-size: var(--fs-3xs);
+  }
+}
+
 .sheet__kicker {
   font-size: var(--fs-2xs);
   font-weight: 700;

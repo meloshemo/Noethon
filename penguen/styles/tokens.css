@@ -55,6 +55,8 @@
               'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 
   /* Fluid scale — 1.25 ratio, clamped so it never gets silly on a phone. */
+  /* One step below 2xs, for the dense landscape layouts only. */
+  --fs-3xs:  clamp(0.62rem, 0.6rem + 0.08vw, 0.68rem);
   --fs-2xs:  clamp(0.68rem, 0.66rem + 0.1vw, 0.74rem);
   --fs-xs:   clamp(0.76rem, 0.73rem + 0.14vw, 0.84rem);
   --fs-sm:   clamp(0.86rem, 0.82rem + 0.2vw, 0.95rem);

@@ -354,7 +354,7 @@ Tarayıcı tarafı dokuz paket, hepsi `playwright` ile gerçek Chromium'da:
 | Paket | Ne ölçüyor |
 |---|---|
 | `browser-identity` | İlk açılışın bir kere çıkması, adın temizlenmesi, kimliğin değişmemesi, kaydın dosyaya inmesi, gömülü sayfada metne düşmesi ve **sayfanın kendi dosyaları dışında tek bir istek yapmaması** |
-| `browser-layout` | Telefon dik, telefon yatık ve masaüstünde her ekranda yatay taşma ve kart hizası; ayrıca dokunmatik kumandanın ekranın beşte birini geçmemesi, her tuşun parmak kadar olması ve üst şeride binmemesi |
+| `browser-layout` | Telefon dik, telefon yatık ve masaüstünde **on dört ekranda** yatay taşma, kart hizası ve ana düğmenin katlanma çizgisinin üstünde kalması; ayrıca dokunmatik kumandanın ekranın beşte birini geçmemesi, her tuşun parmak kadar olması, üst şeride binmemesi ve hiçbir bölümün pengu'yu arayüzün altında başlatmaması |
 | `browser-climb` | Tutunma, asılı kalmanın azar azar, tırmanmanın iki katından fazla, tekmenin bir çırpıda tüketmesi, barın yalnızca yerde dolması, sahanlıkta tutunmanın olmaması |
 | `browser-dive` | Bırakınca yükselme, basınca inme, suda karadan hızlı olma, nefesin bitmesi ve delikte dolması |
 | `browser-brawl` | Nişan alıp atma, kar topunun ilk değdiği şeyde durması, oyuncuyu öldürmesi, ölünce arenanın sıfırlanması, kilitli çıkışın gerçekten kilitli olması |
@@ -1580,6 +1580,8 @@ geçirildi ve bulunanların çoğu okuyarak fark edilmeyecek türdendi.
 | Dalış chapter'ının on dört bölümü pengu'yu bölüm rozetinin altında başlatıyordu | Kamera artık arayüzün durduğu şeritleri biliyor |
 | Arenanın sayacı "2 kaldı" ekranın kenarında kesiliyordu | Görüntünün içine kaydırılıyor |
 | Aynı sayaç her dilde Türkçe yazıyordu | Sözlüğe alındı, `lint` tuvale yazılan metni artık yakalıyor |
+| Bölüm sonu kartı hiçbir ekrana sığmıyordu, "Sıradaki bölüm" katlanma çizgisinin altındaydı | Genişlik varsa üç sütun, yoksa sıkıştırma; testi de var |
+| Duraklatma, karşılama, ad sorma, yardım ve bölüm sonu ekranları hiç ölçülmemişti | Beşi de düzen testine girdi |
 
 ### Telefonu yan çevirince
 
@@ -1619,6 +1621,31 @@ Karar `viewFor` içinde, tek bir saf fonksiyonda (`src/game/config.js`), ve
 esnemiyor, tasarlanan 16:9 hiç değişmiyor, çevirince ölçek sapması %15'in
 altında, geniş ekran en az %20 fazlasını görüyor, ve ölçülemeyen bir sahne
 görüntüyü bozmuyor.
+
+### Bölüm sonu kartı hiçbir ekrana sığmıyormuş
+
+Bunu, yatay modu düzeltirken *ölçtüğüm için* buldum. Kart 950 piksel: başlık,
+yıldızlar, dört sonuç, bir ödeme kutusu (toplam **ve** döküm **ve** ikiye
+katlama teklifi **ve** markete giden yol), lig kutusu, ipucu ve alt alta üç
+düğme. Hiçbir cihazda o kadar yükseklik yok:
+
+| Ekran | Sahne yüksekliği | Kart |
+|---|---|---|
+| Telefon yatay | 390 | 950 |
+| Telefon dik | 844 | 950 |
+| Masaüstü (sahne 16:9 bir kart) | 693 | 950 |
+
+Yani **her cihazda**, her bölüm bittiğinde, "Sıradaki bölüm"e ulaşmak için
+kaydırmak gerekiyordu. Oyunun en sık görülen ekranı bu.
+
+Çözüm genişlik, nerede varsa: sahne 44rem'i geçtiğinde üç blok yan yana
+duruyor ve kart 351 piksele iniyor. Dik tutulan telefonun takas edecek
+genişliği yok, orada da düğmeler tek sıraya geçiyor ve sayılar sıkışıyor —
+797 piksel, sığıyor.
+
+`browser-layout` artık kartlarda ana düğmenin ekranın içinde olmasını şart
+koşuyor. Listelerde (market, bölüm listesi) kaydırma tasarımın kendisi, orada
+şart koşmuyor: kartta kaydırmak zorunda kalmak, kartın sığmaması demek.
 
 ### Market
 
