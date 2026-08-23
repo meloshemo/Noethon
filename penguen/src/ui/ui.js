@@ -185,6 +185,10 @@ export class UI {
     const playing = this.game?.state === 'playing' || this.game?.state === 'paused';
     this.el.hud.hidden = !playing || !inGame;
     this.el.touch.hidden = !this._isTouch || !inGame || !playing;
+    // The camera frames the penguin around these two strips, so it has to be
+    // told the moment they appear or disappear — not at the next resize, which
+    // on a phone that is never rotated is never.
+    this.game?.renderer?.measureChrome();
     // The rotate hint belongs to the title screen only.
     this._checkOrientation?.();
 

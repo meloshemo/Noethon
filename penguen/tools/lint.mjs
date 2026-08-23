@@ -253,6 +253,92 @@ console.log('Proje kuralları denetleniyor...\n');
   }
 }
 
+/* 10 — nothing drawn on the canvas is written in one language ----------- */
+{
+  /*
+   * The interface goes through `t()`, and `browser-lang` checks eight screens
+   * for a leftover word in the other language. Neither reaches the canvas: the
+   * arena's "2 kaldı" counter was drawn straight onto it as a Turkish string
+   * literal, so an English player read Turkish, and no test could see it
+   * because there was no element to look at.
+   *
+   * There are three `fillText` calls in the whole renderer, which makes this
+   * exactly the size of rule that is worth having.
+   */
+  const files = await walk(resolve(root, 'src'));
+  let hits = 0;
+  let calls = 0;
+  for (const file of files) {
+    if (!file.endsWith('.js')) continue;
+    const src = await readFile(file, 'utf8');
+    for (const m of src.matchAll(/fillText\(\s*([^,]+),/g)) {
+      calls++;
+      const arg = m[1].trim();
+      // Translated, or a value that came from somewhere else — both fine. A
+      // quote left here means the words were typed into the renderer.
+      if (arg.startsWith('t(') || !/['"`]/.test(arg)) continue;
+      bad(`${relative(root, file)}: tuvale doğrudan yazılmış metin — ${arg}`);
+      hits++;
+    }
+  }
+  if (!hits) ok(`tuvaldeki metinler sözlükten geliyor — ${calls} çağrı`);
+}
+
+/* 11 — and so is every other number in the readme's summary table -------- */
+{
+  /*
+   * Check 9 caught the one count it was written for and walked past four
+   * others sitting in the same document: the summary table still claimed
+   * fifteen node packs and eight browser ones when there were twenty-two and
+   * nine, 289 strings when there were 303, and a 732 KB single-file build that
+   * had grown to 746. A rule that only guards the number that has already been
+   * wrong once is not a rule, it is a scar.
+   */
+  const readme = await readFile(resolve(root, 'README.md'), 'utf8');
+  const runner = await readFile(resolve(root, 'tools/test.mjs'), 'utf8');
+  const packs = [...runner.matchAll(/\['tests\/([\w-]+)\.mjs'/g)].map((m) => m[1]);
+  const browser = packs.filter((p) => p.startsWith('browser')).length;
+  const { KEYS } = await import(new URL('../src/core/i18n.js', import.meta.url));
+
+  let size = null;
+  try {
+    size = Math.round((await stat(resolve(root, 'dist/pengu.html'))).size / 1024);
+  } catch { /* not built yet — check 5 already says so */ }
+
+  /** Every claim in the table, and what it is a claim about. */
+  const rows = [
+    ['test paketleri', /\| Test \| (\d+) node \+ paketleme \+ (\d+) tarayıcı paketi/,
+      [packs.length - browser, browser]],
+    ['sözlük boyu', /\| Dil \|[^|]*?(\d+) metin/, [KEYS.tr.length]],
+    ...(size === null ? [] : [
+      ['tek dosya boyu', /\| Çevrimdışı \|[^|]*?\((\d+) KB\)/, [size]],
+      ['girişteki tek dosya boyu', /Toplam yük tek dosyada (\d+) KB/, [size]],
+      ['bölüm anlatısındaki tek dosya boyu', /Tek dosya sürümü (\d+) KB ve çevrimdışı/, [size]],
+    ]),
+  ];
+
+  let clean = true;
+  for (const [what, pattern, want] of rows) {
+    const found = readme.match(pattern);
+    if (!found) {
+      bad(`readme özet tablosu ${what} satırını söylemiyor`);
+      clean = false;
+      continue;
+    }
+    const got = want.map((_, i) => +found[i + 1]);
+    // The bundle drifts a kilobyte at a time; a round number stays true for a
+    // while, so allow it to be close rather than exact.
+    const near = what.includes('tek dosya boyu')
+      ? Math.abs(got[0] - want[0]) <= 12
+      : got.every((v, i) => v === want[i]);
+    if (!near) {
+      bad(`readme özet tablosu ${what} için ${got.join('+')} diyor, gerçek ${want.join('+')}`);
+      clean = false;
+    }
+  }
+  if (clean) ok(`readme özet tablosu gerçekle uyuşuyor — ${rows.length} satır`);
+}
+
 if (fails) {
   console.log(`\n✗ ${fails} sorun.`);
   process.exit(1);

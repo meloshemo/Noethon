@@ -156,28 +156,48 @@
 
 /* ====================================================== Touch controls */
 
+/*
+ * The pads are sized from the stage, not from the root font size.
+ *
+ * They used to be a flat 4.2rem with one media query for a band of heights
+ * between 460 and 560 pixels — a band that no phone held sideways is in. A
+ * modern handset is 375 to 430 tall in landscape, below the floor of that
+ * rule, so it got the full desktop-sized pads: the bottom strip alone was a
+ * hundred and fifteen pixels of a three-hundred-and-ninety pixel screen,
+ * nearly a third of the game covered by its own buttons.
+ *
+ * `cqh` is the stage's height, so the pads now shrink continuously with the
+ * screen instead of stepping at a breakpoint that has to be guessed per
+ * handset. The lower clamp is 44px, the smallest target a thumb can be asked
+ * to hit; the upper is what they were, so a desktop and a phone held upright
+ * see no change at all.
+ */
 .touch {
+  --pad: clamp(2.75rem, 11.5cqh, 4.2rem);
+  --pad-jump: clamp(3.25rem, 14.5cqh, 5.2rem);
+  --pad-gap: clamp(0.4rem, 1.9cqh, 0.75rem);
+  --pad-edge: clamp(0.5rem, 2.2cqh, 1rem);
   position: absolute;
   inset: auto 0 0 0;
   z-index: 4;
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  padding: var(--s-4) var(--s-4) calc(var(--s-4) + var(--safe-b));
+  padding: 0 var(--pad-edge) calc(var(--pad-edge) + var(--safe-b));
   pointer-events: none;
 }
 
 .touch__side {
   display: flex;
-  gap: var(--s-3);
+  gap: var(--pad-gap);
   pointer-events: auto;
 }
 
 .pad {
   display: grid;
   place-items: center;
-  width: 4.2rem;
-  height: 4.2rem;
+  width: var(--pad);
+  height: var(--pad);
   border-radius: var(--r-full);
   background: rgba(14, 31, 61, 0.5);
   border: 1px solid var(--border-strong);
@@ -188,22 +208,23 @@
   transition: transform var(--t-fast) var(--e-out), background var(--t-fast);
 }
 
+/* Proportional to the pad, so the glyph never grows out of a shrinking pad. */
 .pad svg {
-  width: 1.7rem;
-  height: 1.7rem;
+  width: 40%;
+  height: 40%;
 }
 
 .pad--jump {
-  width: 5.2rem;
-  height: 5.2rem;
+  width: var(--pad-jump);
+  height: var(--pad-jump);
   background: linear-gradient(150deg, rgba(79, 215, 255, 0.3), rgba(92, 225, 166, 0.22));
   border-color: rgba(79, 215, 255, 0.5);
   color: #eafcff;
 }
 
 .pad--jump svg {
-  width: 2rem;
-  height: 2rem;
+  width: 38%;
+  height: 38%;
 }
 
 .pad.is-pressed {
@@ -211,9 +232,53 @@
   background: rgba(79, 215, 255, 0.32);
 }
 
-@media (min-height: 460px) and (max-height: 560px) {
-  .pad { width: 3.6rem; height: 3.6rem; }
-  .pad--jump { width: 4.4rem; height: 4.4rem; }
+/*
+ * On a sideways phone the pads sit over the level rather than beside it, so
+ * they step back until a thumb is on them. The glyph keeps its brightness —
+ * it is the part you have to be able to find without looking.
+ */
+@container stage (max-height: 560px) {
+  .pad {
+    background: rgba(14, 31, 61, 0.34);
+    border-color: rgba(148, 190, 226, 0.28);
+  }
+  .pad--jump {
+    background: linear-gradient(150deg, rgba(79, 215, 255, 0.24), rgba(92, 225, 166, 0.17));
+    border-color: rgba(79, 215, 255, 0.4);
+  }
+  .pad.is-pressed {
+    background: rgba(79, 215, 255, 0.34);
+  }
+}
+
+/*
+ * The heads-up display on a sideways phone.
+ *
+ * Same reasoning as the pads: three hundred and ninety pixels of height, and
+ * the top strip was taking ninety of them at desktop sizes. Nothing is
+ * removed — the level, the name, the fish, the deaths, the clock and the
+ * pause button are all still there — they are simply drawn at the size a
+ * phone deserves.
+ */
+@container stage (max-height: 560px) {
+  .hud {
+    padding: var(--s-2) var(--s-2) 0;
+    gap: var(--s-1);
+  }
+  .hud__bar {
+    gap: var(--s-2);
+  }
+  .chip {
+    padding: 0.24em 0.6em;
+    font-size: var(--fs-2xs);
+  }
+  .chip--time {
+    min-width: 5.4em;
+  }
+  .icon-btn {
+    width: 1.85rem;
+    height: 1.85rem;
+  }
 }
 
 /* ============================================================ Overlay */

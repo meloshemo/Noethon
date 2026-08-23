@@ -5,15 +5,34 @@
  * place. Units are pixels and seconds unless stated otherwise.
  */
 
+import { clamp } from '../core/util.js';
+
 /**
  * Logical render resolution.
  *
  * Mutable on purpose: the renderer rewrites w/h on every resize so the view
  * matches the device's aspect ratio exactly. That means no black bars — a wide
- * screen simply sees more of the level, a tall one sees more sky.
- * `h` stays the anchor, so the penguin is the same size on every device.
+ * screen simply sees more of the level, a tall one sees more sky. What stays
+ * constant is not a dimension but the scale it is drawn at, which is what
+ * decides how big the penguin looks. `viewFor` below is where that is decided.
  */
-export const VIEW = { w: 960, h: 540 };
+export const VIEW = {
+  w: 960,
+  h: 540,
+  /**
+   * The strips of the view the interface is sitting on, in logical pixels.
+   *
+   * The heads-up display and the touch pads are drawn over the canvas, not
+   * beside it, so the top and bottom of the view are not really the player's
+   * to use. The camera reads these so it can keep the penguin out from under
+   * them; the renderer measures them from the real elements, which is the only
+   * way to get a number that already includes the phone's own safe areas.
+   *
+   * Zero off a screen — a test running in node has no interface to measure.
+   */
+  padTop: 0,
+  padBottom: 0,
+};
 
 /**
  * Bounds the adaptive viewport so no device gets an unfair field of view.
@@ -22,7 +41,71 @@ export const VIEW = { w: 960, h: 540 };
  * level but a bigger picture, and in portrait the width is what limits the
  * scale — at 720 the game only filled about two thirds of the screen.
  */
-export const VIEW_LIMITS = { minW: 600, maxW: 1440, minH: 440, maxH: 900, baseH: 540 };
+export const VIEW_LIMITS = {
+  minW: 600,
+  maxW: 1900,
+  minH: 440,
+  /**
+   * A target, not a ceiling. A phone held upright hits `minW` first, and the
+   * sky it is then really showing is taller than this — see `viewFor`.
+   */
+  maxH: 900,
+  baseH: 540,
+  /** The shape the game is framed for. */
+  wide: 16 / 9,
+  /** How much of a wider-than-framed screen is spent on seeing further. */
+  wideGain: 1,
+  /** Past this much extra width the trade stops. */
+  wideCap: 1.35,
+};
+
+/**
+ * The logical view a stage of this size should show.
+ *
+ * The old rule fixed the height at 540 and let the width follow the aspect,
+ * which is right up to 16:9 and wrong past it. A phone held sideways is
+ * 2.16:1, so every one of those extra pixels went into width — width that a
+ * climbing level, already narrower than the screen, cannot use. The margins
+ * filled with empty sky while the ledge you were jumping to sat above the top
+ * edge of the screen. Sideways you saw two platforms; upright, holding the
+ * same phone, you saw six.
+ *
+ * So past 16:9 the extra width buys height as well, up to a third more of the
+ * world. That is roughly the point where the penguin is the same size on
+ * screen sideways as it is upright, which is the property a player actually
+ * notices when they rotate the phone.
+ *
+ * Returns logical pixels. Exported rather than inlined in the renderer so a
+ * test can check the framing without a browser.
+ */
+export function viewFor(cw, ch) {
+  const L = VIEW_LIMITS;
+  const aspect = cw / ch;
+  if (!Number.isFinite(aspect) || aspect <= 0) return { w: VIEW.w, h: VIEW.h };
+
+  const wide = clamp(aspect / L.wide, 1, L.wideCap);
+  const want = L.baseH * (1 + L.wideGain * (wide - 1));
+
+  // Height first, width from the aspect, then height again — because the width
+  // clamp can bind on an extreme screen, and when it does the height has to
+  // follow it.
+  let h = clamp(want, L.minH, L.maxH);
+  const w = clamp(h * aspect, L.minW, L.maxW);
+  h = clamp(w / aspect, L.minH, L.maxH);
+
+  // A clamp that bound leaves a box that is no longer the shape of the screen
+  // — a portrait phone asks for 249 units of width and is given 600. The
+  // canvas is not letterboxed, though: it is drawn edge to edge at one uniform
+  // scale, so those extra units are on the screen whether or not the box
+  // admits them. Grow the box back out to what is genuinely visible.
+  //
+  // This is not cosmetic. VIEW is what the camera clamps against, and a view
+  // that under-reported its own height by four hundred units let the camera
+  // scroll a phone held upright well past the bottom of the level, into water
+  // with nothing in it.
+  const scale = Math.min(cw / w, ch / h);
+  return { w: Math.round(cw / scale), h: Math.round(ch / scale) };
+}
 
 /**
  * Physics.

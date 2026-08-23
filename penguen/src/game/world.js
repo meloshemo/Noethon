@@ -327,8 +327,12 @@ export class World {
    * penguin at the bottom of the screen under six hundred pixels of empty sky.
    */
   get _camYRange() {
-    const top = this.contentTop;
-    const bottom = this.contentBottom;
+    // The interface stands on the top and bottom of the view, so the band the
+    // camera may show reaches that far past the level in both directions —
+    // otherwise, at the ends of a level, the camera runs out of world to
+    // scroll and parks the penguin underneath a chip or a pad.
+    const top = this.contentTop - VIEW.padTop;
+    const bottom = this.contentBottom + VIEW.padBottom;
     const slack = VIEW.h - (bottom - top);
     if (slack > 0) {
       // The view is taller than everything there is to see: centre it.

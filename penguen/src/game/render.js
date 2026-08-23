@@ -9,9 +9,10 @@
  */
 
 import {
-  VIEW, VIEW_LIMITS, AMBUSH, CHARGED, COIL, QUANTUM, SLACK, CLIMB, BRAWL, TRENCH, lobShot,
+  VIEW, viewFor, AMBUSH, CHARGED, COIL, QUANTUM, SLACK, CLIMB, BRAWL, TRENCH, lobShot,
 } from './config.js';
 import { getSkin, getTrail } from './skins.js';
+import { t } from '../core/i18n.js';
 import { clamp, lerp, makeRng } from '../core/util.js';
 
 /**
@@ -116,9 +117,9 @@ export class Renderer {
   /**
    * Fit the logical viewport to the real one.
    *
-   * The logical height is the anchor (so the penguin and the jump arc are the
-   * same physical size everywhere) and the width follows the aspect ratio, so
-   * the canvas fills the screen edge to edge instead of being letterboxed.
+   * `viewFor` decides how much of the world to show; everything here is the
+   * plumbing around it — the device pixel ratio, the uniform scale that fills
+   * the screen edge to edge instead of letterboxing, and the buffer size.
    */
   resize() {
     const rect = this.canvas.parentElement.getBoundingClientRect();
@@ -137,13 +138,12 @@ export class Renderer {
     }
     dpr = Math.max(1, dpr);
 
-    const L = VIEW_LIMITS;
+    const fit = viewFor(cw, ch);
+    VIEW.w = fit.w;
+    VIEW.h = fit.h;
 
-    VIEW.w = Math.round(clamp(L.baseH * aspect, L.minW, L.maxW));
-    VIEW.h = Math.round(clamp(VIEW.w / aspect, L.minH, L.maxH));
-
-    // Uniform scale; the clamps above only bind on extreme aspect ratios, and
-    // then the leftover is centred rather than stretched.
+    // Uniform scale; the clamps inside viewFor only bind on extreme aspect
+    // ratios, and then the leftover is centred rather than stretched.
     const scale = Math.min(cw / VIEW.w, ch / VIEW.h);
     this.viewScale = scale;
     this.offsetX = (cw - VIEW.w * scale) / 2;
@@ -155,11 +155,46 @@ export class Renderer {
     this.canvas.width = Math.round(cw * dpr);
     this.canvas.height = Math.round(ch * dpr);
 
+    this.measureChrome();
+
     // Snowflakes are laid out in logical space, so respread them on resize.
     for (const f of this.snow) {
       if (f.x > VIEW.w) f.x = Math.random() * VIEW.w;
       if (f.y > VIEW.h) f.y = Math.random() * VIEW.h;
     }
+  }
+
+  /**
+   * How much of the view the interface is standing on.
+   *
+   * The pads and the top strip are drawn over the canvas, so the camera has to
+   * know about them or it will frame the penguin somewhere the player cannot
+   * see him. It did: at the top of every level in the diving chapter the
+   * penguin spawned behind the level chip, because the camera had run out of
+   * level to scroll and stopped with him twenty-seven pixels down a screen
+   * whose first fifty pixels belong to the interface.
+   *
+   * Measured from the real elements rather than assumed, because their size
+   * comes from the stage and the phone's own safe areas, and no constant here
+   * could know either. Hidden elements measure zero, which is the right answer
+   * — a desktop with no pads is owed no room for them.
+   */
+  measureChrome() {
+    if (typeof document === 'undefined') return;
+    const stage = this.canvas.parentElement.getBoundingClientRect();
+    const height = (el) => (el ? el.getBoundingClientRect().height : 0);
+
+    const bar = document.querySelector('.hud__bar');
+    const barBox = bar ? bar.getBoundingClientRect() : null;
+    // Down to the bottom of the chips plus the progress line under them. Not
+    // the whole strip: a toast is part of it and comes and goes, and a camera
+    // that flinched every time one appeared would be worse than the problem.
+    const top = barBox && barBox.height > 0 ? barBox.bottom - stage.top + 10 : 0;
+    const bottom = height(document.getElementById('touch'));
+
+    const scale = this.viewScale || 1;
+    VIEW.padTop = Math.round(top / scale);
+    VIEW.padBottom = Math.round(bottom / scale);
   }
 
   /** @param {import('./world.js').World} world */
@@ -1509,15 +1544,23 @@ export class Renderer {
 
     if (locked) {
       const left = world.rivals.filter((r) => r.guard && !r.out).length;
+      // The raft sits ninety pixels from the far wall of the arena, so while
+      // you are still at the near end the counter hangs half off the screen —
+      // and it is the one number the level is asking you to watch. Slide it
+      // back inside the view. A no-op once the raft is comfortably on screen.
+      const half = 52;
+      const nudge = clamp(
+        x, world.camera.x + half, world.camera.x + VIEW.w - half,
+      ) - x;
       ctx.fillStyle = 'rgba(10,26,44,0.72)';
       ctx.beginPath();
-      ctx.roundRect(-34, -108, 68, 26, 13);
+      ctx.roundRect(nudge - 34, -108, 68, 26, 13);
       ctx.fill();
       ctx.fillStyle = '#ff9aa5';
       ctx.font = '600 15px system-ui, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(`${left} kaldı`, 0, -94);
+      ctx.fillText(t('ui.guardsLeft', { n: left }), nudge, -94);
       ctx.textAlign = 'left';
       ctx.textBaseline = 'alphabetic';
     }

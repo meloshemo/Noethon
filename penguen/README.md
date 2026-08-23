@@ -8,7 +8,7 @@ istiyor.
 
 **Bağımlılık yok, derleme adımı yok, backend yok, görsel/ses dosyası yok.**
 Penguen de, buz da, kuzey ışıkları da, bütün sesler de kodla üretiliyor.
-Toplam yük tek dosyada 732 KB ve çevrimdışı çalışıyor.
+Toplam yük tek dosyada 595 KB ve çevrimdışı çalışıyor.
 
 ▶ **[Oyunu aç](https://claude.ai/code/artifact/2f6dd29b-3ad8-4d60-b4f7-c8490114b96f)**
 
@@ -262,7 +262,7 @@ geçmez, hata verip durur.
 
 ## Testler
 
-Tek komut, 30 paket (21 node + paketleme + 9 tarayıcı), kendi sunucusunu
+Tek komut, 31 paket (22 node + paketleme + 9 tarayıcı), kendi sunucusunu
 kurup kapatıyor ve portu doluysa bir yanına kayıyor:
 
 ```bash
@@ -309,7 +309,7 @@ node tests/browser-bundle.mjs    # tek dosya sürümü file:// üzerinden gerçe
 
 Biçim denetleyicisi değil, bu kod zaten tutarlı yazılıyor ve noktalı virgül
 tartışan bir araç burada hiçbir şey satın almıyor. Denetlenen şey, **gerçekten
-başa gelmiş** ve her seferinde sessizce bozulmuş sekiz kural:
+başa gelmiş** ve her seferinde sessizce bozulmuş on bir kural:
 
 | Kural | Bozulunca ne oluyordu |
 |---|---|
@@ -322,6 +322,9 @@ başa gelmiş** ve her seferinde sessizce bozulmuş sekiz kural:
 | İki sözlükte birebir aynı anahtarlar | Bir dilde eksik metin, sessizce diğerine düşer |
 | Kodun istediği her anahtar sözlükte | Ekranda anahtar adı görünür |
 | Arayüz metninde uzun tire yok | Yazı yeniden makine gibi okunmaya başlar |
+| Readme'nin test sayısı koşucununkiyle aynı | Belge yirmi dört paket diyordu, gerçek otuzdu |
+| Readme özet tablosundaki her sayı gerçek | Aynı tabloda üç ayrı sayı kaymıştı: paket sayısı, sözlük boyu, dosya boyutu |
+| Tuvale doğrudan metin yazılmıyor | Arenadaki sayaç Türkçe sabitti, İngilizce oynayan Türkçe okuyordu |
 
 ### Sürekli entegrasyon
 
@@ -346,12 +349,12 @@ kontrol eder, biri tutmazsa derleme düşer.
 çeşit bozuk yapıştırma sessizce reddediliyor mu, isim değişikliği koşuyu koruyor
 mu diye bakar.
 
-Tarayıcı tarafı sekiz paket, hepsi `playwright` ile gerçek Chromium'da:
+Tarayıcı tarafı dokuz paket, hepsi `playwright` ile gerçek Chromium'da:
 
 | Paket | Ne ölçüyor |
 |---|---|
 | `browser-identity` | İlk açılışın bir kere çıkması, adın temizlenmesi, kimliğin değişmemesi, kaydın dosyaya inmesi, gömülü sayfada metne düşmesi ve **sayfanın kendi dosyaları dışında tek bir istek yapmaması** |
-| `browser-layout` | Telefon dik, telefon yatık ve masaüstünde her ekranda yatay taşma ve kart hizası |
+| `browser-layout` | Telefon dik, telefon yatık ve masaüstünde her ekranda yatay taşma ve kart hizası; ayrıca dokunmatik kumandanın ekranın beşte birini geçmemesi, her tuşun parmak kadar olması ve üst şeride binmemesi |
 | `browser-climb` | Tutunma, asılı kalmanın azar azar, tırmanmanın iki katından fazla, tekmenin bir çırpıda tüketmesi, barın yalnızca yerde dolması, sahanlıkta tutunmanın olmaması |
 | `browser-dive` | Bırakınca yükselme, basınca inme, suda karadan hızlı olma, nefesin bitmesi ve delikte dolması |
 | `browser-brawl` | Nişan alıp atma, kar topunun ilk değdiği şeyde durması, oyuncuyu öldürmesi, ölünce arenanın sıfırlanması, kilitli çıkışın gerçekten kilitli olması |
@@ -433,7 +436,8 @@ tests/
   brawl-run.mjs            IV. chapter çözücüsü
   economy.mjs              ekonomi dengesi simülasyonu
   ghost.mjs                paylaşım kodu çözücüsü
-  browser-*.mjs            kimlik, düzen, tırmanma, yüzme, kar topu, koşu, diller, paket
+  viewport.mjs             hangi ekranın ne kadarını gördüğü
+  browser-*.mjs            kimlik, düzen, tırmanma, yüzme, kar topu, yüklü balık, koşu, diller, paket
 tools/
   serve.mjs                bağımlılıksız statik sunucu
   bundle.mjs               tek dosyaya düzleştirme
@@ -490,7 +494,7 @@ boşluk o sayıya göre ölçülüyor.
 - **Sabit adımlı fizik (1/120 s).** 60 Hz, 120 Hz ve 144 Hz ekranlarda oyun aynı
   hissettiriyor; arka planda kalan sekme geri geldiğinde penguen ışınlanmıyor.
 - **Görsel/ses varlığı yok.** Penguen, buzlar, kuzey ışıkları, su ve bütün sesler
-  kodla üretiliyor. Tek dosya sürümü 732 KB ve çevrimdışı çalışıyor.
+  kodla üretiliyor. Tek dosya sürümü 595 KB ve çevrimdışı çalışıyor.
 - **Metin koddan ayrı.** Arayüz metinleri tek sözlükte, içeriğe ait metinler
   girdinin kendi `en` bloğunda. Bir dil eklemek bir tablo eklemek.
 
@@ -1572,6 +1576,49 @@ geçirildi ve bulunanların çoğu okuyarak fark edilmeyecek türdendi.
 | Aynı adı yazan üç ayrı alan vardı | Tek kaynak: Kimlik ekranı; sıralama oraya yönlendiriyor |
 | Sıralamanın boş hâli bir cümle ve bomboş bir sayfaydı | Simge, tek satır ve çıkış yolu olan bir düğme |
 | Bir koşu dışında kazanılan penguen "Kilitli" görünüyordu | Koleksiyon açılırken hak edilenler teslim ediliyor |
+| Yatay telefonda alttaki kumanda ekranın %29'unu kaplıyordu | Boyut artık sahnenin yüksekliğinden geliyor, %17 |
+| Dalış chapter'ının on dört bölümü pengu'yu bölüm rozetinin altında başlatıyordu | Kamera artık arayüzün durduğu şeritleri biliyor |
+| Arenanın sayacı "2 kaldı" ekranın kenarında kesiliyordu | Görüntünün içine kaydırılıyor |
+| Aynı sayaç her dilde Türkçe yazıyordu | Sözlüğe alındı, `lint` tuvale yazılan metni artık yakalıyor |
+
+### Telefonu yan çevirince
+
+Bunu bir ekran görüntüsü buldu, çünkü elimdeki hiçbir sayı göstermiyordu.
+
+Görüntü şöyle kuruluyordu: yükseklik 540 birime sabit, genişlik ekranın oranına
+göre. 16:9'a kadar doğru, ondan sonrası sessizce yanlış. Yan çevrilmiş bir
+telefon 2,16:1 — yani fazladan gelen her piksel **genişliğe** gidiyordu, ve bir
+tırmanış bölümü zaten ekrandan dar. O genişlik iki yana boş gökyüzü olarak
+dağılırken, zıplayacağın buz ekranın üst kenarının yukarısında kalıyordu.
+
+Sayılar bunu gizliyordu, hatta tersini söylüyordu: yatay tutulmuş telefon
+masaüstünden **daha geniş** bir görüntü bildiriyordu (1169'a karşı 960). Daha
+çok gören bir ekran gibi okunuyor. Aynı telefonda aynı bölüm: dik tutunca altı
+buz, yan tutunca iki.
+
+Artık 16:9'un ötesindeki genişlik yüksekliği de satın alıyor — dünyanın üçte
+bir kadar fazlası, ki bu kabaca **penguenin telefonu çevirdiğinde aynı boyutta
+kaldığı** nokta. Oyuncunun gerçekten hissettiği özellik bir en ya da boy değil,
+tam olarak bu.
+
+| Ekran | Önce | Sonra |
+|---|---|---|
+| iPhone 14 yatay 844×390 | 1169×540 | **1423×657** |
+| Pixel 7 yatay 892×412 | 1169×540 | **1424×658** |
+| Masaüstü 16:9 | 960×540 | 960×540 *(değişmedi)* |
+| Telefon dik 390×844 | 600×900 | **600×1298** |
+
+Sondaki satır ikinci bir hata: dik tutulan telefonda çizilen 1298 birimdi ama
+görüntü kendini 900 diye bildiriyordu, çünkü genişlik tabanına çarpınca kutu
+ekranın şeklinde olmaktan çıkıyordu. Kamera da o yanlış sayıya yaslanıyordu, ve
+her dik bölümde altta dört yüz birim boş suya kadar kayıyordu. Tuval zaten
+kenardan kenara çiziliyor; artık görüntü de gerçekten çizdiği kadarını söylüyor.
+
+Karar `viewFor` içinde, tek bir saf fonksiyonda (`src/game/config.js`), ve
+`tests/viewport.mjs` on ekran şeklinde tarayıcı açmadan kontrol ediyor: oran
+esnemiyor, tasarlanan 16:9 hiç değişmiyor, çevirince ölçek sapması %15'in
+altında, geniş ekran en az %20 fazlasını görüyor, ve ölçülemeyen bir sahne
+görüntüyü bozmuyor.
 
 ### Market
 
@@ -1758,6 +1805,26 @@ Dokunmatik ekranda alttaki üç tuş, ayrıca gamepad desteği var. Ekipmanları
 ikisi de aynı zıplama tuşuna bindi, çünkü dokunmatikte dördüncü bir düğme
 olmamalı ve "bas" ile "basılı tut" zaten iki farklı niyet.
 
+### Tuşlar ekranı kaplamıyor
+
+Tuşlar tek bir kurala bağlıydı: 460 ile 560 piksel arası yükseklikte küçül.
+Yan tutulan hiçbir telefon o aralıkta değil — modern bir cihaz yatayken 375 ile
+430 arası, yani kuralın **tabanının altında**. Sonuç: her yatay telefon
+masaüstü boyundaki tuşları alıyordu. Alttaki şerit 390 piksellik bir ekranda
+115 pikseldi; oyunun neredeyse üçte biri, oyunun kendi düğmeleriyle kapalıydı.
+
+Artık boyut `cqh` ile sahnenin yüksekliğinden geliyor, yani her telefonda
+kademesiz olarak ölçekleniyor — tahmin edilmesi gereken bir kırılma noktası
+yok. Alt sınır 44 piksel (bir parmağın güvenle basabileceği en küçük hedef),
+üst sınır eskisi: masaüstü ve dik tutulan telefon hiç değişmiyor. Yan tutulan
+telefonda şerit 115 pikselden **65'e** iniyor, ekranın %29'undan %17'sine. Üst
+şerit de aynı sebeple daralıyor, ve yatay telefonda tuşlar bir parmak üstlerine
+gelene kadar biraz geri çekiliyor.
+
+Bunun testi yoktu, o yüzden olabildi. Artık `browser-layout` üç boyutta da
+kumandanın ekranın beşte birini geçmediğine, her tuşun 44 pikselden büyük
+olduğuna, sahnenin dışına taşmadığına ve üst şeride binmediğine bakıyor.
+
 **Gamepad**: sol çubuk ve D-pad yürütüyor, A/B/X/Y zıplatıyor, Start
 duraklatıyor (`src/core/input.js`, `pollGamepad`). Tarayıcı `getGamepads()`
 çağrısı hata atarsa kare düşmüyor, o kare klavyeye düşülüyor.
@@ -1825,11 +1892,11 @@ anlatmak değil, olan bir şeyi olduğundan iyi anlatmaktır.
 | Kimlik | Ad, `PNG-XXXXX` kimliği, 7 unvan, hepsi cihazda |
 | Hayalet | Kendi rekorun yanında koşuyor, paylaşım koduyla arkadaşınki de |
 | Müzik | Tek tema, 5 sahne, 5 katman, ses saatinde planlanıyor, ses dosyası yok |
-| Dil | Türkçe ve İngilizce, 289 metin, tarayıcıdan seçiliyor |
+| Dil | Türkçe ve İngilizce, 304 metin, tarayıcıdan seçiliyor |
 | Kayıt | Tek sürümlü JSON, ileri göç, dosyaya aktarma, tek tuşla silme |
-| Çevrimdışı | Servis çalışanı + tek dosya sürümü (732 KB) |
+| Çevrimdışı | Servis çalışanı + tek dosya sürümü (595 KB) |
 | Girdi | Klavye, dokunmatik, gamepad |
-| Test | 15 node + paketleme + 8 tarayıcı paketi, hepsi tek komutta |
+| Test | 22 node + paketleme + 9 tarayıcı paketi, hepsi tek komutta |
 | Zorluk | Ölçülen eğri: `node tools/difficulty.mjs` |
 
 ### Yok, ve neden
