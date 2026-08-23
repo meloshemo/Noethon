@@ -227,6 +227,32 @@ console.log('Proje kuralları denetleniyor...\n');
   else ok('arayüz metninde uzun tire yok');
 }
 
+/* 9 — the readme's test count is the runner's test count ---------------- */
+{
+  /**
+   * A number typed into a document drifts, and this one had: the readme
+   * promised twenty-four packs while the runner had thirty. The project's own
+   * rule is that the readme describes only what actually exists, so the rule
+   * gets a check rather than a good intention.
+   */
+  const runner = await readFile(resolve(root, 'tools/test.mjs'), 'utf8');
+  const packs = [...runner.matchAll(/\['tests\/([\w-]+)\.mjs'/g)].map((m) => m[1]);
+  const browser = packs.filter((p) => p.startsWith('browser')).length;
+  const node = packs.length - browser;
+  const readme = await readFile(resolve(root, 'README.md'), 'utf8');
+  const claim = readme.match(/(\d+) paket \((\d+) node \+ paketleme \+ (\d+) tarayıcı\)/);
+  if (!claim) {
+    bad('readme test sayısını hiç söylemiyor');
+  } else if (+claim[1] !== packs.length || +claim[2] !== node || +claim[3] !== browser) {
+    bad(
+      `readme ${claim[1]} paket (${claim[2]}+${claim[3]}) diyor, gerçek ` +
+        `${packs.length} (${node}+${browser})`,
+    );
+  } else {
+    ok(`readme test sayısı doğru — ${packs.length} paket`);
+  }
+}
+
 if (fails) {
   console.log(`\n✗ ${fails} sorun.`);
   process.exit(1);

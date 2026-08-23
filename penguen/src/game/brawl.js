@@ -11,7 +11,7 @@
  */
 
 import { Arena } from './arena.js';
-import { scaleForLevel } from './config.js';
+import { scaleForLevel, menaceFor} from './config.js';
 
 /** The snowball fight starts here, straight out of the sea. */
 export const BRAWL_FROM = 62;
@@ -329,7 +329,7 @@ function composeArena(plan, id) {
     throw new Error(`${id}. ${plan.name}: ${err.message}`);
   }
   try {
-    return a.build({
+    const def = a.build({
       id,
       name: plan.name,
       subtitle: plan.subtitle,
@@ -337,6 +337,8 @@ function composeArena(plan, id) {
       target: plan.target,
       ship: plan.ship,
     });
+    def.menace = menaceFor((id - BRAWL_FROM) / (BRAWL_PLANS.length - 1));
+    return def;
   } catch (err) {
     throw new Error(`${id}. ${plan.name}: ${err.message}`);
   }

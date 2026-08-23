@@ -1192,6 +1192,28 @@ export const STAR_RULES = {
  * levels pay for playing, stars pay for playing *well*, and missions pay for
  * coming back. A shop with only one income source stops mattering fast.
  */
+/**
+ * How fast a level's hazards run, from where it sits in its chapter.
+ *
+ * It lives here rather than in one chapter's file because it belongs to all
+ * four. It was written for the shelf, where the geometric dial had run out:
+ * `tight` widens gaps until the widest is exactly what a running jump clears,
+ * and pushed further the composer produces a gap the penguin physically cannot
+ * cross, which is not a hard level but a broken one. The mountain is in the
+ * same position — three percent more `effort` and two climb steps stop being
+ * solvable — and it kept the flat clock for a while afterwards purely because
+ * the ramp had been written in the shelf's own file.
+ *
+ * Speeding up what *moves* costs no distance at all, so every geometric proof
+ * in `tests/` stays exactly as true as it was. Flat through the two thirds
+ * that teach, then climbing by a quarter to the last level of the chapter.
+ */
+export function menaceFor(at) {
+  const from = 0.62;
+  if (at <= from) return 1;
+  return +(1 + 0.25 * Math.min(1, (at - from) / (1 - from))).toFixed(3);
+}
+
 export const REWARDS = {
   /**
    * What a fish is worth, and why it is worth less than it was.

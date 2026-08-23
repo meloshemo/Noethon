@@ -39,6 +39,8 @@ function defaults() {
       boosts: 0,
       /** Bird dives survived, seconds glided, motor bursts, fish spent. */
       skuaDodges: 0,
+      /** Grabs the chick twisted out of. */
+      skuaEscapes: 0,
       glideSeconds: 0,
       rocketFires: 0,
       spent: 0,
@@ -131,11 +133,22 @@ function migrate(parsed) {
     out.daily.bestStreak = Math.max(out.daily.bestStreak ?? 0, out.daily.streak ?? 0);
   }
 
-  // v1 had no economy. Rather than starting a returning player at zero, pay
-  // them retroactively for the fish and stars they already earned.
+  /**
+   * v1 had no economy. Rather than starting a returning player at zero, pay
+   * them retroactively for the fish and stars they already earned.
+   *
+   * At the rates that were live when v2 shipped, not today's. Those two were
+   * the same number for a long time and then the payouts were halved, at which
+   * point a hardcoded three quietly stopped being `REWARDS.perFish` and became
+   * a historical constant wearing its clothes. Pinning it says which it is: a
+   * one-off back-payment for a version that no longer exists, and it must not
+   * move when the live economy is retuned.
+   */
   if ((parsed.version ?? 1) < 2) {
+    const V2_PER_FISH = 3;
+    const V2_PER_STAR = 8;
     const stars = Object.values(out.levels).reduce((n, l) => n + (l.stars ?? 0), 0);
-    out.coins = (out.stats.totalFish ?? 0) * 3 + stars * 8;
+    out.coins = (out.stats.totalFish ?? 0) * V2_PER_FISH + stars * V2_PER_STAR;
   }
   return out;
 }

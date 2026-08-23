@@ -33,7 +33,13 @@ const POOL = [
   { id: 'burst', text: 'Bir gayzerin fırlatışından sıyrıl', goal: 1, reward: 25, event: 'burstDodge', tier: 'mid', en: { text: 'Get clear of one geyser' } },
   { id: 'burst3', text: 'Üç gayzerden sağ çık', goal: 3, reward: 60, event: 'burstDodge', tier: 'hard', en: { text: 'Survive three geysers' } },
   { id: 'orca', text: 'Orkanın burnunun dibinden geç', goal: 1, reward: 25, event: 'orcaPass', tier: 'mid', en: { text: 'Slip past an orca' } },
-  { id: 'skua', text: 'Bir kuşun pençesinden kıl payı kurtul', goal: 1, reward: 55, event: 'skuaDodge', tier: 'mid', en: { text: 'Escape a bird by a hair' } },
+  // Two different things, and they used to be one. "Escape a bird by a hair"
+  // is a sentence about being *caught* and fighting free, and it was wired to
+  // the counter for dives that missed you — describing a mechanic that exists
+  // and paying out for a different one. Now the wording and the counter agree,
+  // and the struggle finally has something asking for it.
+  { id: 'skua', text: 'Bir kuş dalışını boşa çıkar', goal: 1, reward: 55, event: 'skuaDodge', tier: 'mid', en: { text: 'Make a bird miss' } },
+  { id: 'skuaFree', text: 'Kuşun pençesinden boğuşarak kurtul', goal: 1, reward: 90, event: 'skuaEscape', tier: 'mid', en: { text: 'Wrestle free of a bird' } },
   { id: 'skua3', text: 'Üç kuş dalışını boşa çıkar', goal: 3, reward: 110, event: 'skuaDodge', tier: 'hard', en: { text: 'Waste three bird dives' } },
   { id: 'tunnel', text: 'Bir tüneli hiç ölmeden geç', goal: 1, reward: 60, event: 'tunnelClean', tier: 'hard', en: { text: 'Cross a tunnel without dying' } },
 

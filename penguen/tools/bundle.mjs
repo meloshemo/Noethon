@@ -63,6 +63,59 @@ const MODULES = [
 
 const read = (rel) => readFile(resolve(root, rel), 'utf8');
 
+/**
+ * Drop the comments, and only the comments.
+ *
+ * Thirty-eight percent of this project's source is prose. That is deliberate
+ * and it stays deliberate — the comments are the reason anybody can pick this
+ * codebase up — but they are written for a person reading the repository, not
+ * for a phone downloading a game. Shipping them cost nearly three hundred
+ * kilobytes and had walked the single-file build to within fifteen kilobytes
+ * of the size limit, which is a build that fails on the next feature.
+ *
+ * Whole lines only, and that is the safety argument rather than laziness. A
+ * line whose first non-space characters are `//`, `/*` or `*` is a comment in
+ * every case except one: inside a multi-line template literal. So backticks
+ * are counted as they go past, and nothing is touched while the count is odd.
+ * Trailing comments after code are left exactly where they are, because
+ * telling `//` in a string from `//` in code needs a real tokeniser and the
+ * few bytes are not worth a parser.
+ *
+ * The proof this is safe is `tests/browser-bundle.mjs`: it opens the built
+ * file in a real browser over `file://` and plays it. If a strip ever breaks
+ * something, that is what says so.
+ */
+function stripComments(source) {
+  const out = [];
+  let inBlock = false;
+  let inTemplate = false;
+  for (const line of source.split('\n')) {
+    const t = line.trim();
+    if (!inTemplate) {
+      if (inBlock) {
+        if (t.includes('*/')) inBlock = false;
+        continue;
+      }
+      if (t.startsWith('/*')) {
+        if (!t.includes('*/')) inBlock = true;
+        continue;
+      }
+      if (t.startsWith('//')) continue;
+      if (t.startsWith('*') && !t.startsWith('*/')) continue;
+    }
+    // Unescaped backticks flip template state; a line with two is back where
+    // it started, which is why this counts rather than toggles per line.
+    let ticks = 0;
+    for (let i = 0; i < line.length; i++) {
+      if (line[i] === '`' && line[i - 1] !== '\\') ticks++;
+    }
+    if (ticks % 2 === 1) inTemplate = !inTemplate;
+    out.push(line);
+  }
+  // Collapse the runs of blank lines the removal leaves behind.
+  return out.join('\n').replace(/\n{3,}/g, '\n\n');
+}
+
 /** Remove import statements and the `export` keyword, leaving plain code. */
 function flatten(source, rel) {
   let code = source
@@ -96,7 +149,7 @@ const css = (await Promise.all(STYLES.map(read))).join('\n\n');
 const seen = new Map();
 const parts = [];
 for (const rel of MODULES) {
-  const code = flatten(await read(rel), rel);
+  const code = flatten(stripComments(await read(rel)), rel);
   for (const name of topLevelNames(code)) {
     if (seen.has(name)) {
       throw new Error(`Name clash: "${name}" is declared in both ${seen.get(name)} and ${rel}`);

@@ -328,6 +328,32 @@ export class Course {
     }
     this.floes.push(floe);
     this._track(floe.y, 20);
+    /**
+     * And the piece lands its own far side.
+     *
+     * Bait was the only thing in this file that put a floe down and left the
+     * next piece to work around it. That held for the one plan that used it —
+     * whose following floe happened to land clear — and broke the moment the
+     * generator started calling it, because a generated piece can begin
+     * anywhere: twenty-eight endless levels came out with a snap floe tucked
+     * under solid ice, which is the exact fault this verb exists to prevent,
+     * reintroduced by the verb itself.
+     *
+     * Simply reserving the space was worse. It pushed the following floe out
+     * by the width of the bait, and the validator caught the consequence at
+     * once: the gap grew past a jump, so the only way across was to land on
+     * the ice that disappears. Bait that is *required* is not a trap, it is a
+     * wall with a story.
+     *
+     * So the piece finishes itself, the way `hush` and `pendulum` do. It knows
+     * where its own bait is, so it is the only thing that can put the far side
+     * within a jump of the near one and still clear of the trap between them.
+     */
+    const landing = Math.max(
+      floe.x + floe.w + CLEAR,
+      step.x + step.w + crossableGap(this.scale) * 0.42,
+    );
+    this.put(landing - this.x, ledge, this.y, 'solid');
     return this;
   }
 

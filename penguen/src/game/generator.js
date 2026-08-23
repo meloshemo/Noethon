@@ -13,7 +13,7 @@
  */
 
 import { makeRng, clamp, lerp } from '../core/util.js';
-import { scaleForLevel, CRAFTED_LEVELS } from './config.js';
+import { scaleForLevel, CRAFTED_LEVELS, menaceFor} from './config.js';
 import { Course } from './terrain.js';
 
 const NAMES = [
@@ -101,6 +101,9 @@ export function generateLevel(id, opts = {}) {
   const segments = Math.round(lerp(5, 9, d));
   let storms = 0;
   let tunnels = 0;
+  let hushes = 0;
+  let lifts = 0;
+  let baits = 0;
 
   for (let i = 0; i < segments; i++) {
     const kind = weighted(rng, [
@@ -113,6 +116,23 @@ export function generateLevel(id, opts = {}) {
       ['summit', lerp(0.15, 0.35, d)],
       ['geysers', lerp(0.05, 0.5, d)],
       ['orca', lerp(0.05, 0.45, d)],
+      /**
+       * The pieces the crafted shelf learned after this generator was written.
+       *
+       * Endless mode is where the player who finished all seventy-six actually
+       * lives, and it had none of them: no dead air, no bait, no wind gate, no
+       * rising column. That is the most loyal player in the game being handed
+       * the poorest version of it — and the economy was just slowed down, so
+       * they are going to be out here longer than before.
+       *
+       * Weighted low and rising with depth, and capped at one each per level:
+       * these are events, and a course made of nothing but events is a course
+       * with no rhythm to break.
+       */
+      ['hush', hushes < 1 ? lerp(0, 0.34, d) : 0],
+      ['windGap', storms < 2 ? lerp(0, 0.3, d) : 0],
+      ['updraft', lifts < 1 ? lerp(0, 0.28, d) : 0],
+      ['bait', baits < 2 ? lerp(0.05, 0.4, d) : 0],
     ]);
 
     switch (kind) {
@@ -174,6 +194,25 @@ export function generateLevel(id, opts = {}) {
       case 'orca':
         c.orcaGap({ gap: lerp(0.5, 0.58, d), period: 3.4 - d * 0.6 });
         break;
+      case 'hush':
+        // The hollow sizes itself and finds its own altitude, so the generator
+        // does not have to know how tall the arc is — which is the whole
+        // reason that logic lives in the verb rather than in the plans.
+        c.hush({});
+        hushes++;
+        break;
+      case 'windGap':
+        c.windGap({ w: lerp(220, 190, d) });
+        storms++;
+        break;
+      case 'updraft':
+        c.updraft({ w: lerp(200, 175, d) });
+        lifts++;
+        break;
+      case 'bait':
+        c.bait();
+        baits++;
+        break;
       default:
         break;
     }
@@ -187,10 +226,26 @@ export function generateLevel(id, opts = {}) {
   // Pickups last, once the shape of the course is known.
   c.scatterFish(3, 62);
   if (rng() < lerp(0.4, 0.85, d)) c.sprint(0.3 + rng() * 0.4);
-  const kinds = ['heavy', 'dizzy', 'blind'];
-  const baits = Math.round(lerp(0, 2.6, d));
-  for (let i = 0; i < baits; i++) {
+  // All four curses, not three. `slick` was added to the crafted levels and
+  // never reached here, so a player past seventy-six met one fewer bad fish
+  // than a player on level sixteen.
+  const kinds = ['heavy', 'slick', 'dizzy', 'blind'];
+  const rots = Math.round(lerp(0, 2.6, d));
+  for (let i = 0; i < rots; i++) {
     c.temptation(0.25 + (i + rng() * 0.5) * 0.26, kinds[Math.floor(rng() * kinds.length)]);
+  }
+
+  /**
+   * And one charged fish, off the line, from halfway up the difficulty band.
+   *
+   * The same rule as everywhere else: never on the running line, never
+   * required, and priced by which one it is. A generated level that could not
+   * offer the game's most interesting pickup was a generated level pretending
+   * to be an easier game than the one it came from.
+   */
+  if (d > 0.35 && rng() < lerp(0.2, 0.6, d)) {
+    const colours = ['coil', 'quantum', 'slack'];
+    c.charged(0.3 + rng() * 0.45, colours[Math.floor(rng() * colours.length)]);
   }
   // Checkpoints thin out as levels get harder: the point of a hard level is
   // that losing it costs something.
@@ -214,6 +269,17 @@ export function generateLevel(id, opts = {}) {
     fog: d > 0.55 && id % 4 === 0 ? 0.45 : 0,
   });
   def.signs = [];
+  /**
+   * Endless levels run on the same clock ramp as the crafted ones.
+   *
+   * Tied to the generator's own difficulty rather than to a level number,
+   * because there is no last level out here to ramp toward — `d` is already
+   * the curve, climbing with depth and flattening off. A generated level was
+   * running at the pace of level one while sitting past level seventy-six,
+   * which made the endless mode a step *down* from the level the player had
+   * just finished.
+   */
+  def.menace = menaceFor(d);
   return def;
 }
 

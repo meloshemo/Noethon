@@ -24,7 +24,7 @@
  */
 
 import { Tower } from './tower.js';
-import { scaleForLevel } from './config.js';
+import { scaleForLevel, menaceFor} from './config.js';
 
 /** @type {{name:string, subtitle:string, target:number, build:(t:Tower)=>void}[]} */
 /**
@@ -458,6 +458,7 @@ function compose(plan, id) {
     text: s.text,
   }));
   def.ship = plan.ship !== false;
+  def.menace = menaceFor((id - CLIMB_FROM) / (CLIMB_PLANS.length - 1));
   return def;
 }
 

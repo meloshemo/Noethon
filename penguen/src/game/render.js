@@ -9,7 +9,7 @@
  */
 
 import {
-  VIEW, VIEW_LIMITS, AMBUSH, CHARGED, COIL, QUANTUM, SLACK, CLIMB, BRAWL, lobShot,
+  VIEW, VIEW_LIMITS, AMBUSH, CHARGED, COIL, QUANTUM, SLACK, CLIMB, BRAWL, TRENCH, lobShot,
 } from './config.js';
 import { getSkin, getTrail } from './skins.js';
 import { clamp, lerp, makeRng } from '../core/util.js';
@@ -703,10 +703,13 @@ export class Renderer {
       const h = z.bottom - z.top;
 
       ctx.save();
+      // The one colour the cold is described in, taken from the config rather
+      // than typed here in three slightly different shades. It claimed to be
+      // read by the renderer for a while before it was.
       const g = ctx.createLinearGradient(0, z.top, 0, z.bottom);
-      g.addColorStop(0, 'rgba(4,18,31,0.12)');
-      g.addColorStop(0.45, 'rgba(3,14,26,0.42)');
-      g.addColorStop(1, 'rgba(2,9,18,0.74)');
+      g.addColorStop(0, withAlpha(TRENCH.tint, 0.12));
+      g.addColorStop(0.45, withAlpha(TRENCH.tint, 0.44));
+      g.addColorStop(1, withAlpha(TRENCH.tint, 0.76));
       ctx.fillStyle = g;
       ctx.fillRect(z.x, z.top, z.w, h);
 

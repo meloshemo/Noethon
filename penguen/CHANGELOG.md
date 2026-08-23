@@ -60,6 +60,69 @@ değildi.
 
 ---
 
+## Denetim: on bulgu, onu da kapandı
+
+Bir üst düzey tarama istendi ve "her şey okey" çıkmadı. On bulgu, ikisi gerçek
+hata, ikisi yalan söyleyen yorum, ikisi ürün boşluğu, biri işletme riski.
+
+### Gerçek hatalar
+
+- **Ödüllü video hatası butonu yutuyordu.** `await doubleUp(...)` bir `try/catch`
+  içinde değildi. Yerinde duran sayaç asla hata vermediği için görünmüyordu —
+  ama gerçek bir SDK'nın ilk yaptığı şey reject etmektir, ve o an buton donmuş
+  bir geri sayımla sonsuza kadar kilitli kalırdı. Artık hata butonu olduğu gibi
+  geri koyuyor: hiçbir şey ödenmiyor, hiçbir hak harcanmıyor.
+- **Nefes çubuğundaki soğuk halka takılı kalıyordu.** `drain` erken `return`'ün
+  altında hesaplanıyordu, yani çukurun içindeki bir delikten nefes alırken
+  ölçek "bu sana iki katına mal oluyor" demeye devam ediyordu. Hiçbir şeyin
+  mal olmadığı anda öyle diyen bir gösterge, göstergesizlikten kötüdür.
+
+### Yalan söyleyen yorumlar
+
+- `TRENCH.tint` "yalnızca çizici okur" diyordu ve **kimse okumuyordu**. Artık
+  soğuğun rengi gerçekten oradan geliyor.
+- `skuasEscaped` "bir görev bunu istiyor" diyordu ve **hiçbir görev istemiyordu**.
+  Dahası `skua` görevinin metni ("pençesinden kıl payı kurtul") tam olarak
+  boğuşmayı tarif edip **dalış ıskasını** sayıyordu. Metin ve sayaç artık aynı
+  şeyden bahsediyor, ve boğuşmanın kendi görevi var.
+
+### Ürün boşlukları
+
+- **Sonsuz mod bütün yeni işi kaçırıyordu.** Sessiz alan, yem, rüzgâr boşluğu,
+  yükselen hava, cilalı lanet, yüklü balıklar, hız çarpanı — hiçbiri yoktu. 76.
+  bölümü bitiren, yani en sadık oyuncu, elle yapılmış bölümlerden belirgin
+  şekilde fakir bir oyun oynuyordu. Hepsi eklendi.
+- **Dört yeni mekanikten üçü hiç konuşmuyordu.** En kötüsü çukurdu: nefesin daha
+  hızlı bitiyor ve sebebini söyleyen hiçbir şey yok, yani oyuncu öğrenmiyor,
+  sadece ölüyor. Dört mekanik de artık ilk karşılaşmada bir kez konuşuyor.
+- **Hız çarpanı yalnızca I. bölümdeydi.** "Son üçte bir hızlanır" kuralı oyunun
+  dörtte birine uygulanmıştı. Dördünde de var, ve dağdaki serak kanıtı artık
+  oyunun gerçekten çalıştığı saate bakıyor.
+
+### Ve sonsuz mod, yemin kendi hatasını gösterdi
+
+Yem fiili üretilen bölümlerde çağrılınca **yirmi sekiz bölümde** kaçan buzu
+sağlam buzun altına koydu — yani tam olarak o fiilin önlemek için yazıldığı hata,
+fiilin kendisi tarafından geri getirildi. Sebebi: yem, buz koyup imleci
+ilerletmeyen tek şeydi. Sadece yer ayırtmak daha da kötüydü — sonraki buzu bir
+zıplamanın ötesine itti ve doğrulayıcı sonucu anında yakaladı: karşıya geçmenin
+tek yolu kaybolan buza basmak oluyordu. **Zorunlu yem, tuzak değil, hikâyesi olan
+duvardır.** Parça artık `hush` ve `pendulum` gibi kendi karşı yakasını da koyuyor.
+
+### İşletme riski
+
+Tek dosya sürümü 885 KB'a çıkmıştı, sınır 900. Kaynağın %38'i yorum ve bu bilerek
+öyle — ama yorumlar depoyu okuyan insan için, oyunu indiren telefon için değil.
+Paketleyici artık yorumları kaldırıyor: **885 KB → 589 KB.** Yalnızca tam satırlar,
+şablon dizelerinin içine dokunmadan, ve güvenli olduğunun kanıtı paketlenmiş
+dosyayı gerçek tarayıcıda açıp oynayan test.
+
+Bir de: readme'nin "24 paket" iddiası gerçekte 30'du. Sayı düzeltildi **ve**
+denetlenebilir hale getirildi — belgeye yazılan bir sayı kayar, o yüzden artık
+lint çalıştırıcıyla karşılaştırıyor.
+
+---
+
 ## Üç bölüme üç yeni fiil, çünkü sorun tembellik değil kelime yokluğuydu
 
 Bölümlerin birbirine benzemesi bir kanaatti; ölçüldü ve sayı çıktı. Her bölümün

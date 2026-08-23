@@ -593,6 +593,10 @@ export class Game {
     result.skuasDodged = w.skuasDodged;
     result.skuaGrabs = w.skuaGrabs;
     st.skuaDodges = (st.skuaDodges ?? 0) + w.skuasDodged;
+    // Grabs fought out of. Counted since the struggle was written and read by
+    // nobody until now, which made the comment claiming a mission wanted them
+    // false on the day it was typed.
+    st.skuaEscapes = (st.skuaEscapes ?? 0) + w.skuasEscaped;
     st.glideSeconds = (st.glideSeconds ?? 0) + w.glideTime;
     st.rocketFires = (st.rocketFires ?? 0) + w.rocketFires;
     // A run that starts between midnight and five in the morning. The alien
@@ -666,6 +670,7 @@ export class Game {
       ...(w.burstDodges > 0 ? progressMission(this.save, 'burstDodge', w.burstDodges) : []),
       ...(w.orcaPasses > 0 ? progressMission(this.save, 'orcaPass', w.orcaPasses) : []),
       ...(w.skuasDodged > 0 ? progressMission(this.save, 'skuaDodge', w.skuasDodged) : []),
+      ...(w.skuasEscaped > 0 ? progressMission(this.save, 'skuaEscape', w.skuasEscaped) : []),
       ...(w.glideTime > 0 ? progressMission(this.save, 'glide', w.glideTime) : []),
       ...(w.rocketFires > 0 ? progressMission(this.save, 'rocket', w.rocketFires) : []),
       ...(w.boostsTaken > 0 ? progressMission(this.save, 'boost', w.boostsTaken) : []),

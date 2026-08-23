@@ -11,7 +11,7 @@
  */
 
 import { Deep } from './deep.js';
-import { scaleForLevel } from './config.js';
+import { scaleForLevel, menaceFor} from './config.js';
 
 /** The dives start here, straight off the summit of the mountain. */
 export const DIVE_FROM = 47;
@@ -418,7 +418,7 @@ function composeDive(plan, id) {
     // plan asked for the impossible rather than making somebody count.
     throw new Error(`${id}. ${plan.name}: ${err.message}`);
   }
-  return d.build({
+  const def = d.build({
     id,
     name: plan.name,
     subtitle: plan.subtitle,
@@ -426,6 +426,8 @@ function composeDive(plan, id) {
     target: plan.target,
     ship: plan.ship,
   });
+  def.menace = menaceFor((id - DIVE_FROM) / (DIVE_PLANS.length - 1));
+  return def;
 }
 
 /** Every plan, shipped or not — the solver's `--all` mode wants these. */

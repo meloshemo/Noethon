@@ -262,7 +262,7 @@ geçmez, hata verip durur.
 
 ## Testler
 
-Tek komut, 24 paket (15 node + paketleme + 8 tarayıcı), kendi sunucusunu
+Tek komut, 30 paket (21 node + paketleme + 9 tarayıcı), kendi sunucusunu
 kurup kapatıyor ve portu doluysa bir yanına kayıyor:
 
 ```bash
@@ -786,6 +786,30 @@ Bir de şu var: **çukur göründüğünden uzundur.** Bölümdeki her kural bir
 yerine soğuk sudan geçen bir bacak gerçekte olduğu kadar uzun sayılıyor. Bütün
 eski kurallar dokunulmadan çalışıyor, ve okunuşu da doğru: çukur sadece acıtmaz,
 **daha uzaktır**.
+
+## Tek dosya sürümü neden küçüldü
+
+Bu projenin kaynağının **%38'i yorum**, ve bu bilerek öyle: bu kod tabanını
+birinin eline alabilmesinin sebebi o yorumlar. Ama yorumlar **depoyu okuyan bir
+insan** için yazılıyor, oyunu indiren bir telefon için değil.
+
+Yollanmaları 295 KB tutuyordu ve tek dosya sürümünü 900 KB sınırının **15 KB
+yakınına** getirmişti — yani bir sonraki özellikte kırılacak bir build. Paketleyici
+artık yorumları kaldırıyor:
+
+| | Önce | Sonra |
+|---|---|---|
+| Tek dosya | 885 KB | **589 KB** |
+
+Yalnızca **tam satırlar** siliniyor, ve bu tembellik değil güvenlik argümanı: ilk
+karakterleri `//`, `/*` veya `*` olan bir satır, **çok satırlı bir şablon dizesinin
+içi hariç**, her durumda yorumdur. O yüzden ters tırnaklar sayılıyor ve sayı tekken
+hiçbir şeye dokunulmuyor. Koddan sonra gelen satır sonu yorumları olduğu gibi
+bırakılıyor, çünkü dizedeki `//` ile koddaki `//` ayırmak gerçek bir çözümleyici
+ister ve o birkaç bayt bir parser'a değmez.
+
+Bunun güvenli olduğunun kanıtı `tests/browser-bundle.mjs`: paketlenmiş dosyayı
+gerçek bir tarayıcıda `file://` üzerinden açıp oynuyor.
 
 ## Zorluk: geometri tavana vurdu, o yüzden zaman kısaldı
 

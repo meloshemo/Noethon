@@ -1461,9 +1461,32 @@ export class UI {
         offer.disabled = true;
         this.audio.ui();
         const label = offer.querySelector('span');
-        const bonus = await doubleUp(this.save, result.coins, (left) => {
-          label.textContent = t('ui.doubleWatching', { n: left });
-        });
+        const was = label.textContent;
+        /**
+         * A provider that throws must not eat the offer.
+         *
+         * The built-in placeholder cannot fail, which is exactly why this was
+         * missing and exactly why it matters: the first thing a real ad SDK
+         * does is reject — no fill, no network, consent withdrawn, tab
+         * backgrounded. Without this the promise rejects, the handler dies
+         * mid-flight, and the button is left disabled forever with a frozen
+         * countdown on it. The player loses the offer and is told nothing.
+         *
+         * A failure puts the button back exactly as it was: nothing charged,
+         * no watch spent, try again. Which is the only honest response to
+         * "the advert did not play".
+         */
+        let bonus = 0;
+        try {
+          bonus = await doubleUp(this.save, result.coins, (left) => {
+            label.textContent = t('ui.doubleWatching', { n: left });
+          });
+        } catch {
+          label.textContent = was;
+          offer.disabled = false;
+          this._toastOnce?.(t('ui.doubleFailed'));
+          return;
+        }
         if (bonus > 0) {
           Storage.addCoins(this.save, bonus);
           result.coins += bonus;

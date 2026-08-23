@@ -328,13 +328,26 @@ function validate(def) {
   }
 
   /* --- falling ice you can wait out --------------------------------- */
+  //
+  // Measured at the speed the level actually runs at, which is not the speed
+  // it was composed at. `menace` shortens every hazard cycle in the last third
+  // of a chapter, and the shelf's version of this check learned that the day
+  // it was written while this one did not — so a serac could run a quarter
+  // faster than the number being proved here. A proof and a game have to be
+  // looking at the same clock.
+  const menace = def.menace ?? 1;
+  if (menace > 1.35) fail(`hız çarpanı fazla yüksek: ${menace}`);
   for (const h of def.hazards) {
     if (h.kind !== 'shard') continue;
-    const dropTime = Math.sqrt((2 * (h.fall ?? 600)) / 2000);
-    const share = (dropTime + (h.warn ?? 0.5)) / (h.period ?? 3);
+    const period = (h.period ?? 3) / menace;
+    const dropTime = Math.sqrt((2 * (h.fall ?? 600)) / 2000) / menace;
+    const share = (dropTime + (h.warn ?? 0.5) / menace) / period;
     if (share > BUDGET.shard) {
       fail(`serak döngüsünün %${Math.round(share * 100)}'i tehlikeli — beklenemez`);
     }
+    // And the gap between two of them has to be long enough to cross under.
+    const safe = period * (1 - share);
+    if (safe < 1.1) fail(`serak arası çok kısa: ${safe.toFixed(2)} sn (en az 1.1 sn)`);
   }
 
   /* --- wind that pushes rather than walls ---------------------------- */

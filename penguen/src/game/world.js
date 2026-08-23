@@ -205,10 +205,21 @@ export class World {
     /** Gravity multiplier from a hush pocket this frame, or 0 for none. */
     this.hushed = 0;
     this._wasHushed = false;
-    this._toldHush = false;
+    /**
+     * Which of this level's mechanics have introduced themselves.
+     *
+     * Once each, per attempt, at the moment the thing first happens to you.
+     * Four mechanics were added and only one of them ever said anything — and
+     * the worst of the silent three was the trench, whose entire effect is
+     * that your air runs out faster with nothing on screen saying why. A
+     * player does not learn from that, they just die.
+     *
+     * A set rather than a flag each, so the fifth mechanic is one word.
+     */
+    this._told = new Set();
     this.skuasDodged = 0;
     this.skuaGrabs = 0;
-    /** Grabs the chick fought its way out of. A mission asks for these. */
+    /** Grabs the chick fought its way out of. A daily mission asks for one. */
     this.skuasEscaped = 0;
     /** Gear use, for the missions that ask how you played rather than what you survived. */
     this.glideTime = 0;
@@ -386,6 +397,20 @@ export class World {
     this.hintTimer = seconds;
   }
 
+  /**
+   * Say a thing once per attempt, the first time it happens.
+   *
+   * Not at the start of the level and not on a sign by the door: at the moment
+   * the mechanic first does something to the player, which is the only moment
+   * the sentence means anything. Said on every occurrence it would be nagging;
+   * said never, three of these mechanics were invisible.
+   */
+  _tell(key, text, seconds = 1.8) {
+    if (this._told.has(key)) return;
+    this._told.add(key);
+    this.showHint(text, seconds);
+  }
+
   update(dt, intent) {
     /**
      * Slack time.
@@ -422,7 +447,16 @@ export class World {
     };
     if (this.shieldFlash > 0) this.shieldFlash = Math.max(0, this.shieldFlash - dt);
 
-    for (const f of this.floes) f.update(wdt, this.time, fx);
+    for (const f of this.floes) {
+      f.update(wdt, this.time, fx);
+      // Standing on a slab that hangs on a rope, the first time. What needs
+      // saying is not that it moves — that is visible — but that it *stops*,
+      // because waiting for the end is the move and rushing the middle is how
+      // it throws you.
+      if (f.type === 'swing' && this.player.groundFloe === f) {
+        this._tell('swing', t('world.swing'), 2);
+      }
+    }
     for (const f of this.fish) f.update(dt);
     for (const f of this.boosts) f.update(dt);
     for (const f of this.charged) f.update(dt);
@@ -506,10 +540,7 @@ export class World {
       // Once per level, not once per entry. Told again on every crossing it
       // would be nagging, and the whole point of the pocket is that it teaches
       // itself the moment the first jump goes twice as far as it should.
-      if (!this._toldHush) {
-        this._toldHush = true;
-        this.showHint(t('world.hush'), 1.8);
-      }
+      this._tell('hush', t('world.hush'), 1.8);
     }
     this._wasHushed = Boolean(this.hushed);
 
@@ -615,6 +646,11 @@ export class World {
       const shot = r.update(dt, this.player, speed);
       if (!shot) continue;
       this.snowballs.push(new Snowball(r.hand, shot, r.lobs));
+      // The first arc. Its whole point is that the answer the player has been
+      // using for four levels — get behind something — has just stopped
+      // working, and being told that once is the difference between a new idea
+      // and an unfair one.
+      if (r.lobs) this._tell('lob', t('world.lob'), 2.2);
       this.audio.jump?.();
       this.particles.puff(r.hand.x, r.hand.y, 4);
     }
@@ -697,6 +733,22 @@ export class World {
       hole.glow = 1;
     }
     p.breathing = inAir;
+    /**
+     * Worked out before the early return, not after it.
+     *
+     * This used to sit below the `inAir` branch, so surfacing inside a hole
+     * left `drain` holding whatever the last underwater frame had put there,
+     * and the breath meter kept its cold outline while the lungs refilled. A
+     * readout that says "this is costing you double" at the one moment nothing
+     * is costing anything is worse than no readout: the player learns to
+     * distrust the only instrument they have down here.
+     */
+    this.drain = inAir ? 1 : trenchDrainAt(this.zones, p.centerX, p.y + p.h / 2);
+    // The trench is the one that has to speak. Everything else the sea does is
+    // visible: a wall, a seal, a current you can feel pushing. This is a number
+    // changing, and a number changing in silence is not a mechanic, it is an
+    // unexplained death.
+    if (this.drain > 1.15) this._tell('trench', t('world.trench'), 2);
     if (inAir) {
       const before = p.breath;
       p.breath = Math.min(p.breathMax, p.breath + SWIM.refill * dt);
@@ -708,16 +760,8 @@ export class World {
       }
       return;
     }
-    /**
-     * Cold black water costs more air than the same distance of open sea.
-     *
-     * Read from the middle of the body and scaled by how far below the trench
-     * lip that is, so hugging the top of one is cheap and lying on its floor
-     * is ruinous. Kept on the world rather than the player because it is a
-     * property of *where you are*, not of what you are — the same reason the
-     * hush lives here.
-     */
-    this.drain = trenchDrainAt(this.zones, p.centerX, p.y + p.h / 2);
+    // Cold black water costs more air than the same distance of open sea,
+    // scaled by how far below the trench lip the body is.
     p.breath -= dt * this.drain;
     if (p.breath <= 0) {
       p.breath = 0;
@@ -1123,6 +1167,7 @@ export class World {
       const k = clamp(s.t / s.warn, 0, 1);
       s.x = s.fromX + (s.targetX - s.fromX) * k;
       s.y = s.fromY + (s.targetY - s.fromY) * k * k;
+      if (s.kind === 'hunt') this._tell('hunt', t('world.hunter'), 2);
       if (s.t >= s.warn) {
         s.state = 'strike';
         s.t = 0;
