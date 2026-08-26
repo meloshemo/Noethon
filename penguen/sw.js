@@ -16,6 +16,14 @@
  *     modules are content the page already asked for; serving them instantly
  *     and fetching a fresh copy behind the scenes is what makes a cold start
  *     feel like a warm one.
+ *   · **A page that came back changed empties the rest first.** Those two
+ *     rules on their own are the classic mixed-version trap: the player gets
+ *     today's markup and last week's modules and stylesheet, because the page
+ *     is fetched and everything it loads is not. The markup and the code that
+ *     reads it are one program — a card that grew a new wrapper this morning
+ *     is styled by a rule that shipped with it — so when the page comes back
+ *     different, the modules it is about to ask for are dropped before the
+ *     response is handed over, and they come back from the network too.
  *
  * Nothing is precached beyond the page: the first run has to be online, and
  * after it the whole game is on the device. Precaching a hand-written list of
@@ -59,9 +67,24 @@ self.addEventListener('fetch', (event) => {
   if (isPage) {
     event.respondWith(
       fetch(request)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(request, copy));
+        .then(async (res) => {
+          // Only a good response is worth acting on. A 404 or a captive
+          // portal's login page is not a new deploy, and treating it as one
+          // would throw away a perfectly good offline copy of the game.
+          if (!res || !res.ok) return res;
+          const cache = await caches.open(CACHE);
+          const had = await cache.match(request);
+          const changed = !had || (await had.clone().text()) !== (await res.clone().text());
+          if (changed) {
+            const keys = await cache.keys();
+            await Promise.all(
+              keys.filter((k) => k.url !== request.url).map((k) => cache.delete(k)),
+            );
+          }
+          // Awaited, not fired and forgotten: the browser has not started
+          // parsing yet, so everything above finishes before the first module
+          // request arrives, which is the whole point.
+          await cache.put(request, res.clone());
           return res;
         })
         .catch(() => caches.match(request).then((hit) => hit ?? caches.match('./index.html'))),

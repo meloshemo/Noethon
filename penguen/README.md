@@ -222,6 +222,87 @@ sadece kolaylaştırır.
 
 ---
 
+## Aynı bölüm iki kere
+
+Bu bölüm bir hata anlatısı, çünkü bulunma şekli anlatmaya değer: kodu okurken
+değil, **ölçerken** çıktı.
+
+Oyundaki her tehlike — 61 bölümde 268 orka, fırtına, hava akımı, serak, saçak
+ve fok — kendi döngüsündeki başlangıç noktasını `Math.random()`'dan alıyordu.
+Hiçbir bölüm bir faz belirtmiyordu, yani hepsi kuruluş anında zar atıyordu.
+Niyet doğruydu (tehlikeler aynı anda çalışmasın), sonucu değildi.
+
+Bunun neden ciddi olduğu bu projeye özel. Buradaki adalet iddiası şu: bir
+çözücü **gerçek `World`'ü** sürüyor ve geçen bir yol buluyor. Ama her çözücü
+denemesi bölümü yeniden kuruyordu. Üç yüz parametre kombinasyonu deneyen bir
+çözücü, üç yüz **farklı bölüm** çekiyor ve içlerinden biri işe yararsa "geçildi"
+diyordu. "Bu bölüm geçilebilir" sessizce "bu bölüm bazı atışlarda geçilebilir"e
+dönüşmüştü — ve oyuncu kendi atışını çekiyor.
+
+Artık faz, bölümün kimliğinden ve tehlikenin oradaki sırasından türüyor. Her
+tehlike çemberin kendi diliminde duruyor ve dilimin içinde sarsılıyor: dağılım
+korunuyor, ama garanti ediliyor. (İlk sürüm sadece hash'liyordu, ki bu
+*ortalamada* dağıtır: iki tehlikeli bir bölümde sekizde bir ihtimalle aynı
+sekizde buluşurlar, ve sonsuz koşudaki bir bölümde buluştular.)
+
+Fazlar sabitlendikten sonra bütün çözücüler ve doğrulayıcılar yine geçti — yani
+hiçbir bölüm sadece şansa geçiliyor değilmiş. Düzeltmenin bedeli sıfır oldu.
+
+Bunun sessiz bir kurbanı da **günün bölümü**ydü: tarihten tohumlanıyor, yani
+herkes aynı bölümü oynuyor sanılıyordu — ama üstündeki her tehlike sonra kendi
+zarını atıyordu. Birinin orkası tam vardığında yüzeye çıkıyor, diğerininki yeni
+dalmış oluyordu. Sıralamada süre karşılaştıran iki kişi aynı bölümü oynamamıştı.
+
+`tests/repeatable.mjs` üç ayrı şeyi tutuyor:
+
+1. Oyuncuya verilen bölüm bir zardan değil, bölümden kuruluyor.
+2. Simülasyonda **başka** bir zar da yok. Kasıtlı olanlar (kopan serak, kuşun
+   saldırı seçimi) sabitlendiğinde, aynı girdiyle iki koşu son piksele kadar
+   aynı olmak zorunda. Olmasaydı bir yerde saat ya da nesne adresi okunuyor
+   demekti, ve o zaman ne kayıt, ne hayalet, ne de kanıt güvenilir olurdu.
+3. Günün bölümü aynı gün herkeste aynı, başka günde başka, ve sonsuz koşunun
+   derinlik rampasını devralmıyor.
+
+## Kontrol noktası sözünü tutuyor mu
+
+Bir kontrol noktası tek bir söz veriyor: öl, ve **buraya** dön. Dört ayrı
+şekilde yalan söylüyordu. Hiçbiri hata fırlatmıyordu, hiçbiri bir testi
+düşürmüyordu, hiçbiri ekranda yanlış görünmüyordu.
+
+| Neydi | Sonucu |
+|---|---|
+| Dalış chapter'ı bayrakların **hepsini** atıyordu | Ölüm döngüsü koruması "6 piksel içinde buz var mı" diye soruyor; buzun altında basacak bir şey yok, çünkü pengu yüzüyor. 15 bölüm: uzun bir tüneli geçiyorsun, bayrağı alıyorsun, çanı duyuyorsun, boğuluyorsun, ve tünelin ağzında hiçbir açıklama olmadan yeniden başlıyorsun |
+| Arenalar da atıyordu | Bayrakları zeminden 46 piksel yukarıya — direğin kendi boyu kadar — dikilmişti. Bayrak havada duruyordu ve noktanın altında zemin yoktu |
+| 20 bayrak kırılan buzdaydı | Çatlayan, eriyen, patlayan. Zaten geri sayan bir zeminde diriliyorsun |
+| 7 bayrak foku üstüne dikiyordu | Yanına değil, üstüne: diriliş seni doğduğun karede öldürüyor, sonra yine. Bundan kurtaran bir girdi yok — bölüm bitti, oyuncunun çıkması gerekiyor. 5 tanesi de saçağın altındaydı, ki 0,4 saniye sonra düşüyor |
+
+`tests/checkpoint.mjs` sözü bir simülasyon olarak yazıyor: oyundaki **her**
+diriliş noktasına pengu'yu koy, 1,2 saniye hiçbir şeye basma, ve ne olduğuna
+bak. (Arena hariç: orada beş rakip sana atış yapıyor ve durmak kaybetmektir —
+o bölümün kendisi, bozukluk değil.)
+
+## Yeni sürüm bir bütün olarak geliyor
+
+Servis çalışanının iki kuralı vardı ve ikisi de tek başına doğruydu: **sayfa
+ağdan önce** (yeni sürüm bir açılıştan fazla uzakta olmasın), **gerisi
+önbellekten** (soğuk açılış sıcak hissettirsin). Birlikte klasik tuzağı
+kuruyorlardı: sayfa çekiliyor, sayfanın yüklediği hiçbir şey çekilmiyor.
+
+Yani her dağıtımdan sonraki **ilk açılışta** oyuncu bu sabahın HTML'ini geçen
+haftanın stil dosyası ve modülleriyle alıyordu. Bu sabah yeni bir sarmalayıcı
+kazanmış bir kartı, henüz gelmemiş bir kural yerleştiriyor. Oyunu ikinci kez
+açana kadar bozuk görünüyor.
+
+Artık ağdan **değişmiş** bir sayfa dönerse, o sayfanın birazdan isteyeceği her
+şey cevabı teslim etmeden önce önbellekten siliniyor. Değişmemiş sayfa hiçbir
+şeyi silmiyor (yoksa her açılış soğuk olurdu), ve kötü bir cevap — bir otel
+wifi'sinin giriş sayfası, yarım kalmış bir dağıtımın 404'ü — yeni sürüm sayılmıyor,
+yoksa çalışan bir oyunu çevrimdışı bırakırdı.
+
+Bunun testi yoktu; `tests/offline.mjs` artık servis çalışanını **çalıştırıyor**.
+Tarayıcı gerekmiyor: bir servis çalışanı bir `fetch` işleyicisidir, ona bir
+önbellek ve bir ağ verirsen ne servis ettiğini söyler.
+
 ## Çalıştırma
 
 ES modülleri `file://` üzerinden çalışmaz, bu yüzden bir sunucu gerekiyor, ve
@@ -262,7 +343,7 @@ geçmez, hata verip durur.
 
 ## Testler
 
-Tek komut, 33 paket (24 node + paketleme + 9 tarayıcı), kendi sunucusunu
+Tek komut, 34 paket (25 node + paketleme + 9 tarayıcı), kendi sunucusunu
 kurup kapatıyor ve portu doluysa bir yanına kayıyor:
 
 ```bash
@@ -348,6 +429,14 @@ kontrol eder, biri tutmazsa derleme düşer.
 **Hayalet testi** 30 saniyelik bir koşuyu örnek örnek gidip geliyor mu, on bir
 çeşit bozuk yapıştırma sessizce reddediliyor mu, isim değişikliği koşuyu koruyor
 mu diye bakar.
+
+**Sahanlık çözücüsü artık üretilmiş bölümleri de yürüyor.** 76'dan sonra oyun
+sonsuza kadar üretilmiş bölümlerle devam ediyor, ve onların *sadece* aritmetik
+kanıtı vardı — ki bu ters: kimsenin bakmadığı bölüm, birinin yürümeyi denemesine
+en çok ihtiyaç duyanıdır. Üretecin şekilleri her 20 kimlikte tekrarlıyor, o
+yüzden örnekleme kimlikler boyunca **art arda** gidiyor. İlk yazdığım hâli
+beşer beşer atlıyordu — yani tam olarak o döngüyle örtüşüyordu ve yirmi şeklin
+dördünü kırk kez test edip 77'den 272'ye uzanan bir yelpaze bildiriyordu.
 
 Tarayıcı tarafı dokuz paket, hepsi `playwright` ile gerçek Chromium'da:
 
@@ -814,6 +903,43 @@ ister ve o birkaç bayt bir parser'a değmez.
 
 Bunun güvenli olduğunun kanıtı `tests/browser-bundle.mjs`: paketlenmiş dosyayı
 gerçek bir tarayıcıda `file://` üzerinden açıp oynuyor.
+
+## Sonsuz koşu 97. bölümde duruyordu
+
+Ölçüm basit: ürete ürete git ve kadranlara bak.
+
+| Bölüm aralığı | Tehlike | Buz | menace | En geniş boşluk | 3-yıldız hedefi |
+|---|---|---|---|---|---|
+| 77-96 | 2,8 | 26,4 | 1,05 | 174 | 76 sn |
+| 97-116 | 5,6 | 31,6 | **1,25** | 248 | **95 sn** |
+| 137-156 | 5,3 | 31,8 | **1,25** | 234 | **95 sn** |
+| 337-356 | 5,3 | 32,6 | **1,25** | 242 | **95 sn** |
+| 977-996 | 5,5 | 34,0 | **1,25** | 223 | **95 sn** |
+
+977. bölüm, 117. bölümle **aynı**. Sonsuz koşu yirmi bölüm sonra koşu olmaktan
+çıkıyordu — ve 76'dan sonraki tek içerik o.
+
+Geometri cevap olamaz: buradaki en geniş boşluk zaten koşarak atlamanın tam
+karşılığı, `menace`'ın var olma sebebi de bu. O yüzden ikinci rampa mesafeye
+dokunmayan iki şeyi harcıyor: tehlikenin saati (`validate-levels.mjs`'in
+tehlike tehlike kanıtladığı tavana kadar) ve üçüncü yıldızın bedeli — ki bu bir
+puan, sonsuza kadar sıkılabilir ve hiçbir bölümü geçilmez yapmaz.
+
+| Bölüm aralığı | menace | 3-yıldız hedefi |
+|---|---|---|
+| 97-116 | 1,256 | 94 sn |
+| 187-206 | 1,306 | 85 sn |
+| 257-276 | 1,345 | 79 sn |
+| 297+ | 1,350 (tavan) | 78 sn |
+
+Yüz seksen bölümde bir uçtan diğerine — kasıtlı olarak yavaş. Bu, birinin bir
+ay sonra hâlâ oynadığı kısım; oraya vardığında gidecek bir yeri kalmalı.
+
+Tavan (`MENACE_CEILING`) artık `config.js`'de duruyor ve doğrulayıcı oradan
+okuyor: `menace` sayısını koyan ile onu denetleyen kural ayrı yerlerde iki
+farklı fikre sahip olamaz. Doğrulayıcının üretilmiş bölüm örneklemi de rampanın
+**iki ucunu** birden alıyor — eskiden 156'da bitiyordu, ki her şey 97'den sonra
+aynıyken sorun değildi ve saat sıkılmaya başladığı anda sorun oldu.
 
 ## Zorluk: geometri tavana vurdu, o yüzden zaman kısaldı
 
@@ -1580,6 +1706,8 @@ geçirildi ve bulunanların çoğu okuyarak fark edilmeyecek türdendi.
 | Dalış chapter'ının on dört bölümü pengu'yu bölüm rozetinin altında başlatıyordu | Kamera artık arayüzün durduğu şeritleri biliyor |
 | Arenanın sayacı "2 kaldı" ekranın kenarında kesiliyordu | Görüntünün içine kaydırılıyor |
 | Aynı sayaç her dilde Türkçe yazıyordu | Sözlüğe alındı, `lint` tuvale yazılan metni artık yakalıyor |
+| Ses açılışı yarım kalabiliyordu: bağlam kuruluyor, kazanç düğümü kurulamıyor | Kenarda kuruluyor, ancak bütünken yayınlanıyor. Sessizlik iyi bir sonuç, her zıplamada hata atan bir oyun değil |
+| Telefonda gelen bir çağrı zıplama tuşunu basılı bırakabiliyordu | `visibilitychange` de her şeyi bırakıyor; `blur` telefonda hep gelmiyor |
 | Bölüm sonu kartı hiçbir ekrana sığmıyordu, "Sıradaki bölüm" katlanma çizgisinin altındaydı | Genişlik varsa üç sütun, yoksa sıkıştırma; testi de var |
 | Duraklatma, karşılama, ad sorma, yardım ve bölüm sonu ekranları hiç ölçülmemişti | Beşi de düzen testine girdi |
 
@@ -1923,7 +2051,7 @@ anlatmak değil, olan bir şeyi olduğundan iyi anlatmaktır.
 | Kayıt | Tek sürümlü JSON, ileri göç, dosyaya aktarma, tek tuşla silme |
 | Çevrimdışı | Servis çalışanı + tek dosya sürümü (600 KB) |
 | Girdi | Klavye, dokunmatik, gamepad |
-| Test | 24 node + paketleme + 9 tarayıcı paketi, hepsi tek komutta |
+| Test | 25 node + paketleme + 9 tarayıcı paketi, hepsi tek komutta |
 | Zorluk | Ölçülen eğri: `node tools/difficulty.mjs` |
 
 ### Yok, ve neden

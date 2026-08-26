@@ -62,6 +62,12 @@ export class Input {
 
     // Releasing everything on blur avoids a stuck "held" key after alt-tab.
     window.addEventListener('blur', () => this.releaseAll());
+    // And on a phone, where the window is often never told it lost focus. A
+    // call arrives while the thumb is on the jump pad, the pad never sees a
+    // pointerup, and the penguin comes back from the call still holding it.
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) this.releaseAll();
+    });
   }
 
   /**

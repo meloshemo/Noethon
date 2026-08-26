@@ -1393,11 +1393,32 @@ export function settleFlags(flags, floes, hazards, scale = 1) {
   return flags;
 }
 
-export function hazardPhase(levelId, index) {
+export function hazardPhase(levelId, index, count = 1) {
   let h = Math.imul((levelId | 0) + 1, 374761393) + Math.imul(index + 1, 668265263);
   h = Math.imul(h ^ (h >>> 13), 1274126177);
-  return ((h ^ (h >>> 16)) >>> 0) / 2 ** 32;
+  const jitter = ((h ^ (h >>> 16)) >>> 0) / 2 ** 32;
+  // Each hazard gets its own slice of the circle and is jittered inside it,
+  // rather than being dropped anywhere and hoped for. Hashing alone spreads
+  // *on average*, which is not the same promise: with two hazards on a level
+  // there is one chance in eight they land in the same eighth, and a level in
+  // the endless run did.
+  const n = Math.max(1, count);
+  return (index % n) / n + jitter / n;
 }
+
+/**
+ * The fastest anything in this game is ever allowed to move.
+ *
+ * `menace` speeds up every clock a hazard runs on and changes no distance, so
+ * it is the only dial left once the geometry is at its limit. It is not a free
+ * dial: past some multiplier an icicle's warning is shorter than the time it
+ * takes to walk a body out from under it, and the hazard stops being a clock
+ * you can read. `validate-levels.mjs` proves the floor hazard by hazard; this
+ * is the blunt ceiling above it, and it lives here rather than in the test so
+ * the generator that sets `menace` and the rule that checks it cannot drift
+ * apart.
+ */
+export const MENACE_CEILING = 1.35;
 
 export function menaceFor(at) {
   const from = 0.62;

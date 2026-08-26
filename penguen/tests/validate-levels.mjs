@@ -11,7 +11,7 @@
 
 import {
   PHYS, PENGUIN, ICE, WIND, HUSH, windAt, tailWindow, lullWindow, reachWithWind, riseWithLift,
-  reachInHush, crossableGap, scaleForLevel, reachFor, CRAFTED_LEVELS,
+  reachInHush, crossableGap, scaleForLevel, reachFor, CRAFTED_LEVELS, MENACE_CEILING,
 } from '../src/game/config.js';
 import { LEVELS, WATER_Y } from '../src/game/levels.js';
 import { CRAFTED_TOTAL, CHAPTERS } from '../src/game/chapters.js';
@@ -413,7 +413,7 @@ function check(def, { tutorial = false } = {}) {
    * is the whole reason it was chosen over widening the ice.
    */
   const menace = def.menace ?? 1;
-  if (menace > 1.35) fail(`hız çarpanı fazla yüksek: ${menace}`);
+  if (menace > MENACE_CEILING) fail(`hız çarpanı fazla yüksek: ${menace}`);
   const bodyOut = (PENGUIN.w * scale) / PHYS.moveSpeed;
   for (const h of def.hazards ?? []) {
     if (h.kind === 'icicle') {
@@ -615,9 +615,24 @@ for (const def of LEVELS) {
   check(def, { tutorial: def.id <= 5 });
 }
 
-// Sample the endless range widely, including the plateau.
+/*
+ * Sample the endless range at both ends of its ramp.
+ *
+ * Eighty consecutive ids from the start covers every shape the generator makes
+ * (they cycle every twenty) four times over, at the shallow end. That used to
+ * be the whole sample, and it stopped at level a hundred and fifty-six — which
+ * was fine while everything past ninety-seven was identical, and stopped being
+ * fine the moment the clock kept tightening past it. The rules below are the
+ * ones that decide whether a sped-up hazard is still a clock a player can read,
+ * so they have to be asked at the speed the player will actually meet, not at
+ * the speed the sample happened to reach.
+ */
 const generated = [];
-for (let id = CRAFTED_LEVELS + 1; id <= CRAFTED_LEVELS + 80; id++) {
+const DEEP = CRAFTED_LEVELS + 220; // past the end of the second ramp
+for (const id of [
+  ...Array.from({ length: 80 }, (_, i) => CRAFTED_LEVELS + 1 + i),
+  ...Array.from({ length: 40 }, (_, i) => DEEP + i),
+]) {
   const def = generateLevel(id);
   generated.push(def);
   check(def);

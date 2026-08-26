@@ -30,17 +30,47 @@ export class Audio {
     }
     const Ctor = window.AudioContext || window.webkitAudioContext;
     if (!Ctor) return;
-    this.ctx = new Ctor();
 
-    this.sfxGain = this.ctx.createGain();
-    this.sfxGain.gain.value = 0.5;
-    this.sfxGain.connect(this.ctx.destination);
+    /*
+     * All or nothing.
+     *
+     * Every sound in the game is guarded by `if (!this.ctx) return`, which is
+     * the right check as long as having a context means having the gain nodes
+     * hanging off it. Built in place, it did not: a browser that refuses a
+     * context after too many tabs, or a gain node that fails on a device with
+     * no output, left `ctx` set and `sfxGain` undefined — and then every sound
+     * passed the guard and threw on the connect. The loop survives a throw,
+     * but it would have been throwing once a jump for the rest of the session.
+     *
+     * So it is assembled to one side and only published when it is whole.
+     */
+    let ctx;
+    try {
+      ctx = new Ctor();
+      const sfxGain = ctx.createGain();
+      sfxGain.gain.value = 0.5;
+      sfxGain.connect(ctx.destination);
 
-    this.musicGain = this.ctx.createGain();
-    this.musicGain.gain.value = 0.2;
-    this.musicGain.connect(this.ctx.destination);
+      const musicGain = ctx.createGain();
+      musicGain.gain.value = 0.2;
+      musicGain.connect(ctx.destination);
 
-    this.music = new Music(this.ctx, this.musicGain);
+      const music = new Music(ctx, musicGain);
+
+      this.ctx = ctx;
+      this.sfxGain = sfxGain;
+      this.musicGain = musicGain;
+      this.music = music;
+    } catch {
+      // Silence is a fine outcome; a game that will not start is not.
+      ctx?.close?.();
+      this.ctx = null;
+      this.sfxGain = null;
+      this.musicGain = null;
+      this.music = null;
+      return;
+    }
+
     if (this._pendingScene !== undefined) this.music.setScene(sceneFor(this._pendingScene));
     if (this.enabled.music) this.music.start();
   }

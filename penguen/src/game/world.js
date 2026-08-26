@@ -111,8 +111,8 @@ export class World {
     // `phase` first, so a level that names one still wins. See `hazardPhase`:
     // this used to be a die roll inside the Hazard, which meant every solver
     // attempt was played against a different level.
-    this.hazards = (def.hazards ?? []).map((d, i) => new Hazard({
-      phase: hazardPhase(def.id ?? 0, i),
+    this.hazards = (def.hazards ?? []).map((d, i, all) => new Hazard({
+      phase: hazardPhase(def.id ?? 0, i, all.length),
       ...d,
     }));
     this.fish = (def.fish ?? []).map((d) => new Fish(d, 'normal'));

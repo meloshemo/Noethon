@@ -13,7 +13,7 @@
  */
 
 import { makeRng, clamp, lerp } from '../core/util.js';
-import { scaleForLevel, CRAFTED_LEVELS, menaceFor} from './config.js';
+import { scaleForLevel, CRAFTED_LEVELS, menaceFor, MENACE_CEILING } from './config.js';
 import { Course } from './terrain.js';
 
 const NAMES = [
@@ -91,6 +91,26 @@ export function generateLevel(id, opts = {}) {
   const scale = opts.scale ?? scaleForLevel(id);
   /** Ramps over 20 generated levels, then plateaus. */
   const d = opts.difficulty ?? clamp((id - CRAFTED_LEVELS) / 20, 0, 1);
+  /**
+   * And what happens after the plateau.
+   *
+   * Measured over full cycles of the generator: from level ninety-seven
+   * onwards every dial was flat. Hazard count, ice count, gap width, clock —
+   * level nine hundred and seventy-seven was exactly level one hundred and
+   * seventeen. The endless run stopped being a run after twenty levels.
+   *
+   * Geometry cannot be the answer; the widest gap out here is already exactly
+   * what a running jump clears, which is the whole reason `menace` exists. So
+   * the second ramp spends the two things that change no distance: the clock
+   * a hazard runs on, up to the ceiling `validate-levels.mjs` proves hazard by
+   * hazard, and the time a third star costs, which is a score and can tighten
+   * for ever without any level becoming impossible.
+   *
+   * Slow on purpose — a hundred and eighty levels to walk from one end of it
+   * to the other. It is the part of the game somebody is still playing in a
+   * month, and it should still have somewhere to go when they get there.
+   */
+  const depth = opts.depth ?? clamp((id - CRAFTED_LEVELS - 20) / 180, 0, 1);
 
   const c = new Course({ scale });
 
@@ -265,7 +285,7 @@ export function generateLevel(id, opts = {}) {
     daily: opts.daily ?? false,
     /** Explicit growth size — the daily has no place on the campaign curve. */
     scale,
-    target: Math.round(lerp(55, 95, d)),
+    target: Math.round(lerp(55, 95, d) * lerp(1, 0.82, depth)),
     fog: d > 0.55 && id % 4 === 0 ? 0.45 : 0,
   });
   def.signs = [];
@@ -279,7 +299,10 @@ export function generateLevel(id, opts = {}) {
    * which made the endless mode a step *down* from the level the player had
    * just finished.
    */
-  def.menace = menaceFor(d);
+  def.menace = Math.min(
+    MENACE_CEILING,
+    +(menaceFor(d) + (MENACE_CEILING - menaceFor(1)) * depth).toFixed(3),
+  );
   return def;
 }
 
@@ -295,6 +318,10 @@ export function generateDailyLevel(dateKey) {
   return generateLevel(-1, {
     seed,
     difficulty: 0.55 + wobble,
+    // The endless run's second ramp is about how deep *you* are into it. The
+    // daily is one level that everybody plays on the same day, so it sits
+    // where the wobble puts it and nowhere else.
+    depth: 0,
     scale: scaleForLevel(CRAFTED_LEVELS),
     name: 'Günün Bölümü',
     subtitle: dateKey,

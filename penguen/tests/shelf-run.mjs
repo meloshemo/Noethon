@@ -27,6 +27,7 @@
 import { Player } from '../src/game/player.js';
 import { WIND, windAt, scaleForLevel, PHYS, PENGUIN, hushAt} from '../src/game/config.js';
 import { LEVELS } from '../src/game/levels.js';
+import { generateLevel } from '../src/game/generator.js';
 
 const STEP = 1 / 120;
 const TUNING = { coyote: 1 };
@@ -195,7 +196,30 @@ if (!MEASURE) console.log('Sahanlık rotası çözülüyor...\n');
 let fails = 0;
 let hops = 0;
 
-for (const def of LEVELS) {
+/*
+ * The handcrafted shelf, and a sample of the endless one behind it.
+ *
+ * Only the crafted levels used to be walked. Past seventy-six the game keeps
+ * going for ever on generated levels, and those had the arithmetic proof and
+ * nothing else — which is the wrong way round: a level nobody has ever looked
+ * at is the one that most needs somebody to try walking it.
+ *
+ * Sampled by walking straight along the ids, not by striding through them.
+ * The generator's names repeat every twenty, and the first version of this
+ * sampled every fifth id — which is to say it aliased with that cycle exactly
+ * and tested four of the twenty shapes forty times over while reporting a
+ * spread from seventy-seven to two hundred and seventy-two.
+ *
+ * Two full cycles at the shallow end, and one more from past the far end of
+ * the endless ramp, where the clocks are at their tightest.
+ */
+const SAMPLE = [
+  ...Array.from({ length: 40 }, (_, i) => generateLevel(77 + i)),
+  ...Array.from({ length: 20 }, (_, i) => generateLevel(296 + i)),
+];
+const SUITE = [...LEVELS, ...SAMPLE.filter((d) => d.axis !== 'up' && !d.diving && !d.brawl)];
+
+for (const def of SUITE) {
   const solids = solidsOf(def);
   const route = [...def.floes]
     .filter((f) => f.type !== 'snap')
@@ -258,7 +282,7 @@ for (const def of LEVELS) {
 
 if (MEASURE) process.exit(0);
 
-console.log(`\n${LEVELS.length} bölüm, ${hops} sıçrayış denendi.`);
+console.log(`\n${SUITE.length} bölüm (${LEVELS.length} el yapımı + ${SUITE.length - LEVELS.length} üretilmiş), ${hops} sıçrayış denendi.`);
 if (fails) {
   console.log(`\n✗ ${fails} sorun.`);
   process.exit(1);

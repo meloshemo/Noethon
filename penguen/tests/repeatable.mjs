@@ -27,7 +27,7 @@
 
 import { World } from '../src/game/world.js';
 import { ALL_LEVELS } from '../src/game/chapters.js';
-import { generateLevel } from '../src/game/generator.js';
+import { generateLevel, generateDailyLevel } from '../src/game/generator.js';
 
 const STEP = 1 / 120;
 const noop = () => {};
@@ -59,7 +59,9 @@ function fingerprint(w) {
   });
 }
 
-const LEVELS = [...ALL_LEVELS, ...[80, 97, 133].map(generateLevel)];
+// Consecutive, not strided: the generator's shapes repeat every twenty ids, so
+// a stride of five would test four of them over and over.
+const LEVELS = [...ALL_LEVELS, ...Array.from({ length: 20 }, (_, i) => generateLevel(77 + i))];
 
 console.log('Aynı bölüm iki kere\n');
 
@@ -135,6 +137,22 @@ for (const def of LEVELS) {
 }
 check(`${LEVELS.length} bölüm iki kez oynandı`, drift.length === 0,
   drift.slice(0, 8).join(', ') || '15 saniyelik koşular birebir aynı');
+
+/* 4 --------------------------------------------------------------------- */
+console.log('\n4) Günün bölümü herkeste aynı');
+// The daily is a shared challenge with a leaderboard attached: two people
+// comparing times have to have played the same level. They did not — the level
+// was seeded from the date, but every hazard on it then rolled its own dice, so
+// one player's orca surfaced as they arrived and another's had just gone under.
+{
+  const a = generateDailyLevel('2026-08-26');
+  const b = generateDailyLevel('2026-08-26');
+  const c = generateDailyLevel('2026-08-27');
+  const w = (def) => fingerprint(new World(def, deps()));
+  check('aynı gün, aynı bölüm', w(a) === w(b));
+  check('başka gün, başka bölüm', w(a) !== w(c));
+  check('günlük sonsuz koşunun rampasını devralmıyor', a.menace === 1, `menace=${a.menace}`);
+}
 
 console.log(`\n${LEVELS.length} bölüm tarandı.`);
 if (fails) {
