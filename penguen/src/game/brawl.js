@@ -58,6 +58,13 @@ const BRAWL_PLANS = [
     build: (a) => {
       a.duel({ guardAt: 0.46, guardUp: 0.19, standAt: 0.16, shooterUp: 0.36 });
       a.heckler({ at: 0.72, up: 0.52, phase: 0.3 });
+      /* The first snow bank in the game, on the level whose whole subject is
+         somebody who never stops throwing at you.
+         Standing behind it is the obvious move and it is the wrong one: the
+         heckler's own shots take it down, three of them, and the safest place
+         on the level is the place that is running out. It teaches the verb by
+         punishing the instinct. */
+      a.bank({ at: 0.34 });
       a.scatterFish(3);
       a.fishAt(0.3, 0.24, 'speed');
     },
@@ -203,6 +210,10 @@ const BRAWL_PLANS = [
       // A queue this long has an end, and the end was somewhere to hide. Not
       // any more: this one is not guarding a door, it is watching the corner.
       a.heckler({ at: 0.16, up: 0.58, phase: 0.6 });
+      /* One place to stop and read the queue, and it lasts three shots.
+         A level of four doors is a level of four decisions taken in a row with
+         no gap between them; the bank is the gap, and buying it costs it. */
+      a.bank({ at: 0.52 });
       a.scatterFish(3);
       a.checkpointAt(0.26);
     },
@@ -263,6 +274,13 @@ const BRAWL_PLANS = [
       // you is that the spring goes off by itself if you sit on it, and a
       // penguin flung upward on somebody else's count comes down on it too.
       a.charged(0.42, 'coil', 0.44);
+      /* Two banks, on the level where every rival throws on the same beat.
+         A volley that arrives together also *lands* together, so cover here
+         does not erode, it is demolished — one salvo per bank. They are two
+         breaths, taken one at a time, and after the second one there is
+         nothing between you and the count. */
+      a.bank({ at: 0.22 });
+      a.bank({ at: 0.64 });
       a.checkpointAt(0.34);
     },
   },

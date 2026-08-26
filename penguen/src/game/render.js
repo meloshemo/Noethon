@@ -9,7 +9,8 @@
  */
 
 import {
-  VIEW, viewFor, AMBUSH, CHARGED, COIL, QUANTUM, SLACK, CLIMB, BRAWL, TRENCH, VENT, lobShot,
+  VIEW, viewFor, AMBUSH, CHARGED, COIL, QUANTUM, SLACK, CLIMB, BRAWL, TRENCH, VENT, BANK,
+  lobShot,
 } from './config.js';
 import { getSkin, getTrail } from './skins.js';
 import { t } from '../core/i18n.js';
@@ -238,6 +239,7 @@ export class Renderer {
     ctx.save();
     ctx.translate(-camX, -camY);
     this._terrain(ctx, world, time);
+    this._banks(ctx, world, time);
     if (world.diving) this._airHoles(ctx, world, time);
     if (world.diving) this._vents(ctx, world, time);
     this._zonesBack(ctx, world, time);
@@ -448,6 +450,81 @@ export class Renderer {
       mg.addColorStop(1, withAlpha('#dffcff', 0));
       ctx.fillStyle = mg;
       ctx.fillRect(cx - v.w * 0.7, mouthY - v.w * 0.7, v.w * 1.4, v.w * 1.4);
+    }
+  }
+
+  /**
+   * Snow banks: cover with a lifespan.
+   *
+   * The one thing that has to be readable without a legend is how much of it
+   * is left, because that is the decision — stay here or move now. So a bank
+   * physically loses height and gains bite marks as it is shot away, rather
+   * than carrying a number or a bar. Three hits, three shapes.
+   */
+  _banks(ctx, world, time) {
+    const view = this._viewBounds(world);
+    for (const b of world.banks ?? []) {
+      if (b.gone || b.x + b.w < view.left || b.x > view.right) continue;
+      const left = Math.max(0, b.left) / Math.max(1, b.hits ?? 3);
+      const h = b.h * (0.42 + left * 0.58);
+      const top = b.y + b.h - h;
+      const flash = b.hit ?? 0;
+
+      ctx.save();
+      // The heap. Rounded, and lower on the side the shots came from.
+      const g = ctx.createLinearGradient(0, top, 0, b.y + b.h);
+      g.addColorStop(0, shade(BANK.tint, 1 + flash * 0.4));
+      g.addColorStop(1, shade(BANK.tint, 0.72));
+      ctx.fillStyle = g;
+      // A drift, not a tooth: the foot spreads well past the box on both sides
+      // so it sits *on* the ice instead of standing up out of it.
+      const foot = b.w * 0.3;
+      ctx.beginPath();
+      ctx.moveTo(b.x - foot, b.y + b.h);
+      ctx.bezierCurveTo(
+        b.x + b.w * 0.02, b.y + b.h - 6,
+        b.x + b.w * 0.1, top + 2,
+        b.x + b.w * 0.4, top,
+      );
+      ctx.bezierCurveTo(
+        b.x + b.w * 0.66, top + (1 - left) * 7,
+        b.x + b.w * 0.94, b.y + b.h - h * 0.55,
+        b.x + b.w + foot, b.y + b.h,
+      );
+      ctx.closePath();
+      ctx.fill();
+
+      // The shaded flank, so it has a lit side and a cold one.
+      ctx.fillStyle = withAlpha('#9dc4de', 0.28);
+      ctx.beginPath();
+      ctx.moveTo(b.x + b.w * 0.4, top);
+      ctx.bezierCurveTo(
+        b.x + b.w * 0.66, top + (1 - left) * 7,
+        b.x + b.w * 0.94, b.y + b.h - h * 0.55,
+        b.x + b.w + foot, b.y + b.h,
+      );
+      ctx.lineTo(b.x + b.w * 0.42, b.y + b.h);
+      ctx.closePath();
+      ctx.fill();
+
+      // Bites out of the face, one per hit taken.
+      const taken = (b.hits ?? 3) - Math.max(0, b.left);
+      ctx.fillStyle = withAlpha('#8fb6d4', 0.35);
+      for (let i = 0; i < taken; i++) {
+        const t = 0.26 + i * 0.24;
+        ctx.beginPath();
+        ctx.arc(b.x + b.w * t, top + 10 + (i % 2) * 16, 9 - i, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // A packed crest, so it reads as snow somebody piled up rather than ice.
+      ctx.strokeStyle = withAlpha('#ffffff', 0.5 + flash * 0.4);
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(b.x + b.w * 0.1, top + 6);
+      ctx.quadraticCurveTo(b.x + b.w * 0.4, top - 1, b.x + b.w * 0.88, top + 8);
+      ctx.stroke();
+      ctx.restore();
     }
   }
 

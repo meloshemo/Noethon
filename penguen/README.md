@@ -343,7 +343,7 @@ geçmez, hata verip durur.
 
 ## Testler
 
-Tek komut, 35 paket (26 node + paketleme + 9 tarayıcı), kendi sunucusunu
+Tek komut, 36 paket (27 node + paketleme + 9 tarayıcı), kendi sunucusunu
 kurup kapatıyor ve portu doluysa bir yanına kayıyor:
 
 ```bash
@@ -846,6 +846,65 @@ setProvider({ available: () => boolean, show: () => Promise<boolean> })
 
 Günlük sınır bir detay değil, tasarımın kendisi: sınırsız bir katlama bonus
 değil ekonominin ta kendisi olurdu, ve ekonomi az önce bilerek yavaşlatıldı.
+
+## Bölümler birbirini tekrar ediyor mu
+
+`tools/variety.mjs` bir kanaati sayıya çeviriyor: her bölümün bestecide
+*hangi fiilleri çağırdığını* okuyup, aynı chapter içinde kelime dağarcığının
+%80'ini paylaşan bölüm çiftlerini sayıyor. İki bölüm kelimelerinin beşte
+dördünü paylaşıyorsa, içlerindeki sayılar ne kadar farklı olursa olsun, tek bir
+fikrin iki düzenlemesidir.
+
+| Chapter | Fiil (önce → sonra) | Tekrar (önce → sonra) |
+|---|---|---|
+| I. Sahanlık (1–31) | 18 | %6 → %6 |
+| II. Zirve (32–46) | 8 | %15 → %15 |
+| III. Buz Altı (47–61) | 9 → **10** | %33 → **%23** |
+| IV. Kar Topu (62–76) | 5 → **6** | %16 → **%10** |
+
+Sıralama işi yönlendirdi: en tekrarlı chapter'a yeni bir fiil (baca), en ince
+dağarcıklı chapter'a bir başkası (kar siperi). Yeni bir mekanik eklemeden önce
+ve ekledikten sonra çalıştırılıyor, çünkü "bu bölümler aynı geliyor" cümlesi
+biri sayı üretene kadar bir kanaat.
+
+## Kar siperi: süresi olan siper
+
+Chapter dört, on beş bölüm için beş kelimeye sahipti — oyundaki en ince
+dağarcık — ve beşi de tek bir fikrin düzenlemesiydi: *hiçbir şeyin sana hattı
+olmayacağı yer neresi*. Kaya sütunu bu sorunun cevabı, ve oyuncu bir sütun
+bulduğunda bölüm yürümek dışında bitmiş oluyor.
+
+Kar siperi, üstünde saat olan bir sütun — ve saati sana atanlar kuruyor. Üç
+isabet ve yerde kar oluyor. Yani bölümün en güvenli yeri, tükenmekte olan yer.
+Saklanmak bir çözüm değil, bir kaynak. Chapter nihayet kamp yapmaya "siperi
+kaldırdık" olmayan bir cevap veriyor.
+
+Üç şeyin doğru olması gerekiyor, ve ikisi yolda kırıldı:
+
+**Yalnızca zaman verebilir.** Katı yapıldığında aynı zamanda bir duvardı, ve
+iki duruş noktası arasındaki yürüyüşün zaten kaçış penceresine göre ayarlandığı
+bir bölümde, o yürüyüşün ortasındaki bir duvar kazanılabilir bir arenayı
+kazanılamaz hâle getirdi. Artık gevşek kar: kar topu içine gömülüyor, penguen
+içinden geçiyor.
+
+**Asla cevabın üstünde durmaz.** Bu chapter'ın bilmecesi, oyuncunun atacak
+hiçbir şeyi olmaması: *sana* atılan bir topun başka bir rakibin içinden geçtiği
+yere duruyorsun ve işi onlara bıraktın. O hatlardan birinin üstündeki bir siper
+demek, topun kara saplanması ve kimsenin devrilmemesi demek. İlk sürüm bunu
+**henüz kurulmamış** bir plana karşı denetliyordu (`duel()` yalnızca istek
+kaydediyor; atıcılar `build()` içinde yerleşiyor), iki bölümde siperi tam
+duruş noktasının üstüne bıraktı, ve bestecideki her kuralı geçti.
+
+**Ölünce geri gelir**, yoksa siperin arkasında ölen oyuncu kendisine verilenden
+daha az siperli bir bölüme dirilirdi.
+
+Hangi bölümler: **64 Tepedeki** (oyundaki ilk siper, konusu hiç durmadan sana
+atan biri olan bölümde — arkasına geçmek bariz hamle ve yanlış olanı), **71 Dört
+Kapı** (üç atışlık tek bir nefes alma yeri), **74 Aynı Anda** (herkesin aynı
+vuruşta attığı bölümde iki siper: burada siper aşınmıyor, yıkılıyor — siper
+başına bir yaylım).
+
+Ölçüm sonrası: arena chapter'ının tekrarı **%16 → %10**, fiil sayısı 5 → 6.
 
 ## Deniz tabanındaki baca: denizin "ne zaman"ı
 
@@ -2135,11 +2194,11 @@ anlatmak değil, olan bir şeyi olduğundan iyi anlatmaktır.
 | Kimlik | Ad, `PNG-XXXXX` kimliği, 7 unvan, hepsi cihazda |
 | Hayalet | Kendi rekorun yanında koşuyor, paylaşım koduyla arkadaşınki de |
 | Müzik | Tek tema, 5 sahne, 5 katman, ses saatinde planlanıyor, ses dosyası yok |
-| Dil | Türkçe ve İngilizce, 305 metin, tarayıcıdan seçiliyor |
+| Dil | Türkçe ve İngilizce, 306 metin, tarayıcıdan seçiliyor |
 | Kayıt | Tek sürümlü JSON, ileri göç, dosyaya aktarma, tek tuşla silme |
 | Çevrimdışı | Servis çalışanı + tek dosya sürümü (619 KB) |
 | Girdi | Klavye, dokunmatik, gamepad |
-| Test | 26 node + paketleme + 9 tarayıcı paketi, hepsi tek komutta |
+| Test | 27 node + paketleme + 9 tarayıcı paketi, hepsi tek komutta |
 | Zorluk | Ölçülen eğri: `node tools/difficulty.mjs` |
 
 ### Yok, ve neden

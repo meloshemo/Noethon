@@ -32,7 +32,7 @@
  *      target's own perch; too flat and it never gets past the thrower's.
  */
 
-import { PENGUIN, BRAWL, dodgeWindow, PHYS, CHARGED } from './config.js';
+import { PENGUIN, BRAWL, dodgeWindow, PHYS, CHARGED, BANK } from './config.js';
 import { nudgeClear } from '../core/util.js';
 
 const RIVAL_W = 30;
@@ -104,6 +104,9 @@ export class Arena {
     this.chargedFish = [];
     this.rotFish = [];
     this.checkpoints = [];
+    /** Cover with a lifespan. See `BANK`. */
+    this.banks = [];
+    this._bankReqs = [];
     this.signs = [];
     /** One entry per guard: which thrower, and where to stand. */
     this.plan = [];
@@ -383,6 +386,72 @@ export class Arena {
     return this;
   }
 
+  /**
+   * A snow bank: cover that the people shooting at you take away.
+   *
+   * Deliberately absent from `_blockers`, so no line check anywhere in this
+   * composer ever counts it. The arena has to be winnable with every bank
+   * already gone, because a few seconds into the fight it will be. That makes
+   * a bank incapable of making a level unsolvable and incapable of being the
+   * answer to one — all it can ever do is buy the player time, which is the
+   * only thing this chapter has never had to sell.
+   *
+   * On the floor, unlike a pillar, and that is the point. A pillar hangs from
+   * the ceiling precisely so it is not a wall you have to get around; a bank
+   * *is* a wall you have to get around, for as long as it lasts, and then it
+   * is not.
+   */
+  bank({ at = 0.5, hits = BANK.hits, w = BANK.w, h = BANK.h } = {}) {
+    // Recorded now, placed in `build` — same as a pillar, and for the same
+    // reason: the throwers and the stand-spots do not exist yet. The first
+    // version of this checked its position against a plan that was still
+    // empty, dropped a bank exactly on top of a stand-spot on two levels, and
+    // both of them passed every rule in the composer.
+    this._bankReqs.push({ at, hits, w, h });
+    return this;
+  }
+
+  /**
+   * Put the snow banks down, once the answer exists to be kept clear of.
+   *
+   * This chapter's puzzle is that the player has nothing to throw: you stand
+   * where a rival's shot at *you* passes through another rival, and let them
+   * do it. So there are two ways a bank can quietly stop being cover and start
+   * being a wall — sitting on one of those lines, where the shot hits snow and
+   * nobody falls over, or sitting on the spot the player has to stand on. It
+   * is slid along the floor until it is out of both.
+   *
+   * It is still never counted as cover *for* anything: see `BANK`. This is the
+   * opposite question. Not "does it block enough" but "does it block the
+   * answer".
+   */
+  _placeBanks() {
+    for (const req of this._bankReqs) {
+      const { hits, w, h } = req;
+      const y = Math.round(this.groundY - h);
+      const room = this.penguinW * 1.4;
+      let placed = false;
+      for (const shift of [0, 0.05, -0.05, 0.1, -0.1, 0.16, -0.16, 0.22, -0.22, 0.3, -0.3]) {
+        const spot = req.at + shift;
+        if (spot < 0.06 || spot > 0.94) continue;
+        const box = { x: Math.round(this.width * spot - w / 2), y, w, h, hits };
+        const onFoot = this.plan.some(
+          (pl) => pl.stand.x + room > box.x && pl.stand.x - room < box.x + box.w,
+        );
+        if (onFoot) continue;
+        this.terrain.push(box);
+        const holds = this._linesHold();
+        this.terrain.pop();
+        if (!holds) continue;
+        this.banks.push(box);
+        placed = true;
+        break;
+      }
+      if (!placed) throw new Error(`kar siperi hiçbir yere sığmıyor: at=${req.at}`);
+    }
+    return this;
+  }
+
   /** A patch of ground that will not hold you: you cannot line up and wait. */
   thinIce({ at = 0.4, w = 150, type = 'crack' }) {
     const x = Math.round(this.width * at - w / 2);
@@ -525,6 +594,7 @@ export class Arena {
       }
     }
     this._placePillars();
+    this._placeBanks();
     this._verify();
     return {
       ...meta,
@@ -555,6 +625,7 @@ export class Arena {
         nudgeClear(f, [...this.floes, ...(this.terrain ?? [])]),
       ),
       rotFish: this.rotFish,
+      banks: this.banks,
       checkpoints: this.checkpoints,
       signs: this.signs,
       hazards: [],

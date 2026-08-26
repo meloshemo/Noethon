@@ -101,6 +101,24 @@ export class World {
       dx: 0,
       dy: 0,
     }));
+    /**
+     * Snow banks: cover the other side shoots away. See `BANK`.
+     *
+     * Loose snow, not ice. A snowball buries itself in one; a penguin bellies
+     * through it. That is not a softening — it is what keeps the promise the
+     * mechanic is built on, that a bank can only ever *give* the player time.
+     * Made solid, it was also a wall: it stood between two stand-spots on a
+     * level where the walk between them is already timed to the dodge window,
+     * and the arena went from winnable to not because somebody added cover.
+     */
+    this.banks = (def.banks ?? []).map((d) => ({
+      ...d,
+      type: 'bank',
+      bank: true,
+      gone: false,
+      left: d.hits ?? 3,
+      hit: 0,
+    }));
     /** What the player actually collides with. Built once; holds references. */
     this.solids = [...this.floes, ...this.terrain];
     this.zones = def.zones ?? [];
@@ -461,6 +479,7 @@ export class World {
       },
     };
     if (this.shieldFlash > 0) this.shieldFlash = Math.max(0, this.shieldFlash - dt);
+    for (const b of this.banks) if (b.hit > 0) b.hit = Math.max(0, b.hit - dt * 3);
 
     for (const f of this.floes) {
       f.update(wdt, this.time, fx);
@@ -706,6 +725,26 @@ export class World {
           this.die('snowball');
           return;
         }
+
+        // A bank eats the shot and is a little less of a bank for it. The
+        // cover on this level is being taken down by the people using it
+        // against you, which is the only clock this chapter has.
+        for (const f of this.banks) {
+          if (f.gone || !rectsOverlap(box, f)) continue;
+          f.left--;
+          f.hit = 1;
+          this.shake(3);
+          this.particles.burstIce(b.x, b.y, 10, 12);
+          if (f.left <= 0) {
+            f.gone = true;
+            this.particles.burstIce(f.x + f.w / 2, f.y + f.h / 2, 20, f.w / 2);
+            this.audio.shatter();
+            this._tell('bank', t('world.bank'), 2);
+          }
+          stopped = true;
+          break;
+        }
+        if (stopped) break;
 
         for (const f of this.solids) {
           if (f.state === 'gone' || f.state === 'melted') continue;
@@ -1100,6 +1139,14 @@ export class World {
     for (const r of this.rivals) r.reset();
     this.snowballs.length = 0;
     this.brawlKnockouts = 0;
+    // The banks come back too. A player who dies behind a bank they had spent
+    // would otherwise respawn into a level with less cover than the one they
+    // were given, which is a difficulty curve nobody chose.
+    for (const b of this.banks) {
+      b.gone = false;
+      b.left = b.hits ?? 3;
+      b.hit = 0;
+    }
     // Speed fish come back on a retry; the normal three stay taken so a death
     // never costs you collectibles you already earned this run.
     for (const f of this.boosts) f.reset();

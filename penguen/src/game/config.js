@@ -1517,6 +1517,34 @@ export function ventWait(period = VENT.period, blow = VENT.blow) {
   return period * (1 - blow);
 }
 
+/**
+ * The snow bank.
+ *
+ * Chapter four had five words for fifteen levels — the thinnest vocabulary in
+ * the game — and all five were arrangements of one idea: *where can you stand
+ * so nothing has a line on you*. A pillar is the answer to that question, and
+ * once a player finds a pillar the level is over except for the walking.
+ *
+ * A bank is a pillar with a clock on it, and the clock is wound by the people
+ * shooting at you. Three hits and it is snow on the ground. So the safest
+ * place on the level is the place that is running out, hiding is a resource
+ * rather than a solution, and the level finally has an answer to camping that
+ * is not "we took the cover away".
+ *
+ * The rule that keeps it fair is that it is *never* counted as cover by the
+ * composer's own line checks. Every arena still has to be winnable with every
+ * bank already gone — which is the state it will be in a few seconds from now
+ * anyway. A bank can only ever give the player time.
+ */
+export const BANK = {
+  /** Snowballs it swallows before it is gone. */
+  hits: 3,
+  w: 58,
+  /** Low enough to jump, tall enough to stop a throw at standing height. */
+  h: 94,
+  tint: '#e8f6ff',
+};
+
 export const MENACE_CEILING = 1.35;
 
 export function menaceFor(at) {
