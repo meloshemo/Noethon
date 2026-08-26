@@ -1400,18 +1400,32 @@ kbd {
  * to do with the one number a shop exists to spend: the obvious gesture — tap
  * your money — did nothing. Now it goes where the money goes.
  */
+/*
+ * The purse.
+ *
+ * It is the only number in the game a player watches go up, and it appears on
+ * the title screen, in the shop header and on the win card — so it is worth
+ * more than a tinted pill. Lit along the top edge, sunk at the bottom, with a
+ * ring inside the border: a small gold object rather than a label.
+ */
 .wallet {
   display: inline-flex;
   align-items: center;
   gap: 0.4em;
-  padding: 0.32em 0.85em;
+  padding: 0.34em 0.9em;
   font-size: var(--fs-sm);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: var(--c-amber);
-  background: rgba(255, 196, 90, 0.12);
-  border: 1px solid rgba(255, 196, 90, 0.34);
+  letter-spacing: 0.01em;
+  color: #ffdd9b;
+  background:
+    linear-gradient(180deg, rgba(255, 214, 130, 0.24), rgba(255, 196, 90, 0.07));
+  border: 1px solid rgba(255, 196, 90, 0.42);
   border-radius: var(--r-full);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 240, 205, 0.35),
+    inset 0 -1px 0 rgba(80, 44, 0, 0.35),
+    0 6px 18px -12px rgba(255, 176, 60, 0.85);
   backdrop-filter: var(--blur);
   -webkit-backdrop-filter: var(--blur);
 }
@@ -1441,6 +1455,7 @@ kbd {
   width: 1.25em;
   height: 1.25em;
   flex: none;
+  filter: drop-shadow(0 1px 0 rgba(70, 38, 0, 0.5));
 }
 
 .wallet--inline {
@@ -1651,46 +1666,136 @@ kbd {
  * put their buttons on the same line. Before this the buttons in one row sat
  * at three different heights and the whole shop read as unfinished.
  */
+/* ================================================== Market: the cards */
+/*
+ * These were nine flat rectangles in one blue. Everything on them was true and
+ * nothing on them was worth looking at, which is a strange thing for the
+ * screen a player is meant to *want* to open.
+ *
+ * The rebuild is state, depth and one accent — not more colour:
+ *
+ *   · every card is a slab of glass: a sheen across the top, a hairline of
+ *     light along its upper edge, and a shadow under it, so it sits on the
+ *     page instead of being printed on it;
+ *   · the three states look like three different things. Affordable has a lit
+ *     rim and wants pressing. Out of reach is cooled down and carries a bar
+ *     showing how close you are. Finished is mint and sealed;
+ *   · the levels are a rail rather than three dots — earned segments lit, the
+ *     next one breathing.
+ *
+ * Gold is reserved for money and mint for "done". Nothing else is allowed to
+ * be either, which is what stops a screen with nine cards on it turning into a
+ * fruit machine.
+ */
 .item {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--s-2);
   padding: var(--s-4);
-  background: var(--surface);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0) 42%),
+    linear-gradient(180deg, var(--c-navy-soft), rgba(10, 22, 45, 0.92));
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
-  transition: border-color 0.18s, transform 0.18s;
-}
-.item:hover {
-  border-color: var(--border-strong);
+  box-shadow:
+    inset 0 1px 0 rgba(226, 244, 255, 0.09),
+    0 10px 26px -18px rgba(0, 0, 0, 0.9);
+  overflow: hidden;
+  transition:
+    border-color var(--t-base) var(--e-out),
+    transform var(--t-base) var(--e-out),
+    box-shadow var(--t-base) var(--e-out);
 }
 
-/* Out of reach: quieter, but never hidden — you are meant to want it. */
-.item--dear {
-  opacity: 0.78;
+/* A slow diagonal light across the glass. Purely a surface, never a colour. */
+.item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  /* Soft and cornered rather than a wedge across the middle. The first
+     version had a hard edge to it and read as a rendering seam. */
+  background: radial-gradient(120% 90% at 100% 0%,
+    rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0) 58%);
+  pointer-events: none;
 }
+
+.item:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgba(226, 244, 255, 0.14),
+    0 18px 34px -20px rgba(0, 0, 0, 0.95);
+}
+
+/*
+ * Affordable. The rim is lit and there is a wash of the accent behind the
+ * card, so the ones you can actually have read first from across the screen.
+ */
+.item:not(.item--dear):not(.item--maxed) {
+  border-color: rgba(79, 215, 255, 0.4);
+  box-shadow:
+    inset 0 1px 0 rgba(226, 244, 255, 0.14),
+    0 0 0 1px rgba(79, 215, 255, 0.08),
+    0 14px 30px -20px rgba(0, 0, 0, 0.95),
+    0 0 34px -18px rgba(79, 215, 255, 0.55);
+}
+
+/* Out of reach: cooled down, but never hidden — you are meant to want it. */
+.item--dear {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0) 42%),
+    linear-gradient(180deg, rgba(18, 33, 60, 0.9), rgba(8, 18, 38, 0.92));
+  border-color: rgba(143, 196, 226, 0.13);
+}
+.item--dear .item__name,
+.item--dear .item__blurb {
+  color: var(--text-muted);
+}
+.item--dear .item__icon {
+  background: rgba(143, 196, 226, 0.08);
+  color: rgba(143, 196, 226, 0.55);
+  box-shadow: inset 0 1px 0 rgba(226, 244, 255, 0.06);
+}
+
+/* Finished. */
 .item--maxed {
-  border-color: rgba(92, 225, 166, 0.32);
+  border-color: rgba(92, 225, 166, 0.38);
+  background:
+    linear-gradient(180deg, rgba(92, 225, 166, 0.07), rgba(255, 255, 255, 0) 46%),
+    linear-gradient(180deg, var(--c-navy-soft), rgba(10, 22, 45, 0.92));
 }
 
 .item__icon {
   display: grid;
   place-items: center;
-  width: 2.4rem;
-  height: 2.4rem;
+  width: 2.7rem;
+  height: 2.7rem;
   border-radius: var(--r-md);
-  background: rgba(79, 215, 255, 0.14);
-  color: var(--c-aqua);
+  /* An object, not a swatch: a lit top edge, a darker floor, an inner ring. */
+  background:
+    radial-gradient(120% 90% at 30% 8%, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 60%),
+    linear-gradient(180deg, rgba(79, 215, 255, 0.26), rgba(79, 215, 255, 0.08));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 0 0 1px rgba(79, 215, 255, 0.22);
+  color: var(--c-ice-100);
   flex: 0 0 auto;
 }
 .item--maxed .item__icon {
-  background: rgba(92, 225, 166, 0.16);
-  color: var(--c-mint);
+  background:
+    radial-gradient(120% 90% at 30% 8%, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0) 60%),
+    linear-gradient(180deg, rgba(92, 225, 166, 0.3), rgba(92, 225, 166, 0.09));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 0 0 1px rgba(92, 225, 166, 0.26);
+  color: #eafff6;
 }
 
 .item__icon svg {
-  width: 1.35rem;
-  height: 1.35rem;
+  width: 1.4rem;
+  height: 1.4rem;
+  filter: drop-shadow(0 1px 0 rgba(3, 20, 38, 0.5));
 }
 
 .item__head {
@@ -1703,20 +1808,24 @@ kbd {
 .item__name {
   font-size: var(--fs-sm);
   font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 /* "1/3" beats three dots: a number is read, a dot pattern is counted. */
 .item__level {
   margin-left: auto;
-  padding: 0.1rem 0.4rem;
+  padding: 0.12rem 0.45rem;
   border-radius: 999px;
-  background: rgba(8, 19, 42, 0.55);
+  background: rgba(4, 12, 28, 0.66);
+  box-shadow: inset 0 0 0 1px rgba(143, 196, 226, 0.14);
   color: var(--text-faint);
   font-size: var(--fs-2xs);
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 .item--maxed .item__level {
   color: var(--c-mint);
+  box-shadow: inset 0 0 0 1px rgba(92, 225, 166, 0.3);
 }
 
 .item__blurb {
@@ -1732,36 +1841,53 @@ kbd {
   flex-wrap: wrap;
 }
 
-.item__pips {
-  display: inline-flex;
+/*
+ * The levels, as a rail.
+ *
+ * Three dots said how many you had. A rail says how much of the thing you own
+ * — and the segment you would buy next breathes, which is the only animation
+ * on the card and points at the only button on it.
+ */
+.item__rail {
+  display: flex;
   gap: 3px;
-  margin-left: auto;
+  height: 4px;
 }
 
-.item__pips i {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: rgba(143, 196, 226, 0.25);
+.item__rail i {
+  flex: 1;
+  border-radius: 999px;
+  background: rgba(143, 196, 226, 0.16);
 }
 
-.item__pips i.on {
-  background: var(--c-mint);
+.item__rail i.on {
+  background: linear-gradient(90deg, var(--c-mint), #8ff0c8);
+  box-shadow: 0 0 10px -2px rgba(92, 225, 166, 0.7);
+}
+
+.item:not(.item--dear) .item__rail i.next {
+  background: rgba(79, 215, 255, 0.45);
+  animation: railBreathe 2.4s ease-in-out infinite;
+}
+
+@keyframes railBreathe {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 1; }
 }
 
 /* The action, always last and always on the same line as its neighbours'. */
 .item__foot {
   display: flex;
   align-items: center;
-  gap: var(--s-2);
+  gap: var(--s-3);
   margin-top: auto;
   padding-top: var(--s-2);
 }
 
 .btn--buy {
   flex: 0 0 auto;
-  min-height: 2.3rem;
-  padding: 0.45rem 0.95rem;
+  min-height: 2.4rem;
+  padding: 0.45rem 1.05rem;
   font-size: var(--fs-xs);
 }
 .btn__price b {
@@ -1769,26 +1895,70 @@ kbd {
   font-variant-numeric: tabular-nums;
 }
 
+/*
+ * How far, and how far along.
+ *
+ * "240 more fish" is a number you have to hold against a price you have to go
+ * and look up. A bar that is nearly full is a feeling, and the feeling is what
+ * brings somebody back to this screen.
+ */
 .item__short {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.item__shortBar {
+  display: block;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(143, 196, 226, 0.16);
+  overflow: hidden;
+}
+
+.item__shortBar i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 196, 90, 0.55), var(--c-amber));
+}
+
+.item__shortText {
   color: var(--c-amber);
   font-size: var(--fs-2xs);
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .item__done {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(92, 225, 166, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(92, 225, 166, 0.3);
   color: var(--c-mint);
   font-size: var(--fs-xs);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 /* ---- Shop groups ---------------------------------------------------- */
-
+/*
+ * A header, a subtitle, a count and a meter. The meter is the change: "3/8" is
+ * a fact you read, a bar three-eighths full is a shelf you are filling — and
+ * these three groups are the only structure this screen has.
+ */
 .shop__group {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: baseline;
   gap: var(--s-2);
   grid-column: 1 / -1;
-  margin: var(--s-4) 0 calc(var(--s-2) * -1);
+  margin: var(--s-5) 0 calc(var(--s-2) * -1);
   padding-bottom: var(--s-2);
   border-bottom: 1px solid var(--border);
 }
@@ -1800,15 +1970,41 @@ kbd {
   font-weight: 700;
   letter-spacing: -0.01em;
 }
+.shop__group.is-done .shop__groupName {
+  color: var(--c-mint);
+}
 .shop__groupNote {
   color: var(--text-faint);
   font-size: var(--fs-2xs);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .shop__groupCount {
-  margin-left: auto;
   color: var(--text-faint);
   font-size: var(--fs-2xs);
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
+}
+.shop__group.is-done .shop__groupCount {
+  color: var(--c-mint);
+}
+.shop__groupBar {
+  grid-column: 1 / -1;
+  display: block;
+  height: 3px;
+  margin-top: 2px;
+  border-radius: 999px;
+  background: rgba(143, 196, 226, 0.14);
+  overflow: hidden;
+}
+.shop__groupBar i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(79, 215, 255, 0.7), var(--c-mint));
+  transition: width var(--t-slow) var(--e-out);
 }
 
 /* A purchase should be felt where the money is, not only where you pressed. */
@@ -1932,6 +2128,30 @@ kbd {
 
 /* The shop's opening line is context, not content: it should never be the
    tallest thing above the fold. */
+/*
+ * A room, not a form.
+ *
+ * The shop is a list of nine cards and it was sitting on the same flat ground
+ * as every other screen. One cold light from above the header is enough to
+ * make it a place — anything more competes with the cards, which are the part
+ * that is supposed to glow.
+ */
+.screen--shop {
+  position: relative;
+}
+
+.screen--shop::before {
+  content: '';
+  position: absolute;
+  inset: -10% -20% auto -20%;
+  height: 60%;
+  background:
+    radial-gradient(60% 100% at 50% 0%, rgba(79, 215, 255, 0.09), rgba(79, 215, 255, 0) 70%),
+    radial-gradient(40% 80% at 82% 6%, rgba(155, 140, 255, 0.08), rgba(155, 140, 255, 0) 70%);
+  pointer-events: none;
+  z-index: -1;
+}
+
 .screen--shop .screen__lede {
   font-size: var(--fs-xs);
   color: var(--text-faint);
@@ -1957,10 +2177,17 @@ kbd {
     grid-template-areas:
       'icon head foot'
       'icon blurb foot'
-      'icon meta foot';
+      'icon meta foot'
+      'rail rail rail';
     align-items: center;
     gap: 0.2rem var(--s-3);
     padding: var(--s-3);
+  }
+  /* Full width along the bottom rather than a stub under the icon: it is a
+     measure of the card, so it should be as wide as the card. */
+  .item__rail {
+    grid-area: rail;
+    margin-top: 0.45rem;
   }
   .item__icon {
     grid-area: icon;
@@ -1986,8 +2213,11 @@ kbd {
   .item__level {
     margin-left: 0;
   }
-  .item__pips {
-    margin-left: 0;
+  .item__short {
+    align-items: flex-end;
+  }
+  .item__shortBar {
+    width: 4.5rem;
   }
 }
 
@@ -3018,39 +3248,92 @@ kbd {
 
 /* =========================================================== Monument */
 
+/*
+ * The monument sits above everything else in the shop, so it has to earn the
+ * position. It was a dashed banner; it is the one thing here that is not for
+ * sale in the ordinary sense — a hole you can pour a hundred thousand fish
+ * into — and it should read as the deep end of the screen rather than as the
+ * first row of it.
+ */
 .monument {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: var(--s-3);
+  gap: var(--s-4);
   width: 100%;
-  padding: var(--s-3);
+  padding: var(--s-4);
   text-align: left;
-  background: linear-gradient(135deg, rgba(126, 200, 240, 0.1), rgba(155, 140, 255, 0.08));
-  border: 1px dashed rgba(143, 196, 226, 0.4);
-  border-radius: var(--r-md);
-  transition: border-color var(--t-fast) var(--e-out), transform var(--t-fast) var(--e-out);
+  background:
+    radial-gradient(90% 140% at 0% 0%, rgba(155, 140, 255, 0.16), rgba(155, 140, 255, 0) 62%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0) 40%),
+    linear-gradient(160deg, rgba(24, 42, 78, 0.95), rgba(8, 18, 38, 0.95));
+  border: 1px solid rgba(143, 196, 226, 0.22);
+  border-radius: var(--r-lg);
+  box-shadow:
+    inset 0 1px 0 rgba(226, 244, 255, 0.1),
+    0 14px 34px -22px rgba(0, 0, 0, 0.95);
+  overflow: hidden;
+  transition:
+    border-color var(--t-base) var(--e-out),
+    transform var(--t-base) var(--e-out),
+    box-shadow var(--t-base) var(--e-out);
+}
+
+/* A cold aurora across the top, slow enough that you notice it only if you
+   stop. It is the only moving light in the shop. */
+.monument::before {
+  content: '';
+  position: absolute;
+  inset: -60% -20% auto -20%;
+  height: 160%;
+  background: linear-gradient(100deg,
+    rgba(79, 215, 255, 0) 30%,
+    rgba(126, 200, 240, 0.1) 50%,
+    rgba(155, 140, 255, 0) 70%);
+  pointer-events: none;
+  animation: monumentAurora 9s ease-in-out infinite;
+}
+
+@keyframes monumentAurora {
+  0%, 100% { transform: translateX(-12%); }
+  50%      { transform: translateX(12%); }
 }
 
 .monument.is-affordable {
-  border-style: solid;
-  border-color: rgba(79, 215, 255, 0.55);
+  border-color: rgba(79, 215, 255, 0.5);
+  box-shadow:
+    inset 0 1px 0 rgba(226, 244, 255, 0.16),
+    0 14px 34px -22px rgba(0, 0, 0, 0.95),
+    0 0 40px -20px rgba(79, 215, 255, 0.6);
 }
 
 .monument:hover,
 .monument:focus-visible {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  border-color: rgba(143, 196, 226, 0.42);
 }
 
 .monument__art {
+  position: relative;
   flex: none;
-  width: 2.2rem;
-  height: 2.2rem;
-  color: var(--c-ice-200);
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--r-md);
+  background:
+    radial-gradient(120% 90% at 30% 8%, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0) 60%),
+    linear-gradient(180deg, rgba(155, 140, 255, 0.3), rgba(79, 215, 255, 0.12));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 0 0 1px rgba(155, 140, 255, 0.28);
+  color: var(--c-ice-100);
 }
 
 .monument__art svg {
-  width: 100%;
-  height: 100%;
+  width: 62%;
+  height: 62%;
+  filter: drop-shadow(0 1px 0 rgba(3, 20, 38, 0.55));
 }
 
 .monument__body {

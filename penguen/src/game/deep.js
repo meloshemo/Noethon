@@ -24,7 +24,10 @@
  *      apart than a lungful can carry you, with margin.
  */
 
-import { PENGUIN, SWIM, swimReach, breathRange, swimCost, TRENCH, CHARGED } from './config.js';
+import {
+  PENGUIN, SWIM, swimReach, breathRange, breathFor, swimCost, TRENCH, CHARGED,
+  VENT, ventWait, swimSpeed,
+} from './config.js';
 import { nudgeClear } from '../core/util.js';
 
 /**
@@ -99,6 +102,8 @@ export class Deep {
     this.route = [];
     /** Where the last breath was taken, so the composer can price the next one. */
     this.lastAir = 0;
+    /** Cracks in the seabed that breathe. */
+    this.vents = [];
   }
 
   /* --------------------------------------------------------- geometry */
@@ -273,6 +278,24 @@ export class Deep {
   }
 
   /**
+   * What a vent will cost from depth `lane`: the dive, the ridge, and the wait.
+   *
+   * `stretch` has to know this before it lays anything, for exactly the reason
+   * it already has to know `surfaceRunFrom`: it fills the corridor up to the
+   * budget and then hands over to whatever ends the stretch, and if it does not
+   * keep back enough for that piece the piece is refused. A vent ends a stretch
+   * the same way a hole does — but it ends it *downwards*, and it also charges
+   * for standing still, so the reserve is a different number.
+   */
+  ventRunFrom(lane, { dip = 170, period = VENT.period } = {}) {
+    const floor = this.depth - 74;
+    const top = Math.min(floor - 8, lane + this.penguinH + dip);
+    const stand = top - this.penguinH;
+    const drop = Math.max(0, this.reachFor(stand - lane));
+    return drop + VENT.width * 2 + 160 + ventWait(period, VENT.blow) * swimSpeed(this.scale);
+  }
+
+  /**
    * Swim until the lungs are `of` of the way down, then come up.
    *
    * The budget is a ceiling, and a ceiling nobody reaches is decoration. A plan
@@ -281,7 +304,7 @@ export class Deep {
    * and the piece that ends it is a breath. This is where the tension of the
    * chapter actually lives.
    */
-  stretch({ of = null, gap = null, len = 280, from = 0.3 } = {}) {
+  stretch({ of = null, gap = null, len = 280, from = 0.3, next = 'air' } = {}) {
     // Spending the whole budget is the default, because the budget *is* the
     // level's difficulty and a stretch that quietly asks for less than it was
     // given is a dial wired to nothing. A plan says `of` only to ask for less.
@@ -292,7 +315,13 @@ export class Deep {
     const net = this.hold;
     this.hold = Infinity;
     let n = 0;
-    while (this.swimSince + len + this.surfaceRun < target && n < 20) {
+    // What has to be kept back for the piece that ends this stretch. A hole is
+    // a rise and a vent is a dive with a wait on the end of it; they are not
+    // the same reserve, and using the hole's for both put every vent in the
+    // chapter over its budget by about the length of one wait.
+    const reserve = () =>
+      (next === 'vent' ? this.ventRunFrom(this.lane) : this.surfaceRun);
+    while (this.swimSince + len + reserve() < target && n < 20) {
       // Alternating open water and slots, and the slots wander up and down the
       // column so the cost is depth as well as distance.
       if (n % 2 === 1) this.gate({ at: from + ((n * 0.19) % 0.46), gap });
@@ -309,7 +338,9 @@ export class Deep {
     // just under the ice and then rises through it, and neither leg is
     // horizontal. Cheaper to keep a little back than to be eighteen pixels over
     // and refused.
-    while (this.swimSince + 150 + this.surfaceRunFrom(this.lane) + 90 < target && fill++ < 12) {
+    const tail = () =>
+      (next === 'vent' ? this.ventRunFrom(this.lane) : this.surfaceRunFrom(this.lane));
+    while (this.swimSince + 150 + tail() + 90 < target && fill++ < 12) {
       this.open({ len: 150 });
     }
     this.hold = net;
@@ -512,6 +543,104 @@ export class Deep {
     return this;
   }
 
+  /**
+   * A crack in the seabed that breathes.
+   *
+   * The chapter's one new question: not *how fast*, but *when*. See `VENT`.
+   *
+   * It lays its own approach, the way `hole` does, and for the mirrored
+   * reason. A hole is at the ceiling and the approach to it is a rise; a vent
+   * is on the floor and the approach is a dive, which in this chapter is the
+   * direction that costs. Assuming the swimmer is already down there priced
+   * the descent twice — once in the route the corridor makes them swim, and
+   * again as a "detour" added on top — and refused every placement in the
+   * game, including the ones that were fine.
+   *
+   * Two things have to be true, and both are arithmetic:
+   *
+   *   · the swim down and the longest possible wait together fit inside the
+   *     lungful you arrived with — worst case being one frame after a blow
+   *     ends;
+   *   · the wait itself is less than a lungful, or hanging over it is not a
+   *     decision, it is a drowning with a countdown.
+   */
+  vent({ dip = 170, period = VENT.period, phase = 0 } = {}) {
+    const floor = this.depth - 74;
+    /*
+     * On a ridge, not on the seabed.
+     *
+     * The seabed is the obvious place for a crack that breathes and it is the
+     * wrong one: from the line just under the ice it is a four-hundred-pixel
+     * descent, and priced honestly — this chapter prices every dive as the
+     * horizontal distance it really costs — that is most of a lungful before
+     * the waiting even starts. Every placement in the game was refused.
+     *
+     * So the crack is in a rock ridge standing off the floor. Still a dive,
+     * still the direction that costs, still air in the last place this chapter
+     * has ever put it; just a dive a breath can pay for.
+     */
+    const top = Math.round(Math.min(floor - 8, this.lane + this.penguinH + dip));
+    const stand = top - this.penguinH;
+    if (top - 74 < this.minGap) {
+      throw new Error(`baca sırtı tavana çok yakın: ${Math.round(top - 74)}px`);
+    }
+
+    const dropNeed = Math.max(0, this.reachFor(stand - this.lane));
+    const run = Math.round(Math.max(dropNeed + VENT.width * 2 + 160, 300));
+
+    const x = this.x;
+    this._span(run, 74, floor);
+    const cx = x + dropNeed + VENT.width + 40;
+
+    // The ridge the crack is in.
+    this.terrain.push({
+      x: Math.round(cx - VENT.width),
+      y: top,
+      w: VENT.width * 2,
+      h: Math.round(floor - top + 8),
+      kind: 'rock',
+    });
+
+    // One leg down to it. There is no ice between here and the ridge — the
+    // corridor is open — so the line down is the line the swimmer takes, and
+    // an intermediate node would only be a shorter leg asked for the same drop.
+    // Tagged as air, because it *is* air. Every rule in this chapter that
+    // resets a lungful at a breathing point — `swimSince` here, the stretch
+    // check in `validate-dive` — then covers the vent without being told about
+    // it, which is the same trick the trench used and for the same reason.
+    // The tag it deserves for its own sake is carried alongside.
+    this._node(cx, stand, this.minGap, 'air');
+    this.route[this.route.length - 1].vent = true;
+    this.lane = stand;
+
+    const wait = ventWait(period, VENT.blow);
+    const waitAsDistance = wait * swimSpeed(this.scale);
+    const owed = this.swimSince + waitAsDistance;
+    if (owed > this.breathReach) {
+      throw new Error(
+        `bacaya inip beklemek ciğere sığmıyor: ${Math.round(owed)}px ` +
+          `(${Math.round(waitAsDistance)}px'i bekleme), bir ciğer ${Math.round(this.breathReach)}px`,
+      );
+    }
+    if (wait >= breathFor(this.scale) * 0.5) {
+      throw new Error(`baca döngüsü çok uzun: ${wait.toFixed(1)} sn bekleme`);
+    }
+
+    this.vents.push({
+      x: Math.round(cx - VENT.width / 2),
+      y: Math.round(top - VENT.height),
+      w: VENT.width,
+      h: VENT.height,
+      period,
+      phase,
+    });
+
+    // Breathing at the vent resets the budget exactly as a hole in the ice does.
+    this.lastAir = cx;
+    this.owedBreath = false;
+    return this;
+  }
+
   /** Where the penguin goes in. Open water, and the surface right above it. */
   mouth({ len = 260 } = {}) {
     const x = this.x;
@@ -698,6 +827,7 @@ export class Deep {
       rotFish: this.rotFish,
       checkpoints: this.checkpoints,
       zones: this.zones,
+      vents: this.vents,
       /** Cold bands, for the validator to charge the lungs properly. */
       trenches: this.trenches ?? [],
       route: this.route,

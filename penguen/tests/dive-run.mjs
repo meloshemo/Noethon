@@ -90,16 +90,49 @@ function trySwim(def, { look, band, start, fear }, probe = {}) {
     // hold still until they are full. It costs seconds on the clock, which is
     // exactly the trade the chapter is about.
     const head = { x: p.x, y: p.y, w: p.w, h: p.h * 0.45 };
-    const gulping =
-      p.breath < p.breathMax * 0.97 &&
-      world.airHoles.some(
-        (a) =>
-          head.x < a.x + a.w &&
-          head.x + head.w > a.x &&
-          head.y < a.y + a.h &&
-          head.y + head.h > a.y,
-      );
-    const axis = t < start || gulping ? 0 : 1;
+    const inside = (a) =>
+      head.x < a.x + a.w &&
+      head.x + head.w > a.x &&
+      head.y < a.y + a.h &&
+      head.y + head.h > a.y;
+    /*
+     * And the same thing at a vent, with the one difference that is the whole
+     * point of a vent: it is not always giving. A hole in the ice rewards
+     * stopping immediately; a crack in the seabed rewards stopping and then
+     * *staying* through a silence that costs air. A controller that leaves the
+     * moment the bubbles stop takes a sip and drowns two slots later, which is
+     * exactly what this solver did the first time these levels were composed —
+     * it failed them both, and they are fine.
+     */
+    const thirsty = p.breath < p.breathMax * 0.97;
+    /*
+     * A vent is not somewhere you pass through, it is somewhere you stand.
+     *
+     * A hole in the ice is a wide cut: swim up into it, let go, and you are
+     * still in it a second later. The column over a vent is a body and a half
+     * across, and at cruising speed you are out the far side in a fifth of a
+     * second — so "stop pressing" is not enough, because stopping pressing
+     * still coasts. That is precisely what this solver did the first time
+     * these levels were composed: it drifted into the column with five
+     * seconds of air, drifted out of it during the silence, and drowned two
+     * slots later with the vent behind it.
+     *
+     * So while the lungs are down and a vent is the next air on the route, it
+     * steers *to* the middle of the column and then keeps steering to stay
+     * there, through the silence, until the blow has filled it.
+     */
+    const vent = thirsty
+      ? (world.vents ?? []).find((v) => v.x + v.w > cx - 40 && v.x - cx < fear)
+      : null;
+    const onVent = Boolean(vent) && inside(vent);
+    const gulping = thirsty && (world.airHoles.some(inside) || onVent);
+    let steer = 1;
+    if (vent) {
+      const mid = vent.x + vent.w / 2;
+      steer = Math.abs(mid - cx) < 6 ? 0 : (mid > cx ? 1 : -1);
+    }
+    // Holding at a hole means letting go; holding at a vent means holding on.
+    const axis = t < start ? 0 : (vent ? steer : (gulping ? 0 : 1));
 
     world.update(STEP, { axis, jumpHeld, jumpPressed: false });
     t += STEP;

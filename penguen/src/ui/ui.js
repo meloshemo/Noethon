@@ -681,6 +681,10 @@ export class UI {
    */
   buildShop() {
     this.refreshMonument();
+    // The cards read the purse and the chip in the corner is filled in
+    // somewhere else entirely, which is one refresh away from the two of them
+    // disagreeing on the same screen. They are the same number; read it once.
+    this.refreshWallet();
     const coins = this.save.coins ?? 0;
     const grid = this.el.shopGrid;
     grid.innerHTML = '';
@@ -692,11 +696,17 @@ export class UI {
       const have = items.reduce((n, sp) => n + (this.save.upgrades[sp.id] ?? 0), 0);
       const all = items.reduce((n, sp) => n + sp.levels.length, 0);
       const head = document.createElement('h3');
-      head.className = 'shop__group';
+      head.className = `shop__group${have >= all ? ' is-done' : ''}`;
+      // The count was already here as text. A bar next to it turns "3/8" into
+      // something you can see from across the screen, which is the difference
+      // between a list of things to buy and a collection you are filling.
       head.innerHTML =
         `<span class="shop__groupName">${loc(group)}</span>` +
         `<span class="shop__groupNote">${loc(group, 'note')}</span>` +
-        `<span class="shop__groupCount">${t('ui.levelsOf', { have, all })}</span>`;
+        `<span class="shop__groupCount">${t('ui.levelsOf', { have, all })}</span>` +
+        `<span class="shop__groupBar" aria-hidden="true"><i style="width:${
+          Math.round((have / Math.max(1, all)) * 100)
+        }%"></i></span>`;
       grid.append(head);
 
       for (const spec of items) grid.append(this._shopCard(spec, coins));
@@ -723,10 +733,10 @@ export class UI {
         <span class="item__effect">${
           maxed ? loc(spec.levels[spec.levels.length - 1], 'label') : loc(next, 'label')
         }</span>
-        <span class="item__pips" aria-hidden="true">${spec.levels
-          .map((_, i) => `<i class="${i < owned ? 'on' : ''}"></i>`)
-          .join('')}</span>
-      </span>`;
+      </span>
+      <span class="item__rail" aria-hidden="true">${spec.levels
+        .map((_, i) => `<i class="${i < owned ? 'on' : i === owned ? 'next' : ''}"></i>`)
+        .join('')}</span>`;
 
     const foot = document.createElement('div');
     foot.className = 'item__foot';
@@ -759,7 +769,15 @@ export class UI {
         // feelings and the player should get to have the right one.
         const gap = document.createElement('span');
         gap.className = 'item__short';
-        gap.textContent = t('ui.short', { n: short });
+        // How far, and how far *along*. "Two hundred and forty more" is a
+        // number you have to hold in your head against a price you have to go
+        // and look up; a bar that is nearly full is a feeling, and the feeling
+        // is the thing that brings somebody back to this screen.
+        gap.innerHTML =
+          `<span class="item__shortBar"><i style="width:${
+            Math.round(Math.min(1, coins / next.cost) * 100)
+          }%"></i></span>` +
+          `<span class="item__shortText">${t('ui.short', { n: short })}</span>`;
         foot.append(gap);
       }
     }

@@ -9,7 +9,7 @@
  */
 
 import {
-  VIEW, viewFor, AMBUSH, CHARGED, COIL, QUANTUM, SLACK, CLIMB, BRAWL, TRENCH, lobShot,
+  VIEW, viewFor, AMBUSH, CHARGED, COIL, QUANTUM, SLACK, CLIMB, BRAWL, TRENCH, VENT, lobShot,
 } from './config.js';
 import { getSkin, getTrail } from './skins.js';
 import { t } from '../core/i18n.js';
@@ -239,6 +239,7 @@ export class Renderer {
     ctx.translate(-camX, -camY);
     this._terrain(ctx, world, time);
     if (world.diving) this._airHoles(ctx, world, time);
+    if (world.diving) this._vents(ctx, world, time);
     this._zonesBack(ctx, world, time);
     this._signs(ctx, world);
     this._floes(ctx, world, time);
@@ -354,6 +355,99 @@ export class Renderer {
       ctx.fillStyle = 'rgba(236,252,255,0.85)';
       ctx.fillRect(hole.x - 10, y - 6, 12, 8);
       ctx.fillRect(hole.x + hole.w - 2, y - 6, 12, 8);
+    }
+  }
+
+  /**
+   * The cracks in the seabed that breathe.
+   *
+   * Drawn from `ventAt` — the same curve the water reads and the validator
+   * prices — so the column a player is timing their dive against is the column
+   * that is actually giving air. Three things have to be legible from a
+   * distance: that it is there when it is silent, that it is *about* to blow,
+   * and that it is blowing now.
+   */
+  _vents(ctx, world, time) {
+    const view = this._viewBounds(world);
+    for (const v of world.vents ?? []) {
+      if (v.x + v.w < view.left || v.x > view.right) continue;
+      const strength = v.blow ?? 0;
+      const mouthY = v.y + v.h;
+      const cx = v.x + v.w / 2;
+
+      // The mouth. Always visible, so a silent vent is still a landmark.
+      ctx.fillStyle = 'rgba(10,26,44,0.85)';
+      ctx.beginPath();
+      ctx.ellipse(cx, mouthY, v.w * 0.42, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = withAlpha(VENT.tint, 0.35 + strength * 0.5);
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      if (strength <= 0.02) {
+        // Silent, but stirring: a few grains lifting off the lip say the crack
+        // is alive and worth waiting on, without promising air that is not
+        // coming yet.
+        if (!this.reducedMotion) {
+          ctx.fillStyle = withAlpha(VENT.tint, 0.22);
+          for (let i = 0; i < 3; i++) {
+            const t = (time * 0.5 + i * 0.33) % 1;
+            ctx.beginPath();
+            ctx.arc(cx + Math.sin(t * 6 + i) * 9, mouthY - t * 26, 1.6, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        continue;
+      }
+
+      // The column.
+      const h = v.h * (0.35 + strength * 0.65);
+      const g = ctx.createLinearGradient(0, mouthY, 0, mouthY - h);
+      g.addColorStop(0, withAlpha(VENT.tint, 0.4 * strength));
+      g.addColorStop(0.55, withAlpha(VENT.tint, 0.2 * strength));
+      g.addColorStop(1, withAlpha(VENT.tint, 0));
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.moveTo(cx - v.w * 0.34, mouthY);
+      ctx.lineTo(cx - v.w * 0.62, mouthY - h);
+      ctx.lineTo(cx + v.w * 0.62, mouthY - h);
+      ctx.lineTo(cx + v.w * 0.34, mouthY);
+      ctx.closePath();
+      ctx.fill();
+
+      // Bubbles, rising on their own clock so the column has grain rather than
+      // being a beam of light with a gradient on it. Enough of them that the
+      // thing reads as *air* from across the screen, because deciding to swim
+      // down to it is a decision made from across the screen.
+      const n = Math.round(26 * strength) + 6;
+      for (let i = 0; i < n; i++) {
+        const seed = i * 2.399 + v.x * 0.013;
+        const rise = ((time * (0.62 + (i % 5) * 0.13) + seed) % 1);
+        const y = mouthY - rise * h;
+        // They spread as they climb, the way a plume does.
+        const spread = 0.12 + rise * 0.5;
+        const wob = Math.sin(rise * 6.5 + seed * 3.1) * v.w * spread;
+        const r = 1.4 + (i % 5) * 0.8 * strength * (1 - rise * 0.35);
+        const fade = Math.sin(Math.min(1, rise * 1.35) * Math.PI) * 0.9 + 0.1;
+        ctx.fillStyle = withAlpha('#eaffff', fade * 0.7 * strength);
+        ctx.beginPath();
+        ctx.arc(cx + wob, y, r, 0, Math.PI * 2);
+        ctx.fill();
+        // A highlight on the bigger ones, so they are bubbles and not dots.
+        if (r > 2.4) {
+          ctx.fillStyle = withAlpha('#ffffff', fade * 0.5 * strength);
+          ctx.beginPath();
+          ctx.arc(cx + wob - r * 0.3, y - r * 0.3, r * 0.34, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // A hard glow at the mouth while it is blowing: the source of the thing.
+      const mg = ctx.createRadialGradient(cx, mouthY, 2, cx, mouthY, v.w * 0.7);
+      mg.addColorStop(0, withAlpha('#dffcff', 0.5 * strength));
+      mg.addColorStop(1, withAlpha('#dffcff', 0));
+      ctx.fillStyle = mg;
+      ctx.fillRect(cx - v.w * 0.7, mouthY - v.w * 0.7, v.w * 1.4, v.w * 1.4);
     }
   }
 

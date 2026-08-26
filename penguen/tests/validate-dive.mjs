@@ -9,7 +9,9 @@
  */
 
 import { DIVE_LEVELS } from '../src/game/dive.js';
-import { PENGUIN, SWIM, swimReach, breathRange, breathFor, swimCost } from '../src/game/config.js';
+import {
+  PENGUIN, SWIM, swimReach, breathRange, breathFor, swimCost, ventWait, swimSpeed,
+} from '../src/game/config.js';
 import { rectsOverlap } from '../src/core/util.js';
 
 let fails = 0;
@@ -68,8 +70,24 @@ for (const def of DIVE_LEVELS) {
    *    the level simply cannot be finished by anybody.
    */
   const breaths = [0];
-  for (const r of route) if (r.tag === 'air' || r.tag === 'start') breaths.push(r.x);
+  /**
+   * A vent is a breath with a bill attached.
+   *
+   * It gives air like a hole in the ice, so it resets the lungful and belongs
+   * in this list — but only while it is blowing, and the worst case is turning
+   * up one frame after a blow ends. That wait is spent hanging over a rock
+   * doing nothing, and doing nothing costs exactly as much air as swimming
+   * does, so the stretch *into* a vent has to fit inside a lungful minus the
+   * wait. Nothing else in this chapter charges for standing still, which is
+   * the entire reason the vent is here.
+   */
+  const ventAt = new Set();
+  for (const r of route) {
+    if (r.tag === 'air' || r.tag === 'start') breaths.push(r.x);
+    if (r.vent) ventAt.add(r.x);
+  }
   breaths.push(route[route.length - 1].x);
+  const waitCost = ventWait() * swimSpeed(scale);
   const lung = breathRange(scale);
   /**
    * Distance from a to b, charged at whatever the lungs are actually paying.
@@ -98,8 +116,14 @@ for (const def of DIVE_LEVELS) {
     // The fairness line, not the difficulty dial. The composer's own budget is
     // per level and climbs across the chapter; this is the point past which
     // there is no room left for a player who takes a slightly wrong line.
-    if (swim > lung * 0.95) {
-      bad(def, `${Math.round(swim)}px nefessiz, bir ciğer ${Math.round(lung)}px`);
+    const budget = lung * 0.95 - (ventAt.has(breaths[i]) ? waitCost : 0);
+    if (swim > budget) {
+      bad(
+        def,
+        `${Math.round(swim)}px nefessiz` +
+          (ventAt.has(breaths[i]) ? ` + ${Math.round(waitCost)}px baca beklemesi` : '') +
+          `, bir ciğer ${Math.round(lung)}px`,
+      );
     }
   }
 

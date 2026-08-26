@@ -181,7 +181,13 @@ const DIVE_PLANS = [
       d.gate({ at: 0.22, gap: 164 });
       d.hole();
       d.trench({ at: 0.66, dip: 0.5, len: 320 });
-      d.hole();
+      /* The bottom of the sawtooth, finally worth going to.
+         Up, down, up — and until now every *down* was a cost and every *up*
+         was where the air was, so the shape of the level and the shape of the
+         reward pointed opposite ways. One tooth now ends in a crack that
+         breathes, which makes the deepest point on the level the one place you
+         want to be, and makes you wait there while the cold runs the clock. */
+      d.vent();
       d.gate({ at: 0.24, gap: 162 });
       d.stretch({ gap: 165, from: 0.26 });
       d.surfaceOut();
@@ -195,7 +201,7 @@ const DIVE_PLANS = [
     en: { name: "The Glacier's Belly", subtitle: 'The ceiling comes down' },
     target: 54,
     depth: 620,
-    breath: 0.82,
+    breath: 0.9,
     /* The ceiling never lifts. Every slot is a squeeze and they are all near
        the bed, so the whole level is swum in the expensive half of the water
        with no room to drift. */
@@ -203,7 +209,12 @@ const DIVE_PLANS = [
       d.mouth();
       d.gate({ at: 0.72, gap: 156 });
       d.gate({ at: 0.76, gap: 152 });
-      d.hole();
+      /* On a level where the ceiling never lifts, the air stops being up.
+         Every slot here is already down in the expensive half of the water,
+         so a hole in the ice was the one moment the level let you go back to
+         the surface and be comfortable — which is the opposite of what it says
+         it is about. The crack in the floor is where you already are. */
+      d.vent();
       // Squeezed from both sides at once. Every slot on this level is already
       // down in the expensive half of the water because the ceiling never
       // lifts — and now the expensive half is expensive for a reason. The
@@ -211,6 +222,7 @@ const DIVE_PLANS = [
       // being low, so the level must not also charge them the full rate for it.
       d.trench({ at: 0.7, dip: 0.42, len: 300 });
       d.gate({ at: 0.78, gap: 148 });
+      d.gate({ at: 0.8, gap: 146 });
       d.stretch({ gap: 152, from: 0.66 });
       d.surfaceOut();
       d.scatterFish(3, 40);
@@ -274,12 +286,20 @@ const DIVE_PLANS = [
     name: 'İki Ciğer',
     subtitle: 'Delikler seyrek',
     en: { name: 'Two Lungs', subtitle: 'The holes are far apart' },
-    target: 62,
+    target: 66,
     depth: 580,
-    breath: 0.87,
+    breath: 0.86,
     /* Exactly two breaths in the whole level, and both of them are earned. The
        name is the level: you get two lungfuls and the sea is longer than two
-       lungfuls' worth of comfortable swimming. */
+       lungfuls' worth of comfortable swimming.
+
+       That was the claim. Measured against `breathRange`, the crossing was
+       0.99 of *one* lungful — the level named Two Lungs was a one-lung level
+       with an optional hole in the middle of it, and a speed fish on the line
+       to make sure. It had been that way since it was written and nothing
+       could see it, because every rule in the chapter checks that a stretch is
+       *short* enough and none of them checks that a level is long enough to
+       deserve its name. The budget is up and the shortcut is gone. */
     build: (d) => {
       d.mouth();
       d.stretch({ gap: 165, len: 320, from: 0.3 });
@@ -290,10 +310,14 @@ const DIVE_PLANS = [
       // has the most air and the least reason to think about it.
       d.trench({ at: 0.6, dip: 0.66, len: 340 });
       d.gate({ at: 0.7, gap: 160 });
+      d.gate({ at: 0.44, gap: 158 });
       d.stretch({ gap: 162, len: 300, from: 0.34 });
       d.surfaceOut();
       d.scatterFish(3, 40);
-      d.fishAt(2, 80, 'speed');
+      /* The speed fish is gone from this one.
+         It sat on the line, on the level whose entire subject is air, and it
+         is the one pickup that shortens a swim. A level called Two Lungs
+         should not hand you a way to make it one. */
       d.checkpointAt(2);
     },
   },
@@ -313,7 +337,15 @@ const DIVE_PLANS = [
       d.gate({ at: 0.66, gap: 148 });
       d.gate({ at: 0.28, gap: 146 });
       d.gate({ at: 0.7, gap: 146 });
-      d.hole();
+      /* The one rest on the level, and it charges rent.
+         This level's own note says there is never a stretch in which to settle
+         and never a moment the line is not being asked for — which was true of
+         everything except the breath in the middle, where you popped up
+         through the ice and went again without deciding anything. So the
+         breath is a vent now: it is on the floor, it is on a clock, and the
+         only way to take it is to stop moving in the one level built out of
+         not stopping. */
+      d.vent();
       d.gate({ at: 0.32, gap: 144 });
       // The level alternates shallow and deep, over and over, and until now
       // the two halves of that alternation cost the same. Putting the cold
@@ -384,7 +416,7 @@ const DIVE_PLANS = [
     en: { name: 'Open Sea', subtitle: 'Where the ice ends' },
     target: 78,
     depth: 660,
-    breath: 0.96,
+    breath: 0.88,
     /* The wall of the chapter, and it is meant to be one. Two seals, two
        currents, slots at both ends of the column and the longest unbreathed
        swim in the game. There is an answer and it is a narrow one: this is the

@@ -12,7 +12,7 @@ import { Player } from './player.js';
 import { GhostRecorder, Ghost } from './ghost.js';
 import {
   VIEW, VIEW_LIMITS, ASSIST, ICE, STORM, WIND, SWIM, BRAWL, BOOST, CHARGED, ROT, REWARDS, AMBUSH, COLLAPSE, HUSH,
-  hushAt, trenchDrainAt, scaleForLevel, upgradeEffect, hazardPhase,
+  hushAt, trenchDrainAt, scaleForLevel, upgradeEffect, hazardPhase, ventAt, VENT,
 } from './config.js';
 import { WATER_Y } from './levels.js';
 import { getSkin } from './skins.js';
@@ -104,6 +104,11 @@ export class World {
     /** What the player actually collides with. Built once; holds references. */
     this.solids = [...this.floes, ...this.terrain];
     this.zones = def.zones ?? [];
+    /**
+     * Cracks in the seabed that breathe. Air, but only when it is blowing.
+     * See `VENT` — this is the chapter's only clock.
+     */
+    this.vents = (def.vents ?? []).map((v) => ({ ...v, blow: 0 }));
     /** Which penguin is being worn — the renderer reads it every frame. */
     this.skinId = deps.skin ?? 'normal';
     /** And what it leaves behind. */
@@ -742,6 +747,27 @@ export class World {
       inAir = true;
       hole.glow = 1;
     }
+    /*
+     * A vent gives air the way a hole does, and takes a clock to do it.
+     *
+     * Deliberately the same branch as the ice: once you are breathing, the
+     * game should not care which of the two you found. What differs is that
+     * this one is only there part of the time, and that difference is the
+     * whole point of it — so the column's strength is read from the shared
+     * `ventAt`, the same curve the renderer draws and the validator prices.
+     */
+    let ventFill = 0;
+    for (const v of this.vents) {
+      v.blow = ventAt(v.period, v.phase, this.time);
+      if (!rectsOverlap(head, v)) continue;
+      // Said the first time a player is standing in a silent column, which is
+      // the exact moment the mechanic looks broken: you have swum down to the
+      // air and there is no air. One line, once, and never again.
+      this._tell('vent', t('world.vent'), 2.2);
+      if (v.blow <= 0.02) continue;
+      inAir = true;
+      ventFill = Math.max(ventFill, v.blow);
+    }
     p.breathing = inAir;
     /**
      * Worked out before the early return, not after it.
@@ -761,7 +787,10 @@ export class World {
     if (this.drain > 1.15) this._tell('trench', t('world.trench'), 2);
     if (inAir) {
       const before = p.breath;
-      p.breath = Math.min(p.breathMax, p.breath + SWIM.refill * dt);
+      // A crack in a rock is a thinner gasp than a hole in the ice, and it
+      // fades at both ends of a blow rather than switching on.
+      const rate = ventFill > 0 ? SWIM.refill * VENT.rate * ventFill : SWIM.refill;
+      p.breath = Math.min(p.breathMax, p.breath + rate * dt);
       // One bubble-burst per gasp, at the moment the lungs actually fill,
       // rather than a stream the whole time a player idles in a hole.
       if (before < p.breathMax * 0.999 && p.breath >= p.breathMax * 0.999) {

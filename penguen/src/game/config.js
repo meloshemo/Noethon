@@ -982,8 +982,20 @@ export function swimReach(scale, dy) {
  * game runs is not a budget, it is a decoration.
  */
 export function breathRange(scale) {
-  const speed = PHYS.moveSpeed * SWIM.speed * (1 - PENGUIN.speedPenaltyPerScale * (scale - 1));
-  return speed * breathFor(scale);
+  return swimSpeed(scale) * breathFor(scale);
+}
+
+/**
+ * Cruising speed under the ice.
+ *
+ * Pulled out of `breathRange` the moment a second caller needed it: the vent
+ * prices a wait in seconds and everything else in this chapter is priced in
+ * pixels, so something has to convert, and it must be *this* number rather
+ * than one derived again a few lines away. Every time two places in this
+ * project re-derived the same physics, they drifted.
+ */
+export function swimSpeed(scale) {
+  return PHYS.moveSpeed * SWIM.speed * (1 - PENGUIN.speedPenaltyPerScale * (scale - 1));
 }
 
 /** Seconds in a lungful at a given growth. `Player.breathMax` reads this too. */
@@ -1418,6 +1430,93 @@ export function hazardPhase(levelId, index, count = 1) {
  * the generator that sets `menace` and the rule that checks it cannot drift
  * apart.
  */
+/**
+ * The seabed vent.
+ *
+ * Measured, the diving chapter repeated itself more than any other in the game
+ * — a third of every pair of levels in it shared eighty percent of its
+ * vocabulary. The reason was not lazy composition. It was that every level was
+ * asking the same question: *how fast can you get to the next hole*. Geometry,
+ * a seal, a current and a cold trench are four ways of making that harder and
+ * none of them is a different question.
+ *
+ * The thing the sea had no word for was **when**. Nothing down there has a
+ * clock; you simply go as fast as you can, for fifteen levels.
+ *
+ * So: a crack in the seabed that breathes. It gives air like a hole in the ice
+ * does, but only while it is blowing, and it blows for about a third of its
+ * cycle. You cannot outswim it — you have to arrive on it, or hang above it
+ * and spend air waiting for air.
+ *
+ * And it is on the *floor*. In this chapter air has been at the ceiling since
+ * the first level, and rising toward it is the one free thing the penguin has;
+ * going down costs the button. A vent turns the whole geometry of the chapter
+ * upside down for as long as it is on screen.
+ */
+export const VENT = {
+  /**
+   * A full cycle, and how much of it is actually blowing.
+   *
+   * Tuned against the thing that pays for it: the worst case is arriving one
+   * frame after a blow ends, so the wait is `period * (1 - blow)` and it comes
+   * out of a lungful. At 4.2 and a third the wait was 2.8 seconds — nearly a
+   * third of a breath — and the composer could not place a vent anywhere
+   * except immediately after air, which is the one place a vent is pointless.
+   * At 3.6 and 0.42 the worst wait is 2.1 seconds: still long enough to be a
+   * decision, short enough to be somewhere.
+   */
+  period: 3.6,
+  blow: 0.42,
+  /**
+   * How fast it fills the lungs, against a hole in the ice.
+   *
+   * Above one, which looks generous and is not. A blow lasts `period * blow`
+   * — about a second and a half — and the column swells and dies rather than
+   * switching on, so the *area* under it is around seven tenths of its peak. A
+   * hole in the ice fills an empty lungful in a little under a second and a
+   * half of steady gasping. For one blow to be worth one breath, the peak has
+   * to be half again as strong as the ice.
+   *
+   * It has to be worth exactly one breath, because the composer prices a vent
+   * as a breath: it resets the lungful the way a hole does. At 0.78 it did not
+   * — one blow left you at eight of nine and a half — and a composer whose
+   * arithmetic says "full" while the water says "not quite" is the shape of
+   * every bug this project has had to dig out twice.
+   */
+  rate: 1.5,
+  /** How tall the bubble column stands. */
+  height: 210,
+  /** How wide the column is at the mouth. */
+  width: 96,
+  tint: '#8fe9ff',
+};
+
+/**
+ * How hard a vent is blowing right now, 0..1.
+ *
+ * Shared, so that the column the player is shown, the air the world hands out
+ * and the wait the validator prices are all reading one curve. Every other
+ * time this project let two of those three diverge it cost a day.
+ */
+export function ventAt(period, phase, time, blow = VENT.blow) {
+  const cycle = (((time / Math.max(0.1, period)) + phase) % 1 + 1) % 1;
+  if (cycle >= blow) return 0;
+  // A shape rather than a switch: it swells and dies away, so the last moment
+  // of a blow is visibly not the middle of one.
+  return Math.sin((cycle / blow) * Math.PI) ** 0.6;
+}
+
+/**
+ * The longest a player can be made to wait for a vent, in seconds.
+ *
+ * Worst case is arriving one frame after a blow ends, which costs the whole
+ * silent part of the cycle. The composer refuses to place a vent whose wait a
+ * lungful cannot cover, and the validator checks it again.
+ */
+export function ventWait(period = VENT.period, blow = VENT.blow) {
+  return period * (1 - blow);
+}
+
 export const MENACE_CEILING = 1.35;
 
 export function menaceFor(at) {
