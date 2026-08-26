@@ -20,8 +20,32 @@
  */
 
 import { Player } from '../src/game/player.js';
-import { scaleForLevel, hushAt, swingAt} from '../src/game/config.js';
+import { scaleForLevel, hushAt, glazeAt, swingAt} from '../src/game/config.js';
 import { CLIMB_LEVELS, CLIMB_DRAFTS } from '../src/game/climb.js';
+
+
+/**
+ * The intent the solver hands the real `Player`, in one place.
+ *
+ * It used to be built inline at four call sites, each of which remembered to
+ * pass `gravity` for a hush zone. When the mountain grew a second kind of zone
+ * — glare ice, where there is nothing to hold — three of those four sites did
+ * not know about it, so this solver's penguin could grip a wall the player's
+ * penguin cannot, and it happily declared two levels climbable by a move
+ * nobody can make. A proof that is allowed to be stronger than the game is not
+ * a proof of anything.
+ *
+ * One function, so the next zone is wired once.
+ */
+function intentFor(def, p, keys) {
+  const cx = p.x + p.w / 2;
+  return {
+    ...keys,
+    push: 0,
+    gravity: hushAt(def.zones, cx, p.y + p.h / 2),
+    grip: glazeAt(def.zones, cx, p.y + p.h * 0.4) ? 0 : 1,
+  };
+}
 
 const STEP = 1 / 120;
 const TUNING = { coyote: 1 };
@@ -140,7 +164,7 @@ function tryJump(def, solids, a, b, { from, delay, hold }) {
 
     const axis = p.onGround ? dir : Math.sign(targetX - cx) || 0;
     swingTo(solids, t);
-    p.update(STEP, { axis, jumpHeld: held, jumpPressed: pressed, push: 0, gravity: hushAt(def.zones, p.x + p.w / 2, p.y + p.h / 2) }, solids, TUNING);
+    p.update(STEP, intentFor(def, p, { axis, jumpHeld: held, jumpPressed: pressed }), solids, TUNING);
     t += STEP;
 
     if (drowned(p, def)) return false;
@@ -204,7 +228,7 @@ function trySwing(def, solids, a, b, { wait, hold }) {
     const held = jumped && !onSlab && t - wait < hold;
     p.update(
       STEP,
-      { axis, jumpHeld: held, jumpPressed: press, push: 0, gravity: hushAt(def.zones, p.x + p.w / 2, p.y + p.h / 2) },
+      intentFor(def, p, { axis, jumpHeld: held, jumpPressed: press }),
       solids,
       TUNING,
     );
@@ -352,7 +376,7 @@ function tryWall(def, solids, a, b, { from, delay, mode, first }, probe = {}) {
       if (p.stamina < p.staminaMax * 0.92) {
         axis = 0;
         swingTo(solids, t);
-        p.update(STEP, { axis: 0, jumpHeld: false, jumpPressed: false, push: 0, gravity: hushAt(def.zones, p.x + p.w / 2, p.y + p.h / 2) }, solids, TUNING);
+        p.update(STEP, intentFor(def, p, { axis: 0, jumpHeld: false, jumpPressed: false }), solids, TUNING);
         t += STEP;
         continue;
       }
@@ -390,7 +414,7 @@ function tryWall(def, solids, a, b, { from, delay, mode, first }, probe = {}) {
     }
 
     swingTo(solids, t);
-    p.update(STEP, { axis, jumpHeld, jumpPressed, push: 0, gravity: hushAt(def.zones, p.x + p.w / 2, p.y + p.h / 2) }, solids, TUNING);
+    p.update(STEP, intentFor(def, p, { axis, jumpHeld, jumpPressed }), solids, TUNING);
     floor = Math.min(floor, p.staminaFrac);
     t += STEP;
 

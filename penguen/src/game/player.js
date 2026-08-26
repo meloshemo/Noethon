@@ -139,6 +139,8 @@ export class Player {
     /** Which side the gripped wall is on: -1 left, +1 right, 0 not gripping. */
     this.wallSide = 0;
     this.clinging = false;
+    /** Hands on glare ice: a wall is there, and it will not be held. */
+    this.glazed = false;
     this.climbing = false;
     this.stamina = this.staminaMax;
     /** Seconds the wall just kicked off stays ungrabbable, and which one. */
@@ -474,7 +476,11 @@ export class Player {
     this.wallBlock = null;
     const wall = this.onGround ? 0 : this._probeWall(floes);
     const holdingInto = wall !== 0 && Math.sign(intent.axis) === wall;
-    const barred = this.noGrab > 0 && this.noGrabSide === wall;
+    // Verglas. The wall is there and it is the same wall; there is simply
+    // nothing to hold on to across this band. See `GLAZE`: it is what turns a
+    // move on this mountain into one you cannot take back halfway.
+    this.glazed = wall !== 0 && (intent.grip ?? 1) <= 0;
+    const barred = (this.noGrab > 0 && this.noGrabSide === wall) || this.glazed;
     // Once the pull-over has started, the grip is latched. The probe loses the
     // face the moment the body moves in over the top — which is exactly the
     // moment the penguin must not be dropped.

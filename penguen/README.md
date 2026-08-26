@@ -343,7 +343,7 @@ geçmez, hata verip durur.
 
 ## Testler
 
-Tek komut, 36 paket (27 node + paketleme + 9 tarayıcı), kendi sunucusunu
+Tek komut, 37 paket (28 node + paketleme + 9 tarayıcı), kendi sunucusunu
 kurup kapatıyor ve portu doluysa bir yanına kayıyor:
 
 ```bash
@@ -858,14 +858,77 @@ fikrin iki düzenlemesidir.
 | Chapter | Fiil (önce → sonra) | Tekrar (önce → sonra) |
 |---|---|---|
 | I. Sahanlık (1–31) | 18 | %6 → %6 |
-| II. Zirve (32–46) | 8 | %15 → %15 |
+| II. Zirve (32–46) | 8 → **9** | %15 → **%11** |
 | III. Buz Altı (47–61) | 9 → **10** | %33 → **%23** |
 | IV. Kar Topu (62–76) | 5 → **6** | %16 → **%10** |
 
 Sıralama işi yönlendirdi: en tekrarlı chapter'a yeni bir fiil (baca), en ince
-dağarcıklı chapter'a bir başkası (kar siperi). Yeni bir mekanik eklemeden önce
-ve ekledikten sonra çalıştırılıyor, çünkü "bu bölümler aynı geliyor" cümlesi
-biri sayı üretene kadar bir kanaat.
+dağarcıklı chapter'a bir başkası (kar siperi), dağa bir üçüncüsü (cam buz).
+Yeni bir mekanik eklemeden önce ve ekledikten sonra çalıştırılıyor, çünkü "bu
+bölümler aynı geliyor" cümlesi biri sayı üretene kadar bir kanaat.
+
+**I. chapter'a dokunulmadı.** 18 fiil, %6 tekrar — ölçüm "burada yapacak iş
+yok" dedi ve iş yapılmadı. Sağlıklı bir sayıya iyileştirme yapmak, sayıyı
+değil kodu bozar.
+
+### Ölçüm bir kere de beni durdurdu
+
+Cam buzu ilk hâlinde dört bölüme birden koydum. Tekrar oranı **düştü değil,
+yükseldi**: %15'ten %17'ye.
+
+Sebebi ölçüldüğünde bariz. Metrik Jaccard: iki bölüm kelimelerinin beşte
+dördünü paylaşıyorsa ikizler. Bir bölüm başka bir bölüm **artı bir kelimeyse**
+hâlâ 5/6 = 0,83 ikizdir; ve aynı yeni kelimeyi tutan dört bölüm birbirinin
+aynısı olur. Yeni bir oyuncak dağıtmak bölümleri birbirine benzetiyor.
+
+Ayırt edicilik oyuncakta değil, **birleşimde**. Bütün yerleşimleri tarayınca
+(dört aday bölüm × iki nadir fiil) en iyi düzen çıktı: **37. bölüm ikisini
+birden alıyor** — düz duvar *ve* cam buz, çıkıntının altında — ve chapter %11'e
+iniyor. İki nadir kelimeyi tek bölümde üst üste koymak, bir kelimeyi dört
+bölüme yaymaktan iyi.
+
+| Düzen | Tekrar |
+|---|---|
+| Hiç değişmemiş | 16/105 (%15) |
+| Cam buz dört bölüme yayılmış | 15/105 (%14) |
+| **Cam buz + düz duvar 37'de, cam buz 36'da** | **12/105 (%11)** |
+
+Ve bir yerde de kanıt "hayır" dedi. **41. Cilalı Sırt** cam buz için mükemmel
+bir aday: adı Cilalı Sırt, alt başlığı "ayak tutmuyor", ve bu şimdiye kadar
+yalnızca zeminle ilgiliydi. Aynı zamanda chapter'ın en zor tırmanışı (effort
+0,962), her yatay geçişin altında cilalı buz var, ve çözücü iki duvarda da her
+yükseklikte bandı reddetti. Bu bölümde geri alamayacağın bir hamle için
+kalmış dayanma gücü yok. Bir bölümün ödeyemediği iyi fikir, o bölüm için iyi
+fikir değil.
+
+## Cam buz: geri dönüşü olmayan hamle
+
+Dağın sekiz fiili, *ne kadar tutunabilirsin* sorusunun sekiz sorulma biçimi:
+bir duvar, bir baca, bir yatay geçiş, sallanan bir buz, bir fırtına. Ortak
+noktaları cevap değil — dağdaki **her hamlenin yarıda bırakılabilmesi**.
+Tutunuyorsun, düşünüyorsun, biraz kayıyorsun, gidiyorsun.
+
+Chapter'ın **kararlılık** diye bir kelimesi yoktu.
+
+Cam buz, duvarın orada olması ve tutulacak hiçbir şeyin olmaması. Tek bir
+duvarda bu sadece ortasında delik olan bir duvar olurdu — banda tırmanırsın,
+tutuş gider, düşersin — o yüzden **bacaya** konuyor, karşıda başka bir duvar
+varken. Bandın yüksekliğini karşı tarafta tek seferde kazanman gerekiyor, ve bu
+dağdaki geri alamayacağın tek hamle: ortasında duramazsın, çünkü ortası
+tutmayan kısım.
+
+İki inşa-zamanı reddi, ikisi de aritmetik: bant tek bir tırmanıştan kısa olmalı
+(yoksa karşı taraf kapatamaz ve baca çıkmaz sokak olur) ve bacanın ağzıyla
+tepesi arasına sığmalı (yoksa bant değil, kısa bir bacadır).
+
+**Ve kanıtın bunu hissetmesi gerekiyordu.** `climb-run.mjs` gerçek `Player`'ı
+sürüyor ama niyeti kendisi kuruyor — üstelik dört ayrı çağrı yerinde. Dördü de
+sessizlik bölgesi için `gravity` geçirmeyi hatırlıyordu; üçü ikinci bir bölge
+türünden habersizdi. Bir commit boyunca bu çözücünün pengueni, oyuncunun
+pengueninin tutunamayacağı bir duvara tutunabiliyordu, ve iki bölümü kimsenin
+yapamayacağı bir hamleyle "tırmanılabilir" ilan etti. Oyundan güçlü olmasına
+izin verilen bir kanıt hiçbir şeyin kanıtı değil. Niyet artık tek bir
+fonksiyonda kuruluyor, ki bir sonraki bölge bir kere bağlansın.
 
 ## Kar siperi: süresi olan siper
 
@@ -2194,11 +2257,11 @@ anlatmak değil, olan bir şeyi olduğundan iyi anlatmaktır.
 | Kimlik | Ad, `PNG-XXXXX` kimliği, 7 unvan, hepsi cihazda |
 | Hayalet | Kendi rekorun yanında koşuyor, paylaşım koduyla arkadaşınki de |
 | Müzik | Tek tema, 5 sahne, 5 katman, ses saatinde planlanıyor, ses dosyası yok |
-| Dil | Türkçe ve İngilizce, 306 metin, tarayıcıdan seçiliyor |
+| Dil | Türkçe ve İngilizce, 307 metin, tarayıcıdan seçiliyor |
 | Kayıt | Tek sürümlü JSON, ileri göç, dosyaya aktarma, tek tuşla silme |
 | Çevrimdışı | Servis çalışanı + tek dosya sürümü (619 KB) |
 | Girdi | Klavye, dokunmatik, gamepad |
-| Test | 27 node + paketleme + 9 tarayıcı paketi, hepsi tek komutta |
+| Test | 28 node + paketleme + 9 tarayıcı paketi, hepsi tek komutta |
 | Zorluk | Ölçülen eğri: `node tools/difficulty.mjs` |
 
 ### Yok, ve neden

@@ -12,7 +12,7 @@ import { Player } from './player.js';
 import { GhostRecorder, Ghost } from './ghost.js';
 import {
   VIEW, VIEW_LIMITS, ASSIST, ICE, STORM, WIND, SWIM, BRAWL, BOOST, CHARGED, ROT, REWARDS, AMBUSH, COLLAPSE, HUSH,
-  hushAt, trenchDrainAt, scaleForLevel, upgradeEffect, hazardPhase, ventAt, VENT,
+  hushAt, glazeAt, trenchDrainAt, scaleForLevel, upgradeEffect, hazardPhase, ventAt, VENT,
 } from './config.js';
 import { WATER_Y } from './levels.js';
 import { getSkin } from './skins.js';
@@ -602,7 +602,11 @@ export class World {
       }
     }
 
-    this.player.update(dt, { ...intent, push, lift, gravity: this.hushed || 1 }, this.solids, this.tuning, {
+    // Glare ice, read at the hands rather than at the feet: what decides
+    // whether a grip lands is where the grip would be.
+    const grip = glazeAt(this.zones, this.player.centerX, this.player.y + this.player.h * 0.4) ? 0 : 1;
+    if (!grip) this._tell('glaze', t('world.glaze'), 2);
+    this.player.update(dt, { ...intent, push, lift, grip, gravity: this.hushed || 1 }, this.solids, this.tuning, {
       onJump: (wound) => {
         if (wound) {
           this.audio.uncoil?.();

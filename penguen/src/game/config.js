@@ -1545,6 +1545,37 @@ export const BANK = {
   tint: '#e8f6ff',
 };
 
+/**
+ * Verglas: a band of the mountain that will not be held.
+ *
+ * The mountain's question is *how long can you hold on*, and after eight verbs
+ * it had asked it eight ways: a face, a chimney, a traverse, a swinging slab,
+ * a gale. All of them are versions of hanging there and deciding when to move.
+ *
+ * What it had no word for is **committing**. Every move on this mountain can
+ * be abandoned halfway: you grab, you think, you slide a little, you go. So a
+ * stretch of the wall is glazed — clear ice, no purchase — and crossing it is
+ * one move you cannot take back. You gather on the grip below it and you are
+ * either past it or falling; there is no hanging in the middle of it, because
+ * the middle of it is the part that does not hold.
+ *
+ * A zone rather than a block, so it can lie across a face the rest of which is
+ * perfectly good — which is the whole idea. A wall you simply cannot climb is
+ * a wall, and the game has had those since level one.
+ */
+export const GLAZE = { tint: '#bfeaff' };
+
+/** Will the wall hold a grip here? Shared by the world, the composer and the proof. */
+export function glazeAt(zones, cx, cy) {
+  if (!zones) return false;
+  for (const z of zones) {
+    if (z.kind !== 'glaze') continue;
+    if (cx < z.x || cx > z.x + z.w || cy < z.top || cy > z.bottom) continue;
+    return true;
+  }
+  return false;
+}
+
 export const MENACE_CEILING = 1.35;
 
 export function menaceFor(at) {

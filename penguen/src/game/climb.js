@@ -135,6 +135,11 @@ const CLIMB_PLANS = [
       // Tall enough that creeping cannot do it — the nub halfway is the whole
       // reason it is passable, and finding it is the level.
       t.chimney({ height: 380, rests: 1 });
+      /* The level is a long shaft with one ledge in it, and the ledge is the
+         whole point. So part of the shaft is glare ice: there is a rest on
+         this climb and there is also a stretch you cannot even pause on, and
+         you have to know which is which before you leave the ledge. */
+      t.glaze({ side: -1, from: 0.62 });
       // A slab of ice hanging on a rope, halfway up the longest chimney in the
       // chapter, and the first one the player meets.
       //
@@ -176,6 +181,31 @@ const CLIMB_PLANS = [
       t.chimney({ height: 250, lip: 0.55 });
       t.traverse({ n: 3, w: 120 });
       t.chimney({ height: 270, lip: 0.45 });
+      /* A blank face and a glazed band, on the one level that gets both.
+         Measured, spreading a new verb thinly across four levels made the
+         chapter *more* repetitive rather than less: a level that is another
+         level plus one word is still four fifths the same level, and four
+         levels holding the same new word are four fifths the same as each
+         other. Distinctiveness is combinations, not toys. `tools/variety.mjs`
+         puts the chapter at 15% twinned untouched, 14% with the glaze spread
+         over four levels, and 11% with two rare words stacked here.
+         Measured, this level shared its whole vocabulary with two others in
+         the chapter — the same six words in the same order — and giving all
+         three of them the *same* new verb kept them identical, which is what
+         the first attempt at this did. Each of them gets a different one. Here
+         it is a single wall with nothing on either side of it, which is the
+         only shape on the mountain that cannot be rested in at all: a chimney
+         always has a far wall to reach for, and this does not.
+
+         The band goes on the shaft above, not on the face — `glaze` always
+         works on the last chimney — so it is written before the face, in the
+         order the two things actually exist. Low in that shaft and on the same
+         side as the lip, because the solver refused every other arrangement: a
+         band above an overhang takes away the wall the kick under it has to
+         land on, and the shaft stops being a hard climb and becomes a dead
+         end. */
+      t.glaze({ side: 1, from: 0.3 });
+      t.face({ height: 150 });
       t.traverse({ n: 2, w: 125 });
       t.steps({ n: 2, rise: 0.58, w: 140 });
       t.crown({ w: 250 });
@@ -282,6 +312,14 @@ const CLIMB_PLANS = [
       t.base({ w: 225 });
       t.traverse({ n: 3, w: 130, types: ['slip', 'solid'] });
       t.chimney({ height: 300 });
+      /* No glare ice here, and it was tried.
+         The fit is exact — the level is called Polished Ridge and its subtitle
+         is "your feet find nothing", which until now was only ever about the
+         floor. It is also the hardest climb in the chapter (effort 0.962) with
+         slip under every traverse, and the solver refused a band at every
+         height on both walls. There is no stamina left in this level for a
+         move you cannot back out of. A good idea that the level cannot pay
+         for is not a good idea for that level. */
       t.traverse({ n: 3, w: 125, types: ['slip', 'solid'] });
       t.chimney({ height: 260, lip: 0.5 });
       t.steps({ n: 2, rise: 0.58, w: 135 });

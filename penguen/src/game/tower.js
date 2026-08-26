@@ -941,6 +941,12 @@ export class Tower {
       if (bottom - wallTop > 40) this.wall(x, wallTop, bottom - wallTop);
     }
 
+    // Remembered so `glaze` has a shaft to lay a band across. Recorded here
+    // rather than found again later, because "the last two walls" is not the
+    // same thing as "this chimney" the moment a shaft has rests in it and puts
+    // four columns down instead of two.
+    this._lastShaft = { leftFace, rightFace, top: wallTop, bottom: lowest, inner };
+
     // A lip: rock jutting from a wall partway up, so one kick in the shaft has
     // to be taken under something. It cannot be gripped — a slab you could
     // hang off is a ladder, not an obstacle.
@@ -1041,6 +1047,74 @@ export class Tower {
    * exists is that it cannot be rushed: there is no second wall to bounce off,
    * so the bar drains at the climbing rate the whole way.
    */
+  /**
+   * Verglas across one wall of the last chimney.
+   *
+   * The mountain's eight verbs are eight ways of asking *how long can you hold
+   * on*, and every move on it can be abandoned halfway: you grab, you think,
+   * you slide a little, you go. The chapter had no word for **committing**.
+   *
+   * A glazed band has the wall still there and nothing on it to hold. On a
+   * single face that would simply be a wall with a hole in the middle of it —
+   * you climb into the band, the grip goes, and you fall — so it goes on a
+   * *chimney*, where there is another wall. The height across the band has to
+   * be gained on the far side in one go, which is the one move on this
+   * mountain you cannot back out of: you cannot stop halfway up it, because
+   * halfway up it is the part that does not hold.
+   *
+   * Two build-time refusals, both arithmetic:
+   *
+   *   · the band must be shorter than one clean creep up a wall, or the far
+   *     side cannot cover it and the shaft is a dead end;
+   *   · it must start above the shaft's mouth and end below its top, or it is
+   *     not a band on a wall, it is a shorter wall.
+   */
+  glaze({ side = -1, from = 0.42, len = null } = {}) {
+    const shaft = this._lastShaft;
+    if (!shaft) throw new Error('cam buz için önce bir baca gerekiyor');
+
+    const budget = climbBudget(this.scale, shaft.inner);
+    const span = Math.round(len ?? Math.min(120, budget.creep * 0.5));
+    const height = shaft.bottom - shaft.top;
+    if (span >= budget.creep) {
+      throw new Error(
+        `cam buz bandı çok uzun: ${span}px, tek seferde ${Math.round(budget.creep)}px tırmanılıyor`,
+      );
+    }
+    // Room to gather below it and room to top out above it: a band flush with
+    // either end of the shaft is not a band, it is a shorter shaft.
+    const margin = Math.round(this.reach.height * 0.5);
+    const centre = shaft.bottom - height * from;
+    const top = Math.round(Math.min(shaft.bottom - margin - span, Math.max(shaft.top + margin, centre - span / 2)));
+    if (top <= shaft.top + 8 || top + span >= shaft.bottom - 8) {
+      throw new Error(`cam buz bandı bacaya sığmıyor: ${height}px şaft, ${span}px bant`);
+    }
+
+    // The zone is read at the penguin's middle, and the penguin's middle when
+    // it is holding this wall is just inside the shaft — so the band reaches
+    // from the wall's back to the middle of the gap and no further. Any wider
+    // and it would take the *other* wall's grip away too, which is the one
+    // thing that must never happen.
+    const reach = Math.round(shaft.inner * 0.45);
+    const wallX = side < 0 ? shaft.leftFace - WALL_T : shaft.rightFace;
+    // `face` is where the ice actually is — the side of the column the penguin
+    // puts its hands on. The zone is wider than that because it is read at the
+    // penguin's middle, which is out in the shaft; without saying which edge is
+    // the wall, the drawing put the sheen in the middle of the gap and it read
+    // as a pane of glass hanging in mid-air.
+    const face = side < 0 ? wallX + WALL_T : wallX;
+    this.zones.push({
+      kind: 'glaze',
+      x: Math.round(side < 0 ? wallX : wallX - reach),
+      w: WALL_T + reach,
+      top,
+      bottom: top + span,
+      side,
+      face: Math.round(face),
+    });
+    return this;
+  }
+
   face({ height = 200, side = null, exit = 160 } = {}) {
     const budget = climbBudget(this.scale, this.width);
     const ceiling = budget.creep * leanOn(BUDGET.creep, this.effort);

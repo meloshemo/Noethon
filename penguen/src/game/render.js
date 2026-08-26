@@ -9,7 +9,7 @@
  */
 
 import {
-  VIEW, viewFor, AMBUSH, CHARGED, COIL, QUANTUM, SLACK, CLIMB, BRAWL, TRENCH, VENT, BANK,
+  VIEW, viewFor, AMBUSH, CHARGED, COIL, QUANTUM, SLACK, CLIMB, BRAWL, TRENCH, VENT, BANK, GLAZE,
   lobShot,
 } from './config.js';
 import { getSkin, getTrail } from './skins.js';
@@ -1001,6 +1001,60 @@ export class Renderer {
     for (const z of world.zones) {
       if (z.x + z.w < view.left || z.x > view.right) continue;
       const h = z.bottom - z.top;
+
+      if (z.kind === 'glaze') {
+        /*
+         * Verglas. It has to read as *the same wall, wet* — not as a hole and
+         * not as a hazard. A player who sees a gap will try to climb through
+         * it; a player who sees a sheen will understand there is nothing to
+         * hold before they commit, which is the only warning this thing gets
+         * to give and the whole reason it is fair.
+         */
+        ctx.save();
+        const wall = z.face ?? (z.side < 0 ? z.x : z.x + z.w);
+        /*
+         * Hugging the wall, not filling the shaft.
+         *
+         * The zone is much wider than the ice because it is read at the
+         * penguin's middle, which is out in the gap. Painting the whole zone
+         * put a pane of haze across the shaft and read as something hanging in
+         * mid-air — the one thing it must not look like, because a player who
+         * sees an object will try to land on it. The sheen dies within about a
+         * body's width of the face.
+         */
+        const bleed = Math.min(z.w, 34);
+        const off = z.side < 0 ? bleed : -bleed;
+        const g = ctx.createLinearGradient(wall + off, 0, wall, 0);
+        g.addColorStop(0, withAlpha(GLAZE.tint, 0));
+        g.addColorStop(0.5, withAlpha(GLAZE.tint, 0.12));
+        g.addColorStop(1, withAlpha(GLAZE.tint, 0.42));
+        ctx.fillStyle = g;
+        ctx.fillRect(Math.min(wall, wall + off), z.top, bleed, h);
+
+        // Meltwater runnels down the face, so it is visibly *wet* ice.
+        ctx.strokeStyle = withAlpha('#eafcff', 0.4);
+        ctx.lineWidth = 1.5;
+        for (let i = 0; i < 5; i++) {
+          const rx = wall + (z.side < 0 ? -4 - i * 5 : 4 + i * 5);
+          const drift = this.reducedMotion ? 0 : Math.sin(time * 1.4 + i * 1.7) * 2;
+          ctx.beginPath();
+          ctx.moveTo(rx + drift, z.top + 4 + (i % 3) * 5);
+          ctx.lineTo(rx - drift, z.bottom - 4 - (i % 2) * 7);
+          ctx.stroke();
+        }
+
+        // A bright lip top and bottom: where the holding stops and starts.
+        ctx.strokeStyle = withAlpha('#ffffff', 0.55);
+        ctx.lineWidth = 2;
+        for (const y of [z.top, z.bottom]) {
+          ctx.beginPath();
+          ctx.moveTo(z.side < 0 ? wall - 20 : wall, y);
+          ctx.lineTo(z.side < 0 ? wall : wall + 20, y);
+          ctx.stroke();
+        }
+        ctx.restore();
+        continue;
+      }
 
       if (z.kind === 'tunnel') {
         ctx.save();
