@@ -12,7 +12,7 @@ import { Player } from './player.js';
 import { GhostRecorder, Ghost } from './ghost.js';
 import {
   VIEW, VIEW_LIMITS, ASSIST, ICE, STORM, WIND, SWIM, BRAWL, BOOST, CHARGED, ROT, REWARDS, AMBUSH, COLLAPSE, HUSH,
-  hushAt, trenchDrainAt, scaleForLevel, upgradeEffect,
+  hushAt, trenchDrainAt, scaleForLevel, upgradeEffect, hazardPhase,
 } from './config.js';
 import { WATER_Y } from './levels.js';
 import { getSkin } from './skins.js';
@@ -108,7 +108,13 @@ export class World {
     this.skinId = deps.skin ?? 'normal';
     /** And what it leaves behind. */
     this.trailId = deps.trail ?? 'none';
-    this.hazards = (def.hazards ?? []).map((d) => new Hazard(d));
+    // `phase` first, so a level that names one still wins. See `hazardPhase`:
+    // this used to be a die roll inside the Hazard, which meant every solver
+    // attempt was played against a different level.
+    this.hazards = (def.hazards ?? []).map((d, i) => new Hazard({
+      phase: hazardPhase(def.id ?? 0, i),
+      ...d,
+    }));
     this.fish = (def.fish ?? []).map((d) => new Fish(d, 'normal'));
     /** Speed fish are scored separately, so the 3-fish star stays a 3-fish star. */
     this.boosts = (def.speedFish ?? []).map((d) => new Fish(d, 'speed'));
@@ -1015,8 +1021,33 @@ export class World {
    * some solid is how a coordinate a few pixels inside a floe passes for one on
    * top of it, and a coordinate inside a floe is a penguin falling out of it.
    */
+  /**
+   * Can the penguin be put down here?
+   *
+   * Asked by the two places that hand the player a coordinate somebody else
+   * chose — the death-loop guard in `_respawn`, and the session restored from
+   * a save. Both need the same answer and both were getting the wrong one.
+   *
+   * It used to ask one question: is there a floe top within six pixels? That
+   * is right for the first two chapters and wrong for the other two.
+   *
+   *   · Under the ice there is nothing to stand on, because the penguin
+   *     swims. Every checkpoint in the whole diving chapter therefore failed
+   *     this test and was thrown away — you crossed a long, hard level, took
+   *     the flag, heard the chime, drowned, and started again from the mouth
+   *     of the tunnel with nothing to say why.
+   *   · It never asked whether the space was *free*. A point can have ground
+   *     under it and still be the middle of an ice pillar.
+   */
   standable(x, y) {
     const half = this.player.w / 2;
+    const box = { x: x - half, y: y - this.player.h, w: this.player.w, h: this.player.h };
+    for (const f of this.solids) {
+      if (!f.solid) continue;
+      if (rectsOverlap(box, { x: f.x, y: f.y, w: f.w, h: f.h })) return false;
+    }
+    // Swimming: anywhere clear is somewhere the penguin can be.
+    if (this.diving) return true;
     for (const f of this.solids) {
       if (!f.solid) continue;
       if (Math.abs(f.y - y) > 6) continue;

@@ -41,6 +41,8 @@ const NODE_SUITES = [
   ['tests/skua.mjs', 'kutup kuşu'],
   ['tests/rewarded.mjs', 'ikiye katlama'],
   ['tests/viewport.mjs', 'görüş alanı'],
+  ['tests/repeatable.mjs', 'aynı bölüm iki kere'],
+  ['tests/checkpoint.mjs', 'kontrol noktası sözü'],
   ['tests/economy.mjs', 'ekonomi dengesi'],
   ['tests/ghost.mjs', 'hayalet kodlaması'],
 ];

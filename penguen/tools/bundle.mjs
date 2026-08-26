@@ -144,6 +144,17 @@ function topLevelNames(code) {
   return names;
 }
 
+/**
+ * Build the single file and return it, without writing anything.
+ *
+ * Split out from the script so `lint.mjs` can ask what the download weighs
+ * without a build having been run first. It used to read `dist/pengu.html` off
+ * the disk, which meant its answer depended on whether somebody had run the
+ * bundler lately — and in the project's own runner lint goes *first*, so it was
+ * reading the previous build every time, and on a clean clone there was no file
+ * to read and the check silently did nothing at all.
+ */
+export async function build() {
 const css = (await Promise.all(STYLES.map(read))).join('\n\n');
 
 const seen = new Map();
@@ -187,10 +198,20 @@ ${parts.join('\n\n')}
 </script>
 `;
 
-await mkdir(dirname(out), { recursive: true });
-await writeFile(out, doc, 'utf8');
+  return { doc, links };
+}
 
-const kb = (doc.length / 1024).toFixed(0);
-console.log(`✓ ${out}`);
-console.log(`  ${MODULES.length} modül + ${STYLES.length} stil dosyası → tek dosya, ${kb} KB`);
-if (links) console.log(`  ${links} dış bağlantı (manifest/ikon) dışarıda bırakıldı`);
+/** What the file weighs on disk and over a wire: bytes, not UTF-16 units. */
+export function sizeKB(doc) {
+  return Math.round(Buffer.byteLength(doc, 'utf8') / 1024);
+}
+
+// Run as a script: build it and write it down.
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const { doc, links } = await build();
+  await mkdir(dirname(out), { recursive: true });
+  await writeFile(out, doc, 'utf8');
+  console.log(`✓ ${out}`);
+  console.log(`  ${MODULES.length} modül + ${STYLES.length} stil dosyası → tek dosya, ${sizeKB(doc)} KB`);
+  if (links) console.log(`  ${links} dış bağlantı (manifest/ikon) dışarıda bırakıldı`);
+}

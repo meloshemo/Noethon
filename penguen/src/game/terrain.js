@@ -25,7 +25,7 @@
 
 import {
   reachFor, reachInHush, reachWithWind, riseWithLift, crossableGap, openingWidth,
-  OPENING, PHYS, PENGUIN, ICE, STORM, WIND, HUSH, CHARGED,
+  OPENING, PHYS, PENGUIN, ICE, STORM, WIND, HUSH, CHARGED, FIRM_ICE, settleFlags,
 } from './config.js';
 import { nudgeClear } from '../core/util.js';
 
@@ -357,8 +357,37 @@ export class Course {
     return this;
   }
 
+  /**
+   * Plant a flag.
+   *
+   * Whatever floe it is handed, the flag goes on the nearest one that will
+   * still be there and still be *there* when the penguin lands back on it.
+   * Twenty flags in the game stood on ice that cracks, melts or erupts: you
+   * respawn on ground that is already counting down, fall, and respawn on it
+   * again. `at()` filters out the ice that vanishes on contact but not the ice
+   * that vanishes on a clock, and a checkpoint is the one thing that cannot
+   * tell the difference later — it is stored as a coordinate.
+   *
+   * It searches backwards first. A flag moved earlier costs nothing; a flag
+   * moved later would hand the player a hazard they never passed.
+   */
   checkpoint(floe = this.floes[this.floes.length - 1]) {
-    this.checkpoints.push({ x: Math.round(floe.x + floe.w / 2 - 12), y: floe.y });
+    const firm = this._firmNear(floe);
+    this.checkpoints.push({ x: Math.round(firm.x + firm.w / 2 - 12), y: firm.y });
+  }
+
+  /** The nearest floe to this one that neither vanishes nor wanders. */
+  _firmNear(floe) {
+    if (FIRM_ICE.has(floe?.type ?? 'solid')) return floe;
+    const i = this.floes.indexOf(floe);
+    if (i < 0) return floe;
+    for (let d = 1; d < this.floes.length; d++) {
+      const back = this.floes[i - d];
+      if (back && FIRM_ICE.has(back.type ?? 'solid')) return back;
+      const fwd = this.floes[i + d];
+      if (fwd && FIRM_ICE.has(fwd.type ?? 'solid')) return fwd;
+    }
+    return floe;
   }
 
   hazard(def) {
@@ -802,7 +831,7 @@ export class Course {
         nudgeClear(f, [...this.floes, ...(this.terrain ?? [])]),
       ),
       rotFish: this.rotFish,
-      checkpoints: this.checkpoints,
+      checkpoints: settleFlags(this.checkpoints, this.floes, this.hazards, this.scale),
       /** Gaps that only the tailwind crosses, for the validator to prove. */
       windGaps: this.windGaps ?? [],
       updrafts: this.updrafts ?? [],

@@ -499,7 +499,12 @@ export class Arena {
   }
 
   checkpointAt(at = 0.5) {
-    this.checkpoints.push({ x: Math.round(this.width * at), y: this.groundY - 46 });
+    // The flag's y is the *base* of its pole — the renderer draws upward from
+    // it, and the other three chapters place it on the ground. This one put it
+    // forty-six pixels up, which is the pole's height: the flag hovered, and
+    // the respawn guard, looking for ground under the point, found air and
+    // threw the checkpoint away on every death in every arena.
+    this.checkpoints.push({ x: Math.round(this.width * at), y: this.groundY });
     return this;
   }
 

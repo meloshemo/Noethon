@@ -1291,6 +1291,114 @@ export const STAR_RULES = {
  * in `tests/` stays exactly as true as it was. Flat through the two thirds
  * that teach, then climbing by a quarter to the last level of the chapter.
  */
+/**
+ * Where a hazard starts in its cycle.
+ *
+ * It used to be `Math.random()`, with no comment, on every orca, storm, gust,
+ * shard, icicle and seal in the game — not one level sets a phase, so all two
+ * hundred and sixty-eight of them rolled a die at construction.
+ *
+ * The intent is obvious and right: hazards should not march in lockstep. The
+ * implementation quietly broke the thing this project is built on. Every proof
+ * of passability — `dive-run`, `wind-run`, `brawl-run` — builds a real `World`
+ * and searches inputs, and each attempt built a *different* level. A solver
+ * that tries three hundred parameter combinations draws three hundred sets of
+ * phases and succeeds if any one of them works, so "this level is passable"
+ * quietly weakened into "this level is passable on some rolls". The player got
+ * their own roll, and it was not the one that was proved.
+ *
+ * So: still spread out, still different for every hazard on the screen, but
+ * derived from the level and the hazard's place in it. The same level is now
+ * the same level — for the solver, for the validator, and for the player on
+ * their fortieth attempt at it.
+ */
+/**
+ * Ice a flag can be planted on.
+ *
+ * A checkpoint is stored as a coordinate, so the ground under it has to do two
+ * things: still be there, and still be *here*. That rules out everything that
+ * breaks (crack, trap, fall, snap), everything that comes and goes (melt,
+ * burst, fake) and everything that wanders off and leaves the coordinate
+ * hanging over water (move, swing).
+ *
+ * Shared so the composer that plants the flag and the validator that checks it
+ * cannot hold different opinions about which ice is which.
+ */
+export const FIRM_ICE = new Set(['solid', 'slip']);
+
+/**
+ * Move any flag that a hazard is standing on.
+ *
+ * A checkpoint is the one promise the game makes about failure: die and you
+ * come back *here*. Seven levels came back on top of a patrolling seal — not
+ * near it, on it — so the respawn killed you in the same frame it happened,
+ * and did it again, and again. There is no input that escapes that; the level
+ * is over and the player has to quit it. Three more dropped an icicle on the
+ * flag half a second after the respawn, inside the six tenths of a second the
+ * game elsewhere calls the shortest fair warning.
+ *
+ * Both are placement accidents — a composer plants a seal on a floe and then
+ * asks for a flag on the same floe — so they are fixed where the level is
+ * finished and everything is finally in one place. Backwards first, for the
+ * same reason `checkpoint()` searches backwards: a flag moved earlier costs a
+ * player nothing, a flag moved later hands them a hazard they never passed.
+ *
+ * @param {Array} flags   {x, y} points, mutated in place
+ * @param {Array} floes   the level's ice
+ * @param {Array} hazards the level's hazards
+ * @param {number} scale  how big the penguin is on this level
+ */
+export function settleFlags(flags, floes, hazards, scale = 1) {
+  const w = PENGUIN.w * scale;
+  const h = PENGUIN.h * scale;
+
+  const clear = (x, y) => {
+    const box = { x: x - w / 2, y: y - h, w, h };
+    for (const z of hazards) {
+      // A patrol is not a point: the seal reaches `range` either side of where
+      // it is drawn, and all of it is somewhere the flag must not be.
+      const zw = z.w ?? 26;
+      // Ice that falls owns the whole column under it, not the ledge it hangs
+      // from. Five flags sat directly beneath an icicle: you respawn, the
+      // icicle sees you, and it lands four tenths of a second later — which is
+      // its designed warning, and is not a warning at all to somebody who did
+      // not choose to be standing there.
+      const drops = z.kind === 'icicle' || z.kind === 'shard';
+      const zh = (z.h ?? 26) + (drops ? 640 : 0);
+      const reach = (z.range ?? 0) + (drops ? 26 : 0);
+      const zx = (z.x ?? 0) - reach;
+      const zy = z.y ?? 0;
+      const pad = 10;
+      if (box.x < zx + zw + reach + pad && box.x + box.w > zx - pad
+        && box.y < zy + zh + pad && box.y + box.h > zy - pad) return false;
+    }
+    return true;
+  };
+
+  const firm = floes.filter((f) => FIRM_ICE.has(f.type ?? 'solid'));
+  for (const flag of flags) {
+    if (clear(flag.x + 12, flag.y)) continue;
+    // Nearest firm floe whose middle is clear, the way we came first.
+    let best = null;
+    let bestD = Infinity;
+    for (const f of firm) {
+      const x = Math.round(f.x + f.w / 2 - 12);
+      if (!clear(x + 12, f.y)) continue;
+      // Half the distance if it is behind us, so backwards wins a tie.
+      const d = Math.abs(x - flag.x) * (x <= flag.x ? 0.5 : 1);
+      if (d < bestD) { bestD = d; best = { x, y: f.y }; }
+    }
+    if (best) { flag.x = best.x; flag.y = best.y; }
+  }
+  return flags;
+}
+
+export function hazardPhase(levelId, index) {
+  let h = Math.imul((levelId | 0) + 1, 374761393) + Math.imul(index + 1, 668265263);
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 2 ** 32;
+}
+
 export function menaceFor(at) {
   const from = 0.62;
   if (at <= from) return 1;

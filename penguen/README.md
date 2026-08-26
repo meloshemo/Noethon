@@ -8,7 +8,7 @@ istiyor.
 
 **Bağımlılık yok, derleme adımı yok, backend yok, görsel/ses dosyası yok.**
 Penguen de, buz da, kuzey ışıkları da, bütün sesler de kodla üretiliyor.
-Toplam yük tek dosyada 595 KB ve çevrimdışı çalışıyor.
+Toplam yük tek dosyada 600 KB ve çevrimdışı çalışıyor.
 
 ▶ **[Oyunu aç](https://claude.ai/code/artifact/2f6dd29b-3ad8-4d60-b4f7-c8490114b96f)**
 
@@ -262,7 +262,7 @@ geçmez, hata verip durur.
 
 ## Testler
 
-Tek komut, 31 paket (22 node + paketleme + 9 tarayıcı), kendi sunucusunu
+Tek komut, 33 paket (24 node + paketleme + 9 tarayıcı), kendi sunucusunu
 kurup kapatıyor ve portu doluysa bir yanına kayıyor:
 
 ```bash
@@ -494,7 +494,7 @@ boşluk o sayıya göre ölçülüyor.
 - **Sabit adımlı fizik (1/120 s).** 60 Hz, 120 Hz ve 144 Hz ekranlarda oyun aynı
   hissettiriyor; arka planda kalan sekme geri geldiğinde penguen ışınlanmıyor.
 - **Görsel/ses varlığı yok.** Penguen, buzlar, kuzey ışıkları, su ve bütün sesler
-  kodla üretiliyor. Tek dosya sürümü 595 KB ve çevrimdışı çalışıyor.
+  kodla üretiliyor. Tek dosya sürümü 600 KB ve çevrimdışı çalışıyor.
 - **Metin koddan ayrı.** Arayüz metinleri tek sözlükte, içeriğe ait metinler
   girdinin kendi `en` bloğunda. Bir dil eklemek bir tablo eklemek.
 
@@ -1921,9 +1921,9 @@ anlatmak değil, olan bir şeyi olduğundan iyi anlatmaktır.
 | Müzik | Tek tema, 5 sahne, 5 katman, ses saatinde planlanıyor, ses dosyası yok |
 | Dil | Türkçe ve İngilizce, 304 metin, tarayıcıdan seçiliyor |
 | Kayıt | Tek sürümlü JSON, ileri göç, dosyaya aktarma, tek tuşla silme |
-| Çevrimdışı | Servis çalışanı + tek dosya sürümü (595 KB) |
+| Çevrimdışı | Servis çalışanı + tek dosya sürümü (600 KB) |
 | Girdi | Klavye, dokunmatik, gamepad |
-| Test | 22 node + paketleme + 9 tarayıcı paketi, hepsi tek komutta |
+| Test | 24 node + paketleme + 9 tarayıcı paketi, hepsi tek komutta |
 | Zorluk | Ölçülen eğri: `node tools/difficulty.mjs` |
 
 ### Yok, ve neden

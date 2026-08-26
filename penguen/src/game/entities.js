@@ -371,7 +371,10 @@ export class Hazard {
     this.state = 'idle';
     this.vy = 0;
     this.timer = 0;
-    this.phase = def.phase ?? Math.random();
+    // Filled in by the World from the level and this hazard's index, so the
+    // same level plays the same way twice. The fallback is only for a Hazard
+    // built outside a World (a test rig), and it is still not a die roll.
+    this.phase = def.phase ?? 0;
     // Orca: how high it breaches and how often.
     this.height = def.height ?? 220;
     this.period = def.period ?? 3.4;

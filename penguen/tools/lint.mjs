@@ -18,7 +18,7 @@
  * Everything here is cheap and runs before the tests.
  */
 
-import { readdir, readFile, stat } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import { resolve, dirname, relative, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -159,15 +159,20 @@ console.log('Proje kuralları denetleniyor...\n');
 }
 
 /* 5 — the single-file build is small enough to be worth having ---------- */
+//
+// Built here rather than measured off the disk. Reading `dist/pengu.html` made
+// the answer depend on whether anyone had run the bundler lately: in this
+// project's own runner lint goes first, so it always read the *previous*
+// build, and on a clean clone or in CI there was no file and the check quietly
+// did nothing — which is the state it was in the whole time it existed.
+const BUNDLE = await (async () => {
+  const { build, sizeKB } = await import(new URL('./bundle.mjs', import.meta.url));
+  const { doc } = await build();
+  return { kb: sizeKB(doc) };
+})();
 {
-  try {
-    const info = await stat(resolve(root, 'dist/pengu.html'));
-    const kb = Math.round(info.size / 1024);
-    if (kb > BUNDLE_BUDGET_KB) bad(`tek dosya sürümü ${kb} KB — sınır ${BUNDLE_BUDGET_KB} KB`);
-    else ok(`tek dosya sürümü ${kb} KB (sınır ${BUNDLE_BUDGET_KB} KB)`);
-  } catch {
-    console.log('  · tek dosya sürümü henüz üretilmemiş (npm run build)');
-  }
+  if (BUNDLE.kb > BUNDLE_BUDGET_KB) bad(`tek dosya sürümü ${BUNDLE.kb} KB — sınır ${BUNDLE_BUDGET_KB} KB`);
+  else ok(`tek dosya sürümü ${BUNDLE.kb} KB (sınır ${BUNDLE_BUDGET_KB} KB)`);
 }
 
 /* 6 — both languages say all the same things ---------------------------- */
@@ -300,21 +305,16 @@ console.log('Proje kuralları denetleniyor...\n');
   const browser = packs.filter((p) => p.startsWith('browser')).length;
   const { KEYS } = await import(new URL('../src/core/i18n.js', import.meta.url));
 
-  let size = null;
-  try {
-    size = Math.round((await stat(resolve(root, 'dist/pengu.html'))).size / 1024);
-  } catch { /* not built yet — check 5 already says so */ }
+  const size = BUNDLE.kb;
 
   /** Every claim in the table, and what it is a claim about. */
   const rows = [
     ['test paketleri', /\| Test \| (\d+) node \+ paketleme \+ (\d+) tarayıcı paketi/,
       [packs.length - browser, browser]],
     ['sözlük boyu', /\| Dil \|[^|]*?(\d+) metin/, [KEYS.tr.length]],
-    ...(size === null ? [] : [
-      ['tek dosya boyu', /\| Çevrimdışı \|[^|]*?\((\d+) KB\)/, [size]],
-      ['girişteki tek dosya boyu', /Toplam yük tek dosyada (\d+) KB/, [size]],
-      ['bölüm anlatısındaki tek dosya boyu', /Tek dosya sürümü (\d+) KB ve çevrimdışı/, [size]],
-    ]),
+    ['tek dosya boyu', /\| Çevrimdışı \|[^|]*?\((\d+) KB\)/, [size]],
+    ['girişteki tek dosya boyu', /Toplam yük tek dosyada (\d+) KB/, [size]],
+    ['bölüm anlatısındaki tek dosya boyu', /Tek dosya sürümü (\d+) KB ve çevrimdışı/, [size]],
   ];
 
   let clean = true;
