@@ -1017,6 +1017,20 @@ kanal sıfırlanıyordu, ve sonuç kuşla hiç ilgisi olmayan düz bir griydi: k
 renginin bir ton koyusu olması gereken uzak kanat, lacivert de olsa kızıl da
 olsa altın da olsa hep aynı macun grisi çiziliyordu.
 
+### Ve bir siluet
+
+Işık gövdeye hacim verdi ama dış hat hâlâ üst üste iki elipsti — ve üst üste
+iki elips bir şekildir, hayvan değil. Hangi yöne dönerse dönsün dış hattı
+aynıydı, ve hangi yöne baktığını bilmeyen bir dış hat, içi ne kadar özenle
+gölgelenirse gölgelensin ucuz okunan şeydir.
+
+- **Kuyruk** — arkada, su hizasında, küt bir kama. Küçük, her şeyin arkasında,
+  ve önü ile arkası olan bir siluetle olmayan arasındaki fark.
+- **Karın boğaza doğru daralıyor** — yukarısı dar, aşağısı geniş ve yuvarlak.
+  Kendi ayakları üstünde duran bir kuşun önü gerçekten bunu yapar; düz elips
+  düz elipstir. İlk deneme simetrik değildi ve daralma gibi değil, **önlüğünü
+  yamuk bağlamış** bir kuş gibi okunuyordu.
+
 Kare süresi 16.7 ms — altmış kare, değişmedi.
 
 ## Oluk: denizin beşinci fiili

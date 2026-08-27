@@ -3250,6 +3250,35 @@ export class Renderer {
     ctx.fill();
     ctx.restore();
 
+    /**
+     * A tail, which is mostly a matter of the outline.
+     *
+     * He was two ellipses, and two ellipses stacked is a shape rather than an
+     * animal — whichever way he faced, his outline was the same, and an
+     * outline that does not know which way it is pointing is the thing that
+     * reads as cheap however carefully the inside of it is shaded. A real
+     * penguin has a stubby wedge trailing off the back at the waterline. It is
+     * small, it is behind everything, and it is the difference between a
+     * silhouette that has a front and a back and one that does not.
+     */
+    const tailX = cx - p.facing * p.w * 0.4;
+    const tailY = by - bodyH * 0.16;
+    ctx.save();
+    ctx.fillStyle = tone(body, -0.3);
+    ctx.beginPath();
+    ctx.moveTo(tailX + p.facing * p.w * 0.1, tailY - p.h * 0.1);
+    ctx.quadraticCurveTo(
+      tailX - p.facing * p.w * 0.12, tailY - p.h * 0.02,
+      tailX - p.facing * p.w * 0.16, tailY + p.h * 0.07,
+    );
+    ctx.quadraticCurveTo(
+      tailX - p.facing * p.w * 0.02, tailY + p.h * 0.05,
+      tailX + p.facing * p.w * 0.1, tailY + p.h * 0.04,
+    );
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
     // Body
     const bodyRY = bodyH * (0.52 + pose.jiggle);
     const bodyCY = by - bodyH * 0.5;
@@ -3274,9 +3303,33 @@ export class Renderer {
     bellyG.addColorStop(0, tone(skin.belly, 0.08));
     bellyG.addColorStop(0.5, skin.belly);
     bellyG.addColorStop(1, tone(skin.belly, -0.24));
+    /**
+     * The white tapers toward the throat.
+     *
+     * A plain ellipse is a plain ellipse: narrow at the top and wide at the
+     * bottom is what the front of a bird standing on its own feet actually
+     * does, and it is the second thing after the tail that stops him reading
+     * as a stack of circles.
+     */
+    const bcx = cx + p.facing * p.w * 0.05;
+    const bw = p.w * 0.29;
     ctx.fillStyle = bellyG;
     ctx.beginPath();
-    ctx.ellipse(cx + p.facing * p.w * 0.05, bellyCY, p.w * 0.29, bellyRY, 0, 0, Math.PI * 2);
+    ctx.moveTo(bcx, bellyCY - bellyRY);
+    // Symmetric about its own centre. The first attempt was not, and a white
+    // front sitting off to one side does not read as a taper — it reads as a
+    // bird wearing his bib crooked.
+    ctx.bezierCurveTo(
+      bcx + bw * 0.7, bellyCY - bellyRY * 0.88,
+      bcx + bw * 1.12, bellyCY + bellyRY * 0.6,
+      bcx, bellyCY + bellyRY,
+    );
+    ctx.bezierCurveTo(
+      bcx - bw * 1.12, bellyCY + bellyRY * 0.6,
+      bcx - bw * 0.7, bellyCY - bellyRY * 0.88,
+      bcx, bellyCY - bellyRY,
+    );
+    ctx.closePath();
     ctx.fill();
     // The chin's shadow, thrown down onto the white. Without it the belly is a
     // sticker laid on the front rather than the front of a body.
