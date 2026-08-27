@@ -969,6 +969,81 @@ başına bir yaylım).
 
 Ölçüm sonrası: arena chapter'ının tekrarı **%16 → %10**, fiil sayısı 5 → 6.
 
+## Oluk: denizin beşinci fiili
+
+Dört fiil ve on beş bölümden sonra dalış chapter'ının tekrarı hâlâ %19'du, ve
+kalan ikizler artık düzenlemeyle çözülmüyordu: `seal`, `current`, `trench`,
+`vent` — dördünün mümkün olan bütün ikili birleşimi ya kullanılmıştı ya da
+başka bir bölümle çakışıyordu. Kombinatorik tükenmişti. Yeni bir fiil
+gerekiyordu, ve hangisi olduğu chapter'ın kendi cümlesinde yazılıydı.
+
+Denizin dilbilgisi tek cümle: **yükselmek bedava, dalmak tuşa mal oluyor.**
+Kaldırma kuvveti kuşu bedavaya yukarı taşıyor; aşağı inmek ödediği tek şey. On
+beş dalış bu asimetrinin düzenlemeleri. Diğer dört fiil cümleye *uymayı*
+zorlaştırıyor — geometri yolu daraltıyor, deniz leoparı seni yoldan kovalıyor,
+çukur derin kısmı pahalılaştırıyor, akıntı suyun kendisini uzatıyor. Oluk
+cümleyi **söküyor**.
+
+Yukarı akan su, ödediğin yönü karşılanamaz kılıyor: tuşu basılı tut, yine de
+zar zor batıyorsun. Aşağı akan su daha acımasız, çünkü **bedava** olan yönü
+alıyor — ve yukarı için bir tuş yok, hiç olmadı.
+
+Adı akıntı değil oluk, çünkü bir *yer*, hava durumu değil: üç buçuk penguen
+boyu bir kanal, içinden su geçiyor, ve orada durgun olan tek şey ortadaki hat.
+Bu da onu chapter'ın **ilk saf kontrol sınavı** yapıyor. Diğer her fiil nereye
+gittiğinle ilgili; bu, zaten olduğun yerde kalıp kalamayacağınla.
+
+### Fizik iki kez yazıldı
+
+İlk hâl iki kelepçeyi kaydırıyordu — "yukarı ve aşağı seyir hızları suya
+görelidir", ki doğru bir cümle ve tam doğru terminal hıza oturuyor. Gerçek bir
+olukta ölçüldüğünde neredeyse hiçbir şey yapmıyordu: tuşu bırakan bir yüzücü
+3.4 boyluk kanaldan **oyundaki en güçlü suda 0.22 saniyede**, hiç suyu
+olmayanda **0.23 saniyede** çıkıyordu.
+
+Sebep kaldırma kuvvetinin sertliği. Serbest yükselişe altıda bir saniyede
+varıyor ve bunu yaparken yalnızca yirmi piksel alıyor — yani dar bir kanalda
+yüzücü **her zaman ivme rampasında** ve hiçbir kelepçeye hiç varmıyor. Rampa
+da iki durumda da aynı: kaldırma kuvveti. **Varılmayan bir kelepçe, config
+dosyasındaki bir sayıdır.**
+
+Su bir cismi ilk kareden itibaren taşır. Yani yatay akıntının yaşadığı yerde
+yaşıyor: suyu sekizde bir saniyede kovalayan bir drift kanalında, ve
+kelepçeler eskiden ne idiyse ona geri döndü. Aynı biçim, aynı gerekçe, tek bir
+vektörün iki yarısı. `_resolveY` de artık gerçek hareket yönüne bakıyor
+(`vy + driftY`), tıpkı `_resolveX`'in kuyruk rüzgârı için yaptığı gibi.
+
+### İçinden geçen rota bilerek düz
+
+Bu chapter'daki her derinlik değişimi `reachFor` ile denetleniyor, ve o
+durgun suyu biliyor — dikey suyun içinde sessizce yanlış olurdu. Kurala
+olukları öğretmek yerine parça hiç derinlik değişimi *istemiyor*. Bedeli,
+denizdeki her bedelin alındığı yerden alınıyor: `swimCost` içinde. Kanıtı da
+her bedelin kanıtlandığı yerden: yüzülerek.
+
+Kanal derinliğini `at` ile seçiyor, `gate` gibi — ve `gate`'in bunu öğrenmek
+zorunda kaldığı sebeple. İlk hâli kanalı hattın olduğu yere açıyordu; nefesten
+hemen sonra bu yüzey demek, kanal suyun tepesine kırpılıyor, ve hat **kendi
+tavanının üstünde** kalıyordu: kimsenin çizmediği bir duvarı olan bölüm.
+
+### Nereye konduğu
+
+**48 Aşağı Bas** — yukarı akan su, nefesten hemen sonra, yükselmenin ne kadar
+ucuz olduğunun yeni hatırlatıldığı yerde. İçeride tuş zar zor çalışıyor.
+Chapter'da ilk kez, çok yukarıda olmanın cevabı "aşağı bas" değil — ve bu, ilk
+yarısını sana hep öyle olduğunu öğreterek geçiren bölümde oluyor.
+
+**57 İki Ciğer** — aşağı akan su, yukarı çıkmakla ilgili bölümde. Acımasız yön,
+en acımasız yere. Bu chapter'da her şeyin cevabı tuşu bırakmak olabilir: kuş
+yüzer, buz yukarıdadır, ve bu ilk dalıştan beri bedava. Burada su **yanlış
+yöne** itiyor. İkinci ciğerde duruyor — bölümün kendi notunun "iyi harcanmalı"
+dediği ciğerde — yani çok derinde olmanın cevabı, tam olarak çok derinde
+olmanın bütün problem olduğu anda çalışmayı bırakıyor.
+
+Ölçüm sonrası: dalış chapter'ının tekrarı **%19 → %12**, fiil sayısı 10 → 11,
+ve 48 ile 57 ikiz listesinden çıktı. Chapter artık oyundaki en tekrarlı bölüm
+değil.
+
 ## Etkisiz mekanik taraması
 
 Akıntı onarıldıktan sonra sorulması gereken soru şuydu: **başka kaç tanesi
