@@ -104,6 +104,8 @@ export class Deep {
     this.lastAir = 0;
     /** Cracks in the seabed that breathe. */
     this.vents = [];
+    /** Bands of moving water still growing with the corridor. */
+    this._flows = [];
   }
 
   /* --------------------------------------------------------- geometry */
@@ -165,14 +167,21 @@ export class Deep {
    * whose width arrived at the end would be measured by nothing.
    */
   _growFlow() {
-    if (!this._flow) return;
-    this._flow.w = Math.max(0, Math.round(this.x - this._flow.x));
+    for (const z of this._flows ?? []) z.w = Math.max(0, Math.round(this.x - z.x));
   }
 
-  /** Moving water stops where the air is: a breath is not something you fight for. */
+  /**
+   * Moving water stops where the air is.
+   *
+   * A hole in the ice is the one thing this chapter promises, and a breath you
+   * have to fight the sea for is not a promise. A vent is deliberately *not*
+   * on this list: its air is on the seabed, and standing still over it while a
+   * current tries to take you off it is the entire point of the one level that
+   * does it.
+   */
   _closeFlow() {
     this._growFlow();
-    this._flow = null;
+    this._flows = [];
   }
 
   /**
@@ -369,8 +378,8 @@ export class Deep {
      * That is not a tolerance to widen. The composer already knows whether it
      * is inside a band, because it is holding the band, so it asks itself.
      */
-    if (this._flow && b >= this._flow.y && a <= this._flow.y + this._flow.h) {
-      worst = Math.max(worst, cost(this._flow.flow ?? 0));
+    for (const z of this._flows ?? []) {
+      if (b >= z.y && a <= z.y + z.h) worst = Math.max(worst, cost(z.flow ?? 0));
     }
     for (let i = 0; i <= 8; i++) {
       worst = Math.max(worst, cost(flowAt(this.zones, this.x, a + ((b - a) * i) / 8)));
@@ -835,16 +844,21 @@ export class Deep {
    * round the composer measures still water and the player swims through
    * moving water, and that gap is the shape of every bug this chapter has had.
    */
-  current({ flow = -0.34, band = 0.5, len = null } = {}) {
+  current({ flow = -0.34, band = 0.5, len = null, at = null, keep = false } = {}) {
     this._breathOwed();
-    this._closeFlow();
+    if (!keep) this._closeFlow();
     const node = this.route[this.route.length - 1];
     const height = Math.round(this.depth * band);
     const strength = Math.max(-CURRENT.max, Math.min(CURRENT.max, flow));
+    // `at` puts the band at a fixed place in the water column, 0 at the ice and
+    // 1 at the bed, the way `gate` does — which is what lets a level stack two
+    // of them running opposite ways. Without it a band is centred on wherever
+    // the line happens to be, and two bands would sit on top of each other.
+    const mid = at === null ? node.y : this.depth * at;
     const zone = {
       kind: 'current',
       x: Math.round(node.x - 140),
-      y: Math.round(Math.max(0, node.y - height / 2)),
+      y: Math.round(Math.max(0, Math.min(this.depth - height, mid - height / 2))),
       w: Math.round(len ?? 0),
       h: height,
       flow: +strength.toFixed(3),
@@ -855,7 +869,7 @@ export class Deep {
     // band runs from here to the next breath, however long that turns out to
     // be. The second is what the levels named after the sea moving were always
     // describing, so it is the default.
-    if (len === null) this._flow = zone;
+    if (len === null) (this._flows = this._flows ?? []).push(zone);
     return this;
   }
 

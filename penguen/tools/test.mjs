@@ -49,6 +49,7 @@ const NODE_SUITES = [
   ['tests/glaze.mjs', 'cam buz'],
   ['tests/current.mjs', 'akıntı'],
   ['tests/strip.mjs', 'yorum ayıklayıcı'],
+  ['tests/seal.mjs', 'deniz leoparı'],
   ['tests/pose.mjs', 'ifade katmanı'],
   ['tests/economy.mjs', 'ekonomi dengesi'],
   ['tests/ghost.mjs', 'hayalet kodlaması'],

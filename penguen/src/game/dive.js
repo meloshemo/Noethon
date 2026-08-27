@@ -146,15 +146,30 @@ const DIVE_PLANS = [
     target: 50,
     depth: 560,
     breath: 0.75,
-    /* With you, then against you, and the against half is placed where the
-       lungs are already low: a current is only interesting when it costs air
-       rather than time. */
+    /* Two rivers, one above the other, running opposite ways.
+       This level used to be with-you then against-you, one after the other,
+       which is a current happening *to* you: there is nothing to decide, only
+       a stretch that is quick and a stretch that is slow. Stacked instead,
+       it becomes the one question moving water can ask and nothing else in
+       this chapter can. The shallow river fights and the deep river helps —
+       so depth, which has cost the button since the first dive and never once
+       bought anything, is suddenly worth *paying* for. And the slots do not
+       care which river you are in, so the choice is real on both sides: hold
+       the button and go fast down where the air is far, or stay up in the
+       slow water near the ice you will need.
+
+       Then the second half turns it over. Both rivers run against you and the
+       deep one runs harder, so the answer that just worked becomes the
+       expensive one, on the half of the level where the lungs are already
+       low. */
     build: (d) => {
       d.mouth();
-      d.current({ flow: 0.32, band: 0.45 });
+      d.current({ flow: -0.3, band: 0.36, at: 0.24 });
+      d.current({ flow: 0.34, band: 0.36, at: 0.74, keep: true });
       d.gate({ at: 0.35, gap: 172 });
       d.hole();
-      d.current({ flow: -0.34, band: 0.55 });
+      d.current({ flow: -0.26, band: 0.36, at: 0.26 });
+      d.current({ flow: -0.44, band: 0.36, at: 0.76, keep: true });
       d.stretch({ gap: 170, from: 0.42 });
       d.surfaceOut();
       d.scatterFish(3);
@@ -267,7 +282,16 @@ const DIVE_PLANS = [
     depth: 620,
     breath: 0.8,
     /* The two things that take your line away, at the same time. A slot is a
-       precise place to be, and a current is the water deciding where you are. */
+       precise place to be, and a current is the water deciding where you are.
+
+       And then the thing neither of them can do alone. The second half of this
+       level has no hole in the ice: the only air is a crack in the seabed that
+       breathes on a clock, and there is a current running over it. Every other
+       vent in the chapter asks you to *stop*, which costs a wait and nothing
+       else. This one asks you to stop in water that is moving, so holding the
+       one square metre where the air is becomes the work — and the level named
+       Black Water finally has a moment where the sea is deciding where you are
+       while you are trying very hard to be somewhere exact. */
     build: (d) => {
       d.mouth();
       d.current({ flow: -0.38, band: 0.4 });
@@ -276,7 +300,10 @@ const DIVE_PLANS = [
       d.hole();
       d.current({ flow: -0.42, band: 0.6 });
       d.gate({ at: 0.7, gap: 150 });
-      d.stretch({ gap: 152, from: 0.36 });
+      d.stretch({ gap: 152, from: 0.36, next: 'vent' });
+      d.vent();
+      d.gate({ at: 0.44, gap: 150 });
+      d.stretch({ gap: 152, from: 0.4 });
       d.surfaceOut();
       d.scatterFish(3);
       d.checkpointAt(4);

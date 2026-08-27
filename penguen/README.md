@@ -343,7 +343,7 @@ geçmez, hata verip durur.
 
 ## Testler
 
-Tek komut, 40 paket (31 node + paketleme + 9 tarayıcı), kendi sunucusunu
+Tek komut, 41 paket (32 node + paketleme + 9 tarayıcı), kendi sunucusunu
 kurup kapatıyor ve portu doluysa bir yanına kayıyor:
 
 ```bash
@@ -968,6 +968,65 @@ vuruşta attığı bölümde iki siper: burada siper aşınmıyor, yıkılıyor 
 başına bir yaylım).
 
 Ölçüm sonrası: arena chapter'ının tekrarı **%16 → %10**, fiil sayısı 5 → 6.
+
+## Etkisiz mekanik taraması
+
+Akıntı onarıldıktan sonra sorulması gereken soru şuydu: **başka kaç tanesi
+böyle?** Bir mekanik, hiçbir çözücünün ve hiçbir doğrulayıcının haber
+veremeyeceği bir biçimde oyundan eksik olabilir — bölümler yine besteleniyor,
+biri yine bitiriyor, ve tek belirti chapter'ın düz hissettirmesi.
+
+Her mekanik tek tek ölçüldü: rüzgâr `drift` kanalında 200 itiş için saniyede
+98 piksel taşıyor; sessiz alan zıplamayı gerçekten büyütüyor; cam buz tutuşu
+gerçekten kesiyor; çukur, baca, siper, sarkaç, kavisli atış hepsi ısırıyor.
+
+Ve tarama kendi cevabını da verdi: **akıntı, kendi paketi olmayan tek
+mekanikti.** Kapsamdaki tek boşluk, hatanın yaşadığı yerin ta kendisiydi.
+
+Geriye bir tane kalmıştı — deniz leoparı — ve o da ancak elle ölçülmüştü, ki
+bu akıntının onarımdan önceki durumunun aynısı. Artık `tests/seal.mjs` var ve
+üç kural kanıtlıyor: devriye geziyor (kımıldamayan bir tehlike, çarpışma
+kutusu olan dekordur), temasta öldürüyor, ve **suyun altında üstüne
+basılamıyor** — buzun üstünde bir tehlikeye atlamak oyunun cesarete verdiği
+ödül, ama suda küçük olan penguen. `world.js` bunu bir yorumda söylüyordu, ve
+bir yorum test değildir.
+
+## Akıntı gerçek olunca iki bölüm yeniden yazıldı
+
+Akıntı çalışmaya başlayınca `tools/variety.mjs`'in yıllardır söylediği şey
+anlam kazandı: dalış chapter'ının ikizleri, ayırt edici fiili boş olan
+bölümlerdi. Onarım tek başına oyunu değiştirdi, ama iki bölüm hâlâ *aynı
+soruyu* soruyordu. İkisi de yeniden yazıldı — yeni bir fiil eklemeden, var
+olanları daha önce hiç denenmemiş biçimde üst üste koyarak.
+
+**52 Akıntı — üst üste iki nehir.** Eskiden önce seninle sonra sana karşı,
+arka arkaya: yani sana *olan* bir akıntı, karar yok, sadece hızlı bir bölüm
+ve yavaş bir bölüm. Şimdi ikisi aynı anda ve üst üste. Sığ nehir sana karşı,
+derin nehir seninle. Bu chapter'da derinlik ilk dalıştan beri tuşa basmaya
+mal oluyordu ve karşılığında hiçbir şey vermiyordu; burada ilk kez **satın
+alınmaya değer**. Geçitler hangi nehirde olduğunu umursamıyor, yani seçim iki
+tarafta da gerçek: tuşu basılı tut ve havanın uzak olduğu derinlikte hızlan,
+ya da yukarıda yavaş suda kal, ihtiyacın olacak buzun yanında.
+
+İkinci yarı bu cevabı ters çeviriyor: iki nehir de sana karşı ve **derin olan
+daha sert**. Az önce işe yarayan cevap, ciğerin zaten azaldığı yarıda pahalı
+olanı hâline geliyor.
+
+Bunun için besteciye `at` geldi — bandı su sütununda sabit bir yere koyuyor,
+`gate`'in yaptığı gibi — ve aynı anda birden fazla açık bant taşıyabilmesi.
+
+**56 Kara Su — akıntının içinde bir baca.** Bölümün ikinci yarısında buzda
+delik yok: tek hava, tabanda saatle nefes alan bir çatlak, ve **üstünden bir
+akıntı geçiyor**. Chapter'daki her baca *durmanı* istiyor, ki bedeli sadece
+bir bekleme. Bu baca, suyun aktığı yerde durmanı istiyor — havanın olduğu bir
+metrekarede kalmak işin kendisi hâline geliyor. Adı Kara Su olan bölüm nihayet
+denizin nerede olduğuna karar verdiği, senin ise çok kesin bir yerde olmaya
+çalıştığın bir ana sahip.
+
+Ölçüm sonrası: dalış chapter'ının tekrarı **%23 → %19**, ve 56 ikiz
+listesinden tamamen çıktı. 47–49 kasıtlı olarak listede kalıyor: onlar
+chapter'ın dilbilgisini öğreten üçlü, ve bir öğretme sırasını bir metriği
+düşürmek için bozmak, ölçmenin amacını kaçırmak olur.
 
 ## Sürüm dosyasının sessizce değiştirdiği çarpma
 
@@ -2377,7 +2436,7 @@ anlatmak değil, olan bir şeyi olduğundan iyi anlatmaktır.
 | Kayıt | Tek sürümlü JSON, ileri göç, dosyaya aktarma, tek tuşla silme |
 | Çevrimdışı | Servis çalışanı + tek dosya sürümü (639 KB) |
 | Girdi | Klavye, dokunmatik, gamepad |
-| Test | 31 node + paketleme + 9 tarayıcı paketi, hepsi tek komutta |
+| Test | 32 node + paketleme + 9 tarayıcı paketi, hepsi tek komutta |
 | Zorluk | Ölçülen eğri: `node tools/difficulty.mjs` |
 
 ### Yok, ve neden
