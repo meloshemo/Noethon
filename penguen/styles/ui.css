@@ -176,13 +176,18 @@
  * is allowed to be uncomfortable as long as it is technically hittable. This
  * is a game held in two hands for minutes at a time, not a link in a form.
  *
- * The budget was never the constraint either. The pads may take a fifth of the
- * screen and they were using 16.7% of it, so there was a third of the
- * allowance sitting unspent. They now aim at 20.6% on every landscape phone
- * measured — from a 320px-tall SE to a 430px-tall Pro Max — which is a
- * direction pad around 60px and a jump around 74px, half again what they were.
- * Above a phone the caps are unchanged, so a desktop and a phone held upright
- * look exactly as they did.
+ * The budget was not the constraint either, and the second tuning found out
+ * why: the number being budgeted against was measuring the wrong thing. It was
+ * the height of this container as a share of the stage, capped at a fifth —
+ * but the container spans the whole width while the pads sit in its two bottom
+ * corners, and measured it was **74% empty down the middle**. The pads were
+ * being charged for a rectangle of air, so they were shrunk to stay under a
+ * cap they were never really near: their real coverage was 3.9% of the screen.
+ *
+ * Sized against what a player actually loses instead, there was room for half
+ * as much again. A landscape phone now gets a direction pad around 78px and a
+ * jump around 96px, covering 6.5% of the screen with two thirds of the width
+ * still clear between the thumbs.
  *
  * The camera needs no help with this: it reads the strip's real measured
  * height, so growing the pads moves the penguin up on its own.
@@ -194,8 +199,8 @@
  * it is a coincidence. Nothing above 320px ever reaches them.
  */
 .touch {
-  --pad: clamp(2.875rem, 15.5cqh, 4.2rem);
-  --pad-jump: clamp(3.5rem, 19cqh, 5.2rem);
+  --pad: clamp(3.25rem, 20cqh, 5rem);
+  --pad-jump: clamp(4rem, 24.5cqh, 6rem);
   --pad-gap: clamp(0.45rem, 2.2cqh, 0.85rem);
   --pad-edge: clamp(0.375rem, 1.6cqh, 1rem);
   position: absolute;

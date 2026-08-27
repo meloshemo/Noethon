@@ -228,16 +228,48 @@ for (const [label, width, height] of SIZES) {
    * single rule keyed to heights between 460 and 560 pixels, a band that no
    * phone held sideways is in. Every landscape handset fell below the floor of
    * it and got the desktop-sized pads: a hundred and fifteen pixel strip
-   * across a three-hundred-and-ninety pixel screen, most of a third of the
-   * game covered by its own buttons.
+   * across a three-hundred-and-ninety pixel screen.
    *
-   * Two numbers hold it shut from both ends. Below 44 pixels a thumb cannot
-   * reliably hit a pad; above a fifth of the screen the pads are no longer
-   * controls sitting on the game, they are a wall in front of it.
+   * The first version of this test then measured the wrong thing, and the
+   * wrong thing is instructive. It took the height of the `#touch` container
+   * as the share of the game the controls were covering, and capped it at a
+   * fifth. But that container spans the whole width while the pads sit in its
+   * two bottom corners: measured, it was **74% empty in the middle**. So the
+   * test was charging the pads for a rectangle of air, the pads were shrunk to
+   * stay under the cap, and every landscape phone ended up with 44 to 49 pixel
+   * buttons while the real coverage was 3.9% of the screen.
+   *
+   * A test that measures a proxy will get the proxy optimised. So this one
+   * measures what a player actually loses:
+   *
+   *   1. the area the pads really cover, added up — a fifteenth of the screen;
+   *   2. how tall the tallest one is, because a pad can be small in area and
+   *      still swallow a corner;
+   *   3. that the middle stays clear, which the container metric could never
+   *      see and is the thing that actually matters on a wide screen;
+   *   4. and the floor, unchanged: below 44 pixels a thumb cannot reliably hit
+   *      anything. That one was always right — it was being used as a target
+   *      rather than a floor, which is a different mistake.
+   */
+  /*
+   * Made to behave like a touch device rather than having the pads forced
+   * visible behind the interface's back.
+   *
+   * Setting `hidden = false` by hand was what the first version did, and it
+   * measured a game that does not exist. The interface re-hides the pads on
+   * every screen change when the pointer is not coarse — desktop Chromium is
+   * not — so they blinked out again on the next `startLevel`, and the camera,
+   * which is told to re-measure at that same moment, recorded a strip zero
+   * pixels tall. The pads were on screen and the camera believed they were
+   * not, so the test reported the penguin starting underneath controls the
+   * real game would have framed him above.
+   *
+   * `_isTouch` is the one switch the whole behaviour hangs off, so the test
+   * flips that and lets the interface do the rest, exactly as a phone does.
    */
   await p.evaluate(() => {
+    window.__pengu.ui._isTouch = true;
     window.__pengu.startLevel(3);
-    document.getElementById('touch').hidden = false;
   });
   await p.waitForTimeout(160);
 
@@ -251,7 +283,18 @@ for (const [label, width, height] of SIZES) {
     const hud = document.querySelector('.hud__bar').getBoundingClientRect();
     const hits = (a, b) =>
       a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+    // The pads never overlap each other, so the area they cover is just the
+    // sum — no need to work out a union of rectangles that cannot intersect.
+    const covered = each.reduce((sum, e) => sum + e.w * e.h, 0);
+    const leftEnd = Math.max(
+      document.getElementById('padLeft').getBoundingClientRect().right,
+      document.getElementById('padRight').getBoundingClientRect().right,
+    );
+    const jumpStart = document.getElementById('padJump').getBoundingClientRect().left;
     return {
+      cover: covered / (stage.width * stage.height),
+      tallest: Math.max(...each.map((e) => e.h)) / stage.height,
+      gap: (jumpStart - leftEnd) / stage.width,
       share: bar.height / stage.height,
       barH: Math.round(bar.height),
       stageH: Math.round(stage.height),
@@ -265,8 +308,15 @@ for (const [label, width, height] of SIZES) {
     };
   });
 
-  ok(`${label}: kumanda ekranı kaplamıyor`, pads.share <= 0.22,
-    `${pads.barH}px / ${pads.stageH}px = %${Math.round(pads.share * 100)}`);
+  ok(`${label}: kumandanın gerçek kapladığı yer küçük`, pads.cover <= 0.09,
+    `ekranın %${(pads.cover * 100).toFixed(1)}'i`);
+  ok(`${label}: en uzun tuş köşeyi yutmuyor`, pads.tallest <= 0.28,
+    `yüksekliğin %${(pads.tallest * 100).toFixed(0)}'i`);
+  // On a phone held upright the two groups are much closer, because the screen
+  // is narrow rather than because the pads grew: the threshold has to clear the
+  // tightest case, and that is portrait at about a quarter.
+  ok(`${label}: ekranın ortası boş`, pads.gap >= 0.18,
+    `iki grup arası genişliğin %${Math.round(pads.gap * 100)}'i`);
   ok(`${label}: her tuş parmak kadar büyük`, pads.tiny.length === 0,
     pads.tiny.join(' | ') || `en küçüğü ${pads.smallest}px`);
   ok(`${label}: tuşlar sahnenin içinde`, pads.outside.length === 0, pads.outside.join(' | '));

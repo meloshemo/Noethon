@@ -2504,18 +2504,26 @@ sürece rahatsız olmasına izin verdiğinize karar verdiğinizde seçtiğiniz
 sayıdır. Oysa bu, dakikalarca iki elle tutulan bir oyun; formdaki bir bağlantı
 değil.
 
-Bütçe de hiç engel değildi. Kumanda ekranın beşte birini kaplayabilir ve
-%16.7'sini kullanıyordu, yani izin verilenin üçte biri harcanmadan duruyordu.
-Ölçülen her yatay telefonda — 320 piksellik eski SE'den 430 piksellik Pro
-Max'e — artık %20.6 hedefleniyor: yön tuşu **60 piksel civarı**, zıplama
-**74 civarı**, yani eskisinin bir buçuk katı.
+Ama bu da yetmedi, ve **ikinci ayar sebebini buldu: bütçelenen sayı yanlış
+şeyi ölçüyordu.** Ölçüt, `#touch` kabının yüksekliğinin sahneye oranıydı ve
+beşte birle sınırlıydı. Oysa o kap bütün genişliği kaplarken tuşlar onun iki
+alt köşesinde duruyor — ölçüldüğünde **ortası %74 boştu**. Yani tuşlar bir
+kutu dolusu havanın parasını ödüyor, hiç yaklaşmadıkları bir tavanın altında
+kalsınlar diye küçültülüyorlardı: gerçek kaplamaları ekranın **%3.9**'uydu.
 
-| | önce | sonra |
-|---|---|---|
-| iPhone SE yatay | 44 / 54 | **58 / 71** |
-| iPhone 14 yatay | 45 / 57 | **60 / 74** |
-| Pixel yatay | 47 / 60 | **64 / 78** |
-| iPhone 14 Pro Max yatay | 49 / 62 | **67 / 82** |
+Bir test vekil bir sayıyı ölçerse, optimize edilen o vekil olur. Ölçüt artık
+oyuncunun gerçekten kaybettiği şey: tuşların gerçekte kapladığı alan, en uzun
+tuşun köşeyi yutup yutmadığı, ve ortanın boş kalması.
+
+| | ilk hâl | birinci ayar | **şimdi** |
+|---|---|---|---|
+| iPhone SE yatay | 44 / 54 | 58 / 71 | **75 / 92** |
+| iPhone 14 yatay | 45 / 57 | 60 / 74 | **78 / 96** |
+| Pixel yatay | 47 / 60 | 64 / 78 | **80 / 96** |
+| iPhone 14 Pro Max yatay | 49 / 62 | 67 / 82 | **80 / 96** |
+
+Yatay telefonda gerçek kaplama **%6.5**, iki tuş grubu arasında genişliğin
+**%68**'i hâlâ boş.
 
 Kamera bu işte yardıma ihtiyaç duymuyor: şeridin gerçek ölçülen yüksekliğini
 okuyor, yani tuşlar büyüyünce pengu kendiliğinden yukarı çıkıyor. Üst şerit de
@@ -2529,8 +2537,18 @@ tam **%22.0** çıkıyordu, ki bu bir pay değil, bir tesadüftür. 320 pikselin
 üstünde hiçbir şey onlara değmiyor.
 
 Bunun testi yoktu, o yüzden olabildi. Artık `browser-layout` üç boyutta da
-kumandanın ekranın beşte birini geçmediğine, her tuşun 44 pikselden büyük
-olduğuna, sahnenin dışına taşmadığına ve üst şeride binmediğine bakıyor.
+gerçek kaplamaya, en uzun tuşun yüksekliğine, ortanın boş kaldığına, her tuşun
+44 pikselden büyük olduğuna, sahnenin dışına taşmadığına ve üst şeride
+binmediğine bakıyor.
+
+Ve test artık **dokunmatik cihaz gibi davranıyor**. Önce tuşları elle
+görünür yapıyordu, ki bu var olmayan bir oyunu ölçmek demek: arayüz, işaretçi
+kaba değilken her ekran değişiminde tuşları yeniden gizliyor — masaüstü
+Chromium kaba değil — yani bir sonraki `startLevel`'da tuşlar kayboluyor ve
+tam o anda yeniden ölçmesi söylenen kamera **sıfır piksellik** bir şerit
+kaydediyordu. Tuşlar ekrandaydı, kamera olmadıklarını sanıyordu. Şimdi test
+`_isTouch`'ı çeviriyor ve gerisini arayüze bırakıyor, tıpkı bir telefon gibi.
+Bu sayede yetmiş altı bölümün hepsi üç boyutta da denetleniyor.
 
 **Gamepad**: sol çubuk ve D-pad yürütüyor, A/B/X/Y zıplatıyor, Start
 duraklatıyor (`src/core/input.js`, `pollGamepad`). Tarayıcı `getGamepads()`
