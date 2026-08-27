@@ -969,6 +969,56 @@ başına bir yaylım).
 
 Ölçüm sonrası: arena chapter'ının tekrarı **%16 → %10**, fiil sayısı 5 → 6.
 
+## Pengu'ya bir ışık
+
+İfade katmanı penguenin nasıl *hareket ettiğini* çözdü ve nasıl *çizildiğine*
+hiç dokunmadı — ve çizim tamamen düz doluydu. Gövde için tek lacivert, karın
+için tek beyaz, gaga için tek turuncu. Düz dolgu çıkartma gibi okunur, ve bir
+karakterin asla benzememesi gereken tek şey çıkartmadır.
+
+Artık bir ışık var: üstte ve biraz önde, buzun ve gökyüzünün zaten aydınlandığı
+yönde. Yeni bir şekil yok; hep orada olan şekillere nihayet güneşin nerede
+olduğu söylendi.
+
+- **Form** — gövde ve kafa kendi renginin açığından koyusuna. Işık bütün
+  boyuna yayıldığında yıkanmış bir griye dönüşüyordu: ışık, açının değil
+  boyanın değişmesi gibi okunuyordu, ve neredeyse siyah olmayan bir penguen
+  penguen değildir. Şimdi kendi rengi erken geliyor ve gövdenin çoğunu tutuyor.
+- **Buzdan seken ışık** — en altta gövde biraz açılıyor. Beyaz bir zeminde
+  duran hiçbir şeyin gölge tarafı karedeki en koyu şey değildir.
+- **Kenar ışığı, şeklin *içine* çizilmiş** — yol üstünde çizilince çizginin
+  yarısı dışarı taşıyor, ve koyu bir kafanın dışındaki geniş parlak çizgi
+  eğriye vuran ışık gibi değil, **cam bir kask** gibi okunuyor. Önce aynı yola
+  kırpınca o yarı atılıyor ve yalnızca istenen kalıyor.
+- **Boyun** — kafanın omuza oturduğu yerde bir gölge. Boyun çoğunlukla bir
+  gölgedir; onsuz kafa, gövdenin üstünde dengelenmiş ikinci bir toptur.
+- **Çenenin gölgesi** karnın üstüne düşüyor, yoksa karın gövdenin önü değil,
+  önüne yapıştırılmış bir çıkartmadır.
+- **Gaga** yüksekliği boyunca aydınlatılıyor. İlk deneme her yarıya ayrı ton
+  veriyordu ve hiçbir işe yaramadı: gaga kapalıyken iki yarı *aynı üçgen*,
+  yani ikincisi birincinin üstünü boyuyor ve yalnızca koyu ton görünüyordu —
+  ki kapalı gaga oyunun çoğunda taktığı yüz.
+- **Ayaklar** parmaklı. İki turuncu leke, bir ayağın çok uzaktan göründüğü
+  şeydir; üç parmak, yakından göründüğü şey.
+- **Uzaktaki göz daha küçük** — üç-çeyrek görünüşün tamamı bu. Yan yana iki
+  özdeş daire, tam karşıdan görülen bir yüzdür; oysa bu kafa karşıdan değil,
+  gaga bir yanından çıkıyor. Aynı boyda çizilince gagayla hangi yöne baktığı
+  konusunda kavga ediyorlardı.
+- **Güneş yuvarlanmıyor.** Penguen dönüyor — koşuya yatıyor, dalışa burnunu
+  eğiyor — ve bu geçişler o dönmenin *içinde* kuruluyor. Kendi hâline
+  bırakılınca güneş onunla yuvarlanıyor ve dik bir dalış alttan aydınlanmış
+  hâlde bitiyordu. `down`, dünyanın dikeyinin onun kendi koordinatlarındaki
+  karşılığı: nasıl dönerse dönsün gölgeleme yerinde kalıyor.
+
+Ve yol üstünde bir hata: `shade()` yalnızca `#rrggbb` okuyordu, oysa penguenin
+gövde rengi oyunun çoğunda bir `rgb(...)` dizgisi — civciv büyüdükçe ve hızlanınca
+ara değerlerle üretiliyor. Öylesine beslendiğinde `parseInt` `NaN` veriyor, her
+kanal sıfırlanıyordu, ve sonuç kuşla hiç ilgisi olmayan düz bir griydi: kendi
+renginin bir ton koyusu olması gereken uzak kanat, lacivert de olsa kızıl da
+olsa altın da olsa hep aynı macun grisi çiziliyordu.
+
+Kare süresi 16.7 ms — altmış kare, değişmedi.
+
 ## Oluk: denizin beşinci fiili
 
 Dört fiil ve on beş bölümden sonra dalış chapter'ının tekrarı hâlâ %19'du, ve

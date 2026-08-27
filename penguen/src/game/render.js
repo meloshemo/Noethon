@@ -31,10 +31,34 @@ function withAlpha(hex, a) {
 }
 
 /** The same colour, darker (`k < 0`) or lighter (`k > 0`). */
-function shade(hex, k) {
-  const n = parseInt(hex.slice(1), 16);
-  const mix = (c) => Math.round(k < 0 ? c * (1 + k) : c + (255 - c) * k);
-  return `rgb(${mix((n >> 16) & 255)},${mix((n >> 8) & 255)},${mix(n & 255)})`;
+/**
+ * The components of a colour, whichever way it was written.
+ *
+ * This exists because the old one did not do it. It took `#rrggbb` and nothing
+ * else, and the penguin's body colour is an `rgb(...)` string for most of the
+ * game — it is interpolated as the chick grows and again when he is boosted.
+ * Fed one of those, `parseInt('gb(88, 100, 118)', 16)` is `NaN`, every channel
+ * came out zero, and the result was a flat grey with no relation to the bird:
+ * the far flipper, which is supposed to be his own colour a shade darker, was
+ * drawn the same putty grey whether he was navy, crimson or gold.
+ */
+function rgbOf(c) {
+  if (c[0] === '#') {
+    const h = c.length < 7 ? c[1] + c[1] + c[2] + c[2] + c[3] + c[3] : c.slice(1, 7);
+    const n = parseInt(h, 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  const m = c.match(/\d+(\.\d+)?/g);
+  return m ? [Math.round(+m[0]), Math.round(+m[1]), Math.round(+m[2])] : [0, 0, 0];
+}
+
+/** Lighter for positive `k`, darker for negative, in the colour's own hue. */
+function tone(c, k, a = 1) {
+  const [r, g, b] = rgbOf(c);
+  const mix = (v) => Math.round(k < 0 ? v * (1 + k) : v + (255 - v) * k);
+  return a >= 1
+    ? `rgb(${mix(r)},${mix(g)},${mix(b)})`
+    : `rgba(${mix(r)},${mix(g)},${mix(b)},${a})`;
 }
 
 const PALETTE = {
@@ -487,8 +511,8 @@ export class Renderer {
       ctx.save();
       // The heap. Rounded, and lower on the side the shots came from.
       const g = ctx.createLinearGradient(0, top, 0, b.y + b.h);
-      g.addColorStop(0, shade(BANK.tint, 1 + flash * 0.4));
-      g.addColorStop(1, shade(BANK.tint, 0.72));
+      g.addColorStop(0, tone(BANK.tint, 1 + flash * 0.4));
+      g.addColorStop(1, tone(BANK.tint, 0.72));
       ctx.fillStyle = g;
       // A drift, not a tooth: the foot spreads well past the box on both sides
       // so it sits *on* the ice instead of standing up out of it.
@@ -1746,7 +1770,7 @@ export class Renderer {
 
       const g = ctx.createLinearGradient(-14, -9, 14, 9);
       g.addColorStop(0, tint);
-      g.addColorStop(1, shade(tint, -0.42));
+      g.addColorStop(1, tone(tint, -0.42));
       ctx.fillStyle = g;
       ctx.shadowColor = withAlpha(tint, 0.65);
       ctx.shadowBlur = 15;
@@ -3060,13 +3084,16 @@ export class Renderer {
     const py = p.submerged ? p.y + p.h * 0.5 : by;
     ctx.translate(cx, py);
     ctx.scale(sx, sy);
+    let tilt = 0;
     if (p.submerged) {
       const pitch = clamp(Math.atan2(p.vy, Math.max(Math.abs(p.vx), 190)), -0.9, 0.9);
-      ctx.rotate(p.facing * pitch * 0.85);
+      tilt = p.facing * pitch * 0.85;
+      ctx.rotate(tilt);
     } else if (pose.lean) {
       // Leaning into a start and out of a stop, around the feet, which is
       // where a standing body actually pivots.
-      ctx.rotate(pose.lean * p.facing);
+      tilt = pose.lean * p.facing;
+      ctx.rotate(tilt);
     }
     ctx.translate(-cx, -py);
 
@@ -3093,23 +3120,119 @@ export class Renderer {
     // Some skins wear things behind the bird — a jetpack, a cape.
     if (skin.behind && skin.paint) skin.paint(ctx, geo, 'behind');
 
-    // Shadow on the floe
+    /**
+     * A light, so that he has a form instead of a silhouette.
+     *
+     * Every part of this bird used to be one flat fill — one navy for the
+     * body, one white for the belly, one orange for the beak — and a flat fill
+     * reads as a sticker. A sticker is the one thing a character must never
+     * look like. So there is a light now: above him and a little in front,
+     * the same direction the ice and the sky are already lit from, and every
+     * piece of him answers to it. Nothing here is a new shape; it is the
+     * shapes that were always there, finally told where the sun is.
+     *
+     * `lit` is the form: pale where the light lands, his own colour through
+     * the middle, deeper underneath. `rim` is the separation: a cool edge
+     * along the top, which is the single cheapest thing that lifts a figure
+     * off its background, and the reason he reads at all against dark water.
+     */
+    /**
+     * Where the light is coming from, in his own frame.
+     *
+     * He rotates — he leans into a sprint and he noses over into a dive — and
+     * these gradients are built inside that rotation, so left alone the sun
+     * rolls with him and a steep dive ends up lit from underneath. The sun
+     * does not roll. `down` is the world's vertical expressed in his local
+     * coordinates, so the shading stays put however he is turned, and at rest
+     * it is exactly the plain vertical it always was.
+     */
+    const down = { x: Math.sin(tilt), y: Math.cos(tilt) };
+    const along = (c0, c1) => {
+      const mid = (c0 + c1) / 2;
+      const half = (c1 - c0) / 2;
+      return ctx.createLinearGradient(
+        cx - down.x * half, mid - down.y * half,
+        cx + down.x * half, mid + down.y * half,
+      );
+    };
+    const lit = (c, top = 0.22, bottom = -0.34) => {
+      const g = along(headY - p.h * 0.28, by);
+      g.addColorStop(0, tone(c, top));
+      // His own colour arrives early and holds most of the body. Lit across
+      // the whole height he came out a washed mid-grey — the light was
+      // reading as a change of paint rather than as a change of angle, and a
+      // penguin who is not nearly black is not a penguin.
+      g.addColorStop(0.34, c);
+      g.addColorStop(0.86, tone(c, bottom));
+      // Bounce off the ice. The shadow side of anything standing on a white
+      // field is never the darkest thing in the frame; it picks the field up.
+      g.addColorStop(1, tone(c, bottom * 0.55));
+      return g;
+    };
+    /**
+     * A cool edge along the top, drawn *inside* the shape.
+     *
+     * Stroked on the path itself, half the line lands outside it, and a wide
+     * bright stroke outside a dark head does not read as light catching a
+     * curve — it reads as a glass helmet. Clipping to the same path first
+     * throws that half away and leaves the only part that was ever wanted:
+     * the inner edge, brightest at the crown and gone by the time the curve
+     * has turned away from the sky.
+     */
+    const rimTop = (path, from, to, a = 0.55) => {
+      ctx.save();
+      path();
+      ctx.clip();
+      const g = along(from, to);
+      g.addColorStop(0, `rgba(200,233,255,${a})`);
+      g.addColorStop(1, 'rgba(200,233,255,0)');
+      ctx.strokeStyle = g;
+      ctx.lineWidth = Math.max(1.4, p.w * 0.07);
+      path();
+      ctx.stroke();
+      ctx.restore();
+    };
+
+    // Shadow on the floe. Soft, and darkest right under him — a hard-edged
+    // disc reads as a hole in the ice rather than as a shadow.
     if (p.onGround) {
-      ctx.fillStyle = 'rgba(10,30,50,0.18)';
+      const g = ctx.createRadialGradient(cx, by + 2, 0, cx, by + 2, p.w * 0.55);
+      g.addColorStop(0, 'rgba(10,30,50,0.26)');
+      g.addColorStop(0.6, 'rgba(10,30,50,0.13)');
+      g.addColorStop(1, 'rgba(10,30,50,0)');
+      ctx.fillStyle = g;
+      ctx.save();
+      ctx.translate(cx, by + 2);
+      ctx.scale(1, 0.16);
       ctx.beginPath();
-      ctx.ellipse(cx, by + 2, p.w * 0.5, 4, 0, 0, Math.PI * 2);
+      ctx.arc(0, 0, p.w * 0.55, 0, Math.PI * 2);
       ctx.fill();
+      ctx.restore();
     }
 
     const footY = by - 1;
 
-    // Feet
-    ctx.fillStyle = skin.foot;
+    // Feet, with toes and a light on them. Two orange blobs is what a foot
+    // looks like from very far away; three toes is what one looks like.
     for (const sgn of [-1, 1]) {
       const fx = cx + sgn * p.w * 0.24 + (sgn === 1 ? step * 3 : -step * 3);
+      const back = sgn === -p.facing;
+      const g = ctx.createLinearGradient(0, footY - p.h * 0.07, 0, footY + p.h * 0.07);
+      g.addColorStop(0, tone(skin.foot, back ? 0.06 : 0.24));
+      g.addColorStop(1, tone(skin.foot, back ? -0.28 : -0.14));
+      ctx.fillStyle = g;
       ctx.beginPath();
       ctx.ellipse(fx, footY, p.w * 0.17, p.h * 0.07, 0, 0, Math.PI * 2);
       ctx.fill();
+      // Toes: two seams, drawn toward the front of the foot.
+      ctx.strokeStyle = tone(skin.foot, -0.42, 0.55);
+      ctx.lineWidth = Math.max(0.8, p.w * 0.018);
+      for (const t of [-0.35, 0.35]) {
+        ctx.beginPath();
+        ctx.moveTo(fx + p.facing * p.w * 0.03 + t * p.w * 0.06, footY - p.h * 0.02);
+        ctx.lineTo(fx + p.facing * p.w * 0.15 + t * p.w * 0.05, footY + p.h * 0.012);
+        ctx.stroke();
+      }
     }
 
     // The far flipper, behind the body and darker for it.
@@ -3121,23 +3244,53 @@ export class Renderer {
     ctx.save();
     ctx.translate(cx + p.facing * p.w * 0.2, by - bodyH * 0.62);
     ctx.rotate(-p.facing * (0.2 + step * 0.2 + pose.armR));
-    ctx.fillStyle = shade(body, 0.72);
+    ctx.fillStyle = tone(body, -0.34);
     ctx.beginPath();
     ctx.ellipse(0, p.h * 0.11, p.w * 0.1, p.h * 0.18, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
     // Body
-    ctx.fillStyle = body;
+    const bodyRY = bodyH * (0.52 + pose.jiggle);
+    const bodyCY = by - bodyH * 0.5;
+    ctx.fillStyle = lit(body);
     ctx.beginPath();
-    ctx.ellipse(cx, by - bodyH * 0.5, p.w * 0.46, bodyH * (0.52 + pose.jiggle), 0, 0, Math.PI * 2);
+    ctx.ellipse(cx, bodyCY, p.w * 0.46, bodyRY, 0, 0, Math.PI * 2);
     ctx.fill();
+    rimTop(
+      () => {
+        ctx.beginPath();
+        ctx.ellipse(cx, bodyCY, p.w * 0.46, bodyRY, 0, 0, Math.PI * 2);
+      },
+      bodyCY - bodyRY,
+      bodyCY - bodyRY * 0.25,
+      0.34,
+    );
 
     // Belly
-    ctx.fillStyle = skin.belly;
+    const bellyCY = by - bodyH * 0.44;
+    const bellyRY = bodyH * 0.4;
+    const bellyG = ctx.createLinearGradient(0, bellyCY - bellyRY, 0, bellyCY + bellyRY);
+    bellyG.addColorStop(0, tone(skin.belly, 0.08));
+    bellyG.addColorStop(0.5, skin.belly);
+    bellyG.addColorStop(1, tone(skin.belly, -0.24));
+    ctx.fillStyle = bellyG;
     ctx.beginPath();
-    ctx.ellipse(cx + p.facing * p.w * 0.05, by - bodyH * 0.44, p.w * 0.29, bodyH * 0.4, 0, 0, Math.PI * 2);
+    ctx.ellipse(cx + p.facing * p.w * 0.05, bellyCY, p.w * 0.29, bellyRY, 0, 0, Math.PI * 2);
     ctx.fill();
+    // The chin's shadow, thrown down onto the white. Without it the belly is a
+    // sticker laid on the front rather than the front of a body.
+    ctx.save();
+    ctx.clip();
+    const chin = ctx.createRadialGradient(
+      cx + p.facing * p.w * 0.05, bellyCY - bellyRY * 0.95, 0,
+      cx + p.facing * p.w * 0.05, bellyCY - bellyRY * 0.95, bellyRY * 0.72,
+    );
+    chin.addColorStop(0, 'rgba(24,40,64,0.22)');
+    chin.addColorStop(1, 'rgba(24,40,64,0)');
+    ctx.fillStyle = chin;
+    ctx.fillRect(cx - p.w * 0.5, bellyCY - bellyRY, p.w, bellyRY * 2);
+    ctx.restore();
 
     // The back motor, under the bird and behind the body.
     if (p.burn > 0) {
@@ -3191,7 +3344,12 @@ export class Renderer {
     ctx.save();
     ctx.translate(cx - p.facing * p.w * 0.38, by - bodyH * 0.62);
     ctx.rotate(p.facing * (0.25 + flap) + pose.armL * p.facing);
-    ctx.fillStyle = body;
+    // Lit along its own length rather than the body's, because it swings: a
+    // flipper shaded by where the body is would go flat every time it lifted.
+    const wing = ctx.createLinearGradient(0, -p.h * 0.08, 0, p.h * 0.32);
+    wing.addColorStop(0, tone(body, 0.3));
+    wing.addColorStop(1, tone(body, -0.24));
+    ctx.fillStyle = wing;
     ctx.beginPath();
     ctx.ellipse(0, p.h * 0.12, p.w * 0.12, p.h * 0.2, 0, 0, Math.PI * 2);
     ctx.fill();
@@ -3199,10 +3357,45 @@ export class Renderer {
 
     // Head
     const hx = cx + p.facing * p.w * 0.04 + headLagX;
-    ctx.fillStyle = body;
+    const headRX = p.w * 0.34;
+    const headRY = p.h * 0.24;
+    // Where the head sits on the shoulders, darkened. A neck is mostly a
+    // shadow, and without one the head is a second ball balanced on the first.
+    const neck = ctx.createRadialGradient(hx, headY + headRY * 0.9, 0, hx, headY + headRY * 0.9, headRX);
+    neck.addColorStop(0, 'rgba(6,14,26,0.34)');
+    neck.addColorStop(1, 'rgba(6,14,26,0)');
+    ctx.fillStyle = neck;
     ctx.beginPath();
-    ctx.ellipse(hx, headY, p.w * 0.34, p.h * 0.24, 0, 0, Math.PI * 2);
+    ctx.ellipse(hx, headY + headRY * 0.9, headRX, headRY * 0.7, 0, 0, Math.PI * 2);
     ctx.fill();
+
+    ctx.fillStyle = lit(body, 0.26, -0.14);
+    ctx.beginPath();
+    ctx.ellipse(hx, headY, headRX, headRY, 0, 0, Math.PI * 2);
+    ctx.fill();
+    rimTop(
+      () => {
+        ctx.beginPath();
+        ctx.ellipse(hx, headY, headRX, headRY, 0, 0, Math.PI * 2);
+      },
+      headY - headRY,
+      headY - headRY * 0.15,
+      0.5,
+    );
+    // The crown, where a wet bird catches the sky. One soft highlight is worth
+    // more than any amount of outline.
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(hx, headY, headRX, headRY, 0, 0, Math.PI * 2);
+    ctx.clip();
+    const gx = hx - p.facing * headRX * 0.12 - down.x * headRY * 0.62;
+    const gy = headY - down.y * headRY * 0.62;
+    const gloss = ctx.createRadialGradient(gx, gy, 0, gx, gy, headRX * 0.55);
+    gloss.addColorStop(0, 'rgba(214,238,255,0.16)');
+    gloss.addColorStop(1, 'rgba(214,238,255,0)');
+    ctx.fillStyle = gloss;
+    ctx.fillRect(hx - headRX, headY - headRY, headRX * 2, headRY * 2);
+    ctx.restore();
 
     /*
      * The beak, which now opens.
@@ -3214,8 +3407,24 @@ export class Renderer {
      * pointing.
      */
     const gape = pose.mouth * p.h * 0.075;
-    ctx.fillStyle = skin.beak;
+    /**
+     * Lit across its height rather than a flat tone per half.
+     *
+     * Per-half was the first attempt and it did nothing at all: with the beak
+     * shut the two halves are the *same triangle*, so the second one painted
+     * over the first and the only tone that ever showed was the dark one. A
+     * gradient over the whole wedge has a top and a bottom whether the beak is
+     * open or closed, which is the point — a shut beak is the one he wears
+     * for most of the game.
+     */
+    const bill = ctx.createLinearGradient(
+      0, headY - gape, 0, headY + p.h * 0.1 + gape,
+    );
+    bill.addColorStop(0, tone(skin.beak, 0.3));
+    bill.addColorStop(0.45, skin.beak);
+    bill.addColorStop(1, tone(skin.beak, -0.34));
     for (const half of [-1, 1]) {
+      ctx.fillStyle = bill;
       ctx.beginPath();
       ctx.moveTo(hx + p.facing * p.w * 0.3, headY + p.h * 0.01 + half * gape * 0.35);
       ctx.lineTo(hx + p.facing * p.w * 0.52, headY + p.h * 0.05 + half * gape);
@@ -3223,6 +3432,13 @@ export class Renderer {
       ctx.closePath();
       ctx.fill();
     }
+    // The ridge along the top of it.
+    ctx.strokeStyle = tone(skin.beak, 0.5, 0.7);
+    ctx.lineWidth = Math.max(0.8, p.w * 0.016);
+    ctx.beginPath();
+    ctx.moveTo(hx + p.facing * p.w * 0.31, headY + p.h * 0.016 - gape * 0.35);
+    ctx.lineTo(hx + p.facing * p.w * 0.5, headY + p.h * 0.05 - gape * 0.9);
+    ctx.stroke();
     // The dark of an open mouth, so a gasp is a gasp and not a split beak.
     if (gape > 0.6) {
       ctx.fillStyle = 'rgba(60,18,24,0.75)';
@@ -3245,6 +3461,18 @@ export class Renderer {
     const blinking = p.blink < 0;
     const eyeR = p.h * 0.065 * pose.open;
     for (const sgn of [-1, 1]) {
+      /**
+       * The far eye is smaller, and that is the whole of the three-quarter.
+       *
+       * Two identical circles side by side is a face seen flat on, and this
+       * head is not flat on — the beak comes out of one side of it. Drawn the
+       * same size they fought the beak for which way he was looking, and the
+       * result was the slightly boneless look that cartoon defaults have.
+       * Shrinking the one further away costs two multiplications and buys a
+       * head with a direction.
+       */
+      const far = sgn !== p.facing;
+      const k = far ? 0.82 : 1;
       const ex = hx + p.facing * p.w * 0.12 + sgn * p.w * 0.12;
       const ey = headY - p.h * 0.03;
       if (blinking) {
@@ -3258,15 +3486,21 @@ export class Renderer {
       }
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();
-      ctx.ellipse(ex, ey, p.w * 0.075 * (0.7 + pose.open * 0.3), eyeR, 0, 0, Math.PI * 2);
+      ctx.ellipse(ex, ey, p.w * 0.075 * k * (0.7 + pose.open * 0.3), eyeR * k, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // A whisker of shade along the top of the white, so the eye sits in a
+      // socket rather than on the surface of the head.
+      ctx.fillStyle = 'rgba(18,30,48,0.22)';
+      ctx.beginPath();
+      ctx.ellipse(ex, ey - eyeR * k * 0.55, p.w * 0.075 * k * 0.9, eyeR * k * 0.45, 0, 0, Math.PI * 2);
       ctx.fill();
       // The pupil, off-centre toward whatever has his attention.
       ctx.fillStyle = skin.eye ?? '#0e1723';
       ctx.beginPath();
       ctx.arc(
-        ex + p.facing * p.w * 0.02 + pose.lookX * p.w * 0.028,
+        ex + p.facing * p.w * 0.02 * k + pose.lookX * p.w * 0.028,
         ey + pose.lookY * p.h * 0.026,
-        p.w * 0.038,
+        p.w * 0.038 * k,
         0,
         Math.PI * 2,
       );
@@ -3276,9 +3510,9 @@ export class Renderer {
       ctx.fillStyle = 'rgba(255,255,255,0.9)';
       ctx.beginPath();
       ctx.arc(
-        ex + p.facing * p.w * 0.035 + pose.lookX * p.w * 0.02,
+        ex + p.facing * p.w * 0.035 * k + pose.lookX * p.w * 0.02,
         ey - p.h * 0.018 + pose.lookY * p.h * 0.018,
-        p.w * 0.014,
+        p.w * 0.014 * k,
         0,
         Math.PI * 2,
       );
