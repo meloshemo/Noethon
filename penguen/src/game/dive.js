@@ -65,6 +65,15 @@ const DIVE_PLANS = [
       d.open({ len: 260 });
       d.gate({ at: 0.82, gap: 180 });
       d.hole();
+      /* And then, once, the asymmetry taken away.
+         This level's whole subject is that going down is the thing you pay
+         for — so the flume is the sentence finished: water running *up*
+         through a narrow channel, right after the breath, where the swimmer
+         has just been reminded how cheap rising is. Inside it the button
+         barely works. It is the first time in the chapter that pressing down
+         is not the answer to being too high, and it lands on the level that
+         spent its first half teaching you it always was. */
+      d.flume({ rise: -0.62, len: 420 });
       d.gate({ at: 0.85, gap: 175 });
       d.stretch({ gap: 180, from: 0.62 });
       d.surfaceOut();
@@ -337,6 +346,16 @@ const DIVE_PLANS = [
       // has the most air and the least reason to think about it.
       d.trench({ at: 0.6, dip: 0.66, len: 340 });
       d.gate({ at: 0.7, gap: 160 });
+      /* Water going down, on the level about getting up.
+         The cruel direction, put where it is cruellest. Everything else in
+         this chapter can be answered by letting go of the button — the bird
+         floats, the ice is up there, and that has been free since the first
+         dive. Here the water pushes the wrong way and there is no button for
+         up; there never was one. It sits on the second lungful, the one this
+         level's own note says has to be spent well, so the answer to being
+         too deep stops working at the exact moment being too deep is the
+         whole problem. */
+      d.flume({ rise: 0.56, at: 0.46, len: 380 });
       d.gate({ at: 0.44, gap: 158 });
       d.stretch({ gap: 162, len: 300, from: 0.34 });
       d.surfaceOut();

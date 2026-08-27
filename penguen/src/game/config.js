@@ -1009,6 +1009,78 @@ export const CURRENT = {
  * absence is why the current was able to be missing from three of those four
  * for this long.
  */
+/**
+ * Oluk — the flume, and the sea's fifth verb.
+ *
+ * The chapter's grammar is one sentence: **rising is free and diving costs the
+ * button.** Buoyancy carries the bird up for nothing; going down is the only
+ * thing it ever has to pay for, and all fifteen dives are arrangements of that
+ * asymmetry. The other four verbs make the sentence harder to obey — geometry
+ * narrows the way, a leopard seal chases you off it, a trench charges more for
+ * the deep part of it, a current makes the water itself longer. A flume takes
+ * the sentence apart.
+ *
+ * Water running up means the paid direction stops being affordable: hold the
+ * button and you still barely sink. Water running down is the crueller one,
+ * because it takes away the direction that was *free*, and there is no button
+ * for up. There never was one.
+ *
+ * It is called a flume rather than a current because it is a place, not
+ * weather: a channel cut to a little over three penguin heights with the water
+ * moving across it, so the only thing in there that is not moving is the lane
+ * through the middle. That makes it the chapter's first pure control test —
+ * every other verb is about *where* you are going, and this one is about
+ * whether you can stay where you already are.
+ *
+ * `max` is under one on purpose, and that is the rule that keeps it a cost
+ * rather than a wall: in the strongest flume in the game a penguin still
+ * sinks, and still rises. The sea charges. It does not forbid.
+ */
+export const FLUME = {
+  /**
+   * The strongest vertical water, as a fraction of a free rise.
+   *
+   * At 0.9 an upward flume leaves a diving penguin 155px/s of descent out of
+   * 380, and a downward one leaves a floating penguin 25px/s of rise out of
+   * 250. Both are still moving. At one, one of them is not — and a direction
+   * you cannot travel at all is not difficulty, it is a wall with a fish
+   * behind it.
+   */
+  max: 0.9,
+  /** Half-height of the channel a flume is cut through, in penguin heights. */
+  bore: 1.7,
+  /**
+   * What holding the lane costs, at full strength, as a fraction of the swim.
+   *
+   * Vertical water does not make the far side further away — a swimmer still
+   * covers the same pixels at the same cruise. What it takes is the *line*:
+   * the lane has to be held against water pushing off it, so the crossing is
+   * a run of corrections and corrections cost seconds the same lungful is
+   * paying for. The number is a guess, which is why it is only half the
+   * story; the other half is `dive-run.mjs` swimming every level afterwards.
+   */
+  charge: 0.34,
+};
+
+/**
+ * The water's own vertical velocity here, in pixels per second, down positive.
+ *
+ * Down positive so it reads the same way as the screen and the same way as
+ * `flowAt` reads to the right — the two of them are one vector split in half,
+ * and a sign that flips between them is a bug waiting for somebody tired.
+ */
+export function flumeAt(zones, cx, cy) {
+  if (!zones) return 0;
+  let total = 0;
+  for (const z of zones) {
+    if (z.kind !== 'flume') continue;
+    if (cx < z.x || cx > z.x + z.w) continue;
+    if (cy < z.y || cy > z.y + z.h) continue;
+    total += z.rise ?? 0;
+  }
+  return Math.max(-FLUME.max, Math.min(FLUME.max, total)) * SWIM.riseMax;
+}
+
 export function flowAt(zones, cx, cy) {
   if (!zones) return 0;
   let total = 0;
@@ -1177,7 +1249,12 @@ export function swimCost(zones, a, b, samples = 12) {
      */
     const along = flowAt(zones, x, y + sag) * heading;
     const drag = 1 / Math.max(1 - CURRENT.max, 1 + along);
-    total += (dist / samples) * trenchDrainAt(zones, x, y + sag) * drag;
+    // A flume charges for the steering rather than for the distance, and it is
+    // charged here so that the budget, the automatic air holes and the
+    // validator's stretch check all see it without being told about it.
+    const held = Math.min(1, Math.abs(flumeAt(zones, x, y + sag)) / SWIM.riseMax);
+    const lane = 1 / (1 - FLUME.charge * held);
+    total += (dist / samples) * trenchDrainAt(zones, x, y + sag) * drag * lane;
   }
   return total;
 }

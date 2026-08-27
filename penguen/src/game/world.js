@@ -12,7 +12,7 @@ import { Player } from './player.js';
 import { GhostRecorder, Ghost } from './ghost.js';
 import {
   VIEW, VIEW_LIMITS, ASSIST, ICE, STORM, WIND, SWIM, BRAWL, BOOST, CHARGED, ROT, REWARDS, AMBUSH, COLLAPSE, HUSH,
-  hushAt, glazeAt, flowAt, trenchDrainAt, scaleForLevel, upgradeEffect, hazardPhase, ventAt, VENT,
+  hushAt, glazeAt, flowAt, flumeAt, trenchDrainAt, scaleForLevel, upgradeEffect, hazardPhase, ventAt, VENT,
 } from './config.js';
 import { WATER_Y } from './levels.js';
 import { getSkin } from './skins.js';
@@ -590,9 +590,15 @@ export class World {
     // has an edge, and a swimmer half in and half out of one should be feeling
     // half of it, not all of it because a corner clipped the box.
     let flow = 0;
+    let flume = 0;
     if (this.diving) {
-      flow = flowAt(this.zones, this.player.centerX, this.player.y + this.player.h / 2)
-        * this.player.swimSpeed;
+      const cx = this.player.centerX;
+      const cy = this.player.y + this.player.h / 2;
+      flow = flowAt(this.zones, cx, cy) * this.player.swimSpeed;
+      // The vertical half of the same vector. It arrives in pixels per second
+      // already, because it is scaled against a free rise rather than against
+      // a swimmer's cruise.
+      flume = flumeAt(this.zones, cx, cy);
     }
 
     // "snap" ice decides to vanish while the player is still in the air, so it
@@ -611,7 +617,7 @@ export class World {
     // whether a grip lands is where the grip would be.
     const grip = glazeAt(this.zones, this.player.centerX, this.player.y + this.player.h * 0.4) ? 0 : 1;
     if (!grip) this._tell('glaze', t('world.glaze'), 2);
-    this.player.update(dt, { ...intent, push, lift, flow, grip, gravity: this.hushed || 1 }, this.solids, this.tuning, {
+    this.player.update(dt, { ...intent, push, lift, flow, flume, grip, gravity: this.hushed || 1 }, this.solids, this.tuning, {
       onJump: (wound) => {
         if (wound) {
           this.audio.uncoil?.();

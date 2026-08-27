@@ -10,7 +10,7 @@
 
 import {
   VIEW, viewFor, AMBUSH, CHARGED, COIL, QUANTUM, SLACK, CLIMB, BRAWL, TRENCH, VENT, BANK, GLAZE,
-  CURRENT, lobShot, swimSpeed,
+  CURRENT, FLUME, SWIM, lobShot, swimSpeed,
 } from './config.js';
 import { getSkin, getTrail } from './skins.js';
 import { Pose } from './pose.js';
@@ -935,6 +935,75 @@ export class Renderer {
      * A player should be able to answer "how fast, which way, and how far up
      * does it reach" without being told any of it.
      */
+    /**
+     * A flume, drawn as the vertical half of the same idea as the current.
+     *
+     * Deliberately the same visual language — streaks moving at the speed the
+     * water moves, a dashed line at the edge — turned ninety degrees, because
+     * they *are* the same thing and a player who has learned one should not
+     * have to learn the other. What has to be legible from outside is the
+     * direction: an upward flume and a downward one demand opposite things,
+     * and finding out which one you are in by being in it is not a mechanic,
+     * it is a trap.
+     */
+    for (const z of world.zones) {
+      if (z.kind !== 'flume') continue;
+      if (z.x + z.w < view.left || z.x > view.right) continue;
+      const rise = z.rise ?? 0;
+      if (!rise) continue;
+      const power = Math.min(1, Math.abs(rise) / FLUME.max);
+      const dir = Math.sign(rise);
+      const speed = Math.abs(rise) * SWIM.riseMax;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(z.x, z.y, z.w, z.h);
+      ctx.clip();
+
+      const g = ctx.createLinearGradient(z.x, 0, z.x + z.w, 0);
+      g.addColorStop(0, 'rgba(140,190,255,0)');
+      g.addColorStop(0.5, `rgba(140,190,255,${(0.13 + power * 0.15).toFixed(3)})`);
+      g.addColorStop(1, 'rgba(140,190,255,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(z.x, z.y, z.w, z.h);
+
+      const cols = Math.max(4, Math.round(z.w / 40));
+      const rng = makeRng(Math.round(z.x * 13 + z.y * 29));
+      ctx.lineCap = 'round';
+      for (let i = 0; i < cols; i++) {
+        const x = z.x + ((i + 0.5) / cols) * z.w;
+        const edge = Math.sin(((i + 0.5) / cols) * Math.PI);
+        const len = 44 + power * 90 + rng() * 44;
+        const period = z.h + len * 2;
+        const lane = rng();
+        for (let k = 0; k < 3; k++) {
+          const slide = this.reducedMotion ? 0 : time * speed * dir;
+          const raw = z.y - len + ((lane * period + (k * period) / 3 + slide) % period);
+          const y = raw < z.y - len ? raw + period : raw;
+          ctx.strokeStyle = `rgba(205,235,255,${(0.1 + power * 0.28) * edge})`;
+          ctx.lineWidth = 1.2 + power * 2;
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(x, y + len * dir);
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+
+      ctx.save();
+      ctx.strokeStyle = `rgba(175,215,255,${(0.22 + power * 0.3).toFixed(3)})`;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([18, 14]);
+      ctx.lineDashOffset = this.reducedMotion ? 0 : -time * speed * dir * 0.5;
+      for (const x of [z.x, z.x + z.w]) {
+        ctx.beginPath();
+        ctx.moveTo(x, z.y);
+        ctx.lineTo(x, z.y + z.h);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
     for (const z of world.zones) {
       if (z.kind !== 'current') continue;
       if (z.x + z.w < view.left || z.x > view.right) continue;

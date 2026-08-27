@@ -343,7 +343,7 @@ geçmez, hata verip durur.
 
 ## Testler
 
-Tek komut, 41 paket (32 node + paketleme + 9 tarayıcı), kendi sunucusunu
+Tek komut, 42 paket (33 node + paketleme + 9 tarayıcı), kendi sunucusunu
 kurup kapatıyor ve portu doluysa bir yanına kayıyor:
 
 ```bash
@@ -2436,7 +2436,7 @@ anlatmak değil, olan bir şeyi olduğundan iyi anlatmaktır.
 | Kayıt | Tek sürümlü JSON, ileri göç, dosyaya aktarma, tek tuşla silme |
 | Çevrimdışı | Servis çalışanı + tek dosya sürümü (639 KB) |
 | Girdi | Klavye, dokunmatik, gamepad |
-| Test | 32 node + paketleme + 9 tarayıcı paketi, hepsi tek komutta |
+| Test | 33 node + paketleme + 9 tarayıcı paketi, hepsi tek komutta |
 | Zorluk | Ölçülen eğri: `node tools/difficulty.mjs` |
 
 ### Yok, ve neden

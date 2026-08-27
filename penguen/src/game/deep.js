@@ -26,7 +26,7 @@
 
 import {
   PENGUIN, SWIM, swimReach, breathRange, breathFor, swimCost, TRENCH, CHARGED,
-  VENT, ventWait, swimSpeed, CURRENT, flowAt,
+  VENT, ventWait, swimSpeed, CURRENT, flowAt, FLUME,
 } from './config.js';
 import { nudgeClear } from '../core/util.js';
 
@@ -871,6 +871,61 @@ export class Deep {
     // describing, so it is the default.
     if (len === null) (this._flows = this._flows ?? []).push(zone);
     return this;
+  }
+
+  /**
+   * A flume: a narrow channel with the water running across it.
+   *
+   * The route through it is deliberately **flat**. Every depth change in this
+   * chapter is checked against `reachFor`, which knows how long a descent
+   * takes in still water and would be quietly wrong inside vertical water;
+   * rather than teach that rule about flumes, the piece never asks for one.
+   * The cost is charged where every other cost in the sea is charged, inside
+   * `swimCost`, and proved the way every other one is proved — by swimming it.
+   *
+   * The channel picks its depth with `at`, the way a gate does, and for the
+   * same reason a gate had to learn to. The first version cut the channel
+   * around wherever the line happened to be; placed straight after a breath
+   * that is the surface, so the channel was clamped to the top of the water,
+   * the lane ended up *above* its own roof, and the piece composed a level
+   * with a wall in it that nobody drew.
+   *
+   * `rise` is negative for water going up — the one that makes the paid
+   * direction unaffordable — and positive for water going down, which is the
+   * crueller of the two.
+   */
+  flume({ rise = -0.7, len = 460, band = 0.62, at = 0.5, lead = null } = {}) {
+    this._breathOwed();
+    const bore = Math.max(this.minGap, Math.round(this.penguinH * FLUME.bore * 2));
+    const margin = 74;
+    const lane = Math.round(
+      Math.max(margin + bore / 2, Math.min(this.depth - margin - bore / 2, this.depth * at)),
+    );
+    const top = Math.round(lane - bore / 2);
+    const bottom = Math.round(lane + bore / 2);
+    // The approach, long enough that the descent into the channel is honest.
+    const need = Math.max(0, this.reachFor(lane - this.lane) - len / 2);
+    this._span(Math.round(lead ?? Math.max(90, need + 40)), margin, this.depth - margin);
+    const x0 = this.x;
+
+    // The water reaches past the channel: its edges have to be visible from
+    // outside it, or the only way to learn where a flume starts is to be in one.
+    const reach = Math.round(this.depth * band);
+    this.zones.push({
+      kind: 'flume',
+      x: Math.round(x0),
+      y: Math.round(Math.max(0, lane - reach / 2)),
+      w: Math.round(len),
+      h: reach,
+      rise: +Math.max(-FLUME.max, Math.min(FLUME.max, rise)).toFixed(3),
+    });
+
+    this._span(len, top, bottom);
+    // Two nodes, so the leg through the flume is priced as its own thing
+    // rather than smeared into the approach.
+    this._node(x0 + len * 0.25, lane, bottom - top, 'flume');
+    this._node(x0 + len * 0.75, lane, bottom - top, 'flume');
+    return this._keepBreathing();
   }
 
   /** Fish, on the line or a little off it. */
