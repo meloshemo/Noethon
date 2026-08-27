@@ -2197,7 +2197,7 @@ geçirildi ve bulunanların çoğu okuyarak fark edilmeyecek türdendi.
 | Aynı adı yazan üç ayrı alan vardı | Tek kaynak: Kimlik ekranı; sıralama oraya yönlendiriyor |
 | Sıralamanın boş hâli bir cümle ve bomboş bir sayfaydı | Simge, tek satır ve çıkış yolu olan bir düğme |
 | Bir koşu dışında kazanılan penguen "Kilitli" görünüyordu | Koleksiyon açılırken hak edilenler teslim ediliyor |
-| Yatay telefonda alttaki kumanda ekranın %29'unu kaplıyordu | Boyut artık sahnenin yüksekliğinden geliyor, %17 |
+| Yatay telefonda alttaki kumanda ekranın %29'unu kaplıyordu | Boyut sahnenin yüksekliğinden geliyor; %29 → %17 → (fazla küçüktü) %21 |
 | Dalış chapter'ının on dört bölümü pengu'yu bölüm rozetinin altında başlatıyordu | Kamera artık arayüzün durduğu şeritleri biliyor |
 | Arenanın sayacı "2 kaldı" ekranın kenarında kesiliyordu | Görüntünün içine kaydırılıyor |
 | Aynı sayaç her dilde Türkçe yazıyordu | Sözlüğe alındı, `lint` tuvale yazılan metni artık yakalıyor |
@@ -2494,11 +2494,39 @@ masaüstü boyundaki tuşları alıyordu. Alttaki şerit 390 piksellik bir ekran
 
 Artık boyut `cqh` ile sahnenin yüksekliğinden geliyor, yani her telefonda
 kademesiz olarak ölçekleniyor — tahmin edilmesi gereken bir kırılma noktası
-yok. Alt sınır 44 piksel (bir parmağın güvenle basabileceği en küçük hedef),
-üst sınır eskisi: masaüstü ve dik tutulan telefon hiç değişmiyor. Yan tutulan
-telefonda şerit 115 pikselden **65'e** iniyor, ekranın %29'undan %17'sine. Üst
-şerit de aynı sebeple daralıyor, ve yatay telefonda tuşlar bir parmak üstlerine
-gelene kadar biraz geri çekiliyor.
+yok. Üst sınır eskisi: masaüstü ve dik tutulan telefon hiç değişmiyor.
+
+**Ama ilk ayar tuşları fazla küçülttü, ve sebebi yazmaya değer.** 44 pikseli
+hedefliyordu — bir parmağın güvenle basabileceği en küçük hedef — ve *bir alt
+sınır bir boyut değildir*. Ölçüldüğünde yan tutulan her telefon 44 ile 49
+piksel arasına düşüyordu: bu, kumandanın teknik olarak basılabilir olduğu
+sürece rahatsız olmasına izin verdiğinize karar verdiğinizde seçtiğiniz
+sayıdır. Oysa bu, dakikalarca iki elle tutulan bir oyun; formdaki bir bağlantı
+değil.
+
+Bütçe de hiç engel değildi. Kumanda ekranın beşte birini kaplayabilir ve
+%16.7'sini kullanıyordu, yani izin verilenin üçte biri harcanmadan duruyordu.
+Ölçülen her yatay telefonda — 320 piksellik eski SE'den 430 piksellik Pro
+Max'e — artık %20.6 hedefleniyor: yön tuşu **60 piksel civarı**, zıplama
+**74 civarı**, yani eskisinin bir buçuk katı.
+
+| | önce | sonra |
+|---|---|---|
+| iPhone SE yatay | 44 / 54 | **58 / 71** |
+| iPhone 14 yatay | 45 / 57 | **60 / 74** |
+| Pixel yatay | 47 / 60 | **64 / 78** |
+| iPhone 14 Pro Max yatay | 49 / 62 | **67 / 82** |
+
+Kamera bu işte yardıma ihtiyaç duymuyor: şeridin gerçek ölçülen yüksekliğini
+okuyor, yani tuşlar büyüyünce pengu kendiliğinden yukarı çıkıyor. Üst şerit de
+aynı sebeple daralıyor, ve yatay telefonda tuşlar bir parmak üstlerine gelene
+kadar biraz geri çekiliyor.
+
+Alt sınırlar artık var olan hiçbir telefonun altında — olması gereken boyutta
+değil. Sebebi şu: var olan her telefondan kısa bir sahne bile şeridi beşte
+birin ötesine itemesin diye duruyorlar. İlk denemede 300 piksel yükseklikte
+tam **%22.0** çıkıyordu, ki bu bir pay değil, bir tesadüftür. 320 pikselin
+üstünde hiçbir şey onlara değmiyor.
 
 Bunun testi yoktu, o yüzden olabildi. Artık `browser-layout` üç boyutta da
 kumandanın ekranın beşte birini geçmediğine, her tuşun 44 pikselden büyük

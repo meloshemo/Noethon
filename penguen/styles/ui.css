@@ -166,17 +166,38 @@
  * hundred and fifteen pixels of a three-hundred-and-ninety pixel screen,
  * nearly a third of the game covered by its own buttons.
  *
- * `cqh` is the stage's height, so the pads now shrink continuously with the
- * screen instead of stepping at a breakpoint that has to be guessed per
- * handset. The lower clamp is 44px, the smallest target a thumb can be asked
- * to hit; the upper is what they were, so a desktop and a phone held upright
- * see no change at all.
+ * `cqh` is the stage's height, so the pads shrink continuously with the screen
+ * instead of stepping at a breakpoint that has to be guessed per handset.
+ *
+ * The first tuning made the pads *too* small, and the reason is worth writing
+ * down: it aimed at 44px, which is the smallest target a thumb can be asked to
+ * hit — and a floor is not a size. Measured, every landscape handset landed on
+ * 44 to 49px, which is the number you choose when you have decided the control
+ * is allowed to be uncomfortable as long as it is technically hittable. This
+ * is a game held in two hands for minutes at a time, not a link in a form.
+ *
+ * The budget was never the constraint either. The pads may take a fifth of the
+ * screen and they were using 16.7% of it, so there was a third of the
+ * allowance sitting unspent. They now aim at 20.6% on every landscape phone
+ * measured — from a 320px-tall SE to a 430px-tall Pro Max — which is a
+ * direction pad around 60px and a jump around 74px, half again what they were.
+ * Above a phone the caps are unchanged, so a desktop and a phone held upright
+ * look exactly as they did.
+ *
+ * The camera needs no help with this: it reads the strip's real measured
+ * height, so growing the pads moves the penguin up on its own.
+ *
+ * The floors are set below any handset that exists rather than at the size
+ * anything should actually be. They exist so that a stage shorter than every
+ * real phone still cannot push the strip past its fifth of the screen — at
+ * 300px tall the first pass landed on exactly 22.0%, which is not a margin,
+ * it is a coincidence. Nothing above 320px ever reaches them.
  */
 .touch {
-  --pad: clamp(2.75rem, 11.5cqh, 4.2rem);
-  --pad-jump: clamp(3.25rem, 14.5cqh, 5.2rem);
-  --pad-gap: clamp(0.4rem, 1.9cqh, 0.75rem);
-  --pad-edge: clamp(0.5rem, 2.2cqh, 1rem);
+  --pad: clamp(2.875rem, 15.5cqh, 4.2rem);
+  --pad-jump: clamp(3.5rem, 19cqh, 5.2rem);
+  --pad-gap: clamp(0.45rem, 2.2cqh, 0.85rem);
+  --pad-edge: clamp(0.375rem, 1.6cqh, 1rem);
   position: absolute;
   inset: auto 0 0 0;
   z-index: 4;
