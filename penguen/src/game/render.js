@@ -10,9 +10,10 @@
 
 import {
   VIEW, viewFor, AMBUSH, CHARGED, COIL, QUANTUM, SLACK, CLIMB, BRAWL, TRENCH, VENT, BANK, GLAZE,
-  lobShot,
+  CURRENT, lobShot, swimSpeed,
 } from './config.js';
 import { getSkin, getTrail } from './skins.js';
+import { Pose } from './pose.js';
 import { t } from '../core/i18n.js';
 import { clamp, lerp, makeRng } from '../core/util.js';
 
@@ -91,6 +92,8 @@ export class Renderer {
 
     this.dpr = 1;
     this.reducedMotion = false;
+    /** How the penguin is feeling. Cosmetic, and structurally unable not to be. */
+    this.pose = new Pose();
     this.snow = Array.from({ length: 90 }, () => ({
       x: Math.random() * VIEW.w,
       y: Math.random() * VIEW.h,
@@ -201,6 +204,17 @@ export class Renderer {
   /** @param {import('./world.js').World} world */
   draw(world, particles, time) {
     if (this.contextLost) return;
+    /*
+     * The expression layer, driven here rather than in the simulation.
+     *
+     * It runs on frame time because it is animation, and it lives on this side
+     * of the wall because nothing in the game is allowed to read it — see
+     * `pose.js`. A dropped frame makes the penguin's head lag look slightly
+     * different and changes nothing else in the world.
+     */
+    const fdt = this._poseAt === undefined ? 1 / 60 : Math.max(0, time - this._poseAt);
+    this._poseAt = time;
+    if (!this.reducedMotion) this.pose.update(fdt, world?.player, world);
     const ctx = this.ctx;
     const s = this.viewScale * this.dpr;
     // Clear the full backing store first — the letterbox strips that appear at
@@ -903,6 +917,90 @@ export class Renderer {
      * wash cannot. Motes drift *up* out of it, which is the one visual cue the
      * sea has for cold, and they are slow.
      */
+    /**
+     * Akıntı — moving water, and until now not drawn at all.
+     *
+     * That was not a cosmetic omission. The current was invisible, unpriced
+     * and (as it turned out) unsimulated, and those three failures protected
+     * each other: nobody looked for the physics bug because the levels played
+     * fine, and the levels played fine because there was nothing there. Now
+     * that the water genuinely takes four tenths of the swimmer's speed away,
+     * being able to see it is the difference between a hazard and an ambush.
+     *
+     * It is drawn as what it is: streaks of water going somewhere, at the
+     * speed they are actually going, in the direction they are actually going.
+     * Nothing about the drawing is decorative — the streaks are longer and
+     * denser in stronger water, they slide at the true flow rate, and the band
+     * fades out at its own edges so the *way out* is as legible as the trap.
+     * A player should be able to answer "how fast, which way, and how far up
+     * does it reach" without being told any of it.
+     */
+    for (const z of world.zones) {
+      if (z.kind !== 'current') continue;
+      if (z.x + z.w < view.left || z.x > view.right) continue;
+      const flow = z.flow ?? 0;
+      if (!flow) continue;
+      const power = Math.min(1, Math.abs(flow) / CURRENT.max);
+      const dir = Math.sign(flow);
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(z.x, z.y, z.w, z.h);
+      ctx.clip();
+
+      // A wash that is strongest through the middle of the band and gone at
+      // the lip, because the lip is the answer to the band.
+      const g = ctx.createLinearGradient(0, z.y, 0, z.y + z.h);
+      g.addColorStop(0, 'rgba(120,200,255,0)');
+      g.addColorStop(0.5, `rgba(120,200,255,${(0.14 + power * 0.16).toFixed(3)})`);
+      g.addColorStop(1, 'rgba(120,200,255,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(z.x, z.y, z.w, z.h);
+
+      // The streaks. Speed is the whole message, so they move at the speed the
+      // water moves and nothing else decides it.
+      const speed = Math.abs(flow) * swimSpeed(world.scale ?? 1);
+      const rows = Math.max(4, Math.round(z.h / 34));
+      const rng = makeRng(Math.round(z.x * 31 + z.y * 7));
+      ctx.lineCap = 'round';
+      for (let i = 0; i < rows; i++) {
+        const y = z.y + ((i + 0.5) / rows) * z.h;
+        // Faded at the edges of the band, in step with the wash.
+        const edge = Math.sin(((i + 0.5) / rows) * Math.PI);
+        const len = 40 + power * 86 + rng() * 40;
+        const period = z.w + len * 2;
+        const lane = rng();
+        for (let k = 0; k < 3; k++) {
+          const drift = this.reducedMotion ? 0 : time * speed * dir;
+          const raw = z.x - len + (lane * period + (k * period) / 3 + drift * -1) % period;
+          const x = raw < z.x - len ? raw + period : raw;
+          ctx.strokeStyle = `rgba(200,240,255,${(0.11 + power * 0.3) * edge})`;
+          ctx.lineWidth = 1.2 + power * 2.2;
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(x + len * dir, y);
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+
+      // The edges themselves, hard enough to aim for. A swimmer's plan against
+      // a current is usually "get above it", and that plan needs a line.
+      ctx.save();
+      ctx.strokeStyle = `rgba(170,230,255,${(0.22 + power * 0.3).toFixed(3)})`;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([18, 14]);
+      ctx.lineDashOffset = this.reducedMotion ? 0 : -time * speed * dir * 0.5;
+      for (const y of [z.y, z.y + z.h]) {
+        if (y <= 2 || y >= (world.depth ?? 1e9) - 2) continue;
+        ctx.beginPath();
+        ctx.moveTo(z.x, y);
+        ctx.lineTo(z.x + z.w, y);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
     for (const z of world.zones) {
       if (z.kind !== 'trench') continue;
       if (z.x + z.w < view.left || z.x > view.right) continue;
@@ -2763,6 +2861,7 @@ export class Renderer {
 
   _penguin(ctx, world, time) {
     const p = world.player;
+    const pose = this.pose;
 
     // The cosmetic trail goes down before anything else — it is behind the
     // penguin in every sense.
@@ -2893,11 +2992,20 @@ export class Renderer {
     if (p.submerged) {
       const pitch = clamp(Math.atan2(p.vy, Math.max(Math.abs(p.vx), 190)), -0.9, 0.9);
       ctx.rotate(p.facing * pitch * 0.85);
+    } else if (pose.lean) {
+      // Leaning into a start and out of a stop, around the feet, which is
+      // where a standing body actually pivots.
+      ctx.rotate(pose.lean * p.facing);
     }
     ctx.translate(-cx, -py);
 
     const bodyH = p.h * 0.82;
-    const headY = by - bodyH - p.h * 0.06;
+    // The head arrives late. A body is not rigid, and the single loudest tell
+    // that a drawing is a creature rather than a shape is that its head is
+    // never quite where the neck says it should be.
+    const headLagX = pose.headX * p.w * p.facing;
+    const headLagY = pose.headY * p.h + (p.onGround ? (pose.breath - 0.5) * p.h * 0.018 : 0);
+    const headY = by - bodyH - p.h * 0.06 + headLagY;
     const step = p.onGround ? Math.sin(p.walkPhase) : 0;
     const geo = {
       cx,
@@ -2933,10 +3041,25 @@ export class Renderer {
       ctx.fill();
     }
 
+    // The far flipper, behind the body and darker for it.
+    //
+    // There was only ever one, on the near side, so the bird was a cut-out. A
+    // second arm at half a shade is the whole of the depth this silhouette
+    // needs, and it swings out of phase with the near one, which is what
+    // walking looks like.
+    ctx.save();
+    ctx.translate(cx + p.facing * p.w * 0.2, by - bodyH * 0.62);
+    ctx.rotate(-p.facing * (0.2 + step * 0.2 + pose.armR));
+    ctx.fillStyle = shade(body, 0.72);
+    ctx.beginPath();
+    ctx.ellipse(0, p.h * 0.11, p.w * 0.1, p.h * 0.18, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
     // Body
     ctx.fillStyle = body;
     ctx.beginPath();
-    ctx.ellipse(cx, by - bodyH * 0.5, p.w * 0.46, bodyH * 0.52, 0, 0, Math.PI * 2);
+    ctx.ellipse(cx, by - bodyH * 0.5, p.w * 0.46, bodyH * (0.52 + pose.jiggle), 0, 0, Math.PI * 2);
     ctx.fill();
 
     // Belly
@@ -2996,7 +3119,7 @@ export class Renderer {
     }
     ctx.save();
     ctx.translate(cx - p.facing * p.w * 0.38, by - bodyH * 0.62);
-    ctx.rotate(p.facing * (0.25 + flap));
+    ctx.rotate(p.facing * (0.25 + flap) + pose.armL * p.facing);
     ctx.fillStyle = body;
     ctx.beginPath();
     ctx.ellipse(0, p.h * 0.12, p.w * 0.12, p.h * 0.2, 0, 0, Math.PI * 2);
@@ -3004,40 +3127,122 @@ export class Renderer {
     ctx.restore();
 
     // Head
+    const hx = cx + p.facing * p.w * 0.04 + headLagX;
     ctx.fillStyle = body;
     ctx.beginPath();
-    ctx.ellipse(cx + p.facing * p.w * 0.04, headY, p.w * 0.34, p.h * 0.24, 0, 0, Math.PI * 2);
+    ctx.ellipse(hx, headY, p.w * 0.34, p.h * 0.24, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Beak
+    /*
+     * The beak, which now opens.
+     *
+     * Two halves hinged at the back rather than one triangle, because a
+     * triangle can only ever be shut. A penguin who has run out of air and a
+     * penguin standing on a beach were previously drawn with the same face,
+     * and the face is where every other animated thing on the screen is
+     * pointing.
+     */
+    const gape = pose.mouth * p.h * 0.075;
     ctx.fillStyle = skin.beak;
-    ctx.beginPath();
-    ctx.moveTo(cx + p.facing * p.w * 0.3, headY + p.h * 0.01);
-    ctx.lineTo(cx + p.facing * p.w * 0.52, headY + p.h * 0.05);
-    ctx.lineTo(cx + p.facing * p.w * 0.3, headY + p.h * 0.09);
-    ctx.closePath();
-    ctx.fill();
+    for (const half of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(hx + p.facing * p.w * 0.3, headY + p.h * 0.01 + half * gape * 0.35);
+      ctx.lineTo(hx + p.facing * p.w * 0.52, headY + p.h * 0.05 + half * gape);
+      ctx.lineTo(hx + p.facing * p.w * 0.3, headY + p.h * 0.09 + half * gape * 0.35);
+      ctx.closePath();
+      ctx.fill();
+    }
+    // The dark of an open mouth, so a gasp is a gasp and not a split beak.
+    if (gape > 0.6) {
+      ctx.fillStyle = 'rgba(60,18,24,0.75)';
+      ctx.beginPath();
+      ctx.moveTo(hx + p.facing * p.w * 0.31, headY + p.h * 0.03);
+      ctx.lineTo(hx + p.facing * p.w * 0.5, headY + p.h * 0.05);
+      ctx.lineTo(hx + p.facing * p.w * 0.31, headY + p.h * 0.07);
+      ctx.closePath();
+      ctx.fill();
+    }
 
-    // Eyes
+    /*
+     * Eyes, which now look at things.
+     *
+     * The pupils were pinned a fixed distance from the middle of the head, so
+     * the bird stared straight ahead through a dive, a hunt and a drowning.
+     * Where a creature is looking is the cheapest signal in the frame and it
+     * was the one thing this face did not have.
+     */
     const blinking = p.blink < 0;
+    const eyeR = p.h * 0.065 * pose.open;
     for (const sgn of [-1, 1]) {
-      const ex = cx + p.facing * p.w * 0.12 + sgn * p.w * 0.12;
+      const ex = hx + p.facing * p.w * 0.12 + sgn * p.w * 0.12;
+      const ey = headY - p.h * 0.03;
       if (blinking) {
         ctx.strokeStyle = '#0e1723';
         ctx.lineWidth = Math.max(1, p.w * 0.035);
         ctx.beginPath();
-        ctx.moveTo(ex - p.w * 0.06, headY - p.h * 0.03);
-        ctx.lineTo(ex + p.w * 0.06, headY - p.h * 0.03);
+        ctx.moveTo(ex - p.w * 0.06, ey);
+        ctx.lineTo(ex + p.w * 0.06, ey);
         ctx.stroke();
-      } else {
-        ctx.fillStyle = '#ffffff';
+        continue;
+      }
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.ellipse(ex, ey, p.w * 0.075 * (0.7 + pose.open * 0.3), eyeR, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // The pupil, off-centre toward whatever has his attention.
+      ctx.fillStyle = skin.eye ?? '#0e1723';
+      ctx.beginPath();
+      ctx.arc(
+        ex + p.facing * p.w * 0.02 + pose.lookX * p.w * 0.028,
+        ey + pose.lookY * p.h * 0.026,
+        p.w * 0.038,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+      // A catchlight. One white dot is the difference between an eye and a
+      // hole, and it is the oldest trick there is.
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.beginPath();
+      ctx.arc(
+        ex + p.facing * p.w * 0.035 + pose.lookX * p.w * 0.02,
+        ey - p.h * 0.018 + pose.lookY * p.h * 0.018,
+        p.w * 0.014,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+
+    /*
+     * Eyelids, not eyebrows.
+     *
+     * Brows were tried first and were invisible: this bird's head is nearly
+     * black, so a dark line above a dark eye socket says nothing at any size.
+     * A lid is drawn in the *body* colour over the white of the eye, so it
+     * always has the one hard edge in the face to cut against — which is why
+     * every cartoon animal ever drawn has one.
+     *
+     * Down and angled inward is determination; there is no lid at all when he
+     * is frightened, because a frightened eye is all white.
+     */
+    if (pose.brow < -0.08 && !blinking) {
+      const k = Math.min(1, -pose.brow);
+      ctx.fillStyle = body;
+      for (const sgn of [-1, 1]) {
+        const ex = hx + p.facing * p.w * 0.12 + sgn * p.w * 0.12;
+        const ey = headY - p.h * 0.03;
+        const rx = p.w * 0.075 * (0.7 + pose.open * 0.3) + 0.6;
+        // The inner corner drops further than the outer one, which is the
+        // difference between concentrating and being sleepy.
+        const inner = sgn * p.facing < 0 ? 1 : -1;
+        ctx.save();
+        ctx.translate(ex, ey);
+        ctx.rotate(inner * k * 0.5);
         ctx.beginPath();
-        ctx.ellipse(ex, headY - p.h * 0.03, p.w * 0.075, p.h * 0.065, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, -eyeR - 0.5 + k * eyeR * 1.15, rx, eyeR, 0, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = skin.eye ?? '#0e1723';
-        ctx.beginPath();
-        ctx.arc(ex + p.facing * p.w * 0.02, headY - p.h * 0.03, p.w * 0.038, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.restore();
       }
     }
 
@@ -3047,8 +3252,11 @@ export class Renderer {
       ctx.lineWidth = Math.max(1.4, p.w * 0.05);
       ctx.lineCap = 'round';
       ctx.beginPath();
-      ctx.moveTo(cx, headY - p.h * 0.2);
-      ctx.lineTo(cx - p.facing * p.w * 0.08, headY - p.h * 0.32 * (1 - t * 0.5));
+      ctx.moveTo(hx, headY - p.h * 0.2);
+      ctx.lineTo(
+        hx - p.facing * p.w * 0.08 - pose.headX * p.w * 0.5 * p.facing,
+        headY - p.h * 0.32 * (1 - t * 0.5),
+      );
       ctx.stroke();
       ctx.lineCap = 'butt';
     }

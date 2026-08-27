@@ -35,6 +35,12 @@ const SHOP_ICONS = {
   wings: '<path d="M12 8c-3-4-8-5-11-4 1 4 4 7 8 8l3-4Zm0 0c3-4 8-5 11-4-1 4-4 7-8 8l-3-4Z" fill="currentColor"/>',
   rocket: '<path d="M12 2c3 2.5 5 6.5 5 11l-3 3h-4l-3-3c0-4.5 2-8.5 5-11Zm-2 17h4l-2 4-2-4Zm2-11a1.6 1.6 0 1 1 0 3.2A1.6 1.6 0 0 1 12 8Z" fill="currentColor"/>',
   radar: '<path d="M12 3a9 9 0 1 0 9 9h-2a7 7 0 1 1-7-7V3Zm0 4a5 5 0 1 0 5 5h-2a3 3 0 1 1-3-3V7Z" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/>',
+  // A gripping hand, for rosin.
+  grip: '<path d="M8 3a1.4 1.4 0 0 1 1.4 1.4V10h1.2V3.6a1.4 1.4 0 0 1 2.8 0V10h1.2V5.2a1.4 1.4 0 0 1 2.8 0V13a7 7 0 0 1-7 7H10a5 5 0 0 1-5-5V9.4a1.4 1.4 0 0 1 2.8 0V10h-.2V4.4A1.4 1.4 0 0 1 8 3Z" fill="currentColor"/>',
+  // Two lungs and a windpipe.
+  lung: '<path d="M11 2h2v7h-2V2Zm-1 8c0 5-2 6-4 6s-3-1-3-4 2-7 4-7c2 0 3 2 3 5Zm4 0c0 5 2 6 4 6s3-1 3-4-2-7-4-7c-2 0-3 2-3 5Z" fill="currentColor"/>',
+  // A shovel blade on a shaft.
+  shovel: '<path d="M11 2h2v10h-2V2Zm-4 11h10v3a5 5 0 0 1-10 0v-3Z" fill="currentColor"/><path d="M9 2h6v2H9V2Z" fill="currentColor"/>',
 };
 
 const $ = (id) => document.getElementById(id);

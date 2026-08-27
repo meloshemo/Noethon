@@ -36,6 +36,7 @@ const MODULES = [
   'src/core/audio.js',
   'src/game/config.js',
   'src/game/skins.js',
+  'src/game/pose.js',
   'src/game/league.js',
   'src/game/daily.js',
   'src/game/store.js',
@@ -101,7 +102,27 @@ function stripComments(source) {
         continue;
       }
       if (t.startsWith('//')) continue;
-      if (t.startsWith('*') && !t.startsWith('*/')) continue;
+      /*
+       * There used to be a line here that skipped anything starting with `*`,
+       * on the theory that it was the middle of a JSDoc block. It was both
+       * redundant and dangerous. Redundant, because the `inBlock` branch above
+       * has already consumed every line of a block comment by the time this
+       * runs. Dangerous, because outside a block comment a line starting with
+       * `*` is not a comment at all — it is a continued expression:
+       *
+       *     const tail = () =>
+       *       (next === 'vent' ? a() : b())
+       *       * this.flowDrag;
+       *
+       * The bundler deleted that last line, automatic semicolon insertion
+       * closed the arrow function over what was left, and the single-file
+       * build shipped a *different multiplication* from the source. It stayed
+       * valid JavaScript, so nothing threw; the composer simply reserved less
+       * air in the bundle than in the modules, and a dive that passed every
+       * check from source refused to build in the shipped game.
+       *
+       * Nothing is skipped here on the strength of one character.
+       */
     }
     // Unescaped backticks flip template state; a line with two is back where
     // it started, which is why this counts rather than toggles per line.

@@ -151,10 +151,10 @@ const DIVE_PLANS = [
        rather than time. */
     build: (d) => {
       d.mouth();
-      d.current({ power: 190, band: 0.45 });
+      d.current({ flow: 0.32, band: 0.45 });
       d.gate({ at: 0.35, gap: 172 });
       d.hole();
-      d.current({ power: -210, band: 0.55 });
+      d.current({ flow: -0.34, band: 0.55 });
       d.stretch({ gap: 170, from: 0.42 });
       d.surfaceOut();
       d.scatterFish(3);
@@ -270,11 +270,11 @@ const DIVE_PLANS = [
        precise place to be, and a current is the water deciding where you are. */
     build: (d) => {
       d.mouth();
-      d.current({ power: -200, band: 0.4 });
+      d.current({ flow: -0.38, band: 0.4 });
       d.gate({ at: 0.34, gap: 152 });
       d.stretch({ gap: 150, from: 0.52 });
       d.hole();
-      d.current({ power: -220, band: 0.6 });
+      d.current({ flow: -0.42, band: 0.6 });
       d.gate({ at: 0.7, gap: 150 });
       d.stretch({ gap: 152, from: 0.36 });
       d.surfaceOut();
@@ -370,11 +370,11 @@ const DIVE_PLANS = [
        eleven levels taught, arriving together, on eleven percent of a lung. */
     build: (d) => {
       d.mouth();
-      d.current({ power: -210, band: 0.5 });
+      d.current({ flow: -0.40, band: 0.5 });
       d.seal({ span: 340, speed: 180 });
       d.gate({ at: 0.38, gap: 148 });
       d.hole();
-      d.current({ power: -230, band: 0.55 });
+      d.current({ flow: -0.44, band: 0.55 });
       d.seal({ span: 360, speed: 185 });
       d.stretch({ gap: 150, from: 0.42 });
       d.surfaceOut();
@@ -402,7 +402,7 @@ const DIVE_PLANS = [
       d.hole();
       d.trench({ at: 0.58, dip: 0.72, len: 380 });
       d.hole();
-      d.current({ power: -200, band: 0.78 });
+      d.current({ flow: -0.36, band: 0.78 });
       d.gate({ at: 0.86, gap: 142 });
       d.stretch({ gap: 144, from: 0.74 });
       d.surfaceOut();
@@ -423,13 +423,18 @@ const DIVE_PLANS = [
        level to lose an evening to. */
     build: (d) => {
       d.mouth();
-      d.current({ power: -210, band: 0.45 });
+      /* A band you cross rather than a passage you live in.
+         Given the whole first lungful it priced out at 4836px against a 3927px
+         lung — two slots at opposite ends of the column and a leopard seal, all
+         of it upstream, is more than one breath can buy. The finale below is
+         the passage; this is the warning. */
+      d.current({ flow: -0.3, band: 0.45, len: 760 });
       d.gate({ at: 0.26, gap: 142 });
       d.seal({ span: 340, speed: 185 });
       d.gate({ at: 0.8, gap: 140 });
       d.hole();
       d.gate({ at: 0.24, gap: 140 });
-      d.current({ power: -240, band: 0.62 });
+      d.current({ flow: -0.52, band: 0.62 });
       d.seal({ span: 360, speed: 195 });
       d.stretch({ gap: 136, len: 190, from: 0.24 });
       d.surfaceOut();

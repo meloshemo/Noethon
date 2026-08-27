@@ -8,7 +8,7 @@ istiyor.
 
 **Bağımlılık yok, derleme adımı yok, backend yok, görsel/ses dosyası yok.**
 Penguen de, buz da, kuzey ışıkları da, bütün sesler de kodla üretiliyor.
-Toplam yük tek dosyada 619 KB ve çevrimdışı çalışıyor.
+Toplam yük tek dosyada 639 KB ve çevrimdışı çalışıyor.
 
 ▶ **[Oyunu aç](https://claude.ai/code/artifact/2f6dd29b-3ad8-4d60-b4f7-c8490114b96f)**
 
@@ -343,7 +343,7 @@ geçmez, hata verip durur.
 
 ## Testler
 
-Tek komut, 37 paket (28 node + paketleme + 9 tarayıcı), kendi sunucusunu
+Tek komut, 40 paket (31 node + paketleme + 9 tarayıcı), kendi sunucusunu
 kurup kapatıyor ve portu doluysa bir yanına kayıyor:
 
 ```bash
@@ -583,7 +583,7 @@ boşluk o sayıya göre ölçülüyor.
 - **Sabit adımlı fizik (1/120 s).** 60 Hz, 120 Hz ve 144 Hz ekranlarda oyun aynı
   hissettiriyor; arka planda kalan sekme geri geldiğinde penguen ışınlanmıyor.
 - **Görsel/ses varlığı yok.** Penguen, buzlar, kuzey ışıkları, su ve bütün sesler
-  kodla üretiliyor. Tek dosya sürümü 619 KB ve çevrimdışı çalışıyor.
+  kodla üretiliyor. Tek dosya sürümü 639 KB ve çevrimdışı çalışıyor.
 - **Metin koddan ayrı.** Arayüz metinleri tek sözlükte, içeriğe ait metinler
   girdinin kendi `en` bloğunda. Bir dil eklemek bir tablo eklemek.
 
@@ -968,6 +968,122 @@ vuruşta attığı bölümde iki siper: burada siper aşınmıyor, yıkılıyor 
 başına bir yaylım).
 
 Ölçüm sonrası: arena chapter'ının tekrarı **%16 → %10**, fiil sayısı 5 → 6.
+
+## Sürüm dosyasının sessizce değiştirdiği çarpma
+
+Akıntı onarımı bittiğinde node paketlerinin hepsi geçiyordu ve **tek dosya
+sürümü açılmıyordu**. Aynı kod, aynı bölüm, iki farklı sonuç:
+
+```
+52. Akıntı: çıkışa nefes yetmiyor: 3418px, bir ciğer 3347px
+```
+
+`config.js`, `deep.js` ve `dive.js` — üçü de sürüm dosyasında kaynakla
+**birebir aynıydı**. Modül sırası da aynıydı; hepsini sırayla node'da içe
+aktarmak hiçbir şeyi bozmadı. Sonunda besteci iki koşuda adım adım
+karşılaştırıldı, ve fark `stretch`'in yedek payındaydı:
+
+```js
+    const tail = () =>
+      (next === 'vent' ? this.ventRunFrom(this.lane) : this.surfaceRunFrom(this.lane))
+      * this.flowDrag;
+```
+
+Sürüm dosyasında **son satır yoktu.**
+
+`tools/bundle.mjs` modülleri tek dosyaya alırken yorumları ayıklıyor, ve
+ayıklayıcıda şu satır vardı:
+
+```js
+if (t.startsWith('*') && !t.startsWith('*/')) continue;
+```
+
+Yani "`*` ile başlayan satır JSDoc'un ortasıdır". Blok yorumun içindeyken bu
+zaten üstteki dal tarafından hallediliyordu — yani satır **gereksizdi**. Blok
+yorumun *dışında* ise `*` ile başlayan bir satır yorum değil, **devam eden bir
+ifadedir**.
+
+Ve en kötüsü bu: satır silindikten sonra geriye kalan şey hâlâ geçerli
+JavaScript. Otomatik noktalı virgül ekleme ok fonksiyonunu kapatıyor, hiçbir
+yerde hata fırlamıyor, sürüm dosyası sessizce **başka bir çarpma** yapıyor.
+Besteci sürüm dosyasında modüllerdekinden daha az hava ayırıyordu.
+
+İkinci bir kurban da vardı ve onu ancak test buldu: `world.js` içinde
+
+```js
+      flow = flowAt(this.zones, this.player.centerX, this.player.y + this.player.h / 2)
+        * this.player.swimSpeed;
+```
+
+Aynı şekilde son satırı siliniyordu — yani sürüm dosyasında akıntı, saniyede
+piksel yerine **kesir** olarak uygulanıyordu: yeni onarılmış mekanik, indirilen
+oyunda yaklaşık beş yüz kat zayıf olacaktı.
+
+Onarım ayıklayıcıdaki o satırı silmek. Yanına da `tests/strip.mjs` geldi:
+yorum sanılmaya en müsait satırlardan kurulu bir paket — satır başında `*`,
+`/`, `**`, metin içinde `//`, şablon içinde `/*` — ve bütün kaynaklar üzerinde
+tek bir iddia: **silinen her satır gerçekten yorum olmalı.**
+
+Bir hatanın alabileceği en kötü biçim budur: bir derleme adımının programın
+anlamını, hâlâ ayrıştırılabilir kalacak şekilde değiştirmesi.
+
+## Hiç var olmamış akıntı
+
+Bu chapter'ın üçüncü fiili yazıldığı günden beri oradaydı, beş bölüm onun
+üstüne kurulmuştu, ikisinin adı oydu — ve **hiçbir şey yapmıyordu**.
+
+Ölçüm şu: oyundaki en güçlü akıntı, `power: -240`, chapter'ın duvarı olması
+gereken bölümde, penguenin hızını saniyede **480 pikselden 478'e** düşürüyordu.
+Yüzde dört onda bir.
+
+Sebep tek bir satırın sırasıydı. Yüzme dalında yatay hız her karede seyir
+hızına kırpılıyor, ve akıntı kırpmadan *sonra* ekleniyordu — yani bir akıntı
+hiçbir zaman tek bir karelik itişten fazlasını taşıyamıyordu. Üstündeki yorum
+"akıntı rüzgâr değildir, yüzücüyü iter, o yüzden `vx`'te yaşar" diyordu. Doğru
+bir cümle, ve yanlış sonuç: `vx` kırpılan kanal. Rüzgârın `drift` kanalında
+olmasının sebebi tam olarak budur.
+
+Üç ayrı eksiklik birbirini koruyordu. Akıntı **çizilmiyordu**, o yüzden kimse
+yokluğunu görmedi. **Fiyatlandırılmıyordu**, o yüzden besteci durgun suya göre
+koridor seriyordu. Ve **çalışmıyordu**, o yüzden bölümler rahat geçiliyordu —
+ki bir çözücünün göremeyeceği tek hata türü budur. `validate-dive` koridorun
+doğru şekilde olduğunu kanıtlıyordu ve öyleydi; `dive-run` birinin bitirdiğini
+kanıtlıyordu ve bitiriyordu. Chapter'ın bütün kontrolleri bir şeyin *mümkün*
+olduğunu soruyordu, ve etkisiz bir tehlike hepsini kolayca geçer.
+
+`tools/variety.mjs` bu bölümleri var olduğu günden beri sade bölümlerin ikizi
+olarak işaretliyordu. Haklıydı, ve göremediği tam sebepten: **ayırt edici tek
+fiili hiçbir şey yapmayan bir bölüm, sade bölümün ta kendisidir.**
+
+Onarım birimde. `flow` artık isimsiz birimlerde bir ivme değil, yüzücünün kendi
+seyir hızının bir **kesri**: 0.4'te su, penguenin yüzdüğü hızın onda dördüyle
+akıyor, karşısına yüzmek `1/(1-0.4)` kadar sürüyor, ve bu chapter havayı
+mesafeyle ölçtüğü için üçte iki fazla **hava** demek. Kesir olması penguen
+büyüdükçe de doğru kalmasını sağlıyor.
+
+Dört yerde birden gerçek oldu:
+
+- **Fizik** — akıntı kırpmayı atlatan `drift` kanalına taşındı, ama rüzgâr gibi
+  bir sürüklenme terimine karşı birikerek değil: sudaki bir cisim sonunda
+  suyun gittiği hızda gider, o yüzden kanal akıntıya doğru *kovalıyor*.
+- **Fiyat** — `swimCost`, chapter'ın her bacağı fiyatlandırdığı tek fonksiyon,
+  artık akıntıyı da örnekliyor. Akıntıya karşı bir bacak, gerçekten olduğu
+  daha uzun yüzüş olarak yazılıyor; çukurun ödendiği yöntemin aynısı.
+- **Yedek** — `stretch`'in yüzeye çıkış payı mesafeydi, `swimSince` ise bedel.
+  Bandın *içinde* doğru piksel, yanlış saniye ayrılıyordu. Şimdi pay, çıkışın
+  geçeceği bütün su sütunundaki en kötü akıntıyla çarpılıyor.
+- **Görüntü** — su nihayet çiziliyor: gerçek hızında kayan çizgiler, gerçek
+  yönünde, kenarında kesikli bir çizgiyle. Hızını yarıya indiren bir tehlikeyi
+  görememek tehlike değil, pusudur.
+
+Sonuç bir **reddediliş** oldu, ki sistemin çalıştığının kanıtı: **61 Açık
+Deniz** artık ilk ciğerini karşılamıyordu — sütunun iki ucunda birer geçit ve
+bir deniz leoparı, hepsi akıntıya karşı, 3927 piksellik ciğere karşı 4836
+piksel. Bölümün açılışı artık *geçilen* bir bant, finali ise *içinde
+yaşadığın* bir geçit.
+
+Ve yeni bir paket: `tests/current.mjs`. Diğerlerinin sorduğu "geçilebilir mi"
+yerine bunun sorduğu soru **"ısırıyor mu"**.
 
 ## Deniz tabanındaki baca: denizin "ne zaman"ı
 
@@ -2259,9 +2375,9 @@ anlatmak değil, olan bir şeyi olduğundan iyi anlatmaktır.
 | Müzik | Tek tema, 5 sahne, 5 katman, ses saatinde planlanıyor, ses dosyası yok |
 | Dil | Türkçe ve İngilizce, 307 metin, tarayıcıdan seçiliyor |
 | Kayıt | Tek sürümlü JSON, ileri göç, dosyaya aktarma, tek tuşla silme |
-| Çevrimdışı | Servis çalışanı + tek dosya sürümü (619 KB) |
+| Çevrimdışı | Servis çalışanı + tek dosya sürümü (639 KB) |
 | Girdi | Klavye, dokunmatik, gamepad |
-| Test | 28 node + paketleme + 9 tarayıcı paketi, hepsi tek komutta |
+| Test | 31 node + paketleme + 9 tarayıcı paketi, hepsi tek komutta |
 | Zorluk | Ölçülen eğri: `node tools/difficulty.mjs` |
 
 ### Yok, ve neden

@@ -12,7 +12,7 @@ import { Player } from './player.js';
 import { GhostRecorder, Ghost } from './ghost.js';
 import {
   VIEW, VIEW_LIMITS, ASSIST, ICE, STORM, WIND, SWIM, BRAWL, BOOST, CHARGED, ROT, REWARDS, AMBUSH, COLLAPSE, HUSH,
-  hushAt, glazeAt, trenchDrainAt, scaleForLevel, upgradeEffect, hazardPhase, ventAt, VENT,
+  hushAt, glazeAt, flowAt, trenchDrainAt, scaleForLevel, upgradeEffect, hazardPhase, ventAt, VENT,
 } from './config.js';
 import { WATER_Y } from './levels.js';
 import { getSkin } from './skins.js';
@@ -116,7 +116,8 @@ export class World {
       type: 'bank',
       bank: true,
       gone: false,
-      left: d.hits ?? 3,
+      hits: (d.hits ?? 3) + upgradeEffect(deps.upgrades ?? {}, 'shovel'),
+      left: (d.hits ?? 3) + upgradeEffect(deps.upgrades ?? {}, 'shovel'),
       hit: 0,
     }));
     /** What the player actually collides with. Built once; holds references. */
@@ -180,6 +181,8 @@ export class World {
       // Grip is a fraction toward "not slippery", so it is capped rather than
       // summed past 1 — a penguin that cannot slide at all is a different game.
       grip: Math.min(0.92, upgradeEffect(owned, 'crampons') + (perk.grip ?? 0)),
+      hold: upgradeEffect(owned, 'rosin'),
+      lungs: upgradeEffect(owned, 'lungs'),
       wind: upgradeEffect(owned, 'vest'),
     };
     this.player.gear = {
@@ -578,16 +581,18 @@ export class World {
     }
     this._wasHushed = Boolean(this.hushed);
 
-    // Currents. A band of moving water, and the only reason the sea has a wind
-    // system at all — but it is not wind: it pushes a *swimmer*, so there is no
-    // ground factor and the down parka does nothing about it. You do not shrug
-    // off the ocean, you swim across it.
+    // Currents. A band of moving water — and not wind, whatever the shape of
+    // the code used to suggest: it carries a *swimmer*, so there is no ground
+    // factor and the down parka does nothing about it. You do not shrug off
+    // the ocean, you swim across it.
+    //
+    // Read at the middle of the body rather than by rectangle overlap. A band
+    // has an edge, and a swimmer half in and half out of one should be feeling
+    // half of it, not all of it because a corner clipped the box.
+    let flow = 0;
     if (this.diving) {
-      for (const z of this.zones) {
-        if (z.kind !== 'current') continue;
-        if (!rectsOverlap(this.player.box, z)) continue;
-        push += z.power ?? 0;
-      }
+      flow = flowAt(this.zones, this.player.centerX, this.player.y + this.player.h / 2)
+        * this.player.swimSpeed;
     }
 
     // "snap" ice decides to vanish while the player is still in the air, so it
@@ -606,7 +611,7 @@ export class World {
     // whether a grip lands is where the grip would be.
     const grip = glazeAt(this.zones, this.player.centerX, this.player.y + this.player.h * 0.4) ? 0 : 1;
     if (!grip) this._tell('glaze', t('world.glaze'), 2);
-    this.player.update(dt, { ...intent, push, lift, grip, gravity: this.hushed || 1 }, this.solids, this.tuning, {
+    this.player.update(dt, { ...intent, push, lift, flow, grip, gravity: this.hushed || 1 }, this.solids, this.tuning, {
       onJump: (wound) => {
         if (wound) {
           this.audio.uncoil?.();

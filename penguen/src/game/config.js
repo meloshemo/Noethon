@@ -948,6 +948,80 @@ export const SWIM = {
 };
 
 /**
+ * Akıntı — moving water.
+ *
+ * The chapter has had a current since it was written, and it was three things
+ * that were each not true. It was never drawn, so a player could not see it.
+ * It was never priced, so the composer laid corridor as though the water were
+ * still. And it was never really simulated: the swim branch fed it into `vx`,
+ * which is re-clamped to the cruise speed at the top of every frame *before*
+ * the push is added, so all a current ever kept was one frame's worth.
+ *
+ * Measured, `power: -240` — the strongest water in the game, on the level that
+ * is supposed to be the wall of the chapter — changed the penguin's speed by
+ * two pixels a second out of four hundred and eighty. Four tenths of one
+ * percent. Five levels were built on it, two of them named after it, and the
+ * variety report had been calling those levels twins of the plain ones for as
+ * long as it had existed. It was right, and for the exact reason it could not
+ * see: a level whose one distinguishing verb does nothing *is* the plain one.
+ *
+ * The unit is the repair. `flow` is a fraction of the swimmer's own cruise
+ * rather than an acceleration in unnamed units, which makes it mean the same
+ * thing to the physics, the composer, the validator and the reader: at 0.4 the
+ * water moves at four tenths of the speed the penguin swims, so crossing it
+ * upstream takes 1/(1-0.4) — two thirds again as long, and because this
+ * chapter measures air in distance, two thirds again as much air.
+ *
+ * Being a fraction also makes it survive the penguin growing. A bigger bird
+ * swims slower, and a current specified in pixels would quietly become a wall
+ * somewhere around level sixty; specified against the cruise it stays the same
+ * question at every size.
+ */
+export const CURRENT = {
+  /**
+   * The strongest water the composer will accept.
+   *
+   * Not one. At one the swimmer cannot make headway upstream at all, and a
+   * level you cannot progress through is not difficult, it is finished. At
+   * 0.62 an upstream crossing costs 2.6x, which is already the most expensive
+   * thing in the chapter — a full trench charges twice.
+   */
+  max: 0.62,
+  /**
+   * How quickly a body takes up the speed of the water around it, per second.
+   *
+   * Water is not wind: there is no gust and no lull, and no gap between the
+   * two of you. A swimmer entering a band is moving with it inside a fifth of
+   * a second — fast enough that the sea reads as having grabbed you, slow
+   * enough that the edge of the band is a place you cross rather than a line
+   * you teleport across.
+   */
+  grip: 8,
+};
+
+/**
+ * The water's own velocity here, as a fraction of a swimmer's cruise.
+ *
+ * Positive is downstream, to the right. One definition, called by the world
+ * that pushes the penguin, the composer that pays for the crossing, the
+ * validator that proves a lungful covers it and the renderer that draws it —
+ * the rule every shared quantity in this game is under, and the rule whose
+ * absence is why the current was able to be missing from three of those four
+ * for this long.
+ */
+export function flowAt(zones, cx, cy) {
+  if (!zones) return 0;
+  let total = 0;
+  for (const z of zones) {
+    if (z.kind !== 'current') continue;
+    if (cx < z.x || cx > z.x + z.w) continue;
+    if (cy < z.y || cy > z.y + z.h) continue;
+    total += z.flow ?? 0;
+  }
+  return Math.max(-CURRENT.max, Math.min(CURRENT.max, total));
+}
+
+/**
  * How far a swimmer travels in the time it takes to rise or sink `dy` pixels.
  *
  * The counterpart of `reachAt` for the mountain: distance and height are not
@@ -1079,12 +1153,31 @@ export const TRENCH = {
 export function swimCost(zones, a, b, samples = 12) {
   const dist = Math.hypot(b.x - a.x, b.y - a.y);
   if (!dist) return 0;
+  // Which way this leg is going, because a current is only expensive in one of
+  // them. A leg with no horizontal component at all is swum across the band
+  // and charged as though it were upstream: it is the pessimistic reading, and
+  // every reserve in this chapter is deliberately pessimistic.
+  const heading = Math.sign(b.x - a.x) || -1;
   let total = 0;
   for (let i = 0; i < samples; i++) {
     const t = (i + 0.5) / samples;
     const x = a.x + (b.x - a.x) * t;
     const y = a.y + (b.y - a.y) * t;
-    total += (dist / samples) * trenchDrainAt(zones, x, y + sagAt(zones, x));
+    const sag = sagAt(zones, x);
+    /**
+     * Moving water is charged as the longer swim it is.
+     *
+     * The same accounting trick the trench is under, for the same reason: this
+     * whole chapter measures a lungful in *pixels*, so rather than teaching
+     * four separate pieces of code about a second currency, a leg that takes
+     * longer is simply a leg that is further. Every existing rule — the
+     * budget, the automatic air holes, the validator's stretch check — then
+     * works untouched, and it reads correctly too. Swimming upstream is not
+     * merely slower; the far side really is further away.
+     */
+    const along = flowAt(zones, x, y + sag) * heading;
+    const drag = 1 / Math.max(1 - CURRENT.max, 1 + along);
+    total += (dist / samples) * trenchDrainAt(zones, x, y + sag) * drag;
   }
   return total;
 }
@@ -1663,6 +1756,21 @@ export const SHOP_GROUPS = [
     note: 'Hata payı ve balık toplama',
     en: { name: 'Endurance', note: 'Room for a mistake, and reach for the fish' },
   },
+  /*
+   * A shelf for the three chapters that had nothing on any shelf.
+   *
+   * These do not belong under Endurance — that group is about room for a
+   * mistake and reaching the fish, and rosin, lungs and a shovel are none of
+   * those. They are about *where you are*: a wall, a tunnel, an arena. Put
+   * under Endurance they made a group of seven with three strangers in it,
+   * and a group whose note no longer described half its contents.
+   */
+  {
+    id: 'saha',
+    name: 'Saha',
+    note: 'Duvarda, suyun altında, arenada',
+    en: { name: 'The Field', note: 'On the wall, under the water, in the arena' },
+  },
   {
     id: 'ekipman',
     name: 'Ekipman',
@@ -1781,6 +1889,57 @@ export const UPGRADES = [
     levels: [
       { cost: 1400, effect: 0.35, label: '+0.35 sn uyarı', en: { label: '+0.35 s warning' } },
       { cost: 3200, effect: 0.7, label: '+0.7 sn uyarı', en: { label: '+0.7 s warning' } },
+    ],
+  },
+  /*
+   * Three chapters had nothing to buy.
+   *
+   * The shop grew alongside the first chapter and stayed there: boots, speed,
+   * crampons, a vest, a magnet — every one of them about walking on ice.
+   * Counted, the mountain had no upgrade, the sea had no upgrade, and the
+   * arena had no upgrade. Three quarters of the game was somewhere you could
+   * spend nothing.
+   *
+   * Each of these is tied to the verb its chapter is actually about — how long
+   * you can hold on, how long you can hold your breath, how long the snow
+   * holds. None of them can make a level passable that was not: every proof in
+   * `tests/` runs a penguin with an empty inventory, so an upgrade is only
+   * ever allowed to be the difference between hard and less hard.
+   */
+  {
+    id: 'rosin',
+    group: 'saha',
+    name: 'Reçine',
+    blurb: 'Buz duvarında daha uzun tutunursun.',
+    en: { name: 'Rosin', blurb: 'Hold on to an ice wall for longer.' },
+    icon: 'grip',
+    levels: [
+      { cost: 480, effect: 0.14, label: '+%14 tutunma', en: { label: '+14% grip' } },
+      { cost: 1250, effect: 0.3, label: '+%30 tutunma', en: { label: '+30% grip' } },
+    ],
+  },
+  {
+    id: 'lungs',
+    group: 'saha',
+    name: 'Geniş Ciğer',
+    blurb: 'Bir nefes seni daha uzağa taşır.',
+    en: { name: 'Deep Lungs', blurb: 'One breath carries you further.' },
+    icon: 'lung',
+    levels: [
+      { cost: 420, effect: 0.1, label: '+%10 nefes', en: { label: '+10% breath' } },
+      { cost: 1150, effect: 0.22, label: '+%22 nefes', en: { label: '+22% breath' } },
+    ],
+  },
+  {
+    id: 'shovel',
+    group: 'saha',
+    name: 'Kar Küreği',
+    blurb: 'Kar siperlerin bir kar topu daha dayanır.',
+    en: { name: 'Snow Shovel', blurb: 'Your snow banks take one more hit.' },
+    icon: 'shovel',
+    levels: [
+      { cost: 700, effect: 1, label: '+1 kar topu', en: { label: '+1 snowball' } },
+      { cost: 1900, effect: 2, label: '+2 kar topu', en: { label: '+2 snowballs' } },
     ],
   },
 ];
