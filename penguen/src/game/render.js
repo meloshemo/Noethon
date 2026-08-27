@@ -973,7 +973,9 @@ export class Renderer {
       for (let i = 0; i < cols; i++) {
         const x = z.x + ((i + 0.5) / cols) * z.w;
         const edge = Math.sin(((i + 0.5) / cols) * Math.PI);
-        const len = 44 + power * 90 + rng() * 44;
+        // Sized to the channel: a streak longer than the tube it is in reads
+        // as a bar rather than as moving water.
+        const len = Math.min(z.h * 0.45, 44 + power * 90 + rng() * 44);
         const period = z.h + len * 2;
         const lane = rng();
         for (let k = 0; k < 3; k++) {

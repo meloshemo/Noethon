@@ -894,7 +894,7 @@ export class Deep {
    * direction unaffordable — and positive for water going down, which is the
    * crueller of the two.
    */
-  flume({ rise = -0.7, len = 460, band = 0.62, at = 0.5, lead = null } = {}) {
+  flume({ rise = -0.7, len = 460, at = 0.5, lead = null } = {}) {
     this._breathOwed();
     const bore = Math.max(this.minGap, Math.round(this.penguinH * FLUME.bore * 2));
     const margin = 74;
@@ -908,15 +908,24 @@ export class Deep {
     this._span(Math.round(lead ?? Math.max(90, need + 40)), margin, this.depth - margin);
     const x0 = this.x;
 
-    // The water reaches past the channel: its edges have to be visible from
-    // outside it, or the only way to learn where a flume starts is to be in one.
-    const reach = Math.round(this.depth * band);
+    /**
+     * The water is exactly the channel, and no taller.
+     *
+     * It reached past it at first, on the reasoning that the edges have to be
+     * visible from outside — but a swimmer can only ever be *in* the channel,
+     * so every pixel of water above the roof or below the bed was drawn inside
+     * solid ice and did nothing. It read as though the flume were a column the
+     * penguin was about to be dragged up through, which is the opposite of the
+     * truth: a flume is a tube you swim along. What actually needs to be
+     * legible from a distance is where it starts and stops, and that is the
+     * job of the dashed lines at its two ends.
+     */
     this.zones.push({
       kind: 'flume',
       x: Math.round(x0),
-      y: Math.round(Math.max(0, lane - reach / 2)),
+      y: top,
       w: Math.round(len),
-      h: reach,
+      h: bottom - top,
       rise: +Math.max(-FLUME.max, Math.min(FLUME.max, rise)).toFixed(3),
     });
 
