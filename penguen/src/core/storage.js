@@ -46,6 +46,14 @@ function defaults() {
       spent: 0,
       /** Runs started between midnight and five. */
       nightRuns: 0,
+      /** The mountain: kicks off an ice wall, and seconds hanging on one. */
+      wallKicks: 0,
+      clingSeconds: 0,
+      /** The sea: seconds under the ice, and dives finished on empty lungs. */
+      swimSeconds: 0,
+      deepBreaths: 0,
+      /** The arena: rivals knocked over. */
+      knockouts: 0,
     },
     /** Spendable currency. */
     coins: 0,

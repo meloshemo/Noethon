@@ -2002,6 +2002,60 @@ export const UPGRADES = [
    * ever allowed to be the difference between hard and less hard.
    */
   {
+    /*
+     * Three powers for the three things the sea learned to do.
+     *
+     * The shop had nothing to sell against a current, a flume or a trench,
+     * because when it was written the sea could not do any of them: the
+     * current was inert, the flume did not exist, and the trench was new. A
+     * player who finds chapter three brutal — which is the intention — had no
+     * way to spend fish on it, and a difficulty the shop cannot answer is not
+     * difficulty, it is a wall.
+     *
+     * None of them switches a mechanic off. Fins do not make you immune to
+     * moving water, they make you a stronger swimmer in it; ballast does not
+     * pin you to the lane, it makes the water shove you less. The hardest
+     * setting of every one of them still leaves the thing in the level.
+     */
+    id: 'fins',
+    group: 'saha',
+    name: 'Yüzgeç',
+    blurb: 'Akıntı seni daha az sürüklüyor.',
+    en: { name: 'Fins', blurb: 'The current drags you less.' },
+    icon: 'fin',
+    levels: [
+      { cost: 260, effect: 0.18, label: 'akıntı −%18', en: { label: 'current −18%' } },
+      { cost: 720, effect: 0.32, label: 'akıntı −%32', en: { label: 'current −32%' } },
+      { cost: 1600, effect: 0.45, label: 'akıntı −%45', en: { label: 'current −45%' } },
+    ],
+  },
+  {
+    id: 'ballast',
+    group: 'saha',
+    name: 'Safra Taşı',
+    blurb: 'Oluğun dikey suyu hattından daha az koparıyor.',
+    en: { name: 'Ballast', blurb: 'A flume pulls you off the lane less.' },
+    icon: 'weight',
+    levels: [
+      { cost: 300, effect: 0.2, label: 'oluk −%20', en: { label: 'flume −20%' } },
+      { cost: 820, effect: 0.34, label: 'oluk −%34', en: { label: 'flume −34%' } },
+      { cost: 1750, effect: 0.46, label: 'oluk −%46', en: { label: 'flume −46%' } },
+    ],
+  },
+  {
+    id: 'insulation',
+    group: 'dayanma',
+    name: 'Yağ Tabakası',
+    blurb: 'Soğuk çukurda nefes daha yavaş tükeniyor.',
+    en: { name: 'Blubber', blurb: 'Cold water empties the lungs slower.' },
+    icon: 'flame',
+    levels: [
+      { cost: 240, effect: 0.16, label: 'çukur −%16', en: { label: 'trench −16%' } },
+      { cost: 680, effect: 0.28, label: 'çukur −%28', en: { label: 'trench −28%' } },
+      { cost: 1500, effect: 0.4, label: 'çukur −%40', en: { label: 'trench −40%' } },
+    ],
+  },
+  {
     id: 'rosin',
     group: 'saha',
     name: 'Reçine',

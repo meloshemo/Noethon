@@ -41,6 +41,12 @@ const SHOP_ICONS = {
   lung: '<path d="M11 2h2v7h-2V2Zm-1 8c0 5-2 6-4 6s-3-1-3-4 2-7 4-7c2 0 3 2 3 5Zm4 0c0 5 2 6 4 6s3-1 3-4-2-7-4-7c-2 0-3 2-3 5Z" fill="currentColor"/>',
   // A shovel blade on a shaft.
   shovel: '<path d="M11 2h2v10h-2V2Zm-4 11h10v3a5 5 0 0 1-10 0v-3Z" fill="currentColor"/><path d="M9 2h6v2H9V2Z" fill="currentColor"/>',
+  // A swim fin, seen from the side: foot pocket at the top, blade below.
+  fin: '<path d="M9 2h5a2 2 0 0 1 2 2v4l3 9a4 4 0 0 1-4 5h-5a4 4 0 0 1-4-5l3-9V4a2 2 0 0 1 2-2Zm0 2v4.3L6.2 17a2 2 0 0 0 1.9 2.6h5a2 2 0 0 0 1.9-2.6L12.2 8.3V4H9Z" fill="currentColor"/>',
+  // A weight, for the ballast stone.
+  weight: '<path d="M9 2h6v3h-1.4l.6 2H9.8l.6-2H9V2Zm-2.4 7h10.8l2.4 12H4.2L6.6 9Zm2.1 2-1.6 8h9.8l-1.6-8H8.7Z" fill="currentColor"/>',
+  // A flame, for the layer of fat that keeps the cold out.
+  flame: '<path d="M12 2c4 4 6 7 6 10.5A6 6 0 0 1 6 12.5C6 9 8 6 12 2Zm0 8c1.8 1.9 2.6 3.1 2.6 4.3a2.6 2.6 0 0 1-5.2 0C9.4 13.1 10.2 11.9 12 10Z" fill="currentColor"/>',
 };
 
 const $ = (id) => document.getElementById(id);

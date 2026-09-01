@@ -83,6 +83,20 @@ export const FEATS = {
   plays: { read: (s) => s.stats.totalPlays ?? 0 },
   night: { read: (s) => s.stats.nightRuns ?? 0 },
   wardrobe: { read: (s) => Object.keys(s.skins ?? {}).length },
+  /*
+   * The other three chapters.
+   *
+   * These read stats that the world had always computed and the save had never
+   * kept, which is the whole reason the wardrobe used to be a shelf-only
+   * cupboard: not one penguin in twenty-four could be earned by climbing,
+   * diving or standing in the snow. Every one of them is cumulative and none
+   * of them can be lost, the same as the rest.
+   */
+  kicks: { read: (s) => s.stats.wallKicks ?? 0 },
+  cling: { read: (s) => Math.floor(s.stats.clingSeconds ?? 0) },
+  swim: { read: (s) => Math.floor(s.stats.swimSeconds ?? 0) },
+  deepBreath: { read: (s) => s.stats.deepBreaths ?? 0 },
+  knockouts: { read: (s) => s.stats.knockouts ?? 0 },
 };
 
 /* ------------------------------------------------------------------ */
@@ -458,6 +472,146 @@ const crystals = (ctx, g) => {
     ctx.lineTo(px + Math.cos(a) * len, py + Math.sin(a) * len);
     ctx.closePath();
     ctx.fill();
+  }
+  ctx.restore();
+};
+
+/** Two ice axes crossed on the back — the mountain's tool, worn like a badge. */
+const axes = (ctx, g) => {
+  ctx.save();
+  for (const sgn of [-1, 1]) {
+    ctx.strokeStyle = '#6a5138';
+    ctx.lineWidth = Math.max(2, g.w * 0.07);
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(g.cx - sgn * g.w * 0.42, g.by - g.bodyH * 0.94);
+    ctx.lineTo(g.cx + sgn * g.w * 0.34, g.by - g.bodyH * 0.16);
+    ctx.stroke();
+    // The head: a straight adze one way, a curved pick the other.
+    ctx.fillStyle = '#cfd8e6';
+    ctx.beginPath();
+    ctx.moveTo(g.cx - sgn * g.w * 0.42, g.by - g.bodyH * 0.94);
+    ctx.lineTo(g.cx - sgn * g.w * 0.06, g.by - g.bodyH * 1.02);
+    ctx.lineTo(g.cx - sgn * g.w * 0.3, g.by - g.bodyH * 0.78);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+};
+
+/** A coil of rope over one shoulder. */
+const rope = (ctx, g) => {
+  ctx.save();
+  ctx.strokeStyle = '#e0b463';
+  ctx.lineWidth = Math.max(1.6, g.w * 0.055);
+  for (let i = 0; i < 3; i++) {
+    ctx.beginPath();
+    ctx.ellipse(
+      g.cx - g.facing * g.w * 0.06,
+      g.by - g.bodyH * (0.62 - i * 0.07),
+      g.w * (0.3 - i * 0.02),
+      g.h * 0.055,
+      -0.25 * g.facing,
+      0,
+      Math.PI * 2,
+    );
+    ctx.stroke();
+  }
+  ctx.restore();
+};
+
+/**
+ * The lure of a deep-sea angler, on a stalk over the head.
+ *
+ * Drawn as a bulb with its own glow rather than a dot, because down where this
+ * penguin earns its name the light *is* the character: the sea's last two
+ * chapters are the darkest screens in the game, and a costume for them has to
+ * be readable against black water.
+ */
+const lure = (ctx, g) => {
+  const sway = Math.sin(g.time * 1.7) * g.w * 0.08;
+  const tipX = g.cx + g.facing * (g.w * 0.34 + sway);
+  const tipY = g.headY - g.h * 0.3;
+  ctx.save();
+  ctx.strokeStyle = '#7fe6d0';
+  ctx.lineWidth = Math.max(1.4, g.w * 0.04);
+  ctx.beginPath();
+  ctx.moveTo(g.cx, g.headY - g.h * 0.03);
+  ctx.quadraticCurveTo(g.cx + g.facing * g.w * 0.1, g.headY - g.h * 0.28, tipX, tipY);
+  ctx.stroke();
+  const pulse = 0.7 + 0.3 * Math.sin(g.time * 3.1);
+  const glow = ctx.createRadialGradient(tipX, tipY, 0, tipX, tipY, g.w * 0.42 * pulse);
+  glow.addColorStop(0, 'rgba(180,255,240,0.95)');
+  glow.addColorStop(0.4, 'rgba(110,230,210,0.45)');
+  glow.addColorStop(1, 'rgba(110,230,210,0)');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(tipX, tipY, g.w * 0.42 * pulse, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#eafffb';
+  ctx.beginPath();
+  ctx.arc(tipX, tipY, g.w * 0.1, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+};
+
+/** A peaked cap with a hard visor, and boards on both shoulders. */
+const peakedCap = (ctx, g) => {
+  ctx.save();
+  ctx.fillStyle = '#2b3550';
+  ctx.beginPath();
+  ctx.ellipse(g.cx, g.headY - g.h * 0.11, g.w * 0.4, g.h * 0.09, 0, Math.PI, Math.PI * 2);
+  ctx.fill();
+  ctx.fillRect(g.cx - g.w * 0.4, g.headY - g.h * 0.115, g.w * 0.8, g.h * 0.045);
+  ctx.fillStyle = '#151d2e';
+  ctx.beginPath();
+  ctx.ellipse(
+    g.cx + g.facing * g.w * 0.18,
+    g.headY - g.h * 0.07,
+    g.w * 0.3,
+    g.h * 0.028,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+  // A snowflake where the badge goes.
+  ctx.strokeStyle = '#ffd23f';
+  ctx.lineWidth = Math.max(1, g.w * 0.03);
+  for (let i = 0; i < 3; i++) {
+    const a = (i / 3) * Math.PI;
+    ctx.beginPath();
+    ctx.moveTo(g.cx - Math.cos(a) * g.w * 0.09, g.headY - g.h * 0.14 - Math.sin(a) * g.h * 0.03);
+    ctx.lineTo(g.cx + Math.cos(a) * g.w * 0.09, g.headY - g.h * 0.14 + Math.sin(a) * g.h * 0.03);
+    ctx.stroke();
+  }
+  ctx.fillStyle = '#ffd23f';
+  for (const sgn of [-1, 1]) {
+    ctx.beginPath();
+    ctx.ellipse(g.cx + sgn * g.w * 0.36, g.by - g.bodyH * 0.82, g.w * 0.14, g.h * 0.035, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+};
+
+/** Fold creases, for the penguin that is a sheet of paper. */
+const creases = (ctx, g) => {
+  ctx.save();
+  ctx.lineWidth = Math.max(1, g.w * 0.022);
+  const lines = [
+    [-0.34, 0.94, 0.06, 0.52],
+    [0.34, 0.9, -0.02, 0.44],
+    [-0.28, 0.44, 0.3, 0.3],
+    [0, 0.98, 0, 0.08],
+  ];
+  for (const [x0, y0, x1, y1] of lines) {
+    // A valley fold is a shadow and a mountain fold is a highlight; alternating
+    // them is what stops this reading as a scribbled-on penguin.
+    ctx.strokeStyle = y0 > y1 ? 'rgba(255,255,255,0.55)' : 'rgba(90,110,140,0.45)';
+    ctx.beginPath();
+    ctx.moveTo(g.cx + g.w * x0, g.by - g.bodyH * y0);
+    ctx.lineTo(g.cx + g.w * x1, g.by - g.bodyH * y1);
+    ctx.stroke();
   }
   ctx.restore();
 };
@@ -894,6 +1048,135 @@ export const SKINS = [
     },
     aura: 'rgba(107,77,255,0.3)',
     unlock: { kind: 'feat', feat: 'wardrobe', goal: 15 },
+  },
+
+
+  /* ---------------------------------- earned in chapters II, III, IV */
+  /*
+   * Five penguins for the three quarters of the game that could not dress you.
+   *
+   * The wardrobe grew alongside the shelf and stayed there: every unlock in it
+   * counted jumps, fish, stars, deaths or days, and not one of them noticed
+   * that the player had spent an hour on an ice wall, under the sea, or in the
+   * snow being shot at. The stats were being computed the whole time and
+   * thrown away at the end of each level — so these cost no new mechanic, only
+   * the decision to remember.
+   *
+   * None of them carries a perk. That stays what it has always been: the mark
+   * of a diamond penguin, and the only ability the wardrobe sells.
+   */
+  {
+    id: 'axeman',
+    rarity: 'epic',
+    name: 'Balta Penguen',
+    blurb: 'Buz duvarından iki yüz elli kez tekme atanlara.',
+    en: { name: 'Ice Axe Penguin', blurb: 'For two hundred and fifty kicks off an ice wall.' },
+    tint: '#3b4a3a',
+    belly: '#e9f0e4',
+    beak: '#e0b463',
+    foot: '#e0b463',
+    eye: '#1c2418',
+    behind: true,
+    paint: (ctx, g, layer) => {
+      if (layer === 'behind') {
+        axes(ctx, g);
+        return;
+      }
+      rope(ctx, g);
+    },
+    unlock: { kind: 'feat', feat: 'kicks', goal: 250 },
+  },
+  {
+    id: 'lantern',
+    rarity: 'epic',
+    name: 'Fener Penguen',
+    blurb: 'Buzun altında yirmi dakika geçirenlere.',
+    en: { name: 'Lantern Penguin', blurb: 'For twenty minutes spent under the ice.' },
+    tint: '#16323c',
+    belly: '#9fe8dc',
+    beak: '#57c9b4',
+    foot: '#57c9b4',
+    eye: '#d8fff6',
+    paint: lure,
+    aura: 'rgba(110,230,210,0.28)',
+    unlock: { kind: 'feat', feat: 'swim', goal: 1200 },
+  },
+  {
+    id: 'pearl',
+    rarity: 'mythic',
+    name: 'İnci Penguen',
+    blurb: 'Yirmi beş dalışı son nefesle bitirenlere.',
+    en: { name: 'Pearl Penguin', blurb: 'For finishing twenty-five dives on empty lungs.' },
+    tint: '#c3c9e6',
+    belly: '#fdf6ff',
+    beak: '#f2c6d8',
+    foot: '#f2c6d8',
+    eye: '#2c2540',
+    paint: (ctx, g) => {
+      // Nacre: three wide bands of colour sliding over the body rather than a
+      // sparkle, because mother-of-pearl is a *shift*, not a glint.
+      ctx.save();
+      ctx.globalAlpha = 0.35;
+      const hues = ['#8fd8ff', '#ffb9e6', '#c9ffd8'];
+      for (let i = 0; i < 3; i++) {
+        const off = Math.sin(g.time * 0.9 + i * 2.1) * g.bodyH * 0.18;
+        ctx.fillStyle = hues[i];
+        ctx.beginPath();
+        ctx.ellipse(
+          g.cx,
+          g.by - g.bodyH * (0.7 - i * 0.16) + off,
+          g.w * 0.42,
+          g.h * 0.07,
+          0,
+          0,
+          Math.PI * 2,
+        );
+        ctx.fill();
+      }
+      ctx.restore();
+      // The pearl itself, at the throat.
+      ctx.save();
+      const px = g.cx + g.facing * g.w * 0.04;
+      const py = g.by - g.bodyH * 0.72;
+      const shine = ctx.createRadialGradient(px - g.w * 0.04, py - g.h * 0.02, 0, px, py, g.w * 0.14);
+      shine.addColorStop(0, '#ffffff');
+      shine.addColorStop(1, '#d9d2f0');
+      ctx.fillStyle = shine;
+      ctx.beginPath();
+      ctx.arc(px, py, g.w * 0.13, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    },
+    aura: 'rgba(240,220,255,0.26)',
+    unlock: { kind: 'feat', feat: 'deepBreath', goal: 25 },
+  },
+  {
+    id: 'general',
+    rarity: 'epic',
+    name: 'Kar Generali',
+    blurb: 'Yüz rakibi kar topuyla deviren komutana.',
+    en: { name: 'Snow General', blurb: 'For knocking a hundred rivals over with snow.' },
+    tint: '#39445e',
+    belly: '#e8edf8',
+    beak: '#ffb43f',
+    foot: '#ffb43f',
+    eye: '#0f1526',
+    paint: peakedCap,
+    unlock: { kind: 'feat', feat: 'knockouts', goal: 100 },
+  },
+  {
+    id: 'origami',
+    rarity: 'mythic',
+    name: 'Origami Penguen',
+    blurb: 'Tek bir kâğıttan katlanmış. Kesik yok.',
+    en: { name: 'Origami Penguin', blurb: 'Folded from one sheet. No cuts.' },
+    tint: '#dfe6f2',
+    belly: '#ffffff',
+    beak: '#ef6a5a',
+    foot: '#ef6a5a',
+    eye: '#3a4560',
+    paint: creases,
+    unlock: { kind: 'coins', cost: 13500 },
   },
 
   /* ------------------------------------------- diamond: with a perk */

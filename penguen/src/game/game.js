@@ -612,6 +612,22 @@ export class Game {
     st.skuaEscapes = (st.skuaEscapes ?? 0) + w.skuasEscaped;
     st.glideSeconds = (st.glideSeconds ?? 0) + w.glideTime;
     st.rocketFires = (st.rocketFires ?? 0) + w.rocketFires;
+    /*
+     * The other three chapters, finally banked.
+     *
+     * Every one of these numbers was already being counted, frame by frame,
+     * and then dropped on the floor when the level ended. The visible symptom
+     * was in the wardrobe: a cupboard of penguins where the mountain, the sea
+     * and the arena could not unlock a single one, because nothing about them
+     * was ever written down. Counting is not remembering.
+     */
+    st.wallKicks = (st.wallKicks ?? 0) + w.wallKicks;
+    st.clingSeconds = (st.clingSeconds ?? 0) + w.clingTime;
+    st.knockouts = (st.knockouts ?? 0) + w.brawlKnockouts;
+    st.swimSeconds = (st.swimSeconds ?? 0) + w.swimTime;
+    // A dive finished on the last of the air. Recorded on the win, so it is a
+    // dive *survived* on empty lungs rather than one abandoned on them.
+    if (w.diving && w.lowestBreath <= 0.15) st.deepBreaths = (st.deepBreaths ?? 0) + 1;
     // A run that starts between midnight and five in the morning. The alien
     // penguin is for people who play at times they should not.
     const hour = new Date().getHours();

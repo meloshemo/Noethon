@@ -8,7 +8,7 @@ istiyor.
 
 **Bağımlılık yok, derleme adımı yok, backend yok, görsel/ses dosyası yok.**
 Penguen de, buz da, kuzey ışıkları da, bütün sesler de kodla üretiliyor.
-Toplam yük tek dosyada 650 KB ve çevrimdışı çalışıyor.
+Toplam yük tek dosyada 666 KB ve çevrimdışı çalışıyor.
 
 ▶ **[Oyunu aç](https://claude.ai/code/artifact/2f6dd29b-3ad8-4d60-b4f7-c8490114b96f)**
 
@@ -30,9 +30,9 @@ Toplam yük tek dosyada 650 KB ve çevrimdışı çalışıyor.
 | **2 pusu** | Bölümün planlamadığı anda dalan kutup kuşu · bayrağa 100 px kala kopan buzul |
 | **4 çürük balık etkisi** | ağırlaşma · **ayak tutmaması** · ters kontrol · körlük |
 | **3 yüklü balık** | yay (tek dev zıplama) · kuantum (havada ışınlanma) · gevşeme (senin dışında her şey yavaşlar) |
-| **24 penguen + 10 iz** | 5 nadirlik seviyesi, 240 kombin |
+| **29 penguen + 10 iz** | 5 nadirlik seviyesi, 290 kombin |
 | **4 elmas penguen** | Tek yetenek taşıyan tek tür: zıplama · hız · süzülme · mıknatıs |
-| **9 market eşyası** | 3'ü penguenin *ne yapabildiğini* değiştiriyor |
+| **15 market eşyası** | 3'ü penguenin *ne yapabildiğini* değiştiriyor, 6'sı ilk chapter'ın dışına satılıyor |
 | **21 günlük görev** | üç ağırlıkta, her gün birer tane |
 | **289 metin, 2 dil** | Türkçe asıl, İngilizce tam; üç denetim ikisini eşit tutuyor |
 | **Haftalık lig** | Bronz → Gümüş (500) → Altın (2.000) → Elmas (5.000) |
@@ -103,7 +103,7 @@ turuncu **yay** bir tek zıplamayı devleştiriyor, mor **kuantum** havadayken s
 her şeyi üçte bir hıza düşürüyor.
 → [ayrıntı](#yüklü-balıklar)
 
-### 🐧 Gardırop, 24 penguen, 10 iz
+### 🐧 Gardırop, 29 penguen, 10 iz
 Ninja, Kral, Astronot, Altın, Korsan, Ateş, Siber, Yılbaşı, Frak, Kâşif, Dalgıç,
 Aşçı, Rock, Uzaylı, Hayalet, Şövalye, Kutup Işığı, Buz Kraliçesi, Gölge.
 Çoğu satın alınmıyor, **kazanılıyor**. Seçtiğin penguen buzun üstünde gerçekten
@@ -155,7 +155,7 @@ hedef var ve **gün boyunca birikiyorlar**: tek turda hepsini yapman gerekmiyor.
 | [Sessiz alan](#sessiz-alan-yerçekiminin-değiştiği-yer) · [Sallanan buz](#sallanan-buz-ipin-ucundaki-sarkaç) · [Kavisli atış](#kavisli-atış-siperin-üstünden) · [Çukur](#çukur-derinliğin-bedeli) | Dört bölümün dört yeni fiili |
 | [Pusu mekanikleri](#pusu-mekanikleri-buzun-tuzakları) · [Kutup kuşu](#pusu-kutup-kuşu) | Ani ölüm olayları |
 | [Ekonomi ve market](#ekonomi-ve-market) | Balık nasıl kazanılır, neye harcanır |
-| [Koleksiyon](#koleksiyon) | 24 penguen, 10 iz, nadirlikler |
+| [Koleksiyon](#koleksiyon) | 29 penguen, 10 iz, nadirlikler |
 | [Haftalık lig](#haftalık-lig) · [Günün Pengu'su](#günün-pengusu) | Meta sistemler |
 | [Hayalet yarışı](#hayalet-yarışı-ve-sıralama) | Rekor yarışı ve paylaşım kodu |
 | [Kontroller](#kontroller) | Tuşlar |
@@ -343,7 +343,7 @@ geçmez, hata verip durur.
 
 ## Testler
 
-Tek komut, 44 paket (34 node + paketleme + 10 tarayıcı), kendi sunucusunu
+Tek komut, 46 paket (36 node + paketleme + 10 tarayıcı), kendi sunucusunu
 kurup kapatıyor ve portu doluysa bir yanına kayıyor:
 
 ```bash
@@ -487,7 +487,7 @@ src/
     config.js              tüm oyun hissi sabitleri + erişim matematiği (reachFor, reachWithWind, crossableGap)
     chapters.js            dört chapter, hangi bölüm hangisine ait
     profile.js             ad temizleme, penguen kimliği, unvanlar
-    skins.js               24 penguen + 10 iz: palet, aksesuar çizimi, açılma şartları
+    skins.js               29 penguen + 10 iz: palet, aksesuar çizimi, açılma şartları
     store.js               Günün Teklifi ve gerçek para kataloğu (kapalı)
     league.js              haftalık lig: puanlama, kademeler, hafta anahtarı
     daily.js               Günün Pengu'su: güne göre seçilen hedefler
@@ -583,7 +583,7 @@ boşluk o sayıya göre ölçülüyor.
 - **Sabit adımlı fizik (1/120 s).** 60 Hz, 120 Hz ve 144 Hz ekranlarda oyun aynı
   hissettiriyor; arka planda kalan sekme geri geldiğinde penguen ışınlanmıyor.
 - **Görsel/ses varlığı yok.** Penguen, buzlar, kuzey ışıkları, su ve bütün sesler
-  kodla üretiliyor. Tek dosya sürümü 650 KB ve çevrimdışı çalışıyor.
+  kodla üretiliyor. Tek dosya sürümü 666 KB ve çevrimdışı çalışıyor.
 - **Metin koddan ayrı.** Arayüz metinleri tek sözlükte, içeriğe ait metinler
   girdinin kendi `en` bloğunda. Bir dil eklemek bir tablo eklemek.
 
@@ -1754,7 +1754,7 @@ tek kaynak olsaydı market kısa sürede anlamını yitirirdi:
 Bölümü tekrar oynamak yalnızca *yeni* ilerleme için ödeme yapar, ilk bölümü
 sonsuza kadar tekrarlayarak para basmak mümkün değil.
 
-Markette dokuz eşya var. Altısı sayı büyütüyor:
+Markette on beş eşya var. Altısı buzda yürümekle ilgili sayıları büyütüyor:
 
 | Eşya | Etkisi | Seviye |
 |------|--------|--------|
@@ -1764,6 +1764,23 @@ Markette dokuz eşya var. Altısı sayı büyütüyor:
 | Kalın Tüy | her denemede bir kez ölümden kurtarır | 1 |
 | Balık Mıknatısı | 90 → 165 px çekim | 2 |
 | Rüzgâr Yeleği | fırtına savurması %55 az | 1 |
+
+Altısı diğer üç chapter'ın kendi fiiline satılıyor — market uzun süre yalnızca
+birinci chapter'ı tanıyordu:
+
+| Eşya | Etkisi | Chapter | Seviye |
+|------|--------|---------|--------|
+| Reçine | buz duvarında tutunma +%14 → +%30 | II | 2 |
+| Geniş Ciğer | nefes +%10 → +%22 | III | 2 |
+| Yüzgeç | akıntının sürüklemesi −%18 → −%45 | III | 3 |
+| Safra Taşı | oluğun dikey suyu −%20 → −%46 | III | 3 |
+| Yağ Tabakası | çukurun *fazla* hava bedeli −%16 → −%40 | III | 3 |
+| Kar Küreği | siper +1 → +2 kar topu | IV | 2 |
+
+Son üçü denizin üç yeni fiiline — akıntı, oluk, çukur — verilen cevap, ve
+hiçbiri mekaniği kapatmıyor: en üst kademede bile akıntı sürüklüyor, oluk
+çekiyor, soğuk su açık denizden pahalı. `tests/gear-sea.mjs` her birini gerçek
+`World` içinde iki kez ölçüyor ve hem indirimi hem de *kalanı* doğruluyor.
 
 Üçü penguenin **ne yapabildiğini** değiştiriyor, [Aktif ekipman](#aktif-ekipman):
 
@@ -1997,7 +2014,7 @@ Penguen her karede sıfırdan çiziliyor, yani bir "skin" görsel dosyası deği
 bir palet artı küçük bir aksesuar çizeri. Bu yüzden her penguen birkaç yüz bayt,
 her büyüme ölçeğinde çalışıyor ve gövdenin ezilip uzamasına kendiliğinden uyuyor.
 
-**İki slot var** ve mesele bu: **24 penguen × 10 iz = 240 kombin**. Bir gardırobu
+**İki slot var** ve mesele bu: **29 penguen × 10 iz = 290 kombin**. Bir gardırobu
 liste olmaktan çıkarıp gardırop yapan şey, ikisinin birden *senin seçimin*
 olması.
 
@@ -2010,18 +2027,30 @@ Nadirlik bir güç seviyesi değil, her şey kozmetik ve öyle kalacak. Nadirlik
 |---|---|---|
 | Yaygın | Penguen | Başlangıç |
 | Nadir | Ninja · Korsan · Yılbaşı · Frak · Kâşif · Dalgıç · Aşçı | 50 ölümsüz bölüm · 20×3 yıldız · Aralık/240 balık · 300 balık · 120 bölüm · 150 ölüm · 380 balık |
-| Efsanevi | Kral · Astronot · Ateş · Rock · Uzaylı · Hayalet · Şövalye | 1000 balık · 5000 m · 15 hız balığı · 60 hız balığı · 5 gece turu · 400 ölüm · 25 kuş dalışı |
-| Mitik | Altın · Siber · Kutup Işığı · Buz Kraliçesi · Gölge | 7 günlük seri · Elmas lig · 300 sn süzülme · 45×3 yıldız · 15 penguen topla |
+| Efsanevi | Kral · Astronot · Ateş · Rock · Uzaylı · Hayalet · Şövalye · **Balta** · **Fener** · **Kar Generali** | 1000 balık · 5000 m · 15 hız balığı · 60 hız balığı · 5 gece turu · 400 ölüm · 25 kuş dalışı · **250 duvar tekmesi** · **1200 sn su altı** · **100 devrilen rakip** |
+| Mitik | Altın · Siber · Kutup Işığı · Buz Kraliçesi · Gölge · **İnci** · **Origami** | 7 günlük seri · Elmas lig · 300 sn süzülme · 45×3 yıldız · 15 penguen topla · **25 son-nefes dalışı** · **13.500 balık** |
 | Elmas | Elmas · Jet · Albatros · İmparator | 6.500 · 7.200 · 8.000 · 9.000 balık |
+
+**Kalın yazılanlar gardırobun ilk üç chapter'ı.** Yirmi dört penguenin hiçbiri
+tırmanarak, dalarak veya kar topu yiyerek açılmıyordu: bütün şartlar zıplama,
+balık, yıldız, ölüm ve gün sayıyordu. Sayaçların eksik olduğu da yoktu —
+`wallKicks`, `clingTime`, `brawlKnockouts` her karede hesaplanıyor ve bölüm
+bitince çöpe atılıyordu. Yeni olan tek şey **hatırlamak**: dünya artık su altı
+saniyesini ve turun en düşük nefesini de tutuyor, `_recordFeats` beşini birden
+kayda geçiriyor. Hiçbirinin yeteneği yok; yetenek elmas penguenlerin işareti
+olarak kalıyor.
 
 Aksesuarlar gerçekten çiziliyor: astronotun kaskı ve havada ateşleyen jeti,
 ninjanın koşarken savrulan bandı, şövalyenin miğferi ve sorguçu, aşçının
 sallanan kepi, uzaylının zıplayan antenleri, hayaletin dalgalanan eteği, Buz
-Kraliçesi'nin omuzlarından çıkan kristaller.
+Kraliçesi'nin omuzlarından çıkan kristaller, Balta Penguen'in sırtındaki çapraz
+iki balta ve omzundaki ip halkası, Fener Penguen'in başının üstünde salınan ve
+kendi ışığını taşıyan yemi, İnci'nin gövdesinde kayan sedef bantları,
+Origami'nin ters yöne katlanmış kırık çizgileri.
 
 ### Elmas penguenler
 
-Yirmi penguen kozmetik. Dördü değil ve fark **kasten** dördüyle sınırlı, çünkü
+Yirmi beş penguen kozmetik. Dördü değil ve fark **kasten** dördüyle sınırlı, çünkü
 "en pahalı penguen en güçlü penguendir" kuralı bir gardırobu bir güç merdivenine
 çevirir.
 
@@ -2753,17 +2782,17 @@ anlatmak değil, olan bir şeyi olduğundan iyi anlatmaktır.
 | Buz | 10 tür |
 | Tehlike | 6 tür (sarkıt, fok, orka, fırtına, yükselen hava, serak) |
 | Rüzgâr | Dört vuruşluk eğri, kendi sürüklenme kanalı, ibre, `windGap`, `updraft` |
-| Koleksiyon | 24 penguen, 10 iz, 5 nadirlik, 4'ünde yetenek var |
+| Koleksiyon | 29 penguen, 10 iz, 5 nadirlik, 4'ünde yetenek var |
 | Market | 9 eşya, 19 kademe, 3 başlık, bitmeyen Buzul Anıtı |
 | Meta | 21 günlük görev, 4 günlük hedef, haftalık lig (4 kademe), Günün Teklifi |
 | Kimlik | Ad, `PNG-XXXXX` kimliği, 7 unvan, hepsi cihazda |
 | Hayalet | Kendi rekorun yanında koşuyor, paylaşım koduyla arkadaşınki de |
 | Müzik | Tek tema, 5 sahne, 5 katman, ses saatinde planlanıyor, ses dosyası yok |
-| Dil | Türkçe ve İngilizce, 307 metin, tarayıcıdan seçiliyor |
+| Dil | Türkçe ve İngilizce, 312 metin, tarayıcıdan seçiliyor |
 | Kayıt | Tek sürümlü JSON, ileri göç, dosyaya aktarma, tek tuşla silme |
-| Çevrimdışı | Servis çalışanı + tek dosya sürümü (650 KB) |
+| Çevrimdışı | Servis çalışanı + tek dosya sürümü (666 KB) |
 | Girdi | Klavye, dokunmatik, gamepad |
-| Test | 34 node + paketleme + 10 tarayıcı paketi, hepsi tek komutta |
+| Test | 36 node + paketleme + 10 tarayıcı paketi, hepsi tek komutta |
 | Zorluk | Ölçülen eğri: `node tools/difficulty.mjs` |
 
 ### Yok, ve neden

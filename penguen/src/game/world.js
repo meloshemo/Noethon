@@ -184,6 +184,12 @@ export class World {
       hold: upgradeEffect(owned, 'rosin'),
       lungs: upgradeEffect(owned, 'lungs'),
       wind: upgradeEffect(owned, 'vest'),
+      // The sea's three. Each is a fraction of a force removed, never the
+      // force itself: at the top level a current still drags, a flume still
+      // pulls and the trench still costs more than open water.
+      fins: Math.min(0.75, upgradeEffect(owned, 'fins') + (perk.fins ?? 0)),
+      ballast: Math.min(0.75, upgradeEffect(owned, 'ballast')),
+      insulation: Math.min(0.75, upgradeEffect(owned, 'insulation')),
     };
     this.player.gear = {
       wings: owned.wings ?? 0,
@@ -290,6 +296,18 @@ export class World {
     this.chargedValue = 0;
     /** Rotten fish swallowed this run — one of the daily objectives reads it. */
     this.rottenTaken = 0;
+    /**
+     * Seconds under the ice, and the emptiest the lungs got.
+     *
+     * Both are per-run readings the sea never kept. The mountain and the arena
+     * were already counting theirs — `clingTime`, `wallKicks`,
+     * `brawlKnockouts` — and every one of those numbers was thrown away at the
+     * end of the level, which is why twenty-four penguins could be unlocked
+     * and not one of them by anything that happens in chapters II, III or IV.
+     * The counting was never the missing part; the remembering was.
+     */
+    this.swimTime = 0;
+    this.lowestBreath = 1;
     /** Kicks off an ice wall, so missions can ask for them. */
     this.wallKicks = 0;
     /** Seconds spent hanging on ice — the climbing counterpart of glide time. */
@@ -594,11 +612,11 @@ export class World {
     if (this.diving) {
       const cx = this.player.centerX;
       const cy = this.player.y + this.player.h / 2;
-      flow = flowAt(this.zones, cx, cy) * this.player.swimSpeed;
+      flow = flowAt(this.zones, cx, cy) * this.player.swimSpeed * (1 - (this.player.boost.fins ?? 0));
       // The vertical half of the same vector. It arrives in pixels per second
       // already, because it is scaled against a free rise rather than against
       // a swimmer's cruise.
-      flume = flumeAt(this.zones, cx, cy);
+      flume = flumeAt(this.zones, cx, cy) * (1 - (this.player.boost.ballast ?? 0));
     }
 
     // "snap" ice decides to vanish while the player is still in the air, so it
@@ -833,7 +851,12 @@ export class World {
      * is costing anything is worse than no readout: the player learns to
      * distrust the only instrument they have down here.
      */
-    this.drain = inAir ? 1 : trenchDrainAt(this.zones, p.centerX, p.y + p.h / 2);
+    // Blubber is priced against the *extra*, not the whole. Cold water costs
+    // more than open sea; a coat that made the drain itself smaller would be
+    // selling free breathing everywhere, so what it buys back is the surcharge
+    // — and only part of it.
+    const cold = inAir ? 1 : trenchDrainAt(this.zones, p.centerX, p.y + p.h / 2);
+    this.drain = cold > 1 ? 1 + (cold - 1) * (1 - (p.boost?.insulation ?? 0)) : cold;
     // The trench is the one that has to speak. Everything else the sea does is
     // visible: a wall, a seal, a current you can feel pushing. This is a number
     // changing, and a number changing in silence is not a mechanic, it is an
@@ -1176,6 +1199,10 @@ export class World {
     this.chargedTaken = 0;
     this.chargedValue = 0;
     this.rottenTaken = 0;
+    // A dive is scored on the attempt that finished it, not on the sum of the
+    // ones that drowned.
+    this.swimTime = 0;
+    this.lowestBreath = 1;
     // Last line of defence against a death loop.
     //
     // A respawn point is a coordinate, and coordinates outlive the ground they
@@ -1224,6 +1251,12 @@ export class World {
     if (this.status !== 'playing') return;
     if (this.player.gliding) this.glideTime += dt;
     if (this.player.clinging) this.clingTime += dt;
+    if (this.diving && this.player.submerged) {
+      this.swimTime += dt;
+      // Read while swimming rather than every frame: a run that ends in a
+      // breathing hole would otherwise be scored on the lungful it took there.
+      this.lowestBreath = Math.min(this.lowestBreath, this.player.breath / this.player.breathMax);
+    }
     if (this.player.rocketFired) {
       this.rocketFires++;
       this.audio.rocket?.();
