@@ -113,6 +113,15 @@ const CLIMB_PLANS = [
       t.base({ w: 240 });
       t.steps({ n: 2, rise: 0.62, w: 135 });
       t.chimney({ height: 260 });
+      /* Wet ice on the first shaft, which is the whole point of the level.
+         "Nowhere to catch your breath" was a claim about *layout* — two
+         chimneys with a traverse between them and no ledge to stand on. The
+         bar did not know that: it drained at the same rate here as on the
+         gentlest wall in the chapter, so the subtitle was true of the geometry
+         and false of the resource. A band of running water on the way up the
+         first shaft makes the second one a thing you arrive at with less, and
+         the traverse between them the place you find that out. */
+      t.sodden({ side: 1, from: 0.55 });
       t.traverse({ n: 2, w: 120 });
       t.chimney({ height: 275 });
       t.steps({ n: 2, rise: 0.58, w: 135 });
@@ -258,6 +267,16 @@ const CLIMB_PLANS = [
       t.chimney({ height: 280, hazard: 'shards' });
       t.traverse({ n: 2, w: 125 });
       t.chimney({ height: 300, hazard: 'shards' });
+      /* Glare ice under falling shards, on the second shaft.
+         Every hazard in this chapter can be answered by waiting: the serac is
+         a metronome, and a climber who holds still through one beat is a
+         climber who is safe. Glare ice takes away the place to hold still. The
+         wet ice that was tried here first did the arithmetic version of the
+         same thing — it made waiting expensive rather than impossible — and it
+         left this level with the same vocabulary as 35, which is the failure
+         the variety tool exists to catch. Two hazard levels should not be one
+         idea twice. */
+      t.glaze({ side: -1, from: 0.42 });
       t.steps({ n: 2, rise: 0.58, w: 135 });
       t.crown({ w: 250 });
       t.scatterFish(3, 58);
@@ -322,6 +341,16 @@ const CLIMB_PLANS = [
          for is not a good idea for that level. */
       t.traverse({ n: 3, w: 125, types: ['slip', 'solid'] });
       t.chimney({ height: 260, lip: 0.5 });
+      /* Wet ice where glare ice was refused, and the difference is the point.
+         The note above records that a band of verglas was tried on this level
+         and the solver turned it down at every height on both walls: there is
+         no stamina here for a move you cannot back out of. Wet ice is not that
+         move. It leaves the wall exactly where it is and charges for the time
+         spent on it, so it is a thing this level can *pay* for — expensively,
+         on the hardest climb in the chapter, above a lip that already forces
+         one kick to be taken under rock. Refused and expensive are different
+         answers, and the second one is available here. */
+      t.sodden({ side: 1, from: 0.4 });
       t.steps({ n: 2, rise: 0.58, w: 135 });
       t.crown({ w: 245 });
       t.scatterFish(3, 58);
@@ -373,6 +402,17 @@ const CLIMB_PLANS = [
       // ledge you were about to rest on simply is not there.
       t.traverse({ n: 3, w: 125, types: ['solid', 'fake'] });
       t.chimney({ height: 330 });
+      /* The wall lies too.
+         Three levels in this chapter had exactly the same vocabulary — 38, 42
+         and 43 — which on a level called Lying Ice is the joke going the wrong
+         way: its idea was carried entirely by a `types` parameter no player
+         reads and no tool can see. Wet ice is the same lie told about the
+         *wall* rather than the floor. It looks like every other face in the
+         shaft, it holds like every other face in the shaft, and it empties the
+         arms at twice the rate while it does. On the level whose subtitle is
+         "you will want to rest", the place you want to rest is the place that
+         charges for it. */
+      t.sodden({ side: -1, from: 0.46 });
       // And once more where the ice lies.
       //
       // By this level the player has ridden three of these and knows the rule:

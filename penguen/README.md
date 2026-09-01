@@ -343,7 +343,7 @@ geçmez, hata verip durur.
 
 ## Testler
 
-Tek komut, 47 paket (37 node + paketleme + 10 tarayıcı), kendi sunucusunu
+Tek komut, 48 paket (38 node + paketleme + 10 tarayıcı), kendi sunucusunu
 kurup kapatıyor ve portu doluysa bir yanına kayıyor:
 
 ```bash
@@ -1165,6 +1165,60 @@ hem de tek sakin yer.
 Ölçüm sonrası: dalış chapter'ının tekrarı **%12 → %6**, fiil sayısı 11 → 12,
 ve 52 ile 53 ikiz listesinden çıktı. Kalan ikizler 47–51'de, yani chapter'ın
 kasten sade olan açılışında.
+
+## Islak buz: dağın onuncu fiili
+
+Deniz altıncı fiilini alınca en tekrarlı chapter dağ oldu (%11), ve sebebi
+sayılabilir bir şeydi: **dokuz fiilin dokuzu da şekille ilgiliydi.** Tutamaklar
+ne kadar uzak, duvar hangi yöne yatıyor, tutulacak bir şey var mı. Chapter'ın
+kaynağı — kol gücü çubuğu — yalnızca *mesafeyle* harcanıyordu, yani chapter
+kendi cümlesiyle ("yukarısı emek") on beş bölüm boyunca tek boyutta tartışmış.
+
+Islak buz çukurun argümanı, dağa taşınmış hâli: **saniyeyle ödeten bir duvar
+bandı.** Hiçbir geometriyi değiştirmiyor — nereye gideceğin aynı — ama aynı
+tırmanış, aynı biçimde yapıldığında çubuğu daha erken bitiriyor. Oyalanan
+tırmanıcı tepeye elinde hiçbir şey kalmadan varıyor.
+
+**Cam buzun kopyası değil, karşıtı.** Cam buz duvarı ortadan kaldırıyor ve
+çubuğa dokunmuyor; bu duvarı tam olduğu yerde bırakıp çubuğu alıyor. 41. bölüm
+bunu kanıtladı: kendi notu cam buzun orada **her yükseklikte, iki duvarda da**
+reddedildiğini yazıyor — geri dönüşü olmayan bir hamle için kol gücü yok. Islak
+buz o hamle değil, o yüzden aynı bölüm onu **ödeyebiliyor**. Reddedilmek ile
+pahalı olmak farklı cevaplar.
+
+### Reddetme kuralı
+
+Bant ancak bacanın **kullanılmamış** bütçesi kadarını harcayabiliyor. Baca
+zaten tek çubukla tırmanılabildiğini kanıtlamış; bant o kanıtın artığından
+fazlasını sessizce harcayamaz. Yani bir plan kolay bir bacayı pahalı yapabilir,
+kanıtlanmış bir bacayı tırmanılamaz yapamaz. Uzunluk verilmezse besteci
+bacanın kaldırabileceği en uzun bandı kendisi seçiyor; gövde boyundan kısa
+olursa da reddediyor, çünkü hissedilmeyen bir mekanik mekanik değil.
+
+Bir de eski bir dersin tekrarı: `tests/climb-run.mjs` içindeki tek `intentFor`
+fonksiyonu, cam buz eklendiğinde dört yerden üçünün haberi olmadığı için
+yazılmıştı. `tests/sodden.mjs` artık dünyanın, çözücünün, fiziğin ve çizimin
+dördünün de aynı bandı okuduğunu statik olarak doğruluyor.
+
+### Nereye konduğu
+
+**35 Çifte Baca** — "nefes alacak yer yok" bir *yerleşim* iddiasıydı; çubuğun
+bundan haberi yoktu. İlk bacada akan su, ikincisine daha az kalarak varmak
+demek.
+
+**41 Cilalı Sırt** — chapter'ın en zor tırmanışı, cam buzun reddedildiği yer,
+ve kaya altından tekme atılan bir çıkıntının üstü.
+
+**43 Yalan Buz** — 38, 42 ve 43'ün fiil dağarcığı birebir aynıydı, ki adı
+"Yalan Buz" olan bir bölümde bu şakanın ters dönmesi demek: bölümün fikri tek
+bir `types` parametresinde saklıydı, ne oyuncu okuyor ne de araç görüyordu.
+Islak buz aynı yalanın **duvar** hakkında söylenmişi. Altyazısı "dinlenmek
+isteyeceksin" olan bölümde, dinlenmek isteyeceğin yer parasını alan yer.
+
+Ölçüm sonrası: dağın tekrarı **%11 → %10**. Kalan ikizler chapter'ın zorunlu
+iskeletinden geliyor (`base` → … → `crown`), ve onu kırmak fiil eklemekle değil
+bölümleri yeniden kurmakla olur — yani bu sayının bir sonraki hamlesi burada
+yazılı duruyor.
 
 ## Zorluk: dört chapter'ın ikisinde eğri yoktu
 
@@ -2846,11 +2900,11 @@ anlatmak değil, olan bir şeyi olduğundan iyi anlatmaktır.
 | Kimlik | Ad, `PNG-XXXXX` kimliği, 7 unvan, hepsi cihazda |
 | Hayalet | Kendi rekorun yanında koşuyor, paylaşım koduyla arkadaşınki de |
 | Müzik | Tek tema, 5 sahne, 5 katman, ses saatinde planlanıyor, ses dosyası yok |
-| Dil | Türkçe ve İngilizce, 312 metin, tarayıcıdan seçiliyor |
+| Dil | Türkçe ve İngilizce, 313 metin, tarayıcıdan seçiliyor |
 | Kayıt | Tek sürümlü JSON, ileri göç, dosyaya aktarma, tek tuşla silme |
 | Çevrimdışı | Servis çalışanı + tek dosya sürümü (666 KB) |
 | Girdi | Klavye, dokunmatik, gamepad |
-| Test | 37 node + paketleme + 10 tarayıcı paketi, hepsi tek komutta |
+| Test | 38 node + paketleme + 10 tarayıcı paketi, hepsi tek komutta |
 | Zorluk | Ölçülen eğri: `node tools/difficulty.mjs` |
 
 ### Yok, ve neden

@@ -673,6 +673,12 @@ export class Player {
     // simply stops being a wall — the penguin does not fall *off*, it stops
     // being able to hold on, which is a distinction the player can feel.
     if (this.clinging) {
+      /* Wet ice charges by the second, not by the pixel.
+         The bar has always been spent by *distance* — a longer wall costs more
+         because it takes longer. A sodden band spends it by time instead, so
+         the same climb made slowly costs more than the same climb made well,
+         which is the one thing the mountain could not previously say. */
+      const sap = intent.sap ?? 1; 
       // Topping out. Once the feet clear the head of the wall there is nothing
       // left to climb, and hanging there creeping sideways at grip speed would
       // take two seconds — so the pull-over happens at running pace and the
@@ -713,19 +719,19 @@ export class Player {
           const to = block.x + block.w / 2 - this.centerX;
           this.vx = clamp(to * 6, -this.moveSpeed * 0.9, this.moveSpeed * 0.9);
           this.vy = -CLIMB.climbSpeed * 0.35;
-          this.stamina -= CLIMB.drainClimb * dt;
+          this.stamina -= CLIMB.drainClimb * dt * sap;
           this.climbing = true;
           this.mantling = true;
         }
       } else if (intent.jumpHeld) {
         this.mantling = false;
         this.vy = -CLIMB.climbSpeed;
-        this.stamina -= CLIMB.drainClimb * dt;
+        this.stamina -= CLIMB.drainClimb * dt * sap;
         this.climbing = true;
       } else {
         this.mantling = false;
         this.vy = CLIMB.slideSpeed;
-        this.stamina -= CLIMB.drainHold * dt;
+        this.stamina -= CLIMB.drainHold * dt * sap;
       }
       // Stay pressed into the ice, otherwise the probe loses the wall the
       // instant friction eats the sideways speed and the grip flickers. While

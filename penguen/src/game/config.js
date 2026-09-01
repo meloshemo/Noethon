@@ -861,6 +861,53 @@ export const CLIMB = {
 };
 
 /**
+ * Islak buz — the mountain's tenth verb, and the first one that costs the bar.
+ *
+ * Chapter II has nine verbs and every one of them is about *shape*: how far
+ * apart the holds are, which way the wall leans, whether there is anything to
+ * hold at all. Its resource — the arm bar — is only ever spent by distance, so
+ * the chapter's own sentence ("up is work") has been argued with in exactly
+ * one dimension for fifteen levels.
+ *
+ * This is the trench's argument, moved to the mountain: a band of wall where
+ * holding on costs more per second than it does anywhere else. It changes no
+ * geometry, so nothing about *where* to go is different; what changes is that
+ * the same climb, made the same way, empties the bar sooner. A climber who
+ * dawdles on it arrives at the top with nothing.
+ *
+ * Deliberately not a version of glare ice. Glare ice removes the wall; this
+ * leaves it exactly where it is and makes it expensive, which is the only kind
+ * of difficulty this chapter did not have.
+ */
+export const SODDEN = {
+  /** What a second of hanging on wet ice costs, as a multiple. */
+  sap: 1.9,
+  /**
+   * And the most a band may ever charge.
+   *
+   * Past about two and a half the band stops being expensive and starts being
+   * a wall with a delay on it: the bar drains faster than a creep can cross
+   * even the shortest legal band, so there is no way to pay and the piece is
+   * a death sentence dressed as a cost. The composer refuses anything above
+   * this rather than trusting a plan to be reasonable.
+   */
+  max: 2.4,
+};
+
+/** How fast the bar drains here, as a multiple of the ordinary rate. */
+export function sapAt(zones, cx, cy) {
+  if (!zones) return 1;
+  let worst = 1;
+  for (const z of zones) {
+    if (z.kind !== 'sodden') continue;
+    if (cx < z.x || cx > z.x + z.w) continue;
+    if (cy < z.top || cy > z.bottom) continue;
+    worst = Math.max(worst, Math.min(SODDEN.max, z.sap ?? SODDEN.sap));
+  }
+  return worst;
+}
+
+/**
  * What one kick off an ice wall is actually worth.
  *
  * A chimney is crossed by bouncing between two faces, so the question that

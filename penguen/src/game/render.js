@@ -1325,6 +1325,56 @@ export class Renderer {
         continue;
       }
 
+      if (z.kind === 'sodden') {
+        /*
+         * Wet ice, and the drawing's whole job is to not be mistaken for glare
+         * ice. They sit on the same wall of the same shaft and they ask for
+         * opposite things: one says do not come here, the other says do not
+         * *linger* here. So this is dark where verglas is bright, it runs with
+         * water rather than shining, and its lips are warm-coloured — the
+         * colour the arm bar uses when it is emptying, which is the resource
+         * this band spends.
+         */
+        ctx.save();
+        const wall = z.face ?? (z.side < 0 ? z.x : z.x + z.w);
+        const bleed = Math.min(z.w, 30);
+        const off = z.side < 0 ? bleed : -bleed;
+        const g = ctx.createLinearGradient(wall + off, 0, wall, 0);
+        g.addColorStop(0, 'rgba(24,42,66,0)');
+        g.addColorStop(0.55, 'rgba(24,42,66,0.22)');
+        g.addColorStop(1, 'rgba(16,30,50,0.55)');
+        ctx.fillStyle = g;
+        ctx.fillRect(Math.min(wall, wall + off), z.top, bleed, h);
+
+        // Water actually running down it, at a speed that reads as running.
+        ctx.lineCap = 'round';
+        for (let i = 0; i < 6; i++) {
+          const rx = wall + (z.side < 0 ? -3 - i * 4.5 : 3 + i * 4.5);
+          const len = 10 + (i % 3) * 7;
+          const period = h + len;
+          const slide = this.reducedMotion ? 0 : (time * 110 + i * 37) % period;
+          const y = z.top + slide - len;
+          ctx.strokeStyle = `rgba(190,232,255,${0.15 + (i % 2) * 0.2})`;
+          ctx.lineWidth = 1.4;
+          ctx.beginPath();
+          ctx.moveTo(rx, Math.max(z.top, y));
+          ctx.lineTo(rx, Math.min(z.bottom, y + len));
+          ctx.stroke();
+        }
+
+        // Where the cost starts and stops, in the bar's own colour.
+        ctx.strokeStyle = 'rgba(255,170,90,0.7)';
+        ctx.lineWidth = 2;
+        for (const y of [z.top, z.bottom]) {
+          ctx.beginPath();
+          ctx.moveTo(z.side < 0 ? wall - 20 : wall, y);
+          ctx.lineTo(z.side < 0 ? wall : wall + 20, y);
+          ctx.stroke();
+        }
+        ctx.restore();
+        continue;
+      }
+
       if (z.kind === 'tunnel') {
         ctx.save();
         // Dark at the middle, open at both mouths, so entering and leaving are

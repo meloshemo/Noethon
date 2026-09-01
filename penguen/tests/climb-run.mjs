@@ -20,7 +20,7 @@
  */
 
 import { Player } from '../src/game/player.js';
-import { scaleForLevel, hushAt, glazeAt, swingAt} from '../src/game/config.js';
+import { scaleForLevel, hushAt, glazeAt, sapAt, swingAt} from '../src/game/config.js';
 import { CLIMB_LEVELS, CLIMB_DRAFTS } from '../src/game/climb.js';
 
 
@@ -44,6 +44,9 @@ function intentFor(def, p, keys) {
     push: 0,
     gravity: hushAt(def.zones, cx, p.y + p.h / 2),
     grip: glazeAt(def.zones, cx, p.y + p.h * 0.4) ? 0 : 1,
+    // Wet ice. Wired here, in the one function, exactly as the note above
+    // promised the next zone would be.
+    sap: sapAt(def.zones, cx, p.y + p.h * 0.4),
   };
 }
 

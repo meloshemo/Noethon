@@ -28,7 +28,7 @@
 
 import {
   reachFor, reachAt, climbBudget, kickGain, openingWidth, swingPeriod, swingAt,
-  CLIMB, PENGUIN, SWING, CHARGED, FIRM_ICE, settleFlags,
+  CLIMB, PENGUIN, SWING, CHARGED, FIRM_ICE, SODDEN, settleFlags,
 } from './config.js';
 import { nudgeClear } from '../core/util.js';
 
@@ -945,7 +945,7 @@ export class Tower {
     // rather than found again later, because "the last two walls" is not the
     // same thing as "this chimney" the moment a shaft has rests in it and puts
     // four columns down instead of two.
-    this._lastShaft = { leftFace, rightFace, top: wallTop, bottom: lowest, inner };
+    this._lastShaft = { leftFace, rightFace, top: wallTop, bottom: lowest, inner, ceiling };
 
     // A lip: rock jutting from a wall partway up, so one kick in the shaft has
     // to be taken under something. It cannot be gripped — a slab you could
@@ -1110,6 +1110,94 @@ export class Tower {
       top,
       bottom: top + span,
       side,
+      face: Math.round(face),
+    });
+    return this;
+  }
+
+  /**
+   * Islak buz: a band of wall that charges the arm bar double.
+   *
+   * Built as glare ice's twin on purpose — the same band on the same wall of
+   * the same shaft, read at the same place — because they are opposite halves
+   * of one question and a player who has learned to see one should recognise
+   * the other. Glare ice takes the wall away and leaves the bar alone. This
+   * leaves the wall exactly where it is and takes the bar.
+   *
+   * The refusal is the important part. A band is only legal if the shaft's
+   * *unused* budget can absorb what it charges: the chimney already proved it
+   * can be climbed on one bar, and this may not quietly spend more than the
+   * headroom that proof left over. So a plan cannot make a shaft unclimbable
+   * by decorating it — it can only make an easy one expensive.
+   */
+  sodden({ side = 1, from = 0.5, len = null, sap = SODDEN.sap } = {}) {
+    const shaft = this._lastShaft;
+    if (!shaft) throw new Error('ıslak buz için önce bir baca gerekiyor');
+    if (sap > SODDEN.max) {
+      throw new Error(`ıslak buz çok pahalı: ${sap}×, sınır ${SODDEN.max}×`);
+    }
+
+    const height = shaft.bottom - shaft.top;
+    /* The shaft's own ceiling, not a fresh guess at one.
+       The first version worked this out again from `climbBudget` and got a
+       different number, because a chimney is climbed by kicking and kicking is
+       cheaper than creeping — so it read every ordinary shaft as already spent
+       and refused a band on all of them. The piece that proved a shaft fits is
+       the piece that knows what fitting cost. */
+    const ceiling = shaft.ceiling ?? climbBudget(this.scale, shaft.inner).creep;
+    /* What the band costs, in the currency the shaft is measured in.
+       A second of wet ice costs `sap` seconds of bar, so crossing `span`
+       pixels of it spends what `span * sap` pixels of dry wall would. The
+       extra has to fit in what the shaft did not already use. */
+    const spare = ceiling - height;
+    /* A plan that names no length gets the longest band the shaft can afford,
+       rather than a fixed number that fits some shafts and not others. Named
+       or not, it is then checked against the same headroom: a plan may make an
+       easy shaft expensive, and may not make a proved one unclimbable. */
+    const span =
+      len != null
+        ? Math.round(len)
+        : Math.floor(Math.max(0, Math.min(150, height * 0.3, spare / (sap - 1))));
+    const extra = span * (sap - 1);
+    if (extra > spare) {
+      throw new Error(
+        `ıslak buz bandı bütçeyi aşıyor: ${Math.round(extra)}px fazladan, ` +
+          `${Math.round(Math.max(0, spare))}px boşluk var`,
+      );
+    }
+    // Below a body height it is not a band, it is a stripe: the penguin is
+    // through it before the extra drain amounts to anything, and the level
+    // has a mechanic in it that nobody can feel.
+    const shortest = PENGUIN.h * this.scale;
+    if (span < shortest) {
+      throw new Error(
+        `ıslak buz bandı çok kısa: ${span}px, en az ${Math.round(shortest)}px olmalı ` +
+          `(bacada ${Math.round(Math.max(0, spare))}px boşluk var)`,
+      );
+    }
+    const margin = Math.round(this.reach.height * 0.5);
+    const centre = shaft.bottom - height * from;
+    const top = Math.round(
+      Math.min(shaft.bottom - margin - span, Math.max(shaft.top + margin, centre - span / 2)),
+    );
+    if (top <= shaft.top + 8 || top + span >= shaft.bottom - 8) {
+      throw new Error(`ıslak buz bandı bacaya sığmıyor: ${height}px şaft, ${span}px bant`);
+    }
+
+    // Read at the penguin's middle, which when it is holding this wall is just
+    // inside the shaft — so the band reaches from the wall's back to the
+    // middle of the gap and no further, and never takes the other wall with it.
+    const reach = Math.round(shaft.inner * 0.45);
+    const wallX = side < 0 ? shaft.leftFace - WALL_T : shaft.rightFace;
+    const face = side < 0 ? wallX + WALL_T : wallX;
+    this.zones.push({
+      kind: 'sodden',
+      x: Math.round(side < 0 ? wallX : wallX - reach),
+      w: WALL_T + reach,
+      top,
+      bottom: top + span,
+      side,
+      sap: +sap.toFixed(2),
       face: Math.round(face),
     });
     return this;
