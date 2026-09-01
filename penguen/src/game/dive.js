@@ -33,7 +33,7 @@ const DIVE_PLANS = [
     en: { name: 'First Breath', subtitle: 'It is quiet under the ice' },
     target: 34,
     depth: 500,
-    breath: 0.56,
+    breath: 0.64,
     /* Only the corridor. Two slots, both wide, both roughly where the swimmer
        already is: the level is here to say "press to go down, let go to come
        up" and then get out of the way. */
@@ -56,7 +56,7 @@ const DIVE_PLANS = [
     en: { name: 'Press Down', subtitle: 'Going up is free, going down is not' },
     target: 40,
     depth: 560,
-    breath: 0.61,
+    breath: 0.68,
     /* The asymmetry, stated. Every slot is near the bed, so the whole level is
        paid for in the expensive direction and the rises are the rests. */
     build: (d) => {
@@ -87,7 +87,7 @@ const DIVE_PLANS = [
     en: { name: 'Narrow Passage', subtitle: 'The ice hangs low' },
     target: 44,
     depth: 560,
-    breath: 0.65,
+    breath: 0.7,
     /* Three slots at the same height, close together. Nothing to think about
        and no room to be wrong: the first level that is about the line rather
        than about the plan. */
@@ -110,7 +110,7 @@ const DIVE_PLANS = [
     en: { name: 'Long Breath', subtitle: 'The next hole is far' },
     target: 46,
     depth: 540,
-    breath: 0.78,
+    breath: 0.84,
     /* Nothing in the way at all. The obstacle is the distance, and this is the
        level that tells you the ceiling of ice is itself the hazard. */
     build: (d) => {
@@ -131,7 +131,7 @@ const DIVE_PLANS = [
     en: { name: 'Leopard Seal', subtitle: 'You are not alone' },
     target: 48,
     depth: 580,
-    breath: 0.69,
+    breath: 0.74,
     /* A new thing to be frightened of, so the breath steps back down. The seal
        gets open water on both sides: it has to be something you see coming and
        swim around, not something you meet inside a slot. */
@@ -154,7 +154,7 @@ const DIVE_PLANS = [
     en: { name: 'The Current', subtitle: 'The water carries you' },
     target: 50,
     depth: 560,
-    breath: 0.75,
+    breath: 0.79,
     /* Two rivers, one above the other, running opposite ways.
        This level used to be with-you then against-you, one after the other,
        which is a current happening *to* you: there is nothing to decide, only
@@ -191,7 +191,7 @@ const DIVE_PLANS = [
     en: { name: 'Sawtooth', subtitle: 'Up, down, up' },
     target: 52,
     depth: 600,
-    breath: 0.78,
+    breath: 0.82,
     /* Top, bottom, top, bottom — and this is the level where that finally
        means something. The comment here used to claim depth was the thing that
        cost, and it was not true: the clock ran at one second per second
@@ -225,7 +225,7 @@ const DIVE_PLANS = [
     en: { name: "The Glacier's Belly", subtitle: 'The ceiling comes down' },
     target: 54,
     depth: 620,
-    breath: 0.9,
+    breath: 0.92,
     /* The ceiling never lifts. Every slot is a squeeze and they are all near
        the bed, so the whole level is swum in the expensive half of the water
        with no room to drift. */
@@ -289,7 +289,7 @@ const DIVE_PLANS = [
     en: { name: 'Black Water', subtitle: 'A current and a squeeze at once' },
     target: 58,
     depth: 620,
-    breath: 0.8,
+    breath: 0.84,
     /* The two things that take your line away, at the same time. A slot is a
        precise place to be, and a current is the water deciding where you are.
 
@@ -373,7 +373,7 @@ const DIVE_PLANS = [
     en: { name: 'Fishbone', subtitle: 'The icicles crowd in' },
     target: 64,
     depth: 620,
-    breath: 0.84,
+    breath: 0.88,
     /* No open water anywhere. Slot after slot, alternating shallow and deep,
        so there is never a stretch in which to settle and never a moment the
        line is not being asked for. */
@@ -411,7 +411,7 @@ const DIVE_PLANS = [
     en: { name: 'Leopard and Current', subtitle: 'You drift while you flee' },
     target: 66,
     depth: 620,
-    breath: 0.9,
+    breath: 0.92,
     /* Being hunted takes a line; a current takes it back. Everything the last
        eleven levels taught, arriving together, on eleven percent of a lung. */
     build: (d) => {
@@ -435,7 +435,7 @@ const DIVE_PLANS = [
     en: { name: 'The Road on the Bottom', subtitle: 'The ceiling has closed entirely' },
     target: 70,
     depth: 660,
-    breath: 0.82,
+    breath: 0.88,
     /* Pinned to the seabed from end to end, and now the seabed is the cold.
        The cheap direction is gone twice over: there is no rising to rest,
        because the slots are all at the bottom, and there is no resting at the
@@ -462,7 +462,7 @@ const DIVE_PLANS = [
     en: { name: 'Open Sea', subtitle: 'Where the ice ends' },
     target: 78,
     depth: 660,
-    breath: 0.88,
+    breath: 0.94,
     /* The wall of the chapter, and it is meant to be one. Two seals, two
        currents, slots at both ends of the column and the longest unbreathed
        swim in the game. There is an answer and it is a narrow one: this is the
