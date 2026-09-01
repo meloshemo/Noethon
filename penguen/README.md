@@ -1108,6 +1108,73 @@ olmanın bütün problem olduğu anda çalışmayı bırakıyor.
 ve 48 ile 57 ikiz listesinden çıktı. Chapter artık oyundaki en tekrarlı bölüm
 değil.
 
+## CEO taraması: on altı cihaz, bir kumanda kolu, ve bir kuş
+
+### Kuş
+
+Senin tarif ettiğin şey gerçekti ve **üç ayrı hatanın toplamıydı**.
+
+Kaçıran kuş ekranda yok oluyordu: dalış sayacı dolduğu karede diziden
+siliniyordu, nerede olursa olsun. Normal bir kaçışa karşı ölçüldüğünde (150
+piksel yana) bu her seferinde ekranın içiydi, ekran ortasına ortanca **32
+piksel** — kuş penguenin suratının dibinde buharlaşıyordu. Artık bir çıkışı
+var: tırmanarak uzaklaşıyor ve ancak gerçekten görüş alanının dışına çıkınca
+siliniyor (ortanca 638 piksel).
+
+Ve gökten değil, buzun yanından geliyordu. Giriş noktası
+`max(contentTop - 40, targetY - 340)` idi; o `max` yapmak istediğinin tersini
+yapıyor, penguen yukarıdayken giriş noktasını en yüksek buzun kırk piksel
+üstüne kadar **aşağı** çekiyor. Beş kalkıştan ikisi bölümün kendi buzunun
+tepesinden aşağıda başlıyordu — yerden bakınca bu, gökten inen bir kuş değil,
+**buzun altından çıkan bir şey.**
+
+Üçüncüsü: `leaving` yazılıyor, hiçbir yerde okunmuyordu. Bir kuş civcivi
+kaptığında diğerlerine "eve dönün" deniyordu ve satırın yorumu bunu
+anlatıyordu; hiçbir kod ona bakmıyordu.
+
+### Kumanda kolu
+
+Oyunun **testi olmayan tek girdi yolu** buydu, ve readme bunu itiraf
+ediyordu. Testi olmadığı için de üç yerde yalan söylüyordu: yalnızca alttaki
+iki yüz tuşu zıplatıyordu (X ve Y ölüydü), Start hiçbir şey yapmıyordu — yani
+yalnızca kumandayla oynayan biri **duraklatma ekranında kilitli kalıyordu** —
+ve `getGamepads()` bir kez hata atınca kumanda oturumun geri kalanı boyunca
+kapanıyordu. Üçü de düzeltildi, ve `browser-gamepad` artık gerçek tarayıcıda
+sahte bir pad takıp hepsini deniyor.
+
+### On altı cihaz
+
+`browser-layout` üç boyuta bakıyordu. On altı gerçek boyutluk bir tarama iki
+şey buldu.
+
+**320×568** — hâlâ kullanılan en küçük telefon — dokunmatik tuşlar sahnenin
+*yüksekliğine* göre ölçüldüğü için, boyu bol ama eni dar olan bu ekranda
+tavana dayanıyor ve ekranın **%12.1**'ini kaplıyordu (normal yatay telefonda
+%6.5). Ölçü artık `cqmin`: en dar yöne bakıyor. Yatay telefonlarda küçük olan
+zaten yükseklik, yani orada hiçbir şey değişmiyor; yalnızca sıkışık şekiller
+küçülüyor.
+
+Ve aynı ekranda **bölüm sonu kartının ana düğmesi ekranın 230 piksel altında
+kalıyordu.** Kart 852 piksel, ekran 568. Overlay kaydığı için ulaşılabilirdi —
+ama bir bölümü yeni bitirmiş oyuncu, sonrakini başlatan düğmeyi aramak zorunda
+kalmamalı.
+
+Denenen ve işe yaramayan üç şey, sırasıyla öğretici: iki sütunlu sonuç
+tablosu **daha uzun** (dört öğe iki sütunda iki satır eder); yapışkan bir alt
+şerit burada hiç çalışamaz, çünkü `.sheet__actions` üçüncü `.win__half`'ın
+içinde ve yapışkan bir kutu kendi ebeveyninden asla çıkamaz — tam o sütunun
+bittiği yerde, ekranın altında duruyordu; ve dolguları kısmak düğmeyi sığmaya
+**dört piksel** yaklaştırdı, ki bu bir çözüm değil, başka bir dilde daha uzun
+bir kelimeyi bekleyen bir tesadüftür.
+
+Çözüm, düğmeleri kendi sütunlarında ödüllerin üstüne almaktı: tek adımda 145
+piksel, çünkü altındaki ödüller ve ipucu tam olarak o kadar ediyor. Hiçbir şey
+gizlenmiyor — kazanılan eşyalar düğmenin altında duruyor, bakmak isteyen
+bakar. Sonraki bölümü başlatan düğme aranacak bir şey değil.
+
+`browser-layout` artık iki uç boyutu da kalıcı olarak taşıyor: en dar telefon
+ve enine ekran.
+
 ## Etkisiz mekanik taraması
 
 Akıntı onarıldıktan sonra sorulması gereken soru şuydu: **başka kaç tanesi

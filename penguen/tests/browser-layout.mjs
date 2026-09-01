@@ -19,10 +19,23 @@
 
 import { launch, openGame, checklist } from './browser-kit.mjs';
 
+/*
+ * Three shapes were not enough, and a sweep of sixteen real ones found the
+ * gap: at 320 by 568 — the smallest phone still in daily use — the pads were
+ * sized off the stage's *height*, which a tall narrow screen has plenty of,
+ * and ended up covering 12.1% of it against 6.5% on an ordinary landscape
+ * handset. Nothing in the three tested shapes could see that, because none of
+ * them is cramped in one direction only.
+ *
+ * So the two extremes are permanent residents now: the narrowest phone, and a
+ * screen far wider than it is tall.
+ */
 const SIZES = [
   ['telefon', 390, 844],
   ['yatay', 844, 390],
+  ['dar telefon', 320, 568],
   ['masaüstü', 1280, 800],
+  ['geniş ekran', 2560, 1080],
 ];
 
 /** Screens worth checking, and how to get to each one. */

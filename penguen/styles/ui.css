@@ -199,8 +199,19 @@
  * it is a coincidence. Nothing above 320px ever reaches them.
  */
 .touch {
-  --pad: clamp(3.25rem, 20cqh, 5rem);
-  --pad-jump: clamp(4rem, 24.5cqh, 6rem);
+  /*
+   * Sized against the *smaller* side of the stage, not its height.
+   *
+   * Keyed to height alone, a tall narrow screen gets the full cap: a 320 by
+   * 568 phone — the smallest still in daily use — has plenty of height and
+   * almost no width, so 80 pixel pads covered 12.1% of it, against 6.5% on a
+   * normal landscape handset. `cqmin` asks the question that actually matters,
+   * which is how much room there is in the tightest direction. On every
+   * landscape phone the smaller side *is* the height, so nothing there
+   * changes; only the cramped shapes get smaller pads.
+   */
+  --pad: clamp(3.25rem, 20cqmin, 5rem);
+  --pad-jump: clamp(4rem, 24.5cqmin, 6rem);
   --pad-gap: clamp(0.45rem, 2.2cqh, 0.85rem);
   --pad-edge: clamp(0.375rem, 1.6cqh, 1rem);
   position: absolute;
@@ -1142,6 +1153,88 @@ kbd {
   gap: var(--s-4);
   width: 100%;
   min-width: 0;
+}
+
+/*
+ * The win card on a screen that is short *and* narrow.
+ *
+ * The three-column rule below rescues a wide screen, and a tall one has the
+ * room to stack. A 320 by 568 phone has neither: measured, the card came to
+ * **852 pixels in a 568 pixel screen**, so "Sıradaki bölüm" sat two hundred
+ * and thirty pixels below the bottom edge. The overlay scrolls, so it was
+ * reachable — but a player who has just finished a level should not have to go
+ * looking for the button that starts the next one.
+ *
+ * Two things, and the second is the one that guarantees it. The card gets
+ * tighter: the secondary buttons share a row and the padding comes in. And
+ * then the actions are pinned to the bottom of the card, so however long the
+ * payout grows — a
+ * doubling offer, a league box, a share panel — the primary button is on
+ * screen. The details scroll behind it, which is the right way round: the
+ * numbers are for reading, the button is for pressing.
+ */
+@container stage (max-height: 40rem) {
+  .sheet--win {
+    padding: var(--s-4) var(--s-4) 0;
+    gap: var(--s-3);
+  }
+  /*
+   * The buttons come before the trophies in their own column.
+   *
+   * This is what actually fixed it, and it is worth saying why the obvious
+   * things did not. Two-up results are *taller* than four-up, because four
+   * items in two columns is two rows. A sticky footer cannot work here at all:
+   * `.sheet__actions` lives inside the third `.win__half`, and a sticky box
+   * can never leave its own parent, so it stopped exactly where that column
+   * stopped — below the screen. And shaving padding got the primary button to
+   * within four pixels of fitting, which is not a fix, it is a coincidence
+   * waiting for a longer word in another language.
+   *
+   * Moving the actions to the top of their column moves them a hundred and
+   * forty-five pixels up in one step, because that is what the rewards and the
+   * hint underneath them are worth. Nothing is hidden: the earned items are
+   * still there, below the button, for a player who wants to look. The button
+   * that starts the next level is not something you should have to look for.
+   */
+  .sheet--win .sheet__actions {
+    order: -1;
+  }
+  .sheet--win .results {
+    padding: var(--s-2) 0;
+  }
+  .sheet--win .win__half {
+    gap: var(--s-2);
+  }
+  /*
+   * The itemised breakdown goes, the total and the doubling offer stay.
+   *
+   * The rows are a receipt for a number that is printed directly above them,
+   * so on the one screen size where the card does not fit they are the
+   * cheapest hundred pixels in it. What must not go is the offer to double the
+   * catch — that is the whole reason the card pauses here — so it stays, and
+   * the button that starts the next level comes up above the fold with it.
+   */
+  .sheet--win .payout__rows,
+  .sheet--win .payout__missions,
+  .sheet--win #winShopBtn {
+    display: none;
+  }
+  .sheet--win .stars {
+    transform: scale(0.8);
+    margin: calc(var(--s-2) * -1) 0;
+  }
+  .sheet--win .sheet__actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .sheet--win .sheet__actions .btn--primary {
+    width: 100%;
+  }
+  .sheet--win .sheet__actions .btn {
+    width: auto;
+    flex: 1 1 8rem;
+  }
 }
 
 @container stage (min-width: 44rem) {
