@@ -50,7 +50,7 @@ const CLIMB_PLANS = [
     subtitle: 'Yukarısı çok uzak',
     en: { name: "The Glacier's Foot", subtitle: 'The top is a long way up' },
     target: 40,
-    effort: 1.251,
+    effort: 0.7,
     build: (t) => {
       t.base({ w: 300 });
       t.steps({ n: 3, rise: 0.6, w: 150 });
@@ -68,7 +68,7 @@ const CLIMB_PLANS = [
     subtitle: 'Kollarında ne kadar var',
     en: { name: 'Holding On', subtitle: 'How much your arms have left' },
     target: 46,
-    effort: 1.02,
+    effort: 0.76,
     build: (t) => {
       t.base({ w: 260 });
       t.steps({ n: 2, rise: 0.62, w: 140 });
@@ -87,7 +87,7 @@ const CLIMB_PLANS = [
     subtitle: 'İki duvar arası',
     en: { name: 'Narrow Cleft', subtitle: 'Between two walls' },
     target: 52,
-    effort: 0.78,
+    effort: 0.82,
     build: (t) => {
       t.base({ w: 250 });
       t.steps({ n: 2, rise: 0.6, w: 140 });
@@ -108,7 +108,7 @@ const CLIMB_PLANS = [
     subtitle: 'Nefes alacak yer yok',
     en: { name: 'Twin Chimneys', subtitle: 'Nowhere to catch your breath' },
     target: 58,
-    effort: 0.78,
+    effort: 0.88,
     build: (t) => {
       t.base({ w: 240 });
       t.steps({ n: 2, rise: 0.62, w: 135 });
@@ -128,7 +128,7 @@ const CLIMB_PLANS = [
     subtitle: 'Yarı yolda bir çıkıntı',
     en: { name: 'Long Chimney', subtitle: 'One ledge halfway up' },
     target: 64,
-    effort: 0.665,
+    effort: 0.94,
     build: (t) => {
       t.base({ w: 240 });
       t.steps({ n: 2, rise: 0.62, w: 135 });
@@ -174,7 +174,7 @@ const CLIMB_PLANS = [
     subtitle: 'Gökyüzü kapandı',
     en: { name: 'The Overhang', subtitle: 'The sky is gone' },
     target: 66,
-    effort: 1.025,
+    effort: 1.0,
     build: (t) => {
       t.base({ w: 240 });
       t.steps({ n: 2, rise: 0.6, w: 140 });
@@ -220,7 +220,7 @@ const CLIMB_PLANS = [
     subtitle: 'Dinlenecek yer güvenli değil',
     en: { name: 'Brittle Steps', subtitle: 'The place to rest is not safe' },
     target: 70,
-    effort: 0.861,
+    effort: 1.06,
     build: (t) => {
       t.base({ w: 230 });
       t.steps({ n: 2, rise: 0.6, w: 135 });
@@ -251,7 +251,7 @@ const CLIMB_PLANS = [
     subtitle: 'Yukarıdan gelen',
     en: { name: 'Serac', subtitle: 'Coming down from above' },
     target: 74,
-    effort: 0.912,
+    effort: 1.12,
     build: (t) => {
       t.base({ w: 230 });
       t.steps({ n: 2, rise: 0.6, w: 135 });
@@ -278,7 +278,7 @@ const CLIMB_PLANS = [
     subtitle: 'Şaft bir borudur',
     en: { name: 'Wind in the Chimney', subtitle: 'A shaft is a pipe' },
     target: 78,
-    effort: 0.989,
+    effort: 1.18,
     build: (t) => {
       t.base({ w: 230 });
       t.steps({ n: 2, rise: 0.6, w: 135 });
@@ -307,7 +307,7 @@ const CLIMB_PLANS = [
     subtitle: 'Ayak tutmuyor',
     en: { name: 'Polished Ridge', subtitle: 'Your feet find nothing' },
     target: 80,
-    effort: 0.962,
+    effort: 1.24,
     build: (t) => {
       t.base({ w: 225 });
       t.traverse({ n: 3, w: 130, types: ['slip', 'solid'] });
@@ -335,7 +335,7 @@ const CLIMB_PLANS = [
     subtitle: 'İki mola, bir nefes',
     en: { name: 'High Shaft', subtitle: 'Two rests, one breath' },
     target: 86,
-    effort: 0.872,
+    effort: 1.3,
     build: (t) => {
       t.base({ w: 225 });
       t.steps({ n: 2, rise: 0.6, w: 132 });
@@ -364,7 +364,7 @@ const CLIMB_PLANS = [
     subtitle: 'Dinlenmek isteyeceksin',
     en: { name: 'Lying Ice', subtitle: 'You will want to rest' },
     target: 90,
-    effort: 1.205,
+    effort: 1.36,
     build: (t) => {
       t.base({ w: 220 });
       t.steps({ n: 2, rise: 0.6, w: 132 });
@@ -420,7 +420,7 @@ const CLIMB_PLANS = [
     subtitle: 'Aşağı bakma',
     en: { name: 'Ice Tower', subtitle: 'Do not look down' },
     target: 104,
-    effort: 1.219,
+    effort: 1.48,
     build: (t) => {
       t.base({ w: 215 });
       t.steps({ n: 2, rise: 0.6, w: 130 });
