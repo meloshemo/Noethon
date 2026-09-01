@@ -70,6 +70,16 @@ const CHAPTERS = [
      * below about a quarter of the inputs. Writing 0.10 here would make the
      * tool report failure at the thing it cannot measure rather than at the
      * thing the chapter is doing. Measured range, measured target.
+     *
+     * And the chapter's own dial is already spent, which is worth writing down
+     * so it is not re-derived. `tight` in levels.js ramps 0.8 → 1.3 and the
+     * composer caps it at 1.45; pushed to that cap, level 31 asks for 182px
+     * jumps against a 163px reach and `validate-levels` refuses with
+     * twenty-one errors. 1.45 × 163/182 is 1.30 — the value it already ends
+     * on. Chapter I is as tight as these plans go, so the flatness this tool
+     * reports here is partly the metric saturating and partly the last level
+     * being built out of gentler *kinds* of jump than the middle. Making it
+     * harder means editing the plans, not the ramp.
      */
     want: [0.42, 0.22],
     easier: 'up',
