@@ -26,7 +26,7 @@
 
 import {
   PENGUIN, SWIM, swimReach, breathRange, breathFor, swimCost, TRENCH, CHARGED,
-  VENT, ventWait, swimSpeed, CURRENT, flowAt, FLUME,
+  VENT, ventWait, swimSpeed, CURRENT, flowAt, FLUME, EDDY,
 } from './config.js';
 import { nudgeClear } from '../core/util.js';
 
@@ -934,6 +934,65 @@ export class Deep {
     // rather than smeared into the approach.
     this._node(x0 + len * 0.25, lane, bottom - top, 'flume');
     this._node(x0 + len * 0.75, lane, bottom - top, 'flume');
+    return this._keepBreathing();
+  }
+
+  /**
+   * A girdap: water arranged in a circle instead of a line.
+   *
+   * Every other thing the sea does is uniform inside a rectangle — the same
+   * push wherever you are in it — which makes a current and a flume things you
+   * budget for rather than things you read. This one is the same two force
+   * channels bent into a ring, and that is the whole difference: where you are
+   * inside it decides what it does to you.
+   *
+   * The cell is drawn around an **open** span, wide and tall, because a
+   * rotation needs room to be a rotation. Squeezed into a corridor it would
+   * just be a current that changes its mind, and the eye — the still spot in
+   * the middle, which is the level's answer — would be inside the ice.
+   *
+   * Three nodes: the rim you enter by, the eye, and the rim you leave by. The
+   * two ring crossings get priced separately by `swimCost`, which reads the
+   * same `flowAt`/`flumeAt` the world does, so the fare is charged once and
+   * agreed on by everybody.
+   */
+  eddy({ at = 0.5, r = 190, spin = 0.5, lead = null } = {}) {
+    this._breathOwed();
+    const margin = 74;
+    const radius = Math.round(
+      Math.min(r, (this.depth - margin * 2) / 2, this.depth / 2 - this.penguinH),
+    );
+    const mid = Math.round(
+      Math.max(margin + radius, Math.min(this.depth - margin - radius, this.depth * at)),
+    );
+    const top = mid - radius;
+    const bottom = mid + radius;
+    /* The approach, long enough that arriving at the rim on the eye's line is
+       an honest descent rather than a teleport.
+
+       The whole descent has to be finished by the *rim*, not by the eye. The
+       first version deducted the radius from it on the reasoning that the
+       swimmer is still dropping as they cross the cell — which is true and
+       irrelevant, because the entry node sits at the eye's depth a few pixels
+       inside the rim. The composer caught it on the finale and said so in
+       pixels. */
+    const need = Math.max(0, this.reachFor(mid - this.lane));
+    this._span(Math.round(lead ?? Math.max(90, need + 40)), margin, this.depth - margin);
+    const x0 = this.x;
+
+    this.zones.push({
+      kind: 'eddy',
+      x: Math.round(x0),
+      y: Math.round(top),
+      w: radius * 2,
+      h: radius * 2,
+      spin: +Math.max(-EDDY.max, Math.min(EDDY.max, spin)).toFixed(3),
+    });
+
+    this._span(radius * 2, top, bottom);
+    this._node(x0 + radius * 0.12, mid, radius * 2, 'eddy');
+    this._node(x0 + radius, mid, radius * 2, 'eye');
+    this._node(x0 + radius * 1.88, mid, radius * 2, 'eddy');
     return this._keepBreathing();
   }
 

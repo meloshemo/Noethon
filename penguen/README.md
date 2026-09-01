@@ -147,7 +147,7 @@ hedef var ve **gün boyunca birikiyorlar**: tek turda hepsini yapman gerekmiyor.
 | [Çalıştırma](#çalıştırma) · [Testler](#testler) | Nasıl açılır, nasıl doğrulanır |
 | [Mimari](#mimari) | Dosya düzeni ve neden böyle |
 | [Zirve](#zirve-tırmanış) | Tutunma, tekme, baca, ikinci bölümün fiili |
-| [Buz Altı](#buz-altı-dalış) | Dalış, nefes, akıntı, üçüncü bölümün fiili |
+| [Buz Altı](#buz-altı-dalış) | Dalış, nefes, akıntı, girdap, üçüncü bölümün fiili |
 | [Kar Topu](#kar-topu-hizalama) | Hizalama, nişan kilidi, kaçış, dördüncü bölümün fiili |
 | [Zorluk eğrisi](#zorluk-eğrisi) | Rampa tasarımı |
 | [Buz türleri](#buz-türleri) · [Tehlikeler](#tehlikeler) | Oyun içi her mekanik |
@@ -343,7 +343,7 @@ geçmez, hata verip durur.
 
 ## Testler
 
-Tek komut, 46 paket (36 node + paketleme + 10 tarayıcı), kendi sunucusunu
+Tek komut, 47 paket (37 node + paketleme + 10 tarayıcı), kendi sunucusunu
 kurup kapatıyor ve portu doluysa bir yanına kayıyor:
 
 ```bash
@@ -1107,6 +1107,64 @@ olmanın bütün problem olduğu anda çalışmayı bırakıyor.
 Ölçüm sonrası: dalış chapter'ının tekrarı **%19 → %12**, fiil sayısı 10 → 11,
 ve 48 ile 57 ikiz listesinden çıktı. Chapter artık oyundaki en tekrarlı bölüm
 değil.
+
+## Girdap: denizin altıncı fiili
+
+Oluktan sonra dalış chapter'ı yine en tekrarlı bölüm hâline geldi (%12), ve bu
+sefer sebebi kombinatorik değildi: **denizin bütün suyu düz akıyordu.** Akıntı
+bir dikdörtgenin içinde her yerde aynı itiş, oluk da öyle. İkisi de *okunacak*
+bir şey değil, **bütçelenecek** bir şey — kenarda planını yapıyorsun ve o plan
+karşı tarafa kadar aynı kalıyor.
+
+Girdap aynı iki kuvvet kanalının bir çembere bükülmüş hâli, ve tek fark bu:
+**içinde nerede olduğun, sana ne yaptığına karar veriyor.** Halkayı geçerken
+yana savruluyorsun; kenar da göz de durgun.
+
+Durgun göz meselenin kendisi. Cevabı olmayan bir tehlike duvardır, ve denizin
+yaptığı her şey en azından nefesle ödenebiliyor. Bu **çözülebiliyor**: ortaya
+gel, deniz seni bırakıyor. Bir dalışta hedefi olmayan bir korku değil, hedefi
+olan bir korku.
+
+### İki kanıt katmanı ilk kez birbiriyle çelişti
+
+Girdap `flowAt` ve `flumeAt`'in ikisini birden besliyor, yani dünya, bestecinin
+fiyatı, doğrulayıcı ve çizim aynı fonksiyondan okuyor — akıntının bir chapter
+boyunca ölü kalmasına izin veren sapma bir daha olamaz. Ama yeni bir sapma
+çıktı ve tam tersi yönde:
+
+**Rota hattı gözün içinden geçiyor.** `swimCost` hattı örnekliyor, gözde su
+yok, yani hücre besteciye neredeyse **bedava** görünüyordu. Finale bir girdap
+konduğunda doğrulayıcı geçirdi — ve çözücü çıkışa **dört yüz piksel kala**,
+elli dört denemenin hepsinde boğuldu. Bir yüzücü bir hat değil.
+
+Cevap `EDDY.charge`: halka, yaptığı itişten daha pahalı, çünkü düzeltme
+hücrenin ortasında **yön değiştiriyor**. Oluk sabit bir itişe karşı hat
+tutmanın parasını alıyor; halka, tutulan hattın yarı yolda ters dönmesinin.
+Fiyatlandıktan sonra besteci o finali **kendisi reddetti** ve gerekçesini
+piksel cinsinden yazdı — iki katmanın çelişkisinin ait olduğu yer orası.
+
+Bunun bir sonucu daha var, ve bölüm yerleştirirken belirleyici oldu: **akıntı
+uzunluk bakımından bedava, girdap değil.** Akıntı zaten var olan koridorun
+üstüne sürülen bir bölge; girdap kendi iki yüz seksen pikselini ve giriş
+rampasını yanında getiriyor. 59'un iki yarısı da tam bir ciğerdi, ikisi de
+odayı kaldıramadı — bu bir eksiklik değil, bölümün dolu olduğunun ölçüsü.
+
+### Nereye konduğu
+
+**52 Akıntı** — üst üste ters akan iki nehir bu bölümün var olma sebebi, ve
+iki bandın birbirini sıyırdığı yerde suyun gerçekte yaptığı şey girdap. Akıntı
+adlı bölümün son yaptığı şey **dönmek**. İlk yarı derinliğin iki düz nehir
+arasında bir seçim olduğunu öğretiyor; halkanın yukarısı diye bir yer yok, ve
+göz tam ortada — yani beş dakikadır kullanmadığın tek derinlik.
+
+**53 Testere Dişi** — dişin birinde. Bölümün bütün şekli yukarı-aşağı-yukarı ve
+suyun buna dair hiçbir fikri yoktu; halka artık seni geçmeye çalıştığın dişin
+boyunca savuruyor, göz de tam dibinde. Bölümün en derin noktası hem en kötü
+hem de tek sakin yer.
+
+Ölçüm sonrası: dalış chapter'ının tekrarı **%12 → %6**, fiil sayısı 11 → 12,
+ve 52 ile 53 ikiz listesinden çıktı. Kalan ikizler 47–51'de, yani chapter'ın
+kasten sade olan açılışında.
 
 ## Zorluk: dört chapter'ın ikisinde eğri yoktu
 
@@ -2792,7 +2850,7 @@ anlatmak değil, olan bir şeyi olduğundan iyi anlatmaktır.
 | Kayıt | Tek sürümlü JSON, ileri göç, dosyaya aktarma, tek tuşla silme |
 | Çevrimdışı | Servis çalışanı + tek dosya sürümü (666 KB) |
 | Girdi | Klavye, dokunmatik, gamepad |
-| Test | 36 node + paketleme + 10 tarayıcı paketi, hepsi tek komutta |
+| Test | 37 node + paketleme + 10 tarayıcı paketi, hepsi tek komutta |
 | Zorluk | Ölçülen eğri: `node tools/difficulty.mjs` |
 
 ### Yok, ve neden

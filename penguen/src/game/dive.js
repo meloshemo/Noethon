@@ -179,6 +179,17 @@ const DIVE_PLANS = [
       d.hole();
       d.current({ flow: -0.26, band: 0.36, at: 0.26 });
       d.current({ flow: -0.44, band: 0.36, at: 0.76, keep: true });
+      /* And then the two rivers meet.
+         Stacked opposing bands are the reason this level exists, and a girdap
+         is what water actually does where two of them shear past each other —
+         so on the level named after the current, the last thing it does is
+         turn. It is placed in the second half deliberately: the first half
+         teaches that depth is a choice between two straight rivers, and this
+         is where that lesson stops applying, because a ring has no upstream to
+         get above. The eye is the answer and the eye is dead centre, which on
+         a level that has spent five minutes teaching you to pick a depth is
+         the one depth you have not been using. */
+      d.eddy({ at: 0.5, r: 165, spin: 0.5 });
       d.stretch({ gap: 170, from: 0.42 });
       d.surfaceOut();
       d.scatterFish(3);
@@ -212,6 +223,15 @@ const DIVE_PLANS = [
          breathes, which makes the deepest point on the level the one place you
          want to be, and makes you wait there while the cold runs the clock. */
       d.vent();
+      /* And the tooth after it turns.
+         The sawtooth's whole shape is up-down-up, which the water had no
+         opinion about: every stroke cost the same and the only variable was
+         how far. A girdap on one of the down-strokes gives the shape an
+         argument — the ring throws you along the tooth you are trying to
+         cross, and the still eye is exactly at the bottom of it, so the
+         deepest point of the level is both the worst place to be and the only
+         calm one. */
+      d.eddy({ at: 0.62, r: 180, spin: 0.42 });
       d.gate({ at: 0.24, gap: 162 });
       d.stretch({ gap: 165, from: 0.26 });
       d.surfaceOut();

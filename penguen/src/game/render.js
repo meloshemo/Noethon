@@ -10,7 +10,7 @@
 
 import {
   VIEW, viewFor, AMBUSH, CHARGED, COIL, QUANTUM, SLACK, CLIMB, BRAWL, TRENCH, VENT, BANK, GLAZE,
-  CURRENT, FLUME, SWIM, lobShot, swimSpeed,
+  CURRENT, FLUME, EDDY, SWIM, lobShot, swimSpeed,
 } from './config.js';
 import { getSkin, getTrail } from './skins.js';
 import { Pose } from './pose.js';
@@ -1093,6 +1093,82 @@ export class Renderer {
         ctx.lineTo(z.x + z.w, y);
         ctx.stroke();
       }
+      ctx.restore();
+    }
+
+    /**
+     * Girdap, drawn as the thing it is: rings, turning.
+     *
+     * The same visual language as the other two — streaks moving at the speed
+     * the water moves — bent into circles, so a player who has learned what a
+     * current looks like reads this without being told. What the drawing has
+     * to make obvious is the part that is *not* like the others: the still eye
+     * in the middle, which is the answer to the whole hazard. So the wash is
+     * darkest in the ring and clears at the centre, and the centre gets a
+     * quiet mark of its own. A player should be able to see where to aim
+     * before they are anywhere near it.
+     */
+    for (const z of world.zones) {
+      if (z.kind !== 'eddy') continue;
+      if (z.x + z.w < view.left || z.x > view.right) continue;
+      const spin = z.spin ?? 0;
+      if (!spin) continue;
+      const power = Math.min(1, Math.abs(spin) / EDDY.max);
+      const cx = z.x + z.w / 2;
+      const cy = z.y + z.h / 2;
+      const radius = Math.min(z.w, z.h) / 2;
+      const turn = this.reducedMotion ? 0 : time * spin * 1.6;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.clip();
+
+      // Clear in the middle, strongest through the ring, gone at the rim.
+      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+      g.addColorStop(0, 'rgba(120,200,255,0)');
+      g.addColorStop(EDDY.peak, `rgba(120,200,255,${(0.13 + power * 0.17).toFixed(3)})`);
+      g.addColorStop(1, 'rgba(120,200,255,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Arcs at four radii, each turning at the speed its own water turns —
+      // which is why the ring visibly shears against the rim and the eye.
+      const rng = makeRng(Math.round(z.x * 17 + z.y * 11));
+      ctx.lineCap = 'round';
+      for (let i = 1; i <= 4; i++) {
+        const rr = (i / 5) * radius;
+        const f = Math.sin(Math.PI * Math.min(1, (rr / radius) ** (Math.log(0.5) / Math.log(EDDY.peak))));
+        const arcs = 2 + i;
+        for (let k = 0; k < arcs; k++) {
+          const a0 = rng() * Math.PI * 2 + (k / arcs) * Math.PI * 2 + (turn * f * radius) / Math.max(1, rr);
+          const sweep = (0.5 + f * 0.9) * (Math.PI / arcs);
+          ctx.strokeStyle = `rgba(200,240,255,${(0.08 + power * 0.3 * f).toFixed(3)})`;
+          ctx.lineWidth = 1.2 + power * f * 2.2;
+          ctx.beginPath();
+          ctx.arc(cx, cy, rr, a0, a0 + sweep, spin < 0);
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+
+      // The rim, so the cell has an outside, and the eye, so it has an answer.
+      ctx.save();
+      ctx.strokeStyle = `rgba(170,230,255,${(0.2 + power * 0.28).toFixed(3)})`;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([16, 14]);
+      ctx.lineDashOffset = this.reducedMotion ? 0 : -time * spin * 60;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.strokeStyle = `rgba(215,245,255,${(0.16 + power * 0.2).toFixed(3)})`;
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius * 0.16, 0, Math.PI * 2);
+      ctx.stroke();
       ctx.restore();
     }
 
