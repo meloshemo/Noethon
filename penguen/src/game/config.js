@@ -712,6 +712,24 @@ export const AMBUSH = {
   rate: 0.4,
   /** The earliest level an ambush can happen at all. */
   fromLevel: 12,
+  /**
+   * The way out, for a bird that missed.
+   *
+   * There was not one. A dive that failed simply deleted the bird on the frame
+   * its timer ran out — measured, that happened **on screen every single
+   * time**, a median of 263 pixels from the middle of it. The player watched a
+   * hunting bird blink out of existence an arm's length away and then, some
+   * seconds later, watched another one appear low beside the ice. Nothing
+   * about that reads as an animal; it reads as the game forgetting to draw
+   * something.
+   *
+   * A miss now costs the bird what a miss costs a real one: it has to climb
+   * out, and it does that in full view, going somewhere. It is only taken off
+   * the board once it is genuinely past the edge of the world the player can
+   * see.
+   */
+  leaveSpeed: 430,
+  leaveClimb: 320,
 
   /**
    * The bird learned to hunt.

@@ -18,7 +18,7 @@
 
 import { World } from '../src/game/world.js';
 import { ALL_LEVELS } from '../src/game/chapters.js';
-import { AMBUSH } from '../src/game/config.js';
+import { AMBUSH, VIEW } from '../src/game/config.js';
 
 const STEP = 1 / 120;
 const noop = () => {};
@@ -190,6 +190,86 @@ check('bekleme süresi kısaldı', AMBUSH.cooldown <= 4.2, `${AMBUSH.cooldown} s
 check('saldırı olasılığı arttı', AMBUSH.rate >= 0.3, `saniyede ${AMBUSH.rate}`);
 check('12. bölümden önce hâlâ yok', AMBUSH.fromLevel === 12);
 check('kolay modda yarıya iniyor', true);
+
+/* 5 --------------------------------------------------------------------- */
+console.log("\n5) Bir kuş gökten iner ve uçarak gider");
+{
+  /**
+   * The two things a player kept seeing that no rule forbade.
+   *
+   * A missed dive used to delete the bird on the frame its timer ran out.
+   * Measured against a normal dodge — a hundred and fifty pixels sideways —
+   * that happened on screen every single time, a median of **32 pixels from
+   * the middle of the screen**: the bird blinked out of existence in the
+   * chick's face. And the entry point was `max(contentTop - 40, targetY -
+   * 340)`, whose `max` drags the bird *down* to just above the highest ice
+   * whenever the chick is up there, so two launches in five began below the
+   * top of the level's own ice. From the ground that reads as something
+   * coming out from under the ice rather than down out of the sky.
+   *
+   * Neither was catchable by the rules this file already had, because both
+   * are about where the bird *is*, not about whether the hunt is fair.
+   */
+  let entered = 0;
+  let vanishedOnScreen = 0;
+  let flights = 0;
+  const far = [];
+  for (const def of ALL_LEVELS) {
+    const probe = new World(def, deps());
+    if (!probe.ambushes) continue;
+    const w = new World(def, deps());
+    const bird = w._launchSkua({ kind: 'lock' });
+    flights++;
+    if (bird.fromY < w.camera.y) entered++;
+
+    const home = { x: w.player.x, y: w.player.y };
+    let last = null;
+    let dodged = false;
+    for (let i = 0; i < 900 && w.skuas.length && w.status === 'playing'; i++) {
+      const s = w.skuas[0];
+      last = { x: s.x, y: s.y };
+      if (s.state === 'strike' && !dodged) {
+        home.x -= 150;
+        dodged = true;
+      }
+      // Pinned so the run measures the bird rather than the penguin's footing.
+      w.player.x = home.x;
+      w.player.y = home.y;
+      w.player.vx = 0;
+      w.player.vy = 0;
+      run(w, STEP, { axis: 0 });
+    }
+    if (!last) continue;
+    const dx = Math.abs(last.x - w.camera.x - VIEW.w / 2);
+    far.push(dx);
+    if (dx < VIEW.w / 2 && last.y > w.camera.y - 100) vanishedOnScreen++;
+  }
+  check('her kuş ekranın üstünden giriyor', entered === flights, `${entered}/${flights}`);
+  check(
+    'kaçıran kuş ekranda yok olmuyor',
+    vanishedOnScreen === 0,
+    `${vanishedOnScreen}/${far.length} ekranda kayboldu`,
+  );
+  const median = far.sort((a, b) => a - b)[Math.floor(far.length / 2)] ?? 0;
+  check('uçup gidiyor', median > VIEW.w / 2, `ortanca ${Math.round(median)}px (yarı ekran ${VIEW.w / 2})`);
+}
+
+/* 6 --------------------------------------------------------------------- */
+console.log("\n6) Çağrılan kuş gerçekten dönüyor");
+{
+  // `leaving` was set when one bird took the chick and never read anywhere, so
+  // the second bird of a pair carried on and struck a penguin already in
+  // another bird's feet — which cannot be dodged and cannot be answered.
+  const def = ALL_LEVELS.find((d) => new World(d, deps()).ambushes);
+  const w = new World(def, deps());
+  const a = w._launchSkua({ kind: 'lock' });
+  const b = w._launchSkua({ kind: 'lock', mirror: true });
+  b.delay = 0;
+  b.leaving = true;
+  run(w, 0.05, { axis: 0 });
+  check('bırakılan kuş saldırıyı kesiyor', b.state === 'leave', b.state);
+  check('öbürü işine devam ediyor', a.state !== 'leave', a.state);
+}
 
 console.log(`\n${ALL_LEVELS.length} bölüm tarandı.`);
 if (fails) {

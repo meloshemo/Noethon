@@ -1288,6 +1288,20 @@ export class World {
    * One bird, one frame. Returns true when it is finished with.
    */
   _flySkua(s, dt, intent, held) {
+    /**
+     * Called off. This flag was set and never read.
+     *
+     * When one bird takes the chick the others are told to go home, and the
+     * comment at that line has described them doing so since it was written.
+     * Nothing acted on it: the second bird of a pair carried on and struck a
+     * penguin who was already in another bird's feet, which cannot be dodged,
+     * cannot be answered, and is not what the level meant to ask.
+     */
+    if (s.leaving && s.state !== 'carry' && s.state !== 'leave') {
+      s.state = 'leave';
+      s.t = 0;
+    }
+
     if (s.state === 'warn') {
       // Fly in along a straight line to the strike point.
       const k = clamp(s.t / s.warn, 0, 1);
@@ -1364,10 +1378,32 @@ export class World {
         // where you stand, not a pile-on once the answer is in.
         for (const other of this.skuas) if (other !== s) other.leaving = true;
       } else if (s.t >= AMBUSH.dive) {
+        // Missed. It is counted dodged here, where the dodge actually
+        // happened, but it does not disappear — it has to fly out.
         this.skuasDodged++;
-        return true;
+        s.state = 'leave';
+        s.t = 0;
       }
       return false;
+    }
+
+    if (s.state === 'leave') {
+      /**
+       * Climbing away, in full view, until it is really gone.
+       *
+       * Before this the bird was spliced out of the array on the frame its
+       * dive timer expired, wherever that happened to be — which was on
+       * screen, every time, a median of 263 pixels from the middle of it. An
+       * animal that vanishes an arm's length from you is not frightening, it
+       * is a bug the player has to decide to ignore.
+       */
+      s.x += s.dir * AMBUSH.leaveSpeed * dt;
+      s.y -= AMBUSH.leaveClimb * dt;
+      return (
+        s.y < this.camera.y - 200 ||
+        s.x < this.camera.x - 160 ||
+        s.x > this.camera.x + VIEW.w + 160
+      );
     }
 
     if (s.state === 'wheel') {
@@ -1574,7 +1610,22 @@ export class World {
       targetY,
       // Comes in high and behind, so it crosses the screen into the strike.
       fromX: targetX - dir * (VIEW.w * 0.62),
-      fromY: Math.max(this.contentTop - 40, targetY - 340),
+      /**
+       * Above the top of the screen, always.
+       *
+       * This used to be `max(contentTop - 40, targetY - 340)`, and the `max`
+       * is the wrong way round for what it was trying to do: it drags the
+       * entry point *down* to forty pixels above the highest ice whenever the
+       * chick is up there. Measured, two launches in five began below the top
+       * of the level's own ice — so the bird did not descend out of the sky,
+       * it appeared beside the floes at head height, which from the ground
+       * looks like something coming out from under the ice.
+       *
+       * A bird arrives from above. The entry is at least three hundred and
+       * forty pixels over the chick *and* clear of the top of the view, so it
+       * is always seen to come down into the level.
+       */
+      fromY: Math.min(targetY - 340, this.camera.y - 80),
       x: 0,
       y: 0,
       hit: false,
