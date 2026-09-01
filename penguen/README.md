@@ -1108,6 +1108,62 @@ olmanın bütün problem olduğu anda çalışmayı bırakıyor.
 ve 48 ile 57 ikiz listesinden çıktı. Chapter artık oyundaki en tekrarlı bölüm
 değil.
 
+## Zorluk: dört chapter'ın ikisinde eğri yoktu
+
+`tools/difficulty.mjs` her chapter için bir hedef bant yazıyor ve ölçüyor.
+Ölçüldüğünde şu çıktı:
+
+| bölüm | ölçü | hedef | ölçülen | durum |
+|---|---|---|---|---|
+| I Sahanlık | tolerans | 0.42 → 0.22 | 0.756 → 0.393 | **eğri yok** |
+| II Zirve | kalan kol gücü | %62 → %3 | %80 → %9 | uçlar gevşek |
+| III Buz Altı | en az nefes | %40 → %2 | %57 → %11 | uçlar gevşek |
+| IV Kar Topu | en yakın top | 95px → 16px | 34px → 41px | **eğri yok, ters** |
+
+İki chapter'da eğri sadece hedefi tutturamıyor değildi — **hiç yoktu**, ve
+ikisinde de sebep aynıydı: zorluk dial'i elle, bölüm bölüm, sırasız
+yazılmıştı.
+
+**Arena.** `heat` için brawl.js'in kendi yorumu "chapter'ın zorluk eğrisi,
+yazılmış hâli" diyor. Değerler: 0.8, 1.188, 1.3, 1.05, ... Düşük heat = zor,
+yani inmeli. İnmiyor: 63 ve 64 ilk bölümden daha kolay, final 72'den gevşek.
+Üstüne arena.js `Math.max(0.62, heat)` ile tabanlıyordu, yani 0.62 altını
+isteyen üç bölüm sessizce aynı sıcaklığı alıyordu — eğri tam ısırması gereken
+yerde düzleşiyordu.
+
+**Zirve.** `effort` aynı hastalık: chapter'ın **ilk** tırmanışı (1.251) bütün
+chapter'ın en yükseği, finali (1.07) 43 ve 45'ten düşük.
+
+İkisi de tek yönlü hâle getirildi. Zirve'nin sonucu net: üçte birlik
+ortalamalar **0.610 → 0.389 → 0.180** iken **0.642 → 0.304 → 0.046** oldu,
+yani son üçte bir dörtte birine indi ve 0.62 → 0.03 hedef bandına oturdu.
+42 ve 45 artık tam sıfır kol gücüyle bitiyor.
+
+Dalış chapter'ında `breath` dialleri yukarı çekildi (55 ve 57 hariç — onlar
+zaten %3.8 ve %0 ile dibi görüyor). Final %11.1'den **%3.6**'ya indi.
+
+### Üç şey işe yaramadı, ve üçü de öğretici
+
+**Sahanlığın dial'i zaten sonuna kadar açıkmış.** `tight` 0.8 → 1.3 ramp'ini
+besteci 1.45'te tavanlıyor; tavana kadar itince 31. bölüm 163 piksellik
+erişime karşı 182 piksellik sıçrayış istiyor ve doğrulayıcı yirmi bir hatayla
+reddediyor. 1.45 × 163/182 = 1.30 — zaten bittiği değer. Chapter I bu
+planlarla gidebileceği kadar sıkı; zorlaştırmak ramp'i değil planları
+düzenlemeyi gerektiriyor.
+
+**Bazı bölümleri zorlaştıran şey dial değil, geometri.** Zirve'de 44 ve 46,
+arenada 68, 71 ve 75 dial'in bir tık fazlasını kaldıramıyor: çözücü
+reddediyor. Onları zor yapan kol gücü ya da atış sıklığı değil, adımların
+yüksekliği ve kaçacak yerin azlığı. Bütün chapter'ı düzleştirmek yerine o
+beşi kendi değerlerinde bırakıldı. **Zor bir sayıdır, imkânsız bir derleme
+hatasıdır.**
+
+**Ve bir hatayı ben yaptım.** Arena eğrisini yazdıktan sonra `brawl-run
+--measure` ile kontrol ettim, geçti, commit ettim. Ama `--measure` çözücünün
+arama genişliğini değiştiriyor; oyunun gerçekten çalıştırdığı kontrol düz
+`brawl-run` ve o üç arenada düşüyordu. **Bir kontrolün iki kipi varsa,
+doğrulayan kip oyunun çalıştırdığı kiptir.**
+
 ## CEO taraması: on altı cihaz, bir kumanda kolu, ve bir kuş
 
 ### Kuş
