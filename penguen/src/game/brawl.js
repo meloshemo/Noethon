@@ -139,7 +139,7 @@ const BRAWL_PLANS = [
     subtitle: 'İki taraftan birden',
     en: { name: 'Crossfire', subtitle: 'From both sides at once' },
     target: 66,
-    heat: 0.8,
+    heat: 0.86,
     build: (a) => {
       a.duel({ guardAt: 0.34, guardUp: 0.18, standAt: 0.08, shooterUp: 0.34 });
       a.duel({ guardAt: 0.66, guardUp: 0.24, standAt: 0.92, shooterUp: 0.42, phase: 0.4 });
@@ -201,7 +201,7 @@ const BRAWL_PLANS = [
     subtitle: 'Uzun bir sıra',
     en: { name: 'Four Doors', subtitle: 'A long queue' },
     target: 82,
-    heat: 0.66,
+    heat: 0.78,
     build: (a) => {
       a.duel({ guardAt: 0.28, guardUp: 0.16, standAt: 0.05, shooterUp: 0.32 });
       a.duel({ guardAt: 0.46, guardUp: 0.21, standAt: 0.76, shooterUp: 0.38, phase: 0.25 });
@@ -289,7 +289,7 @@ const BRAWL_PLANS = [
     subtitle: 'Beş kapıcı, iki gözcü',
     en: { name: 'The Crowd', subtitle: 'Five keepers, two watchers' },
     target: 104,
-    heat: 0.5,
+    heat: 0.6,
     build: (a) => {
       a.duel({ guardAt: 0.26, guardUp: 0.15, standAt: 0.04, shooterUp: 0.3 });
       a.duel({ guardAt: 0.4, guardUp: 0.2, standAt: 0.68, shooterUp: 0.36, phase: 0.2 });
