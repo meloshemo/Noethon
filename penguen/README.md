@@ -343,7 +343,7 @@ geçmez, hata verip durur.
 
 ## Testler
 
-Tek komut, 42 paket (33 node + paketleme + 9 tarayıcı), kendi sunucusunu
+Tek komut, 43 paket (33 node + paketleme + 10 tarayıcı), kendi sunucusunu
 kurup kapatıyor ve portu doluysa bir yanına kayıyor:
 
 ```bash
@@ -2550,13 +2550,32 @@ kaydediyordu. Tuşlar ekrandaydı, kamera olmadıklarını sanıyordu. Şimdi te
 `_isTouch`'ı çeviriyor ve gerisini arayüze bırakıyor, tıpkı bir telefon gibi.
 Bu sayede yetmiş altı bölümün hepsi üç boyutta da denetleniyor.
 
-**Gamepad**: sol çubuk ve D-pad yürütüyor, A/B/X/Y zıplatıyor, Start
-duraklatıyor (`src/core/input.js`, `pollGamepad`). Tarayıcı `getGamepads()`
-çağrısı hata atarsa kare düşmüyor, o kare klavyeye düşülüyor.
+**Gamepad**: sol çubuk ve D-pad yürütüyor, A/B/X/Y zıplatıyor, Start (ve
+Select) duraklatıyor (`src/core/input.js`, `pollGamepad`). Tarayıcı
+`getGamepads()` çağrısı hata atarsa kare düşmüyor.
 
-> Dürüst olmak gerekirse: gamepad yolu **otomatik test edilmiyor**. Klavye ve
-> dokunmatik testlerden geçiyor, gamepad yalnızca gerçek bir kolla denenebilir
-> ve o [`docs/BILGISAYARDA.md`](docs/BILGISAYARDA.md) listesinde duruyor.
+Bu paragraf uzun süre üç yerde yalan söylüyordu, ve yalan söyleyebilmesinin
+sebebi **testinin olmamasıydı** — readme bunu kendisi itiraf ediyordu.
+Gerçekte: yalnızca alttaki iki yüz tuşu zıplatıyordu (X ve Y hiçbir şey
+yapmıyordu), Start hiçbir şey yapmıyordu, ve `getGamepads()` bir kez hata
+atınca kumanda **oturumun geri kalanı boyunca** kapanıyordu — "o kare"
+değil. Sekmenin odağı geri kazanması bunun için yeterli.
+
+Üçü de düzeltildi. Dört yüz tuşunun dördü de zıplatıyor, çünkü hangisinin
+"alttaki" olduğu pada ve tarayıcının eşlemesine göre değişir ve bunda
+yanılmak bir zıplamaya mal olur. Start, Escape'in kullandığı `pause`
+eyleminin aynısını yayıyor — iki yol değil, tek yol. Ve kumanda ancak
+üst üste 120 kare hata alırsa kapanıyor, ki bu "bu tarayıcı izin vermiyor"
+ile "bu kare olmadı" arasındaki fark.
+
+Artık `browser-gamepad` var: gerçek tarayıcıda sahte bir pad takıyor
+(`navigator.getGamepads()` oyunun kullandığı tek arayüz, dolayısıyla
+donanım dışında her şey kanıtlanıyor) ve çubuğu, D-pad'i, dört yüz tuşunu,
+ölü bölgeyi, duraklatmayı, basılı tutmayı ve kumanda kesilip geri
+geldiğinde toparlanmayı deniyor.
+
+> Not: gamepad **artık otomatik test ediliyor** (`browser-gamepad`); geriye
+> yalnızca gerçek donanımla deneme kaldı.
 
 ---
 
@@ -2621,7 +2640,7 @@ anlatmak değil, olan bir şeyi olduğundan iyi anlatmaktır.
 | Kayıt | Tek sürümlü JSON, ileri göç, dosyaya aktarma, tek tuşla silme |
 | Çevrimdışı | Servis çalışanı + tek dosya sürümü (650 KB) |
 | Girdi | Klavye, dokunmatik, gamepad |
-| Test | 33 node + paketleme + 9 tarayıcı paketi, hepsi tek komutta |
+| Test | 33 node + paketleme + 10 tarayıcı paketi, hepsi tek komutta |
 | Zorluk | Ölçülen eğri: `node tools/difficulty.mjs` |
 
 ### Yok, ve neden

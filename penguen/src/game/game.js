@@ -296,10 +296,23 @@ export class Game {
 
     // Gamepad access is blocked outright in some embedded contexts, and a
     // throw here would kill the frame before anything got drawn.
+    /*
+     * Gamepad access is blocked outright in some embedded contexts, and a
+     * throw here would kill the frame before anything got drawn.
+     *
+     * It used to give up permanently on the first throw, which is a heavy
+     * price for one bad frame: a pad that was briefly unavailable — the tab
+     * regaining focus is enough — stayed dead for the rest of the session
+     * while the manual promised it worked. It takes a run of failures now,
+     * which is the difference between "this browser will not allow it" and
+     * "not this frame".
+     */
     try {
       this.input.pollGamepad();
+      this._padFails = 0;
     } catch {
-      this.input.pollGamepad = () => {};
+      this._padFails = (this._padFails ?? 0) + 1;
+      if (this._padFails > 120) this.input.pollGamepad = () => {};
     }
 
     if (this.state === 'playing' && this.world) {

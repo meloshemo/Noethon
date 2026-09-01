@@ -97,18 +97,41 @@ export class Input {
     el.addEventListener('contextmenu', (e) => e.preventDefault());
   }
 
+  /**
+   * One controller, read fresh every frame.
+   *
+   * The mapping used to be narrower than the manual claimed: only the bottom
+   * two face buttons jumped, so X and Y did nothing on a pad where the manual
+   * said all four worked, and Start did nothing at all even though pausing is
+   * an action this class already knows how to emit. Both were the kind of gap
+   * nobody reports — a player with an unusual pad simply decides the game does
+   * not support controllers.
+   *
+   * All four face buttons jump now, because which one is "the bottom one"
+   * depends on the pad and on the browser's remapping, and being wrong about
+   * it costs a jump. Start pauses, through the same `pause` action the Escape
+   * key emits, so there is one path rather than two.
+   */
   pollGamepad() {
     const pads = navigator.getGamepads?.() ?? [];
     const pad = [...pads].find(Boolean);
     const next = new Set();
     if (pad) {
+      const on = (i) => Boolean(pad.buttons[i]?.pressed);
       const ax = pad.axes[0] ?? 0;
-      if (ax < -0.35 || pad.buttons[14]?.pressed) next.add('left');
-      if (ax > 0.35 || pad.buttons[15]?.pressed) next.add('right');
-      if (pad.buttons[0]?.pressed || pad.buttons[1]?.pressed) next.add('jump');
+      if (ax < -0.35 || on(14)) next.add('left');
+      if (ax > 0.35 || on(15)) next.add('right');
+      if (on(0) || on(1) || on(2) || on(3)) next.add('jump');
+      // Start, and Select beside it: a pad in a living room is not always the
+      // one the layout was written for.
+      if (on(9) || on(8)) next.add('pause');
     }
     const had = this._sources.pad;
     for (const a of next) if (!had.has(a)) this._emit(a);
+    // `pause` stays in the set on purpose. It is a moment rather than a state,
+    // and the only thing that stops a held Start from toggling on every single
+    // frame is that it was in the set last frame too. `_sync` reads left,
+    // right and jump and nothing else, so it costs nothing to leave it here.
     this._sources.pad = next;
     this._sync();
   }
