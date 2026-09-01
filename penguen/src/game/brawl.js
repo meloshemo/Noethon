@@ -30,7 +30,7 @@ const BRAWL_PLANS = [
     subtitle: 'Yolu bir penguen tutuyor',
     en: { name: 'The One in the Doorway', subtitle: 'A penguin is holding the way' },
     target: 30,
-    heat: 0.8,
+    heat: 1.15,
     build: (a) => {
       a.sign('Yukarıdaki sana atıyor.\nAradaki penguenin arkasına geç.');
       a.duel({ guardAt: 0.52, guardUp: 0.18, standAt: 0.2, shooterUp: 0.34 });
@@ -42,7 +42,7 @@ const BRAWL_PLANS = [
     subtitle: 'İkisi de düşecek',
     en: { name: 'Two Doorkeepers', subtitle: 'Both of them go down' },
     target: 42,
-    heat: 1.188,
+    heat: 1.08,
     build: (a) => {
       a.duel({ guardAt: 0.38, guardUp: 0.17, standAt: 0.12, shooterUp: 0.32 });
       a.duel({ guardAt: 0.62, guardUp: 0.22, standAt: 0.88, shooterUp: 0.4, phase: 0.5 });
@@ -54,7 +54,7 @@ const BRAWL_PLANS = [
     subtitle: 'Biri sadece sana atıyor',
     en: { name: 'The One on Top', subtitle: 'One of them only throws at you' },
     target: 46,
-    heat: 1.3,
+    heat: 1.02,
     build: (a) => {
       a.duel({ guardAt: 0.46, guardUp: 0.19, standAt: 0.16, shooterUp: 0.36 });
       a.heckler({ at: 0.72, up: 0.52, phase: 0.3 });
@@ -74,7 +74,7 @@ const BRAWL_PLANS = [
     subtitle: 'Her yerden hat yok',
     en: { name: 'The Rock', subtitle: 'There is no line from everywhere' },
     target: 50,
-    heat: 1.05,
+    heat: 0.96,
     build: (a) => {
       a.duel({ guardAt: 0.36, guardUp: 0.18, standAt: 0.1, shooterUp: 0.34 });
       a.duel({ guardAt: 0.64, guardUp: 0.24, standAt: 0.9, shooterUp: 0.42, phase: 0.45 });
@@ -99,7 +99,7 @@ const BRAWL_PLANS = [
     subtitle: 'Durup bekleyemezsin',
     en: { name: 'Thin Ice', subtitle: 'You cannot stand and wait' },
     target: 54,
-    heat: 0.861,
+    heat: 0.9,
     build: (a) => {
       a.duel({ guardAt: 0.4, guardUp: 0.19, standAt: 0.13, shooterUp: 0.36 });
       a.duel({ guardAt: 0.66, guardUp: 0.25, standAt: 0.9, shooterUp: 0.43, phase: 0.5 });
@@ -125,7 +125,7 @@ const BRAWL_PLANS = [
     subtitle: 'Sıra kimde?',
     en: { name: 'Three Doorkeepers', subtitle: 'Whose turn is it?' },
     target: 62,
-    heat: 1.088,
+    heat: 0.85,
     build: (a) => {
       a.duel({ guardAt: 0.3, guardUp: 0.16, standAt: 0.06, shooterUp: 0.32 });
       a.duel({ guardAt: 0.52, guardUp: 0.22, standAt: 0.86, shooterUp: 0.4, phase: 0.33 });
@@ -139,7 +139,7 @@ const BRAWL_PLANS = [
     subtitle: 'İki taraftan birden',
     en: { name: 'Crossfire', subtitle: 'From both sides at once' },
     target: 66,
-    heat: 0.9,
+    heat: 0.8,
     build: (a) => {
       a.duel({ guardAt: 0.34, guardUp: 0.18, standAt: 0.08, shooterUp: 0.34 });
       a.duel({ guardAt: 0.66, guardUp: 0.24, standAt: 0.92, shooterUp: 0.42, phase: 0.4 });
@@ -161,7 +161,7 @@ const BRAWL_PLANS = [
     subtitle: 'Kaçacak yer az',
     en: { name: 'Tight Ground', subtitle: 'Little room to move' },
     target: 70,
-    heat: 0.905,
+    heat: 0.75,
     build: (a) => {
       a.duel({ guardAt: 0.38, guardUp: 0.19, standAt: 0.11, shooterUp: 0.36 });
       a.duel({ guardAt: 0.68, guardUp: 0.25, standAt: 0.92, shooterUp: 0.43, phase: 0.5 });
@@ -181,7 +181,7 @@ const BRAWL_PLANS = [
     subtitle: 'Daha hızlı atıyorlar',
     en: { name: 'The Impatient', subtitle: 'They throw faster' },
     target: 74,
-    heat: 0.84,
+    heat: 0.7,
     build: (a) => {
       a.duel({ guardAt: 0.36, guardUp: 0.18, standAt: 0.1, shooterUp: 0.35, period: 1.9 });
       a.duel({ guardAt: 0.64, guardUp: 0.24, standAt: 0.9, shooterUp: 0.42, period: 2.0, phase: 0.5 });
@@ -201,7 +201,7 @@ const BRAWL_PLANS = [
     subtitle: 'Uzun bir sıra',
     en: { name: 'Four Doors', subtitle: 'A long queue' },
     target: 82,
-    heat: 0.906,
+    heat: 0.66,
     build: (a) => {
       a.duel({ guardAt: 0.28, guardUp: 0.16, standAt: 0.05, shooterUp: 0.32 });
       a.duel({ guardAt: 0.46, guardUp: 0.21, standAt: 0.76, shooterUp: 0.38, phase: 0.25 });
@@ -223,7 +223,7 @@ const BRAWL_PLANS = [
     subtitle: 'Kaya, ince buz, ve onlar',
     en: { name: 'The Glacier\'s Mouth', subtitle: 'Rock, thin ice, and them' },
     target: 86,
-    heat: 0.52,
+    heat: 0.62,
     build: (a) => {
       a.duel({ guardAt: 0.32, guardUp: 0.17, standAt: 0.07, shooterUp: 0.33 });
       a.duel({ guardAt: 0.54, guardUp: 0.23, standAt: 0.84, shooterUp: 0.4, phase: 0.4 });
@@ -239,7 +239,7 @@ const BRAWL_PLANS = [
     subtitle: 'Üç tanesi sadece bekliyor',
     en: { name: 'The Watchers', subtitle: 'Three of them are only waiting' },
     target: 88,
-    heat: 0.7,
+    heat: 0.58,
     build: (a) => {
       a.duel({ guardAt: 0.38, guardUp: 0.19, standAt: 0.11, shooterUp: 0.36 });
       a.duel({ guardAt: 0.66, guardUp: 0.25, standAt: 0.92, shooterUp: 0.43, phase: 0.5 });
@@ -260,7 +260,7 @@ const BRAWL_PLANS = [
     subtitle: 'Hepsi birlikte atıyor',
     en: { name: 'All at Once', subtitle: 'They all throw together' },
     target: 92,
-    heat: 0.55,
+    heat: 0.54,
     build: (a) => {
       a.duel({ guardAt: 0.3, guardUp: 0.17, standAt: 0.06, shooterUp: 0.33, phase: 0 });
       a.duel({ guardAt: 0.54, guardUp: 0.23, standAt: 0.84, shooterUp: 0.4, phase: 0 });
@@ -289,7 +289,7 @@ const BRAWL_PLANS = [
     subtitle: 'Beş kapıcı, iki gözcü',
     en: { name: 'The Crowd', subtitle: 'Five keepers, two watchers' },
     target: 104,
-    heat: 0.637,
+    heat: 0.5,
     build: (a) => {
       a.duel({ guardAt: 0.26, guardUp: 0.15, standAt: 0.04, shooterUp: 0.3 });
       a.duel({ guardAt: 0.4, guardUp: 0.2, standAt: 0.68, shooterUp: 0.36, phase: 0.2 });
@@ -307,7 +307,7 @@ const BRAWL_PLANS = [
     subtitle: 'Bütün koloni yolunu kesti',
     en: { name: 'The Colony\'s End', subtitle: 'The whole colony blocked the way' },
     target: 116,
-    heat: 0.65,
+    heat: 0.45,
     build: (a) => {
       a.duel({ guardAt: 0.26, guardUp: 0.15, standAt: 0.04, shooterUp: 0.3, period: 2.2 });
       a.duel({ guardAt: 0.4, guardUp: 0.2, standAt: 0.68, shooterUp: 0.36, period: 2.2, phase: 0.2 });

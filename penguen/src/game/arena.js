@@ -87,7 +87,14 @@ export class Arena {
      * and a cadence shorter than that means the next ball is aimed before you
      * could possibly have left the last one's line.
      */
-    this.heat = Math.max(0.62, heat);
+    /*
+     * The floor was above the plans.
+     *
+     * Three levels asked for less than 0.62 and were silently given 0.62, so
+     * the hottest arenas in the chapter were all the same temperature as each
+     * other and the curve flattened exactly where it was supposed to bite.
+     */
+    this.heat = Math.max(0.45, heat);
     this.scale = scale;
     this.width = width;
     this.height = height;
