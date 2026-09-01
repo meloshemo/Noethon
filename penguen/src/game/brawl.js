@@ -130,6 +130,13 @@ const BRAWL_PLANS = [
       a.duel({ guardAt: 0.3, guardUp: 0.16, standAt: 0.06, shooterUp: 0.32 });
       a.duel({ guardAt: 0.52, guardUp: 0.22, standAt: 0.86, shooterUp: 0.4, phase: 0.33 });
       a.duel({ guardAt: 0.66, guardUp: 0.26, standAt: 0.34, shooterUp: 0.46, phase: 0.66 });
+      /* Three shots to line up and one square you cannot linger on.
+         The level's own question is "whose turn is it" — three guards, three
+         stand-spots, and the answer is a route around them. The ceiling now
+         has an opinion about the middle of that route: it is the shortest way
+         between the first spot and the last, and it is the one place on the
+         level where waiting for a phase is free. It is not free any more. */
+      a.icefall({ at: 0.46 });
       a.scatterFish(3);
       a.checkpointAt(0.3);
     },
@@ -215,6 +222,12 @@ const BRAWL_PLANS = [
          no gap between them; the bank is the gap, and buying it costs it. */
       a.bank({ at: 0.52 });
       a.scatterFish(3);
+      /* Four doors, and the ceiling has an opinion about the near end.
+         It was over the middle first and the solver could not win: the
+         middle *is* this level's answer to all four doors, and hanging ice
+         on the only answer is not difficulty, it is a locked door. Moved to
+         the approach, it shapes the run without closing it. */
+      a.icefall({ at: 0.3, up: 0.62 });
       a.checkpointAt(0.26);
     },
   },
@@ -332,6 +345,12 @@ const BRAWL_PLANS = [
       a.charged(0.24, 'coil', 0.46);
       a.charged(0.5, 'quantum', 0.52);
       a.charged(0.78, 'slack', 0.46);
+      /* The last arena in the game, and the last word is not a thrower.
+         Two of them, over the two places a player instinctively backs
+         into when the shooting starts: the corners. There is nowhere on
+         this level that is safe for as long as you would like. */
+      a.icefall({ at: 0.22, up: 0.58 });
+      a.icefall({ at: 0.8, up: 0.64 });
       a.checkpointAt(0.2);
     },
   },

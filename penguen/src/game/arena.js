@@ -121,6 +121,8 @@ export class Arena {
     this._duels = [];
     /** Rock waiting for the lines to be drawn, so it can be kept off them. */
     this._pillars = [];
+    /** Ice hanging from the ceiling, placed in `build` like the pillars. */
+    this._icefalls = [];
   }
 
   /* --------------------------------------------------------- pieces */
@@ -460,6 +462,32 @@ export class Arena {
   }
 
   /** A patch of ground that will not hold you: you cannot line up and wait. */
+  /**
+   * Buz düşmesi — the arena's first threat that cover cannot answer.
+   *
+   * Six verbs and every one of them was the same question: *where can you
+   * stand so that nothing has a line on you*. Pillars answer it, banks put a
+   * clock on the answer, a lobber goes over it — but all of that is one
+   * argument about horizontal sight-lines, which is why fifteen levels built
+   * from it read as one level.
+   *
+   * This comes from above, so no wall is between you and it. And it is
+   * *reactive*: it hangs there doing nothing until somebody is underneath, and
+   * then it gives them a beat and lets go. That makes it a statement about the
+   * spot rather than about the shot — the safest square on the level is the
+   * one you must not stand on — which is the one thing the chapter's whole
+   * vocabulary could not say.
+   *
+   * It is the icicle from the shelf, unchanged: the same entity, the same
+   * warning, the same physics, already proven and already drawn. A new
+   * question does not need a new mechanism when an old mechanism has never
+   * been asked this question.
+   */
+  icefall({ at = 0.5, up = 0.6, w = 30 } = {}) {
+    this._icefalls.push({ at, up, w });
+    return this;
+  }
+
   thinIce({ at = 0.4, w = 150, type = 'crack' }) {
     const x = Math.round(this.width * at - w / 2);
     this.floes.push({ x, y: this.groundY - 1, w, h: 22, type });
@@ -635,7 +663,22 @@ export class Arena {
       banks: this.banks,
       checkpoints: this.checkpoints,
       signs: this.signs,
-      hazards: [],
+      hazards: this._icefalls.map(({ at, up, w }) => ({
+        kind: 'icicle',
+        x: Math.round(this.width * at - w / 2),
+        /*
+         * Hung inside the arena, above the highest perch.
+         *
+         * The first version read `groundY - height`, which is the *top of the
+         * world* rather than the top of the room: on a standard arena that is
+         * y = -102, so the ice hung off the top of the screen and the warning
+         * it gives — the whole reason it is fair — could not be seen until it
+         * was already falling.
+         */
+        y: Math.round(this.groundY - this.height * up),
+        w,
+        h: 46,
+      })),
       zones: [],
       /** The intended solution: which throw takes out which guard, from where. */
       plan: this.plan,
