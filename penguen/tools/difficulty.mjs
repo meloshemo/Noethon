@@ -146,6 +146,22 @@ const CHAPTERS = [
     metric: 'en yakın top',
     read: (close) => close,
     format: (v) => `${Math.round(v)}px`,
+    /*
+     * Read this one as a floor, not as a dial — it does not answer to pressure.
+     *
+     * The number is how near a snowball came *on the route the solver chose*,
+     * and a solver picks the safest route it can find. Tested directly: a
+     * second lobber was hung over the finale's remaining cover, and the
+     * measurement got **looser** (55px → 57px), because the extra arc pushed
+     * the solver onto a different line where the balls stayed further away. A
+     * denser arena can measure safer.
+     *
+     * So the hard end of this band is aspirational rather than achievable by
+     * adding threats: across all fifteen arenas the tightest any level reaches
+     * is about 34px, and the finale's 55px is a fact about where its clean
+     * solution runs. Making the arena harder means closing routes — geometry —
+     * and this number will only notice once the safest one is gone.
+     */
     want: [95, 16],
     easier: 'up',
   },

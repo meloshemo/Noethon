@@ -1940,6 +1940,26 @@ belirleyici adımı başka yerde ve o adım da iki sınırdan birine dayanmış
 durumda. Yani zirvenin bayrağı **tavan** hakkında bir gerçek, plan hakkında
 değil.
 
+## Arenanın "en yakın top"u bir kadran değil, bir taban
+
+Arena finali hedefin gerisinde duruyordu: en yakın top 55px, hedef 16px. Daha
+fazla baskı ekleyip düzelir mi diye **denendi** — finalin kalan siperinin
+üstüne ikinci bir lobber asıldı.
+
+Sayı **kötüleşti**: 55px → 57px.
+
+Sebebi metriğin ne ölçtüğü. "En yakın top", çözücünün **seçtiği rota** üzerinde
+bir kar topunun ne kadar yaklaştığı — ve çözücü bulabildiği en güvenli rotayı
+seçiyor. Fazladan bir yay, onu topların daha uzak kaldığı başka bir hatta
+itiyor. **Daha yoğun bir arena daha güvenli ölçülebiliyor.**
+
+O yüzden bu sayı bir taban olarak okunmalı: on beş arenanın en sıkısı 34px
+civarında, ve finalin 55px'i temiz çözümünün nereden geçtiğine dair bir gerçek.
+Arenayı zorlaştırmak rota kapatmak demek — yani geometri — ve bu sayı ancak en
+güvenli rota kapandığında kıpırdıyor. İkinci lobber geri alındı: yazılı tasarım
+notuna ("oyunun son kavgasında **bir** yay, oradaki tek siperin üstünde") aykırı
+ve ölçülebilir bir faydası yok.
+
 ## Zorluk: geometri tavana vurdu, o yüzden zaman kısaldı
 
 Bölümlerin zorluk kadranı ölçüldü ve **tavana vurmuş** çıktı. Sahanlıkta `tight`
