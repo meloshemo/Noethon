@@ -117,9 +117,15 @@ console.log('\n4) Besteci geçilemeyecek bandı reddediyor');
   check('tek tırmanıştan uzun bant reddediliyor', refuse(() => {
     const t = new Tower({ scale: 1.5 });
     t.base();
-    t.chimney({ height: 380 });
+    t.chimney({ height: 340 });
     t.glaze({ len: 900 });
   }));
+  /* The fixture shafts are 340px rather than 380 because a shaft is now priced
+     at the rates it is actually climbed at: the stretch at the bottom where
+     only one wall has reached down can only be creeped, at more than twice the
+     cost per pixel of the kicking above it. At this scale 380px asks for 67% of
+     a bar against a 62% line, so the composer refuses it — which is the whole
+     point of the new rule, and a fixture is not exempt from it. */
   // Too long for the shaft, though still short enough to be creepable. `from`
   // is only a wish — a band asked for near the floor is slid up until it has
   // somewhere to gather below it — but the *length* has to fit or there is
@@ -127,13 +133,13 @@ console.log('\n4) Besteci geçilemeyecek bandı reddediyor');
   check('bacaya sığmayan bant reddediliyor', refuse(() => {
     const t = new Tower({ scale: 1.5 });
     t.base();
-    t.chimney({ height: 380 });
+    t.chimney({ height: 340 });
     t.glaze({ len: 320 });
   }));
   check('taban yakını istenirse yukarı kaydırılıyor', !refuse(() => {
     const t = new Tower({ scale: 1.5 });
     t.base();
-    t.chimney({ height: 380 });
+    t.chimney({ height: 340 });
     t.glaze({ from: 0.02 });
   }));
 }

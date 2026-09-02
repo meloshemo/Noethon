@@ -343,7 +343,7 @@ geçmez, hata verip durur.
 
 ## Testler
 
-Tek komut, 50 paket (40 node + paketleme + 10 tarayıcı), kendi sunucusunu
+Tek komut, 51 paket (41 node + paketleme + 10 tarayıcı), kendi sunucusunu
 kurup kapatıyor ve portu doluysa bir yanına kayıyor:
 
 ```bash
@@ -1825,6 +1825,60 @@ bir problem zorluk değil, kontrollerin bozulması gibi görünür.** Artık ken
 resmi olmayan her lanet, ekranın kenarında kendi renginde nefes alan bir bant
 bırakıyor.
 
+## 41'in geçilmeyen aralığı: bütçe yanlış hızdan hesaplanıyordu
+
+Şikâyet netti: "41'de bir aralık geçilmiyor, ve bu zorlukla alakalı değil, oyun
+hatası gibi." Hataydı — ve arkasındaki aritmetik chapter'ın **her** bacası için
+aynı şekilde yanlıştı.
+
+Bir baca tekmeleyerek tırmanılır ve tekme **iki** duvar ister. Ama bir bacanın
+iki sütunu asla ikisi birden dibe inmez: her biri kendi ayağını bulur, ki bacaya
+girmek iki değil tek tutamak istesin. Yani her bacanın dibinde karşı duvarın
+henüz olmadığı bir bölüm var, ve orada tekmelenecek bir şey yok — tek yol
+sürünmek, piksel başına iki katından fazlaya.
+
+Besteci bütün yüksekliği **tekme hızından** fiyatlandırıyordu.
+
+| Bölüm | alt bölümün gerçek bedeli | kendi sınırı |
+|---|---|---|
+| 41 Cilalı Sırt | **%81** | %77 |
+| 46 Zirve | **%68** | %66 |
+| diğer 13 bölüm | %21–66 | — |
+
+Üstüne 41'in ikinci bacasına koyduğum ıslak buz bandı vardı: dürüst
+fiyatlandırıldığında — sürünme hızından, çünkü tam da tek duvarlı bölüme
+düşüyordu — o baca **barın %99'unu** istiyordu. Bu zor tırmanış değil, tepede
+bir toplamaya kaybedilen tırmanış. Oyuncunun koltuğundan doğru şeyi yapıyorsun
+ve kol gücü yine de bitiyor.
+
+**Ne değişti.** Besteci artık gerçek hızlardan hesaplıyor — tek duvarlı bölüm
+sürünme, gerisi tekme — ve alt bölümün kendi barına sığması şart. İki bölümün
+bacası kısaldı: 41 (300→275) ve kimsenin şikâyet etmediği 46 (360→345).
+
+Islak buz bandı da oturduğu bölümün hızından ödeniyor. Böyle ölçüldüğünde 41 ve
+35 bandı **ödeyemiyor**: bu chapter'ın bacaları zaten kendi adalet çizgisine
+yakın ayarlı, yani ıslak buz yükseklikle **satın alınmak** zorunda. Chapter'da
+tam olarak bir banda yer var, o da 43'te — ve 43 onu yirmi piksel şaftla satın
+aldı. Bu bir hayal kırıklığı değil, bütçenin görünür hâli.
+
+Sonuç, çözücünün ölçtüğü kalan kol gücüyle: **41 %1.5 → %15**, 43 %2 → %10.
+
+### Aynı sınıftan ikinci bir açık
+
+41'e bakarken çıktı: iki çözücü de **kırılan buzu kalıcı zemin sayıyordu.**
+Sahte buz yarım saniyeden az, çatlak buz bir saniyeden az duruyor — ama sweep
+0.8 saniye bekleyip atlayan bir çözüm bulabiliyor ve bölümü bunun üstüne
+"kanıtlanmış" sayabiliyordu. Beş tırmanış bölümünün rotasında kırılan buz var.
+
+Buzun eriyişini adım adım modellemek asıl çözüm ve büyük bir iş; **beklemek**
+ise kırılan buzun yasakladığı şeyin ta kendisi. O yüzden sweep'in
+deneyebileceği bekleme süresi artık ayağın altındaki buzun taşıyabildiği kadar.
+Kapattıktan sonra hiçbir bölüm düşmedi — yani açık gerçekti ama kimse ona
+yaslanmamıştı.
+
+`tests/shaft.mjs` her iki kuralı da kilitliyor: 27 baca bölümü ve 17 tek duvar,
+gerçekten tırmanıldıkları hızlardan ölçülüyor.
+
 ## Zorluk: geometri tavana vurdu, o yüzden zaman kısaldı
 
 Bölümlerin zorluk kadranı ölçüldü ve **tavana vurmuş** çıktı. Sahanlıkta `tight`
@@ -3058,7 +3112,7 @@ anlatmak değil, olan bir şeyi olduğundan iyi anlatmaktır.
 | Kayıt | Tek sürümlü JSON, ileri göç, dosyaya aktarma, tek tuşla silme |
 | Çevrimdışı | Servis çalışanı + tek dosya sürümü (679 KB) |
 | Girdi | Klavye, dokunmatik, gamepad |
-| Test | 40 node + paketleme + 10 tarayıcı paketi, hepsi tek komutta |
+| Test | 41 node + paketleme + 10 tarayıcı paketi, hepsi tek komutta |
 | Zorluk | Ölçülen eğri: `node tools/difficulty.mjs` |
 
 ### Yok, ve neden
