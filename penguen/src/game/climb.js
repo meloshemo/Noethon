@@ -342,7 +342,23 @@ const CLIMB_PLANS = [
     effort: 1.24,
     build: (t) => {
       t.base({ w: 225 });
-      t.traverse({ n: 3, w: 130, types: ['slip', 'solid'] });
+      /* The traverses are spread vertically, and the steps after the second
+         shaft are pushed further apart — both because of the same fault.
+         A jump does not travel straight up: the arc out of a ledge rises the
+         better part of a body-and-a-half above where it lands, and the
+         composer's stacking rule only ever compared a ledge with what sits
+         over its *own footprint*. On this level the tenth step lands at
+         348–498 and the eleventh sits at 517–652, seventy pixels higher —
+         spans that do not overlap by a pixel, so nothing compared them, and
+         the arc passed right underneath. The penguin put its head into it at
+         the top of every jump, dropped short, and fell back down the shaft.
+         That is the level that was reported as "you cannot get past this gap,
+         and when you do it throws you straight back", and it measured as the
+         worst jump in the chapter: twenty-seven landings out of seven hundred
+         and two swept inputs. With the ledges spread it is forty-seven per
+         cent. `tests/headroom.mjs` now measures every rising jump in the
+         chapter so a plan cannot quietly build a ceiling again. */
+      t.traverse({ n: 3, w: 130, types: ['slip', 'solid'], drift: 0.2 });
       /* Shorter than it was, and the composer is the one that said so.
          Every chimney has a stretch at the bottom where only one wall has
          reached down — the columns find their own feet so that entering needs
@@ -361,7 +377,7 @@ const CLIMB_PLANS = [
          height on both walls. There is no stamina left in this level for a
          move you cannot back out of. A good idea that the level cannot pay
          for is not a good idea for that level. */
-      t.traverse({ n: 3, w: 125, types: ['slip', 'solid'] });
+      t.traverse({ n: 3, w: 125, types: ['slip', 'solid'], drift: 0.2 });
       t.chimney({ height: 260, lip: 0.5 });
       /* And no wet ice here either, on the same grounds as the glare ice.
          A band was put on this shaft and it is why the level became
@@ -375,7 +391,7 @@ const CLIMB_PLANS = [
          kind. Two mechanics have now been offered to it and the arithmetic has
          refused both. Worth leaving written down so it is not offered a
          third. */
-      t.steps({ n: 2, rise: 0.58, w: 135 });
+      t.steps({ n: 2, rise: 0.72, w: 135 });
       t.crown({ w: 245 });
       t.scatterFish(3, 58);
       t.fishAt(5, 44, 'heavy');

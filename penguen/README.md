@@ -343,7 +343,7 @@ geçmez, hata verip durur.
 
 ## Testler
 
-Tek komut, 51 paket (41 node + paketleme + 10 tarayıcı), kendi sunucusunu
+Tek komut, 52 paket (42 node + paketleme + 10 tarayıcı), kendi sunucusunu
 kurup kapatıyor ve portu doluysa bir yanına kayıyor:
 
 ```bash
@@ -1886,6 +1886,46 @@ yaslanmamıştı.
 `tests/shaft.mjs` her iki kuralı da kilitliyor: 27 baca bölümü ve 17 tek duvar,
 gerçekten tırmanıldıkları hızlardan ölçülüyor.
 
+## 41'in sütun başı: sıçrayışın üstünde görünmeyen bir tavan vardı
+
+Bir ekran görüntüsü geldi: penguen 41. bölümde bir sütunun tepesinde duruyor,
+ve "bu aralıktan geçemiyor, geçse bile anında olduğu yere geri atıyor."
+
+Aralık değildi. O adım 348–498'deki bir sahanlığa iniyor; **bir sonraki**
+sahanlık 517–652'de, yetmiş piksel yukarıda. Bu iki aralık **tek piksel bile
+örtüşmüyor**, o yüzden bestecinin istifleme kuralı — ki bir sahanlığı kendi
+ayak izinin üstündekiyle karşılaştırır — onları hiç karşılaştırmadı. Ama bir
+sıçrayış dümdüz yukarı gitmiyor: sütun başından çıkan yay tam da o yüksek
+sahanlığın **altından** geçiyor, penguen yayın tepesinde kafasını çarpıyor,
+kısa düşüyor ve şaftın dibine geri iniyor. "Geri atıyor" tam olarak buydu.
+
+Ölçüm: o adım taranan **702 girdiden 27'siyle** iniyordu — %3,9, chapter'ın en
+kötü sıçrayışı, ve yalnızca kimsenin denemeyi akıl etmeyeceği kırpılmış bir
+dokunuşla.
+
+### Genel düzeltme denendi ve geri alındı
+
+Doğru kural açık: kontrol, sahanlığın ayak izini değil, sıçrayışın geçtiği
+**koridoru** taramalı. Yazıldı, ve chapter'ı baştan akıttı — beş tırmanışta on
+iki adım geçilemez oldu, doğrulayıcı 21 sorun saydı. `tower.js`'in iki yüz
+satır yukarısındaki uyarı tam da bunu diyor: *"Buradaki geometri bir zincir.
+Bir halkayı oynatmak üstündeki her halkayı oynatır."*
+
+O yüzden düzeltme, dosyanın kendi reçetesiyle plan seviyesinde yapıldı:
+traverslerin dikey aralığı ve ikinci şafttan sonraki basamakların yükselişi
+açıldı. Sonuç: **%3,9 → %46,7**.
+
+### Ve ölçü kalıcı hâle getirildi
+
+`tests/headroom.mjs` chapter'ın **yükselen** her sıçrayışını tarıyor (148
+tane) ve %8'in altına düşeni reddediyor. Düz sıçrayışlar kasten dışarıda: düz
+bir hop zaten kısa bir dokunuş, ve hiç ulaşmadığı bir tavan yolunda değil.
+
+Paketi yazarken bir ölçüm hatası daha çıktı: sallanan buz kütleleri durgun
+kabul edilince beş bölümde adımlar %8,3 okuyordu. Halat, penguen oraya
+vardığında kütleyi başka yere taşımış oluyor. Çözücünün kendi `swingTo`'su
+kullanılınca chapter'ın en dar yükselen sıçrayışı **%16,7** — tabanın iki katı.
+
 ## Tırmanış çözücüsü fırtınayı hiç görmüyordu
 
 41'in aralığını düzeltirken aynı sınıftan **daha büyük** bir açık çıktı.
@@ -3225,7 +3265,7 @@ anlatmak değil, olan bir şeyi olduğundan iyi anlatmaktır.
 | Kayıt | Tek sürümlü JSON, ileri göç, dosyaya aktarma, tek tuşla silme |
 | Çevrimdışı | Servis çalışanı + tek dosya sürümü (679 KB) |
 | Girdi | Klavye, dokunmatik, gamepad |
-| Test | 41 node + paketleme + 10 tarayıcı paketi, hepsi tek komutta |
+| Test | 42 node + paketleme + 10 tarayıcı paketi, hepsi tek komutta |
 | Zorluk | Ölçülen eğri: `node tools/difficulty.mjs` |
 
 ### Yok, ve neden
