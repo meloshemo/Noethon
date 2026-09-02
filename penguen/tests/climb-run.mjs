@@ -20,7 +20,7 @@
  */
 
 import { Player } from '../src/game/player.js';
-import { scaleForLevel, hushAt, glazeAt, sapAt, swingAt, ICE } from '../src/game/config.js';
+import { scaleForLevel, hushAt, glazeAt, sapAt, swingAt, ICE, WIND, windAt } from '../src/game/config.js';
 import { CLIMB_LEVELS, CLIMB_DRAFTS } from '../src/game/climb.js';
 
 
@@ -37,17 +37,52 @@ import { CLIMB_LEVELS, CLIMB_DRAFTS } from '../src/game/climb.js';
  *
  * One function, so the next zone is wired once.
  */
-function intentFor(def, p, keys) {
+function intentFor(def, p, keys, t = 0) {
   const cx = p.x + p.w / 2;
   return {
     ...keys,
-    push: 0,
+    /*
+     * The gale, which this solver used to climb in dead calm.
+     *
+     * `push` was the literal number zero, on a chapter where four of the
+     * fifteen levels hang a storm across the whole shaft. Measured against the
+     * real physics, a gale at this chapter's own strength moves a jump by a
+     * hundred and five pixels — and the jumps here are between thirty-five and
+     * a hundred and thirteen pixels wide. So the solver was proving a set of
+     * levels the game does not contain: same ice, no weather.
+     *
+     * A clinging penguin is genuinely immune (pressed into the wall, the
+     * collision pass eats the drift every frame), which is why nothing ever
+     * looked wrong on the wall steps. It is the airborne half — every jump and
+     * every kick across a shaft — that the wind owns.
+     *
+     * Computed the same way `world.js` computes it and from the same `windAt`,
+     * with the same ground and dug-in factors, so the two cannot drift apart.
+     */
+    push: windPush(def, p, t, keys.axis ?? 0),
     gravity: hushAt(def.zones, cx, p.y + p.h / 2),
     grip: glazeAt(def.zones, cx, p.y + p.h * 0.4) ? 0 : 1,
     // Wet ice. Wired here, in the one function, exactly as the note above
     // promised the next zone would be.
     sap: sapAt(def.zones, cx, p.y + p.h * 0.4),
   };
+}
+
+/** Everything the weather is doing to the penguin at this instant. */
+function windPush(def, p, t, axis) {
+  let push = 0;
+  const box = { x: p.x, y: p.y, w: p.w, h: p.h };
+  for (const h of def.hazards ?? []) {
+    if (h.kind !== 'storm') continue;
+    const inside =
+      box.x + box.w > h.x && box.x < h.x + h.w && box.y + box.h > h.y && box.y < h.y + h.h;
+    if (!inside) continue;
+    const signed = windAt(t / (h.period ?? WIND.period) + (h.phase ?? 0));
+    const still = p.onGround && Math.abs(axis) < 0.01;
+    const factor = p.onGround ? (still ? WIND.dugIn : WIND.ground) : 1;
+    push += (h.power ?? WIND.power) * signed * (h.dir ?? 1) * factor;
+  }
+  return push;
 }
 
 const STEP = 1 / 120;
@@ -136,7 +171,7 @@ function drowned(p, def) {
  * button stays down. Everything after take-off is steering toward the target,
  * which is what a player does.
  */
-function tryJump(def, solids, a, b, { from, delay, hold }) {
+function tryJump(def, solids, a, b, { from, delay, hold, phase = 0 }) {
   const p = makePlayer(def, a.x + a.w * from, a.y);
   const targetX = b.x + b.w / 2;
   // The top of the shaft is the exit ledge's own height: the route's node for a
@@ -167,7 +202,7 @@ function tryJump(def, solids, a, b, { from, delay, hold }) {
 
     const axis = p.onGround ? dir : Math.sign(targetX - cx) || 0;
     swingTo(solids, t);
-    p.update(STEP, intentFor(def, p, { axis, jumpHeld: held, jumpPressed: pressed }), solids, TUNING);
+    p.update(STEP, intentFor(def, p, { axis, jumpHeld: held, jumpPressed: pressed }, phase + t), solids, TUNING);
     t += STEP;
 
     if (drowned(p, def)) return false;
@@ -210,7 +245,7 @@ function tryJump(def, solids, a, b, { from, delay, hold }) {
  * period so that every phase of the swing gets tried. `hold` is the length of
  * the hop onto the slab.
  */
-function trySwing(def, solids, a, b, { wait, hold }) {
+function trySwing(def, solids, a, b, { wait, hold, phase = 0 }) {
   const slab = solids.find((f) => f.type === 'swing' && Math.abs(f.pivotX - (b.swingPivot ?? f.pivotX)) < 1);
   if (!slab) return false;
   const nearX = b.swing.nearX;
@@ -231,7 +266,7 @@ function trySwing(def, solids, a, b, { wait, hold }) {
     const held = jumped && !onSlab && t - wait < hold;
     p.update(
       STEP,
-      intentFor(def, p, { axis, jumpHeld: held, jumpPressed: press }),
+      intentFor(def, p, { axis, jumpHeld: held, jumpPressed: press }, phase + t),
       solids,
       TUNING,
     );
@@ -246,7 +281,7 @@ function trySwing(def, solids, a, b, { wait, hold }) {
   return false;
 }
 
-function tryWall(def, solids, a, b, { from, delay, mode, first }, probe = {}) {
+function tryWall(def, solids, a, b, { from, delay, mode, first, phase = 0 }, probe = {}) {
   // The lowest the arms ever got on a step that worked.
   //
   // This is the chapter's real difficulty, the way breath is the sea's: how
@@ -379,7 +414,7 @@ function tryWall(def, solids, a, b, { from, delay, mode, first }, probe = {}) {
       if (p.stamina < p.staminaMax * 0.92) {
         axis = 0;
         swingTo(solids, t);
-        p.update(STEP, intentFor(def, p, { axis: 0, jumpHeld: false, jumpPressed: false }), solids, TUNING);
+        p.update(STEP, intentFor(def, p, { axis: 0, jumpHeld: false, jumpPressed: false }, phase + t), solids, TUNING);
         t += STEP;
         continue;
       }
@@ -417,7 +452,7 @@ function tryWall(def, solids, a, b, { from, delay, mode, first }, probe = {}) {
     }
 
     swingTo(solids, t);
-    p.update(STEP, intentFor(def, p, { axis, jumpHeld, jumpPressed }), solids, TUNING);
+    p.update(STEP, intentFor(def, p, { axis, jumpHeld, jumpPressed }, phase + t), solids, TUNING);
     floor = Math.min(floor, p.staminaFrac);
     t += STEP;
 
@@ -499,6 +534,35 @@ function solveStep(def, solids, a, b, probe = {}) {
   let tried = 0;
   let hit = null;
   const delays = delaysOn(a);
+  /*
+   * Storm phases, the way the shelf's solver has always swept them.
+   *
+   * A gale is a breath in and a breath out, and where you are in it decides
+   * whether a gap is short or long — measured, by up to a hundred and five
+   * pixels on a chapter whose jumps are between thirty-five and a hundred and
+   * thirteen. Sweeping a fraction of the cycle reports a step as impossible
+   * when the player only had to wait a moment, and sweeping none of it — which
+   * is what this file did — reports every step as easier than it is.
+   *
+   * Only where there is weather, so the fourteen still levels cost nothing.
+   */
+  const storm = (def.hazards ?? []).find((h) => h.kind === 'storm');
+  const period = storm?.period ?? WIND.period;
+  const phases = storm ? Array.from({ length: 12 }, (_, i) => (period * i) / 12) : [0];
+  /*
+   * And one place where "some phase works" is not good enough.
+   *
+   * Sweeping phases is fair because a player can stand on a ledge and wait for
+   * the gale to breathe out. That argument needs a ledge you can stand on —
+   * and two of the four stormy climbs launch a step from ice that gives way in
+   * under a second, on a storm whose cycle is nearly three. You cannot wait
+   * for the weather on a floe that is already breaking.
+   *
+   * So a step that leaves from breakable ice has to work at *every* phase, and
+   * the sweep records which ones did rather than stopping at the first.
+   */
+  const mustHoldEverywhere = storm && (a.type === 'crack' || a.type === 'fake');
+  const worked = new Set();
   if (b.via === 'swing') {
     // A whole period of waits, so no phase of the swing is assumed.
     const period = b.swing?.period ?? 1.8;
@@ -514,40 +578,61 @@ function solveStep(def, solids, a, b, probe = {}) {
       }
     }
     probe.width = tried ? ok / tried : 0;
+    probe.phases = worked.size;
+    if (mustHoldEverywhere && worked.size < phases.length) {
+      probe.stormGap = `${worked.size}/${phases.length} fırtına fazı`;
+      return null;
+    }
     return hit;
   }
   if (b.via === 'jump') {
-    for (const from of FROMS) {
-      for (const delay of delays) {
-        for (const hold of HOLDS) {
-          tried++;
-          if (tryJump(def, solids, a, b, { from, delay, hold })) {
-            hit ??= { from, delay, hold };
-            if (!MEASURE) return hit;
-            ok++;
+    for (const phase of phases) {
+      for (const from of FROMS) {
+        for (const delay of delays) {
+          for (const hold of HOLDS) {
+            tried++;
+            if (tryJump(def, solids, a, b, { from, delay, hold, phase })) {
+              hit ??= { from, delay, hold, phase };
+              worked.add(phase);
+              if (!MEASURE && !mustHoldEverywhere) return hit;
+              ok++;
+            }
           }
         }
       }
     }
     probe.width = tried ? ok / tried : 0;
+    probe.phases = worked.size;
+    if (mustHoldEverywhere && worked.size < phases.length) {
+      probe.stormGap = `${worked.size}/${phases.length} fırtına fazı`;
+      return null;
+    }
     return hit;
   }
-  for (const from of FROMS) {
-    for (const delay of delays) {
-      for (const mode of MODES) {
-        for (const first of [1, -1]) {
-          tried++;
-          if (tryWall(def, solids, a, b, { from, delay, mode, first }, probe)) {
-            hit ??= { from, delay, mode, first };
-            probe.spare = Math.min(probe.spare ?? 1, probe.stepFloor ?? 1);
-            if (!MEASURE) return hit;
-            ok++;
+  for (const phase of phases) {
+    for (const from of FROMS) {
+      for (const delay of delays) {
+        for (const mode of MODES) {
+          for (const first of [1, -1]) {
+            tried++;
+            if (tryWall(def, solids, a, b, { from, delay, mode, first, phase }, probe)) {
+              hit ??= { from, delay, mode, first, phase };
+              worked.add(phase);
+              probe.spare = Math.min(probe.spare ?? 1, probe.stepFloor ?? 1);
+              if (!MEASURE && !mustHoldEverywhere) return hit;
+              ok++;
+            }
           }
         }
       }
     }
   }
   probe.width = tried ? ok / tried : 0;
+  probe.phases = worked.size;
+  if (mustHoldEverywhere && worked.size < phases.length) {
+    probe.stormGap = `${worked.size}/${phases.length} fırtına fazı`;
+    return null;
+  }
   return hit;
 }
 
@@ -592,7 +677,14 @@ for (const def of suite) {
       if (probe.spare != null) bars.push(probe.spare);
     }
     if (probe.trace) console.log(probe.log.slice(-60).join('\n'));
-    if (!found) bad.push(`${i}. adım (${route[i].via}) yapılamıyor: y ${route[i - 1].y} → ${route[i].y} (en yüksek ${probe.best ?? '-'})`);
+    if (!found) {
+      bad.push(
+        probe.stormGap
+          ? `${i}. adım (${route[i].via}) kırılgan buzdan kalkıyor ve yalnızca ` +
+            `${probe.stormGap} işe yarıyor — o buzda rüzgârı bekleyemezsin`
+          : `${i}. adım (${route[i].via}) yapılamıyor: y ${route[i - 1].y} → ${route[i].y} (en yüksek ${probe.best ?? '-'})`,
+      );
+    }
   }
   if (MEASURE) {
     const tight = widths.length ? Math.min(...widths) : 0;
