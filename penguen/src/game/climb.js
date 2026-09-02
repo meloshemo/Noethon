@@ -113,15 +113,19 @@ const CLIMB_PLANS = [
       t.base({ w: 240 });
       t.steps({ n: 2, rise: 0.62, w: 135 });
       t.chimney({ height: 260 });
-      /* Wet ice on the first shaft, which is the whole point of the level.
-         "Nowhere to catch your breath" was a claim about *layout* — two
-         chimneys with a traverse between them and no ledge to stand on. The
-         bar did not know that: it drained at the same rate here as on the
-         gentlest wall in the chapter, so the subtitle was true of the geometry
-         and false of the resource. A band of running water on the way up the
-         first shaft makes the second one a thing you arrive at with less, and
-         the traverse between them the place you find that out. */
-      t.sodden({ side: 1, from: 0.55 });
+      /* No wet ice on this one, and the arithmetic is the reason.
+         A band was put here first, on the reasoning that "nowhere to catch
+         your breath" was a claim about layout that the bar itself did not
+         know. Charged honestly it does not fit: this shaft is a hundred and
+         ninety pixels tall and a hundred and six of them are the stretch where
+         only one wall has reached down, where the only way up is creeping and
+         a wet pixel costs more than twice what it costs higher. Between the
+         top margin and that stretch there is nowhere left to put a band a
+         player could feel.
+         The chapter has room for exactly one, and it is on 43. That is not a
+         disappointment, it is the budget being visible: these shafts were
+         already tuned to sit near their own fairness line, so wet ice has to
+         be *bought* with height, and most of these plans have none to sell. */
       t.traverse({ n: 2, w: 120 });
       t.chimney({ height: 275 });
       t.steps({ n: 2, rise: 0.58, w: 135 });
@@ -339,7 +343,16 @@ const CLIMB_PLANS = [
     build: (t) => {
       t.base({ w: 225 });
       t.traverse({ n: 3, w: 130, types: ['slip', 'solid'] });
-      t.chimney({ height: 300 });
+      /* Shorter than it was, and the composer is the one that said so.
+         Every chimney has a stretch at the bottom where only one wall has
+         reached down — the columns find their own feet so that entering needs
+         one hand-hold, not two — and in that stretch there is nothing to kick
+         off, so it can only be creeped at more than twice the cost per pixel.
+         The shaft budget had always priced the whole height at the kicking
+         rate. Here that came out at 81% of one bar for the bottom leg alone,
+         against a fairness line of 77%: a climb you lose at the top to a sum,
+         which from the player's seat looks exactly like a fault. */
+      t.chimney({ height: 275 });
       /* No glare ice here, and it was tried.
          The fit is exact — the level is called Polished Ridge and its subtitle
          is "your feet find nothing", which until now was only ever about the
@@ -350,16 +363,18 @@ const CLIMB_PLANS = [
          for is not a good idea for that level. */
       t.traverse({ n: 3, w: 125, types: ['slip', 'solid'] });
       t.chimney({ height: 260, lip: 0.5 });
-      /* Wet ice where glare ice was refused, and the difference is the point.
-         The note above records that a band of verglas was tried on this level
-         and the solver turned it down at every height on both walls: there is
-         no stamina here for a move you cannot back out of. Wet ice is not that
-         move. It leaves the wall exactly where it is and charges for the time
-         spent on it, so it is a thing this level can *pay* for — expensively,
-         on the hardest climb in the chapter, above a lip that already forces
-         one kick to be taken under rock. Refused and expensive are different
-         answers, and the second one is available here. */
-      t.sodden({ side: 1, from: 0.4 });
+      /* And no wet ice here either, on the same grounds as the glare ice.
+         A band was put on this shaft and it is why the level became
+         unfinishable: charged honestly — at the creeping rate, because it
+         landed in the stretch where only one wall has reached down — it took
+         the shaft to ninety-nine per cent of one bar. The old budget could not
+         see that, because it priced every pixel of every shaft at the kicking
+         rate.
+         The note above turns out to have been about the level rather than
+         about verglas: this climb has no bar to spare for anything of any
+         kind. Two mechanics have now been offered to it and the arithmetic has
+         refused both. Worth leaving written down so it is not offered a
+         third. */
       t.steps({ n: 2, rise: 0.58, w: 135 });
       t.crown({ w: 245 });
       t.scatterFish(3, 58);
@@ -410,7 +425,9 @@ const CLIMB_PLANS = [
       // meant to be: on the shelf you keep running and survive it, up here the
       // ledge you were about to rest on simply is not there.
       t.traverse({ n: 3, w: 125, types: ['solid', 'fake'] });
-      t.chimney({ height: 330 });
+      // Twenty pixels shorter than it was, bought back as wet ice below: a
+      // shaft and a band spend the same bar, so a plan cannot simply add one.
+      t.chimney({ height: 310 });
       /* The wall lies too.
          Three levels in this chapter had exactly the same vocabulary — 38, 42
          and 43 — which on a level called Lying Ice is the joke going the wrong
@@ -496,7 +513,12 @@ const CLIMB_PLANS = [
     build: (t) => {
       t.base({ w: 210 });
       t.gale({ height: 900, power: 180, period: 2.8 });
-      t.chimney({ height: 360, hazard: 'shards' });
+      /* Two points of arithmetic over the line, and it counts. The summit's
+         first shaft priced out at 68% of a bar against its own 66% limit once
+         the bottom of it was charged at the creeping rate it is actually
+         climbed at. Nobody reported this one — it is the level after the one
+         that was reported, and it was over by the same rule. */
+      t.chimney({ height: 345, hazard: 'shards' });
       t.traverse({ n: 3, w: 116, types: ['crack', 'solid'] });
       t.chimney({ height: 400, rests: 1, hazard: 'shards', lip: 0.62 });
       t.traverse({ n: 3, w: 116, types: ['solid', 'fake'] });

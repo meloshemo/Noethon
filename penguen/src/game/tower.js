@@ -887,6 +887,50 @@ export class Tower {
     // lifted clear of a corridor below, the shaft starts higher — it does not
     // silently become a shorter climb than the budget was checked against.
     const wallTop = wallBottom - height;
+
+    /**
+     * The part of the shaft that has only one wall in it — and what it costs.
+     *
+     * The ceiling checked above is the one this piece has always used, and it
+     * is optimistic in a way that only shows up as a level nobody can finish:
+     * it prices the whole shaft at `max(kicked, creep)`, which is the kicking
+     * rate, and kicking needs *two* walls. The columns never both reach the
+     * bottom — each finds its own foot, by design, so that entering the shaft
+     * only needs one hand-hold — so the bottom of every chimney in the game is
+     * a stretch where the far wall is not there yet and the only way up is to
+     * creep, at more than twice the cost per pixel.
+     *
+     * Measured across the chapter most shafts spend 40–70% of a bar and are
+     * fine. Level 41's bottom leg came out at **81%** against a fairness line
+     * of 77%, and with a band of wet ice on it the second shaft reached 99%.
+     * That is not a hard climb, it is a climb you lose at the top to a sum you
+     * cannot see — which is exactly how it was reported: "a gap you cannot get
+     * past, and it does not look like difficulty."
+     */
+    const second = Math.min(...feet);
+    const solo = Math.max(0, Math.min(height, wallBottom - second));
+    const both = Math.max(0, height - solo);
+    const lean = leanOn(BUDGET.kick, this.effort);
+    const trueCost = solo / budget.creep + both / budget.kicked;
+    // The bottom leg carries all of the creeping, so it is the one that has to
+    // fit on its own bar; a rest ledge only helps what comes after it.
+    const segment = height / (rests + 1);
+    const soloIn = Math.min(solo, segment);
+    const firstLeg = soloIn / budget.creep + (segment - soloIn) / budget.kicked;
+    if (firstLeg > lean) {
+      throw new Error(
+        `bacanın alt bölümü tek bara sığmıyor: ${Math.round(segment)}px, ` +
+          `${Math.round(soloIn)}px'i tek duvarda — barın %${Math.round(firstLeg * 100)}'i ` +
+          `(sınır %${Math.round(lean * 100)})`,
+      );
+    }
+    if (trueCost > (rests + 1) * lean) {
+      throw new Error(
+        `baca gerçek hızlarla sığmıyor: ${Math.round(solo)}px sürünme + ` +
+          `${Math.round(both)}px tekme = barın %${Math.round(trueCost * 100)}'i, ` +
+          `${rests} molayla sınır %${Math.round((rests + 1) * lean * 100)}`,
+      );
+    }
     // The cornice sits *level* with the heads of the columns, not above them.
     // Raised even a ledge's thickness, its underside becomes a lip exactly
     // where the last kick passes, and the climb dies five pixels from the top.
@@ -945,7 +989,22 @@ export class Tower {
     // rather than found again later, because "the last two walls" is not the
     // same thing as "this chimney" the moment a shaft has rests in it and puts
     // four columns down instead of two.
-    this._lastShaft = { leftFace, rightFace, top: wallTop, bottom: lowest, inner, ceiling };
+    this._lastShaft = {
+      leftFace,
+      rightFace,
+      top: wallTop,
+      bottom: lowest,
+      inner,
+      ceiling,
+      /* What anything hung on this shaft afterwards has to fit inside, and at
+         which rate: the bar the ascent does not already spend, plus the line
+         where the second wall begins — a pixel of wet ice below it is creeped
+         and one above it is kicked, at less than half the price. */
+      spare: Math.max(0, (rests + 1) * lean - trueCost),
+      soloTop: second,
+      creep: budget.creep,
+      kicked: budget.kicked,
+    };
 
     // A lip: rock jutting from a wall partway up, so one kick in the shaft has
     // to be taken under something. It cannot be gripped — a slab you could
@@ -1138,33 +1197,41 @@ export class Tower {
     }
 
     const height = shaft.bottom - shaft.top;
-    /* The shaft's own ceiling, not a fresh guess at one.
-       The first version worked this out again from `climbBudget` and got a
-       different number, because a chimney is climbed by kicking and kicking is
-       cheaper than creeping — so it read every ordinary shaft as already spent
-       and refused a band on all of them. The piece that proved a shaft fits is
-       the piece that knows what fitting cost. */
+    /* The shaft's own numbers, not a fresh guess at them. An early version
+       worked the budget out again from `climbBudget` and got a different
+       answer, because a chimney is climbed by kicking and kicking is cheaper
+       than creeping — so it read every ordinary shaft as already spent and
+       refused a band on all of them. */
     const ceiling = shaft.ceiling ?? climbBudget(this.scale, shaft.inner).creep;
+    void ceiling;
     /* What the band costs, in the currency the shaft is measured in.
        A second of wet ice costs `sap` seconds of bar, so crossing `span`
        pixels of it spends what `span * sap` pixels of dry wall would. The
        extra has to fit in what the shaft did not already use. */
-    const spare = ceiling - height;
+    /*
+     * What the band may cost, in bars rather than in pixels.
+     *
+     * This used to subtract the shaft's height from its ceiling and call the
+     * difference "spare pixels", which is two mistakes in one line. Pixels are
+     * not a currency here — one costs a certain amount creeped and less than
+     * half that kicked — and the ceiling it subtracted from was the optimistic
+     * one that prices a whole shaft at the kicking rate.
+     *
+     * On level 41 that let a band be hung in the creep-only stretch at the
+     * bottom of a shaft, where its pixels cost the most in the game, and
+     * reported it as comfortably inside budget. Charged properly the shaft
+     * came out at 99% of one bar.
+     */
+    const rate = (y) => (y > shaft.soloTop ? shaft.creep : shaft.kicked);
+    const spare = shaft.spare ?? 0;
     /* A plan that names no length gets the longest band the shaft can afford,
        rather than a fixed number that fits some shafts and not others. Named
        or not, it is then checked against the same headroom: a plan may make an
        easy shaft expensive, and may not make a proved one unclimbable. */
+    const where = shaft.bottom - height * from;
+    const afford = (spare / (sap - 1)) * rate(where);
     const span =
-      len != null
-        ? Math.round(len)
-        : Math.floor(Math.max(0, Math.min(150, height * 0.3, spare / (sap - 1))));
-    const extra = span * (sap - 1);
-    if (extra > spare) {
-      throw new Error(
-        `ıslak buz bandı bütçeyi aşıyor: ${Math.round(extra)}px fazladan, ` +
-          `${Math.round(Math.max(0, spare))}px boşluk var`,
-      );
-    }
+      len != null ? Math.round(len) : Math.floor(Math.max(0, Math.min(150, height * 0.3, afford)));
     // Below a body height it is not a band, it is a stripe: the penguin is
     // through it before the extra drain amounts to anything, and the level
     // has a mechanic in it that nobody can feel.
@@ -1182,6 +1249,17 @@ export class Tower {
     );
     if (top <= shaft.top + 8 || top + span >= shaft.bottom - 8) {
       throw new Error(`ıslak buz bandı bacaya sığmıyor: ${height}px şaft, ${span}px bant`);
+    }
+
+    // And now the bill, pixel by pixel, at the rate of the section each is in.
+    let cost = 0;
+    for (let y = top; y < top + span; y += 2) cost += (2 * (sap - 1)) / rate(y);
+    if (cost > spare) {
+      throw new Error(
+        `ıslak buz bandı bütçeyi aşıyor: barın %${Math.round(cost * 100)}'i, ` +
+          `%${Math.round(spare * 100)} boşluk var` +
+          (top + span > shaft.soloTop ? ' (bant tek duvarlı bölümde, orası sürünerek geçiliyor)' : ''),
+      );
     }
 
     // Read at the penguin's middle, which when it is holding this wall is just

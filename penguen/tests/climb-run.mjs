@@ -20,7 +20,7 @@
  */
 
 import { Player } from '../src/game/player.js';
-import { scaleForLevel, hushAt, glazeAt, sapAt, swingAt} from '../src/game/config.js';
+import { scaleForLevel, hushAt, glazeAt, sapAt, swingAt, ICE } from '../src/game/config.js';
 import { CLIMB_LEVELS, CLIMB_DRAFTS } from '../src/game/climb.js';
 
 
@@ -471,10 +471,34 @@ const MODES = ['kick', 'creep'];
  */
 const MEASURE = process.argv.includes('--measure');
 
+/**
+ * How long the ledge you are leaving from will hold you.
+ *
+ * The solver builds its collision list once and every floe in it is permanent,
+ * which is fine for a chapter made of solid ice and quietly wrong for this
+ * one: five of the fifteen climbs put `crack` or `fake` ice *on the route*.
+ * Fake ice holds for under half a second and cracked ice for less than one, so
+ * a solution that stands on either and waits eight tenths of a second before
+ * jumping is a solution the game will not allow — and the sweep was free to
+ * find one, and to call the level proved on the strength of it.
+ *
+ * Modelling the ice dissolving underneath the penguin would be the thorough
+ * fix and a large one. The *waiting* is the part breakable ice forbids, so the
+ * delays offered are cut to what the ledge can actually carry.
+ */
+function delaysOn(node) {
+  if (node.type !== 'crack' && node.type !== 'fake') return DELAYS;
+  const holds = node.type === 'fake' ? ICE.fakeDelay : ICE.crackDelay;
+  // A little under: the break starts when the foot lands, and the jump has to
+  // be committed before the ice is gone rather than as it goes.
+  return DELAYS.filter((d) => d <= holds * 0.8);
+}
+
 function solveStep(def, solids, a, b, probe = {}) {
   let ok = 0;
   let tried = 0;
   let hit = null;
+  const delays = delaysOn(a);
   if (b.via === 'swing') {
     // A whole period of waits, so no phase of the swing is assumed.
     const period = b.swing?.period ?? 1.8;
@@ -494,7 +518,7 @@ function solveStep(def, solids, a, b, probe = {}) {
   }
   if (b.via === 'jump') {
     for (const from of FROMS) {
-      for (const delay of DELAYS) {
+      for (const delay of delays) {
         for (const hold of HOLDS) {
           tried++;
           if (tryJump(def, solids, a, b, { from, delay, hold })) {
@@ -509,7 +533,7 @@ function solveStep(def, solids, a, b, probe = {}) {
     return hit;
   }
   for (const from of FROMS) {
-    for (const delay of DELAYS) {
+    for (const delay of delays) {
       for (const mode of MODES) {
         for (const first of [1, -1]) {
           tried++;

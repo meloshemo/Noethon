@@ -25,7 +25,7 @@
  */
 
 import { Player } from '../src/game/player.js';
-import { WIND, windAt, scaleForLevel, PHYS, PENGUIN, hushAt} from '../src/game/config.js';
+import { WIND, windAt, scaleForLevel, PHYS, PENGUIN, hushAt, ICE } from '../src/game/config.js';
 import { LEVELS } from '../src/game/levels.js';
 import { generateLevel } from '../src/game/generator.js';
 
@@ -150,6 +150,22 @@ function tryHop(def, solids, a, b, { start, phase, delay, hold }, centred = fals
  * a gap as impossible when the player only had to wait a second longer, which
  * is the solver being wrong about the level rather than the other way round.
  */
+/**
+ * How long the floe you are leaving from will hold you.
+ *
+ * The same hole the mountain's solver had. `snap` ice is filtered out of the
+ * collision list because it vanishes, but `crack`, `fake` and `melt` are left
+ * in as permanent ground — and they are not: fake ice holds for under half a
+ * second, cracked ice for less than one. A sweep allowed to wait a second and
+ * a third on a floe that gives way in half of one can report a hop as passable
+ * on the strength of a pause the game will never grant.
+ */
+function waitOn(f) {
+  if (f.type === 'fake') return ICE.fakeDelay * 0.8;
+  if (f.type === 'crack' || f.type === 'melt' || f.type === 'trap') return ICE.crackDelay * 0.8;
+  return Infinity;
+}
+
 function search(def, solids, a, b, fixedStart = null) {
   const storm = (def.hazards ?? []).find((h) => h.kind === 'storm');
   const period = storm?.period ?? WIND.period;
@@ -162,7 +178,8 @@ function search(def, solids, a, b, fixedStart = null) {
   let first = null;
   for (const phase of phases) {
     for (const start of starts) {
-      for (let delay = 0; delay <= 1.3; delay += step) {
+      const patience = Math.min(1.3, waitOn(a));
+      for (let delay = 0; delay <= patience; delay += step) {
         for (const hold of [0.06, 0.12, 0.2, 0.3, 0.5, 1]) {
           tried++;
           if (tryHop(def, solids, a, b, { start, phase, delay, hold }, fixedStart != null)) {
