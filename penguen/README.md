@@ -1940,6 +1940,38 @@ belirleyici adımı başka yerde ve o adım da iki sınırdan birine dayanmış
 durumda. Yani zirvenin bayrağı **tavan** hakkında bir gerçek, plan hakkında
 değil.
 
+## Tekrar ölçüsü, parametreleri göremediği için yanlış sayıyordu
+
+`tools/variety.mjs` her bölümün çağırdığı besteci fiillerini okuyup, bir
+chapter içinde sözlüğünün %80'i ortak olan çiftleri sayıyor. Yalnızca **metot
+adlarını** okuyordu — ve bu, önemli bir yerde eksik sayıyor.
+
+Dağın üç tırmanışı birebir aynı sözlükle çıkıyordu: `base steps chimney
+traverse crown`. Oysa biri üstünde duramadığın cilalı buzun üstüne kurulu,
+biri kavramayı öğreten sade bir baca, biri de tekmenin kayanın altından
+atılmasını zorlayan bir çıkıntı taşıyor. Bunlar yolda karşılaşılan **farklı
+şeyler**. Sadece metot değil, argüman olarak yazılıyorlar.
+
+Artık `types: ['slip','fake']`, `hazard: 'shards'`, `lip` ve `rests` de sözlüğe
+dâhil. Ölçüt şu: oyuncu yanından geçerken bunu "başka bir şey" diye tarif eder
+mi? Cilalı zemin açıkça eder.
+
+| chapter | eski okuma | gerçek okuma | fiil |
+|---|---|---|---|
+| I · Sahanlık | %6 | **%2** | 18 → 24 |
+| II · Zirve | %12 | **%3** | 10 → 16 |
+| III · Buz Altı | %6 | %6 | 12 |
+| IV · Kar Topu | %5 | %5 | 7 |
+
+Yani dağ hiçbir zaman aracın söylediği kadar tekrarlı değildi; ayrımları aracın
+göremediği yerdeydi. Bu düzeltmeden sonra **en tekrarlı chapter deniz** (%6) —
+ve denizin varyasyonları isim değil sayı (`at`, `flow`, `rise`), o yüzden onun
+okuması değişmedi. Sıradaki iş orada.
+
+Bu bölümün üstündeki eski oranlar (%19 → %12 → %6 gibi) o günün okumasına göre
+doğruydu ve öyle bırakıldı: bir ölçünün değiştiği yerde eski sayıyı silmek,
+neyin neden değiştiğini de siler.
+
 ## Arenanın "en yakın top"u bir kadran değil, bir taban
 
 Arena finali hedefin gerisinde duruyordu: en yakın top 55px, hedef 16px. Daha

@@ -59,7 +59,28 @@ for (const [start, file] of Object.entries(SOURCE)) {
     const composer = body.match(/build:\s*\((\w+)\)\s*=>/);
     if (!composer) throw new Error(`${file}: ${+start + i}. bölümün bestecisi okunamadı`);
     const calls = [...body.matchAll(new RegExp(`\\b${composer[1]}\\.(\\w+)\\(`, 'g'))];
-    verbs.set(+start + i, new Set(calls.map((m) => m[1]).filter((v) => !FURNITURE.has(v))));
+    const words = calls.map((m) => m[1]).filter((v) => !FURNITURE.has(v));
+    /*
+     * Verbs, plus the things a plan names that are verbs in all but syntax.
+     *
+     * Reading only the method names undercounts, and it undercounts in a way
+     * that matters: three of the mountain's climbs came out with an identical
+     * vocabulary — `base steps chimney traverse crown` — while one of them is
+     * built on ice you cannot stand still on, one is a plain teaching shaft and
+     * one hangs rock over a kick. Those are different things to meet. They are
+     * simply passed as arguments rather than called as methods.
+     *
+     * So a `types: ['slip', 'fake']`, a `hazard: 'shards'`, a `lip` and a
+     * `rests` count as vocabulary too. The test is whether a player would
+     * describe it as a different thing on the way past, and slippery footing
+     * plainly is.
+     */
+    for (const m of body.matchAll(/types:\s*\[([^\]]*)\]/g)) {
+      for (const kind of m[1].matchAll(/'(\w+)'/g)) if (kind[1] !== 'solid') words.push(kind[1]);
+    }
+    for (const m of body.matchAll(/hazard:\s*'(\w+)'/g)) words.push(m[1]);
+    for (const m of body.matchAll(/\b(lip|rests):/g)) words.push(m[1]);
+    verbs.set(+start + i, new Set(words));
     names.set(+start + i, block.slice(0, block.indexOf("'")));
   });
 }

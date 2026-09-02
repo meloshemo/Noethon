@@ -393,6 +393,15 @@ const CLIMB_PLANS = [
       t.base({ w: 225 });
       t.steps({ n: 2, rise: 0.6, w: 132 });
       t.chimney({ height: 420, rests: 2, hazard: 'shards' });
+      /* And the tall shaft is the one that can afford wet ice.
+         The band went onto 35 and 41 first and the honest budget threw it off
+         both: their shafts sit near their own fairness line with nothing left
+         to spend. This one has two rests in it, so it is measured as three
+         short legs rather than one long one, and every leg has room. That is
+         the trade the mechanic is for — a level whose shape leaves change in
+         the bar can buy something with it, and one whose shape does not
+         cannot. */
+      t.sodden({ side: -1, from: 0.78 });
       t.traverse({ n: 3, w: 118 });
 // A rope in the second shaft, on the tallest tower in the chapter.
       //
