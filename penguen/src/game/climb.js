@@ -520,10 +520,33 @@ const CLIMB_PLANS = [
          that was reported, and it was over by the same rule. */
       t.chimney({ height: 345, hazard: 'shards' });
       t.traverse({ n: 3, w: 116, types: ['crack', 'solid'] });
+      /* Taller than it was, because the summit had gone soft in the one place
+         the chapter measures.
+         Cutting the first shaft to satisfy the honest budget cost this level
+         real difficulty: on the arm-bar reading it finished with a third of a
+         bar while 42, 44 and 45 finish with a tenth — the finale was the
+         easiest of the last four on the chapter's own axis. This shaft has a
+         rest in it, so each of its two legs is measured separately and both
+         had room. The height goes back into the half of the climb that can
+         carry it. */
       t.chimney({ height: 400, rests: 1, hazard: 'shards', lip: 0.62 });
       t.traverse({ n: 3, w: 116, types: ['solid', 'fake'] });
       t.face({ height: 185, side: -1, exit: 150 });
-      t.chimney({ height: 300, hazard: 'shards' });
+      /* Forty pixels taller, and worth writing down what that did not do.
+         Cutting shaft one to satisfy the honest budget cost this level
+         difficulty on the chapter's own axis: it finishes with a third of a
+         bar where 42, 44 and 45 finish with a tenth. Three ways to give it
+         back were tried. The middle shaft is at the height the *physics*
+         allows — the solver cannot climb 415 there, let alone 500. Shafts one
+         and two sit exactly on the *budget* line. This one had room in both,
+         so the height went here — and the measured arm reading did not move a
+         point, because the level's binding step is elsewhere and that step is
+         itself against one of the two limits.
+         So the summit is as demanding of the arm as this chapter's geometry
+         permits, and the difficulty tool's "easy" flag on it is a fact about
+         the ceiling rather than about the plan. The extra height stays: it is
+         more climbing on the last climb, honestly priced. */
+      t.chimney({ height: 340, hazard: 'shards' });
       t.crown({ w: 250 });
       t.scatterFish(3, 58);
       t.fishAt(7, 92, 'speed');

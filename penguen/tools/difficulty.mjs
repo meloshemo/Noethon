@@ -101,7 +101,30 @@ const CHAPTERS = [
     metric: 'kalan kol gücü',
     read: (tight, spare) => spare,
     format: (v) => `%${Math.round(v * 100)}`,
-    want: [0.62, 0.03],
+    /*
+     * The band moved because the number under it was being read wrong.
+     *
+     * `spare` used to be the *minimum* over every attempt that worked, which
+     * is the clumsiest line that still happens to succeed — and on a search
+     * trying a hundred and sixty combinations there is nearly always one that
+     * scrapes through on an empty arm. Five of the fifteen climbs therefore
+     * read "0% left" while their shafts measured comfortably inside budget:
+     * the metric had bottomed out and was saying nothing.
+     *
+     * It is the best working line now, which is what a player actually has,
+     * and the chapter reads as a curve again: a full bar at the first climb
+     * down to a tenth of one at the hardest. The band is that curve.
+     *
+     * One level sits above the line on purpose and cannot be brought down to
+     * it: the summit finishes with about a third of a bar. Its middle shaft is
+     * already at the height the solver can physically climb, and its other two
+     * are exactly on the budget line, so there is nowhere left to spend. The
+     * flag on 46 is a fact about the ceiling, not about the plan — the same
+     * kind of saturation chapter I's `tight` ramp hit, and recorded here for
+     * the same reason: so it is not re-derived every time somebody reads the
+     * chart.
+     */
+    want: [0.95, 0.1],
     easier: 'up',
   },
   {

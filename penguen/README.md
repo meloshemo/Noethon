@@ -1879,6 +1879,60 @@ yaslanmamıştı.
 `tests/shaft.mjs` her iki kuralı da kilitliyor: 27 baca bölümü ve 17 tek duvar,
 gerçekten tırmanıldıkları hızlardan ölçülüyor.
 
+## Tırmanış çözücüsü fırtınayı hiç görmüyordu
+
+41'in aralığını düzeltirken aynı sınıftan **daha büyük** bir açık çıktı.
+
+`intentFor` içinde `push` düz **sıfır**dı. On beş tırmanışın dördü bütün şaftın
+üstüne bir fırtına asıyor — 40, 44, 45, 46 — ve çözücü hepsini **ölü sakinlikte**
+kanıtlıyordu.
+
+Ne kadar önemli olduğu ölçüldü: bu chapter'ın kendi gücündeki bir gale (170–180)
+bir sıçrayışı **105 piksel** kaydırıyor. Buradaki sıçrayışlar 35 ile 113 piksel
+arası. Yani rüzgâr, bir boşluğu iki katına çıkarabiliyor ya da tamamen
+kapatabiliyor — ve kanıt onu hiç görmüyordu.
+
+Duvara tutunan penguen rüzgârdan **gerçekten** etkilenmiyor: duvara bastırılmış
+hâlde çarpışma her karede drift'i yiyor. O yüzden duvar adımlarında hiçbir şey
+yanlış görünmüyordu. Havada olan yarısı — her sıçrayış ve şafttaki her tekme —
+rüzgârın malı.
+
+Artık `push` `world.js`'in hesapladığı gibi, aynı `windAt`'ten, aynı zemin ve
+kazık faktörleriyle hesaplanıyor; ve fırtınalı bölümlerde her adım sahanlığın
+çözücüsündeki gibi **12 faz** boyunca taranıyor.
+
+### Bir de adalet kuralı
+
+Faz taramak adil, çünkü oyuncu bir sahanlıkta durup rüzgârın geçmesini
+bekleyebilir. Ama iki fırtınalı tırmanış, adımlarını **yarım saniyede kırılan
+buzdan** kaldırıyor — ve orada rüzgârı bekleyemezsin. O yüzden kırılgan buzdan
+kalkan bir adım artık **bütün** fazlarda çalışmak zorunda, birinde değil.
+
+### Ve ölçüm aletinin kendisi yine bozuktu
+
+Rüzgâr modellendikten sonra beş bölüm "kalan kol gücü %0" göstermeye başladı —
+ama `tests/shaft.mjs` aynı bacaları bütçenin rahatça içinde ölçüyordu. Sebebi
+metrikti: `spare`, **işe yarayan bütün denemelerin en kötüsünü** alıyordu. Yüz
+altmış kombinasyon deneyen bir aramada, hemen her zaman kolu bitirerek zar zor
+sıyrılan bir tane bulunur. Yani sayı dibe vurmuş ve hiçbir şey söylemiyordu.
+
+Oyuncunun elinde olan şey **bulabildiği en iyi hat**, o yüzden ölçülen de o
+oldu. Chapter yeniden bir eğri:
+
+| bölüm | 32 | 35 | 38 | 41 | 44 | 46 |
+|---|---|---|---|---|---|---|
+| kalan kol gücü | %100 | %70 | %62 | %34 | %11 | %32 |
+
+Eğim hedeflenen rampanın **%80'i**, toplam kolaylık sapması **0,7**.
+
+Tek bayrak zirvede, ve kaldırılamıyor: 46 üçte bir barla bitiyor. Orta bacası
+çözücünün fiziksel olarak tırmanabildiği yükseklikte (415'i geçemiyor, 500'ü
+hiç), diğer iki bacası da tam bütçe çizgisinde. Üçüncü bacaya kırk piksel
+eklendi — meşru, kanıtlı, ve sayıyı bir puan bile oynatmadı, çünkü bölümün
+belirleyici adımı başka yerde ve o adım da iki sınırdan birine dayanmış
+durumda. Yani zirvenin bayrağı **tavan** hakkında bir gerçek, plan hakkında
+değil.
+
 ## Zorluk: geometri tavana vurdu, o yüzden zaman kısaldı
 
 Bölümlerin zorluk kadranı ölçüldü ve **tavana vurmuş** çıktı. Sahanlıkta `tight`

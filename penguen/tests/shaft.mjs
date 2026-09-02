@@ -61,6 +61,7 @@ function shafts(def) {
          one way up; above it there are two and the climb is kicks. */
       soloTop: Math.min(...feet),
       face: cols.find((c) => c.y + c.h === bottom),
+      leftFace: Math.min(...cols.map((c) => c.x)),
       inner: node.chimney.inner,
     });
   }
@@ -125,25 +126,36 @@ console.log('1) Her bacanın her bölümü tek bara sığıyor');
 console.log('\n2) Tek duvarlar sürünme bütçesinin içinde');
 {
   /* A single face has no second wall by definition, so every pixel of it is
-     creeped. Nothing here was over the line — this is the check that keeps it
-     that way, since `face` and `chimney` price the bar differently. */
+     creeped. `face` and `chimney` price the bar differently, so which one a
+     wall belongs to has to be decided properly rather than guessed at.
+
+     Guessed at, it was wrong: the first version grouped walls by their top
+     edge and called anything alone a face. A shaft with a rest ledge in it
+     *breaks one of its columns* to stand the shelf on, so that column arrives
+     as two pieces with two different tops — and both were then charged at the
+     creeping rate for a climb that is kicked. The level that exposed it was
+     the summit, the moment its middle shaft grew a rest. A wall is part of a
+     shaft if it stands in one, so that is what is asked. */
   let counted = 0;
   for (const def of CLIMB_LEVELS) {
     const scale = def.scale ?? scaleForLevel(def.id);
     const budget = climbBudget(scale, 520);
     const lean = leanOn(CREEP_BUDGET, def.effort ?? 1);
-    const byTop = new Map();
+    const boxes = shafts(def);
+    const inShaft = (w) =>
+      boxes.some(
+        (s) =>
+          w.y + w.h > s.top - 8 &&
+          w.y < s.bottom + 8 &&
+          Math.abs(w.x - s.leftFace) < s.inner + 98,
+      );
     for (const w of (def.terrain ?? []).filter((t) => t.climb)) {
-      const k = Math.round(w.y / 6);
-      byTop.set(k, [...(byTop.get(k) ?? []), w]);
-    }
-    for (const [, group] of byTop) {
-      if (group.length !== 1) continue;
+      if (inShaft(w)) continue;
       counted++;
-      const cost = group[0].h / budget.creep;
+      const cost = w.h / budget.creep;
       if (cost > lean) {
         bad(
-          `L${def.id} ${def.name}: ${group[0].h}px tek duvar barın %${Math.round(cost * 100)}'ini ` +
+          `L${def.id} ${def.name}: ${w.h}px tek duvar barın %${Math.round(cost * 100)}'ini ` +
             `istiyor (sınır %${Math.round(lean * 100)})`,
         );
       }

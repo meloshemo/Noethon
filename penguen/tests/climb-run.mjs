@@ -456,7 +456,7 @@ function tryWall(def, solids, a, b, { from, delay, mode, first, phase = 0 }, pro
     floor = Math.min(floor, p.staminaFrac);
     t += STEP;
 
-    if (p.y < (probe.best ?? Infinity)) probe.best = Math.round(p.y);
+    if (p.y < (probe.high ?? Infinity)) probe.high = Math.round(p.y);
     if (probe.trace && i % 4 === 0) {
       probe.log.push(
         `${t.toFixed(2)} cx${Math.round(p.x + p.w / 2)} y${Math.round(p.y)} vy${Math.round(p.vy)} ` +
@@ -618,7 +618,8 @@ function solveStep(def, solids, a, b, probe = {}) {
             if (tryWall(def, solids, a, b, { from, delay, mode, first, phase }, probe)) {
               hit ??= { from, delay, mode, first, phase };
               worked.add(phase);
-              probe.spare = Math.min(probe.spare ?? 1, probe.stepFloor ?? 1);
+              // The *best* line, not the worst one that happens to work.
+              probe.arm = Math.max(probe.arm ?? 0, probe.stepFloor ?? 0);
               if (!MEASURE && !mustHoldEverywhere) return hit;
               ok++;
             }
@@ -674,7 +675,21 @@ for (const def of suite) {
     const found = solveStep(def, solids, route[i - 1], route[i], probe);
     if (MEASURE && found) {
       widths.push(probe.width ?? 1);
-      if (probe.spare != null) bars.push(probe.spare);
+      /*
+       * The bar reading, taken off the best line rather than the worst.
+       *
+       * This used to be `min` over every attempt that worked, which is the
+       * clumsiest way of doing a step that still happens to succeed — and on a
+       * search trying a hundred and sixty combinations there is nearly always
+       * one that scrapes through on an empty arm. Five levels therefore
+       * reported "0% left" while their shafts measured comfortably inside
+       * budget, and the number said nothing about the chapter.
+       *
+       * What a player has is the best line they can find, so that is what is
+       * recorded: the most arm any working attempt finished with, and then the
+       * worst of those across the climb.
+       */
+      if (probe.arm != null) bars.push(probe.arm);
     }
     if (probe.trace) console.log(probe.log.slice(-60).join('\n'));
     if (!found) {
@@ -682,7 +697,7 @@ for (const def of suite) {
         probe.stormGap
           ? `${i}. adım (${route[i].via}) kırılgan buzdan kalkıyor ve yalnızca ` +
             `${probe.stormGap} işe yarıyor — o buzda rüzgârı bekleyemezsin`
-          : `${i}. adım (${route[i].via}) yapılamıyor: y ${route[i - 1].y} → ${route[i].y} (en yüksek ${probe.best ?? '-'})`,
+          : `${i}. adım (${route[i].via}) yapılamıyor: y ${route[i - 1].y} → ${route[i].y} (en yüksek ${probe.high ?? '-'})`,
       );
     }
   }
