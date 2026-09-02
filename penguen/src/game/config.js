@@ -865,6 +865,22 @@ export const AMBUSH = {
   /** Rarer than on the shelf: a climb is slower, so the same rate bites more. */
   roostRate: 0.26,
   /**
+   * How near a climbable wall has to be for a bird to come at all.
+   *
+   * A dive sweeps two hundred and forty pixels sideways through its strike
+   * point, and the mountain's ledges are a hundred and sixteen to a hundred
+   * and fifty. So the shelf's answer — keep running — does not exist up here:
+   * running to the far lip of a ledge gets you to the far lip. Measured over
+   * thirty-five ledges, a fleeing penguin was caught a hundred and fifty times
+   * out of two hundred and ten.
+   *
+   * The wall is therefore not a second answer, it is the only one, and a
+   * threat whose answer is sometimes missing is a coin flip. A short run —
+   * about two thirds of a second at climbing pace — is what "within reach"
+   * means, and a bird will not launch without one.
+   */
+  roostReach: 150,
+  /**
    * Being carried.
    *
    * The bird used to grab you and that was the end of it: a fixed second of

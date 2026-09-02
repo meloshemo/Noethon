@@ -1767,6 +1767,13 @@ kadar. **On beş zor şaft, aralarında sınırsız mola.**
 
 Kuş tam olarak orayı avlıyor:
 
+- **Yalnızca cevabı olan yerde saldırıyor.** Sahanlığın cevabı — koşmaya devam
+  et — burada yok, ve bu tahmin değil ölçüm: bir dalış, vuruş noktasının içinden
+  **240 piksel** yatay süpürüyor, bu chapter'ın sahanlıkları ise 116–150 piksel.
+  Yani bir sahanlığın öbür ucuna koşmak seni "öbür uca" götürüyor, kuşun dışına
+  değil. Otuz beş sahanlıkta ölçüldüğünde kaçan penguen **210 denemenin
+  150'sinde** yakalandı. O yüzden duvar ikinci cevap değil, **tek** cevap — ve
+  kuş, tutunulacak buz bir koşu mesafesindeyken geliyor, başka zaman değil.
 - **Duvardaki ya da havadaki pengueni hiç hedef almıyor.** Eski itiraz doğruydu
   ve korunuyor: şaftlar tam olarak eskiden oldukları problem.
 - **Kayadaki pengueni asla almıyor.** Mutlak bir kural, çünkü bazen işleyen bir

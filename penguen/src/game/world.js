@@ -281,15 +281,21 @@ export class World {
      * chapter *gave the resource back*, for free, for as long as you liked.
      * Fifteen hard shafts joined by unlimited rest.
      *
-     * This bird hunts that ground. It never launches at a climber who is on a
-     * wall or in the air, because the original objection was right — there is
-     * no dodging inside a shaft — and it never takes anybody off rock. What it
-     * takes away is *standing still*: the refill is still there, and it is no
-     * longer free of charge.
+     * This bird hunts that ground — but only the part of it that has an
+     * answer. It never launches at a climber who is on a wall or in the air,
+     * because the original objection was right, and it never takes anybody off
+     * rock. What it takes away is *standing still beside a wall*: the refill
+     * is still there and it is no longer free of charge.
      *
-     * The dodge on a wide ledge is the shelf's dodge, keep moving, which the
-     * chapter's players have known since level twelve. Where a face is within
-     * reach there is a second answer, and it is the chapter's own: get on it.
+     * The shelf's dodge — keep running — is not available up here, and that
+     * was measured rather than assumed: a dive sweeps two hundred and forty
+     * pixels sideways through its strike point, and this chapter's ledges are
+     * a hundred and sixteen to a hundred and fifty wide, so running to the far
+     * lip of one gets you to the far lip. Over thirty-five ledges a fleeing
+     * penguin was caught a hundred and fifty times out of two hundred and ten.
+     *
+     * So the wall is the answer, and `_roostable` makes sure there is always
+     * one to reach before a bird is ever launched.
      */
     this.roost =
       this.axis === 'up' && !this.brawl && (def.id ?? 1) >= AMBUSH.roostFrom;
@@ -1357,7 +1363,7 @@ export class World {
        * Launching at a climber already halfway up a shaft would be the thing
        * this chapter deliberately does not have, a threat with no reply.
        */
-      if (this.roost && (!this.player.onGround || this.player.clinging)) return;
+      if (this.roost && !this._roostable()) return;
       // Assist mode halves the frequency rather than switching it off: the
       // point of easy mode is fewer surprises, not a different game.
       const base = this.roost ? AMBUSH.roostRate : AMBUSH.rate;
@@ -1387,6 +1393,47 @@ export class World {
       if (done) this.skuas.splice(i, 1);
     }
     if (!this.skuas.length) this.skuaCooldown = AMBUSH.cooldown;
+  }
+
+  /**
+   * May a bird hunt the penguin where it is standing right now?
+   *
+   * Two conditions, and the second one is the whole fairness of the piece.
+   *
+   * It has to be standing. A climber on a wall or in the air has nowhere to go
+   * and nothing to answer with, which was the chapter's original objection to
+   * having a bird at all, and it was right.
+   *
+   * And there has to be a wall within reach. Measured, the running dodge that
+   * works on the shelf does not exist up here: a dive sweeps two hundred and
+   * forty pixels sideways through the strike point, and the mountain's ledges
+   * are a hundred and sixteen to a hundred and fifty. Running to the far lip
+   * of one does not get you out of the way — it gets you to the far lip. Over
+   * thirty-five ledges the sweep caught a fleeing penguin a hundred and fifty
+   * times out of two hundred and ten.
+   *
+   * So the wall is not *a* second answer here, it is *the* answer, and a
+   * threat whose answer is sometimes absent is not difficulty, it is a coin
+   * flip. The bird comes when there is ice to grab, and not otherwise.
+   */
+  _roostable() {
+    const p = this.player;
+    if (!p.onGround || p.clinging) return false;
+    const cx = p.centerX;
+    const feet = p.y + p.h;
+    for (const f of this.solids) {
+      if (!f.climb) continue;
+      // Within a short run, and — the part the first version got wrong —
+      // reaching down to where the penguin is *standing*. A wall whose foot
+      // hangs a body-and-a-half over your head is not an answer you can walk
+      // to, it is one you would have to jump for, and the bird is already in
+      // the air by then.
+      if (Math.abs((f.x + f.w / 2) - cx) > AMBUSH.roostReach) continue;
+      if (f.y > feet - p.h * 0.5) continue;
+      if (f.y + f.h < feet - p.h * 0.4) continue;
+      return true;
+    }
+    return false;
   }
 
   /**

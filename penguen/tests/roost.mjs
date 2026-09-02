@@ -59,23 +59,114 @@ console.log('1) Kavrama öğrenilmeden gelmiyor');
   check(AMBUSH.roostFrom === 35, `eşik ${AMBUSH.roostFrom}. bölüm`);
 }
 
-console.log('\n2) Durup dinlenmek artık bedava değil');
+/**
+ * A ledge this bird is actually allowed to hunt: one with ice within reach.
+ *
+ * Standing at the spawn is not that. The foot of the mountain has no wall
+ * beside it, so no bird comes there — which is the rule working, not a gap:
+ * the ledges where resting matters are the ones between shafts, and those are
+ * beside walls by construction. Tests that want to see a hunt have to stand
+ * where hunting is allowed.
+ */
+function huntedLedge(def) {
+  for (const node of def.route) {
+    if (node.head) continue;
+    const w = new World(def, deps());
+    const p = w.player;
+    p.x = node.x + node.w / 2 - p.w / 2;
+    p.y = node.y - p.h;
+    for (let i = 0; i < 20; i++) w.update(STEP, { axis: 0, jumpHeld: false, jumpPressed: false });
+    if (w._roostable()) return node;
+  }
+  return null;
+}
+
+console.log('\n2) Duvarın dibinde durup dinlenmek artık bedava değil');
 {
   /* The whole point, measured: a penguin standing on a ledge doing nothing —
      which is exactly what refilling the arm bar looks like — gets taken. */
+  const def = at(40);
+  const node = huntedLedge(def);
+  check(Boolean(node), 'avlanabilir bir sahanlık var');
   let taken = 0;
   const tries = 12;
   for (let i = 0; i < tries; i++) {
-    const w = new World(at(40), deps());
+    const w = new World(def, deps());
+    const p = w.player;
+    const put = () => {
+      p.x = node.x + node.w / 2 - p.w / 2;
+      p.y = node.y - p.h;
+      p.vx = 0;
+      p.vy = 0;
+    };
     for (let f = 0; f < 45 * 120 && w.status === 'playing'; f++) {
+      if (!w.skuas.length) put();
       w.update(STEP, { axis: 0, jumpHeld: false, jumpPressed: false });
+      if (w.skuaGrabs > 0) break;
     }
     if (w.skuaGrabs > 0) taken++;
   }
   check(taken >= tries * 0.8, `${taken}/${tries} kez kıpırdamayan penguen yakalandı`);
 }
 
-console.log('\n3) Şaftın içindekine hiç saldırmıyor');
+console.log('\n3) Cevabı olmayan yerde hiç saldırmıyor');
+{
+  /*
+   * The measurement that rewrote this bird.
+   *
+   * The shelf's answer to a dive is to keep running, and up here it does not
+   * exist: a dive sweeps two hundred and forty pixels sideways through its
+   * strike point and the mountain's ledges are a hundred and sixteen to a
+   * hundred and fifty wide. Running to the far lip of one gets you to the far
+   * lip. Over thirty-five ledges, a fleeing penguin was caught a hundred and
+   * fifty times out of two hundred and ten.
+   *
+   * So the wall is not a second answer here, it is the only one — and a threat
+   * whose answer is sometimes absent is a coin flip with a rock face next to
+   * it. Every launch is checked against that: there has to be climbable ice
+   * within a short run, reaching down to where the penguin is standing.
+   */
+  let launches = 0;
+  let answerless = 0;
+  for (const id of [35, 40, 44, 45, 46]) {
+    const def = at(id);
+    for (const node of def.route) {
+      if (node.head) continue;
+      const w = new World(def, deps());
+      const p = w.player;
+      const put = () => {
+        p.x = node.x + node.w / 2 - p.w / 2;
+        p.y = node.y - p.h;
+        p.vx = 0;
+        p.vy = 0;
+      };
+      put();
+      for (let f = 0; f < 25 * 120 && w.status === 'playing'; f++) {
+        const had = w.skuas.length;
+        put();
+        w.update(STEP, { axis: 0, jumpHeld: false, jumpPressed: false });
+        if (w.skuas.length > had) {
+          launches++;
+          // The wall the design promises, measured from where the penguin is.
+          const feet = p.y + p.h;
+          const reachable = w.solids.some(
+            (f2) =>
+              f2.climb &&
+              Math.abs(f2.x + f2.w / 2 - p.centerX) <= AMBUSH.roostReach &&
+              f2.y <= feet - p.h * 0.5 &&
+              f2.y + f2.h >= feet - p.h * 0.4,
+          );
+          if (!reachable) answerless++;
+          break;
+        }
+      }
+    }
+  }
+  check(launches > 0, `${launches} sahanlıkta saldırı denendi`);
+  check(answerless === 0, `${answerless} tanesinde tutunacak duvar yoktu`);
+}
+
+console.log('\n4) Şaftın içindekine hiç saldırmıyor');
 {
   /* The objection the chapter was built around, kept. A bird may not even be
      launched at a climber who is holding a wall or in the air, so the shafts
@@ -108,7 +199,7 @@ console.log('\n3) Şaftın içindekine hiç saldırmıyor');
   check(badLaunch === 0, `${badLaunch} tanesi duvardaki ya da havadaki pengueni hedef aldı`);
 }
 
-console.log('\n4) Kayadaki pengueni asla almıyor');
+console.log('\n5) Kayadaki pengueni asla almıyor');
 {
   /* Absolute, because a reply that only sometimes works teaches the player not
      to trust it — which is worse than having no reply. */
@@ -137,7 +228,7 @@ console.log('\n4) Kayadaki pengueni asla almıyor');
   check(grabbedOnWall === 0, 'duvardayken bir kez bile yakalanmadı');
 }
 
-console.log('\n5) Sade dalış, ve daha uzun uyarı');
+console.log('\n6) Sade dalış, ve daha uzun uyarı');
 {
   /* A hunter steers all the way down and is answered by the struggle rather
      than the sidestep; a pair takes both directions away. Either of those on a
@@ -146,9 +237,23 @@ console.log('\n5) Sade dalış, ve daha uzun uyarı');
   let most = 0;
   let warnMin = Infinity;
   for (const id of [35, 41, 46]) {
+    const def = at(id);
+    const node = huntedLedge(def);
+    if (!node) {
+      bad(`L${id}: avlanabilir sahanlık bulunamadı`);
+      continue;
+    }
     for (let trial = 0; trial < 10; trial++) {
-      const w = new World(at(id), deps());
+      const w = new World(def, deps());
+      const p = w.player;
+      const put = () => {
+        p.x = node.x + node.w / 2 - p.w / 2;
+        p.y = node.y - p.h;
+        p.vx = 0;
+        p.vy = 0;
+      };
       for (let f = 0; f < 30 * 120 && w.status === 'playing'; f++) {
+        if (!w.skuas.length) put();
         w.update(STEP, { axis: 0, jumpHeld: false, jumpPressed: false });
         for (const s of w.skuas) {
           kinds.add(s.kind);
@@ -166,7 +271,7 @@ console.log('\n5) Sade dalış, ve daha uzun uyarı');
   );
 }
 
-console.log('\n6) Kaçtıktan sonra ısrar ediyor, sonra vazgeçiyor');
+console.log('\n7) Kaçtıktan sonra ısrar ediyor, sonra vazgeçiyor');
 {
   /* The first version deleted the bird the instant a hand touched ice, which
      made the wall a free exit. A real one with a spoiled dive wheels and comes
@@ -218,4 +323,4 @@ if (fails) {
   console.log(`✗ ${fails} kontrol düştü.`);
   process.exit(1);
 }
-console.log('✓ Dağda artık bedava mola yok — ve kaya hâlâ kaya.');
+console.log('✓ Duvarın dibinde bedava mola yok — ve kuşun geldiği her yerde bir kaya var.');
