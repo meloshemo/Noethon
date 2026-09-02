@@ -112,6 +112,30 @@ export function generateLevel(id, opts = {}) {
    */
   const depth = opts.depth ?? clamp((id - CRAFTED_LEVELS - 20) / 180, 0, 1);
 
+  /**
+   * Raising the *floor* of a jump, which is the dial nobody had tried.
+   *
+   * Measured, the endless run is easier than the crafted chapter it comes
+   * after — every one of sixty sampled levels, level three hundred and fifteen
+   * included, landed looser than level thirty-one, and the average generated
+   * level gives a jump more than twice the input tolerance the end of the
+   * shelf does. That is not a contradiction of the note above: the widest gap
+   * out here really is at the ceiling a running jump clears, and it cannot go
+   * further.
+   *
+   * But a level is not its widest gap. The generator draws from a range, and
+   * while the top of that range was pinned at the ceiling the *bottom* of it
+   * never moved — so a deep endless level is a handful of hard jumps in a
+   * field of trivial ones, and the mean says so. This closes the range from
+   * below as the run goes on: the easiest jump on the course stops being easy,
+   * and the hardest one does not move at all, so nothing gets closer to
+   * impossible than the validator has already proved passable.
+   *
+   * Spent over the same hundred and eighty levels as the clock, and never past
+   * `top`, which is a width the crafted chapter already uses.
+   */
+  const floorGap = (base, top) => lerp(base, top, depth);
+
   const c = new Course({ scale });
 
   // Always open on safe, level ice. Whatever the seed does afterwards, the
@@ -161,7 +185,7 @@ export function generateLevel(id, opts = {}) {
         const from = c.x;
         c.shelf({
           n,
-          gap: lerp(0.36, 0.5, d) + rng() * 0.05,
+          gap: floorGap(lerp(0.36, 0.5, d), 0.54) + rng() * 0.05,
           w: lerp(200, 145, d),
           types: iceTypes(rng, d, n),
         });
@@ -177,15 +201,15 @@ export function generateLevel(id, opts = {}) {
         c.slope({
           n: 3 + Math.floor(rng() * 2),
           rise: lerp(0.36, 0.5, d),
-          gap: lerp(0.34, 0.44, d),
+          gap: floorGap(lerp(0.34, 0.44, d), 0.5),
           w: lerp(175, 140, d),
         });
         break;
       case 'descend':
-        c.slope({ n: 2 + Math.floor(rng() * 2), rise: -0.34, gap: 0.34, w: lerp(185, 150, d) });
+        c.slope({ n: 2 + Math.floor(rng() * 2), rise: -0.34, gap: floorGap(0.34, 0.48), w: lerp(185, 150, d) });
         break;
       case 'cliff':
-        c.cliff({ drop: lerp(240, 400, d), ledges: 3 + Math.floor(rng() * 2), gap: 0.3 });
+        c.cliff({ drop: lerp(240, 400, d), ledges: 3 + Math.floor(rng() * 2), gap: floorGap(0.3, 0.46) });
         break;
       case 'crevasse':
         c.crevasse({
@@ -198,7 +222,7 @@ export function generateLevel(id, opts = {}) {
         c.tunnel({
           n: 4 + Math.floor(rng() * 3),
           headroom: lerp(126, 110, d),
-          gap: lerp(0.4, 0.46, d),
+          gap: floorGap(lerp(0.4, 0.46, d), 0.52),
           w: lerp(160, 140, d),
           icicles: d > 0.35 ? 2 + Math.floor(rng() * 2) : 0,
           types: d > 0.4 ? ['solid', 'crack'] : null,

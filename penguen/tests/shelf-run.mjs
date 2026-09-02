@@ -213,10 +213,26 @@ let hops = 0;
  * Two full cycles at the shallow end, and one more from past the far end of
  * the endless ramp, where the clocks are at their tightest.
  */
-const SAMPLE = [
-  ...Array.from({ length: 40 }, (_, i) => generateLevel(77 + i)),
-  ...Array.from({ length: 20 }, (_, i) => generateLevel(296 + i)),
-];
+/*
+ * `--sample=N` shortens the endless sample.
+ *
+ * The full sweep in `--measure` mode takes about forty minutes, which in
+ * practice means the generator's difficulty gets argued about from memory
+ * rather than re-measured after a change. A short sample is not a proof and is
+ * not allowed to be one — the build always runs the whole thing — but it turns
+ * "did that tighten anything?" into a question with an answer in seconds.
+ */
+const SAMPLE_ARG = process.argv.find((a) => a.startsWith('--sample='));
+const SAMPLE_N = SAMPLE_ARG ? Number(SAMPLE_ARG.slice(9)) : null;
+const SAMPLE = SAMPLE_N
+  ? [
+      ...Array.from({ length: Math.ceil(SAMPLE_N / 2) }, (_, i) => generateLevel(77 + i * 3)),
+      ...Array.from({ length: Math.floor(SAMPLE_N / 2) }, (_, i) => generateLevel(296 + i * 3)),
+    ]
+  : [
+      ...Array.from({ length: 40 }, (_, i) => generateLevel(77 + i)),
+      ...Array.from({ length: 20 }, (_, i) => generateLevel(296 + i)),
+    ];
 const SUITE = [...LEVELS, ...SAMPLE.filter((d) => d.axis !== 'up' && !d.diving && !d.brawl)];
 
 for (const def of SUITE) {

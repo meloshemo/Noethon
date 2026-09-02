@@ -145,10 +145,25 @@ function bar(value, [easy, hard]) {
   return '█'.repeat(filled) + '·'.repeat(24 - filled);
 }
 
+/*
+ * `--chapter=1` (or `--chapter=1,4`) runs only those chapters.
+ *
+ * Chapter I's reading takes about forty minutes: it sweeps every input of
+ * every hop of thirty-one crafted levels *and* sixty generated ones, with no
+ * early exit, because counting how many ways there are is the measurement.
+ * The other three take seconds between them. Without a way to ask for one
+ * chapter, anybody tuning the arena has to sit through the shelf — so in
+ * practice the tool gets run once and then argued with from memory, which is
+ * the failure mode it was written against.
+ */
+const pick = process.argv.find((a) => a.startsWith('--chapter='));
+const wanted = pick ? new Set(pick.slice(10).split(',').map(Number)) : null;
+
 console.log('\nZorluk eğrisi\n');
 
 let drift = 0;
-for (const ch of CHAPTERS) {
+for (const [index, ch] of CHAPTERS.entries()) {
+  if (wanted && !wanted.has(index + 1)) continue;
   const text = await run(ch.script);
   const rows = [];
   for (const line of text.split('\n')) {
@@ -163,7 +178,29 @@ for (const ch of CHAPTERS) {
 
   const [easy, hard] = ch.want;
   console.log(`${ch.name}  ·  ${ch.metric}  ·  hedef ${ch.format(easy)} → ${ch.format(hard)}`);
-  for (const r of rows) {
+
+  /*
+   * The endless levels are measured, and they are not on the ramp.
+   *
+   * Chapter I's solver also walks sixty generated levels, and the first
+   * version of this ran the target line straight through them: the ramp is
+   * defined between levels 1 and 31, so level 315 was being asked for a
+   * tolerance of *minus one point six*. Every one of the eighty rows past the
+   * crafted chapter was therefore reported "← kolay" against a target no level
+   * can hit, and — worse — every one of them fed the headline number. The
+   * total easiness drift read 392.9, of which the crafted game was a small
+   * minority: an instrument whose summary figure is dominated by nonsense is
+   * not a strict instrument, it is a broken one.
+   *
+   * The endless levels do have a standard, and it is a floor rather than a
+   * ramp: the generator never gets to stop being at least as hard as the end
+   * of the crafted chapter. So they are scored against `hard`, held flat, and
+   * reported in their own block — and only the crafted rows move the drift,
+   * because only they are what the ramp is a claim about.
+   */
+  const crafted = rows.filter((r) => r.id <= ch.to);
+  const endless = rows.filter((r) => r.id > ch.to);
+  for (const r of crafted) {
     const v = ch.read(r.a, r.b);
     const want = easy + ((hard - easy) * (r.id - ch.from)) / Math.max(1, ch.to - ch.from);
     const off = v - want;
@@ -175,13 +212,29 @@ for (const ch of CHAPTERS) {
     );
     drift += Math.max(0, off) / (easy - hard);
   }
+  if (endless.length) {
+    const vals = endless.map((r) => ch.read(r.a, r.b));
+    const mean = vals.reduce((n, v) => n + v, 0) / vals.length;
+    const loosest = Math.max(...vals);
+    const tightest = Math.min(...vals);
+    const soft = vals.filter((v) => v > hard).length;
+    console.log(
+      `  sonsuz (${endless.length} üretilmiş bölüm)  ·  taban ${ch.format(hard)}
+` +
+        `    ortalama ${ch.format(mean)} · en sıkı ${ch.format(tightest)} · en gevşek ${ch.format(loosest)}
+` +
+        `    ${soft}/${endless.length} bölüm tabanın gevşek tarafında` +
+        `${soft > endless.length * 0.5 ? ' ← üretici bölümün sonundan kolay' : ''}`,
+    );
+  }
 
   // Does it actually get harder? A chapter whose line is flat is a chapter with
   // one level in it, played fifteen times.
-  const first = ch.read(rows[0].a, rows[0].b);
-  const last = ch.read(rows[rows.length - 1].a, rows[rows.length - 1].b);
+  const ramp = rows.filter((r) => r.id <= ch.to);
+  const first = ch.read(ramp[0].a, ramp[0].b);
+  const last = ch.read(ramp[ramp.length - 1].a, ramp[ramp.length - 1].b);
   const climbed = ((first - last) / (easy - hard)) * 100;
   console.log(`  eğim: ${climbed.toFixed(0)}% (100% = hedeflenen ramp)\n`);
 }
 
-console.log(`Toplam kolaylık sapması: ${drift.toFixed(1)}\n`);
+console.log(`Toplam kolaylık sapması: ${drift.toFixed(1)} (yalnızca el yapımı bölümler)\n`);

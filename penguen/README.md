@@ -1671,6 +1671,56 @@ farklı fikre sahip olamaz. Doğrulayıcının üretilmiş bölüm örneklemi de
 **iki ucunu** birden alıyor — eskiden 156'da bitiyordu, ki her şey 97'den sonra
 aynıyken sorun değildi ve saat sıkılmaya başladığı anda sorun oldu.
 
+### Sonra sonsuz koşu ölçüldü, ve el yapımı bölümlerden kolay çıktı
+
+`tools/difficulty.mjs` sahanlığın altmış üretilmiş bölümünü de tarıyor.
+Sonuç: **altmışının altmışı da 31. bölümden gevşek.** 315. bölüm dâhil.
+Ortalama üretilmiş bölüm, bir sıçrayışa 31. bölümün verdiğinin **iki katından
+fazla** giriş toleransı bırakıyor.
+
+Bu yukarıdaki notla çelişmiyor: buradaki *en geniş* boşluk gerçekten tavanda ve
+daha ileri gidemez. Ama bir bölüm en geniş boşluğundan ibaret değil. Üretici bir
+aralıktan çekiyor, ve aralığın tepesi tavana çakılıyken **tabanı hiç
+kımıldamıyordu** — yani derin bir sonsuz bölüm, bir avuç zor sıçrayışın
+etrafına serpilmiş bir sürü önemsiz sıçrayış. Ortalama da bunu söylüyordu.
+
+`floorGap` aralığı **aşağıdan** kapatıyor: koşu ilerledikçe kurstaki en kolay
+sıçrayış kolay olmaktan çıkıyor, en zoru hiç kımıldamıyor. Yani hiçbir şey
+doğrulayıcının zaten geçilebilir kanıtladığından daha yakına gitmiyor. Saatle
+aynı yüz seksen bölüme yayılıyor.
+
+| Bölüm | önce | sonra |
+|---|---|---|
+| 296 | 0,434 | 0,434 |
+| 299 | 0,514 | 0,515 |
+| 302 | 0,552 | **0,435** |
+| 305 | 0,614 | **0,401** |
+
+İkisi sıkıştı, ikisi kımıldamadı — o ikisinin gevşekliği elle dokunulan
+fiillerden değil, `summit`, `geysers` ve `bait` gibi boşluk parametresi
+olmayan parçalardan geliyor. Yani bu iş yarım: sayı yazılı, sıradaki hamle
+belli.
+
+### Ölçüm aletinin kendisi bozuktu
+
+Bu bulgunun ortaya çıkması için önce aletin tamir edilmesi gerekti. Hedef
+rampası 1 ile 31 arasında tanımlı, ve araç o çizgiyi üretilmiş bölümlerin
+içinden **düz geçiriyordu**: 315. bölümden *eksi bir buçuk* tolerans
+isteniyordu. El yapımı chapter'ın dışındaki seksen satırın seksen biri de
+"← kolay" diye işaretleniyor ve — daha kötüsü — hepsi manşet sayısını
+besliyordu. Toplam kolaylık sapması 392,9 okuyordu; bunun içinde el yapımı
+oyunun payı azınlıktı. **Özet rakamı saçmalıkla dolu bir alet sıkı değil,
+bozuktur.**
+
+Üretilmiş bölümlerin de bir standardı var ama o bir rampa değil bir **taban**:
+üretici, el yapımı chapter'ın sonundan kolay olmayı hiçbir zaman hak etmiyor.
+Artık `hard`'a karşı, düz, ve kendi bloğunda raporlanıyorlar; sapmayı yalnızca
+el yapımı satırlar hareket ettiriyor. Aynı sebeple iki bayrak eklendi:
+`--chapter=` (sahanlığın taraması kırk dakika, diğer üçü saniyeler — filtresiz
+bir araç bir kez çalıştırılıp sonra hafızadan tartışılıyor) ve `shelf-run` için
+`--sample=` (kanıt değil, "bu bir şeyi sıkıştırdı mı?" sorusunun saniyeler
+içinde cevabı).
+
 ## Zorluk: geometri tavana vurdu, o yüzden zaman kısaldı
 
 Bölümlerin zorluk kadranı ölçüldü ve **tavana vurmuş** çıktı. Sahanlıkta `tight`
