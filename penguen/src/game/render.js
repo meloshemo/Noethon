@@ -10,7 +10,7 @@
 
 import {
   VIEW, viewFor, AMBUSH, CHARGED, COIL, QUANTUM, SLACK, CLIMB, BRAWL, TRENCH, VENT, BANK, GLAZE,
-  CURRENT, FLUME, EDDY, SWIM, lobShot, swimSpeed,
+  CURRENT, FLUME, EDDY, SWIM, ROT, lobShot, swimSpeed,
 } from './config.js';
 import { getSkin, getTrail } from './skins.js';
 import { Pose } from './pose.js';
@@ -1984,7 +1984,16 @@ export class Renderer {
    * once, without being so loud that the first one is not a surprise.
    */
   _rotFish(ctx, f, time) {
-    const tint = { heavy: '#7a5cff', dizzy: '#7fbf4d', blind: '#8a8f9a' }[f.kind] ?? '#7fbf4d';
+    /*
+     * The colour comes from the definition now.
+     *
+     * This was a three-entry lookup with a green fallback, and the fallback
+     * was doing real work: `slick` had never been added, so the fish that
+     * takes your grip and the fish that reverses your controls were the same
+     * green — two different four-second problems wearing one picture, on a
+     * pickup whose entire warning is its colour.
+     */
+    const tint = ROT[f.kind]?.tint ?? '#7fbf4d';
     const cx = f.x + f.w / 2;
     const cy = f.y + f.h / 2 + Math.sin(f.phase) * 3;
 
@@ -2200,9 +2209,89 @@ export class Renderer {
   _hazards(ctx, world, time) {
     for (const h of world.hazards) {
       if (h.kind === 'icicle') {
+        /*
+         * Falling ice, redrawn around the two moments that matter.
+         *
+         * It used to be a small triangle with a dashed line under it, and the
+         * line was drawn only while the ice was idle — so the cue vanished at
+         * the exact instant it started to mean something. In a tunnel that was
+         * survivable, because the ceiling it hangs from explains it. Hung in
+         * the open sky of an arena it read as a stray mark with a line ruled
+         * down from the top of the screen: no source, no target, and nothing
+         * to watch.
+         *
+         * So: it hangs from something (`crag`), the fall line stays up through
+         * the warning and brightens, and the *floor* gets a mark that fills in
+         * over the warning beat. Where it will land is now a thing you look at
+         * rather than a thing you work out.
+         */
         const shakeX = h.state === 'warn' ? Math.sin(time * 60) * 2.4 : 0;
+        const spent = h.state === 'cooldown';
+        const mid = h.x + h.w / 2;
+        const floorY = h.baseY + (h.drop ?? 260) + h.h;
+
+        if (h.crag && !spent) {
+          // The block it is frozen to. Deliberately ragged and deliberately
+          // not a ledge — nothing about it should suggest you can stand there.
+          ctx.save();
+          ctx.fillStyle = '#b9d4e6';
+          ctx.beginPath();
+          ctx.moveTo(h.x - h.w * 0.9, h.baseY - 26);
+          ctx.lineTo(h.x + h.w * 1.9, h.baseY - 22);
+          ctx.lineTo(h.x + h.w * 1.5, h.baseY + 2);
+          ctx.lineTo(h.x + h.w * 0.5, h.baseY - 6);
+          ctx.lineTo(h.x - h.w * 0.5, h.baseY + 2);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = 'rgba(255,255,255,0.45)';
+          ctx.fillRect(h.x - h.w * 0.9, h.baseY - 26, h.w * 2.8, 4);
+          ctx.restore();
+        }
+
+        if (h.state !== 'drop' && !spent) {
+          const hot = h.state === 'warn';
+          ctx.save();
+          ctx.strokeStyle = hot ? 'rgba(255,150,170,0.55)' : 'rgba(223,241,251,0.25)';
+          ctx.lineWidth = hot ? 2 : 1;
+          ctx.setLineDash([4, 8]);
+          ctx.beginPath();
+          ctx.moveTo(mid, h.y + h.h);
+          ctx.lineTo(mid, floorY);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          // The landing mark, filling in over the beat you are given.
+          const fill = hot ? 1 - Math.max(0, Math.min(1, h.timer / 0.42)) : 0;
+          ctx.strokeStyle = hot ? 'rgba(255,150,170,0.8)' : 'rgba(223,241,251,0.3)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.ellipse(mid, floorY - 2, h.w * 0.8, 6, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          if (fill > 0) {
+            ctx.fillStyle = `rgba(255,150,170,${(0.15 + fill * 0.4).toFixed(3)})`;
+            ctx.beginPath();
+            ctx.ellipse(mid, floorY - 2, h.w * 0.8 * fill, 6 * fill, 0, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+
         ctx.save();
         ctx.translate(h.x + shakeX, h.y);
+        if (spent) {
+          // What is left afterwards: broken ice on the floor, and harmless.
+          ctx.fillStyle = 'rgba(214,235,248,0.75)';
+          for (let i = 0; i < 4; i++) {
+            const bx = (i - 1.5) * (h.w * 0.42);
+            ctx.beginPath();
+            ctx.moveTo(h.w / 2 + bx - 6, h.h);
+            ctx.lineTo(h.w / 2 + bx + 6, h.h);
+            ctx.lineTo(h.w / 2 + bx + (i % 2 ? 3 : -3), h.h - 9 - (i % 3) * 4);
+            ctx.closePath();
+            ctx.fill();
+          }
+          ctx.restore();
+          continue;
+        }
         ctx.fillStyle = h.state === 'warn' ? '#ffe6ea' : '#dff1fb';
         ctx.beginPath();
         ctx.moveTo(0, 0);
@@ -2213,14 +2302,10 @@ export class Renderer {
         ctx.strokeStyle = 'rgba(255,255,255,0.7)';
         ctx.lineWidth = 1.5;
         ctx.stroke();
-        if (h.state === 'idle') {
-          ctx.strokeStyle = 'rgba(223,241,251,0.25)';
-          ctx.setLineDash([4, 8]);
-          ctx.beginPath();
-          ctx.moveTo(h.w / 2, h.h);
-          ctx.lineTo(h.w / 2, h.h + 260);
-          ctx.stroke();
-          ctx.setLineDash([]);
+        if (h.state === 'drop') {
+          // A streak behind it, so a fast object reads as one.
+          ctx.fillStyle = 'rgba(220,240,255,0.35)';
+          ctx.fillRect(h.w * 0.25, -30, h.w * 0.5, 30);
         }
         ctx.restore();
       } else if (h.kind === 'shard') {
@@ -3866,6 +3951,42 @@ export class Renderer {
       const t = Math.min(1, p.curse.heavy / 0.6);
       ctx.fillStyle = `rgba(74,58,114,${0.12 * t})`;
       ctx.fillRect(0, 0, VIEW.w, VIEW.h);
+    }
+
+    /*
+     * And a sign for the ones with no picture of their own.
+     *
+     * Three curses had a screen effect and the rest had nothing — `slick` has
+     * been in the game since the bait was written and has never once told the
+     * player it was on. A four-second problem you cannot tell you have is not
+     * difficulty; it is the controls appearing to break.
+     *
+     * So every remaining curse gets the same thing: a band of its own colour
+     * around the edge of the picture, breathing, thickest when it lands and
+     * gone as it lifts. One shape for all of them on purpose — what the colour
+     * means is taught by the fish you just ate, and the border only has to say
+     * *it is still on, and it is nearly over*.
+     */
+    const bespoke = new Set(['blind', 'dizzy', 'heavy']);
+    for (const [kind, spec] of Object.entries(ROT)) {
+      const left = p.curse[kind] ?? 0;
+      if (left <= 0 || bespoke.has(kind)) continue;
+      const fade = Math.min(1, left / 0.7);
+      const pulse = 0.7 + 0.3 * Math.sin(time * 6);
+      const band = VIEW.h * 0.16;
+      const [r, g, b] = [1, 3, 5].map((i) => parseInt(spec.tint.slice(i, i + 2), 16));
+      ctx.save();
+      for (const [x0, y0, x1, y1] of [
+        [0, 0, 0, band],
+        [0, VIEW.h, 0, VIEW.h - band],
+      ]) {
+        const grad = ctx.createLinearGradient(x0, y0, x1, y1);
+        grad.addColorStop(0, `rgba(${r},${g},${b},${(0.34 * fade * pulse).toFixed(3)})`);
+        grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, Math.min(y0, y1), VIEW.w, band);
+      }
+      ctx.restore();
     }
   }
 

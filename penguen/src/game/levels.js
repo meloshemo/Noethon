@@ -704,6 +704,16 @@ const PLANS = [
       c.landing({ w: 250 });
       c.scatterFish(3, 58);
       c.temptation(0.45, 'dizzy');
+      /* And the fish that turns the equipment off, on the level that offers
+         the most of it.
+         Every other bait here makes the penguin worse at what it is already
+         doing. This one takes away what the player *bought* — the glide and
+         the motor, the two things somebody who has been shopping reaches for
+         the moment a gap looks too wide. Put it at the far end, past the
+         charged fish, where the shelf's longest crevasse is still ahead: the
+         answer to being in trouble stops working at the exact moment the level
+         starts asking. */
+      c.temptation(0.86, 'stiff');
       // The last shelf level offers all three at once, spread wide enough that
       // taking one is choosing not to take the others. That is the exam: not
       // whether you can use them, but whether you know which one this stretch

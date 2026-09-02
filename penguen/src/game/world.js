@@ -266,12 +266,34 @@ export class World {
     this.stillTime = 0;
     /** Set by the game: ambushes only start once the player knows the game. */
     // The skua hunts over open ice. Inside a shaft there is nowhere for it to
-    // dive from and nowhere for the player to dodge to, so the mountain gets
-    // its own ambushes — falling seracs — rather than this one.
+    // dive from and nowhere for the player to dodge to — which is a good
+    // reason and only a reason about shafts. See `roost` below.
     this.ambushes =
       this.axis === 'across' &&
       !this.brawl &&
       ((def.id ?? 1) >= AMBUSH.fromLevel || Boolean(def.daily) || Boolean(def.generated));
+    /**
+     * The mountain's own bird, and what it is actually for.
+     *
+     * A climb is not all shaft: it is ledges and traverses with shafts between
+     * them. The arm bar drains only while a wall is held and refills only on
+     * the ground — so the ledges were not merely safe, they were where the
+     * chapter *gave the resource back*, for free, for as long as you liked.
+     * Fifteen hard shafts joined by unlimited rest.
+     *
+     * This bird hunts that ground. It never launches at a climber who is on a
+     * wall or in the air, because the original objection was right — there is
+     * no dodging inside a shaft — and it never takes anybody off rock. What it
+     * takes away is *standing still*: the refill is still there, and it is no
+     * longer free of charge.
+     *
+     * The dodge on a wide ledge is the shelf's dodge, keep moving, which the
+     * chapter's players have known since level twelve. Where a face is within
+     * reach there is a second answer, and it is the chapter's own: get on it.
+     */
+    this.roost =
+      this.axis === 'up' && !this.brawl && (def.id ?? 1) >= AMBUSH.roostFrom;
+    if (this.roost) this.ambushes = true;
     /**
      * The serac that calves off the cliff as you reach the raft. Armed once per
      * attempt, on a coin flip, and only past the point where the level is
@@ -519,7 +541,19 @@ export class World {
     this._updateSkua(wdt, intent);
     this._updateCollapse(wdt);
     for (const c of this.checkpoints) c.update(dt);
-    for (const h of this.hazards) h.update(wdt, this.time, this.player, this.hazardSpeed);
+    for (const h of this.hazards) {
+      h.update(wdt, this.time, this.player, this.hazardSpeed);
+      // Falling ice hitting the ground. Read here rather than inside the
+      // hazard because a hazard has no particles and no ears — and because a
+      // landing nobody sees or hears is the reason this thing read as broken:
+      // it used to sink through the floor and off the bottom of the screen.
+      if (h.landed) {
+        h.landed = false;
+        this.particles.burstIce(h.x + h.w / 2, h.y + h.h, 18, h.w);
+        this.audio.shatter?.();
+        this.shake(5);
+      }
+    }
     this.goal.pulse = (this.goal.pulse + dt * 2) % (Math.PI * 2);
 
     if (this.status === 'dying') {
@@ -633,8 +667,20 @@ export class World {
 
     // Glare ice, read at the hands rather than at the feet: what decides
     // whether a grip lands is where the grip would be.
-    const grip = glazeAt(this.zones, this.player.centerX, this.player.y + this.player.h * 0.4) ? 0 : 1;
+    let grip = glazeAt(this.zones, this.player.centerX, this.player.y + this.player.h * 0.4) ? 0 : 1;
     if (!grip) this._tell('glaze', t('world.glaze'), 2);
+    /*
+     * A chick in a bird's feet cannot hold a wall.
+     *
+     * The carry sets the penguin's position every frame, and the penguin's own
+     * update then ran afterwards and happily gripped whatever it was being
+     * flown past — so it could be simultaneously in the air, in a bird, and
+     * clinging to ice. Nothing visible came of it, which is exactly why it was
+     * worth writing down: on the mountain the wall is a promise ("a bird will
+     * not take you off rock"), and a penguin who counts as *on rock* while
+     * already caught makes that promise say something false.
+     */
+    if (this.skuas.some((b) => b.state === 'carry')) grip = 0;
     // Wet ice, read at the same place for the same reason: what costs the bar
     // is where the hands are.
     const sap = sapAt(this.zones, this.player.centerX, this.player.y + this.player.h * 0.4);
@@ -861,6 +907,17 @@ export class World {
     // — and only part of it.
     const cold = inAir ? 1 : trenchDrainAt(this.zones, p.centerX, p.y + p.h / 2);
     this.drain = cold > 1 ? 1 + (cold - 1) * (1 - (p.boost?.insulation ?? 0)) : cold;
+    /*
+     * A hole in the lung.
+     *
+     * Multiplied on top of everything else — the trench, the coat that pays
+     * part of the trench back — because it is not a property of the water, it
+     * is a property of the swimmer. The sea's own rotten fish, and the only
+     * one in the game that costs the resource the chapter is actually about:
+     * on a level where the air is already the whole problem, five seconds of
+     * double drain is most of a lungful.
+     */
+    if (p.curse?.leak > 0) this.drain *= ROT.leak.drain;
     // The trench is the one that has to speak. Everything else the sea does is
     // visible: a wall, a seal, a current you can feel pushing. This is a number
     // changing, and a number changing in silence is not a mechanic, it is an
@@ -1291,9 +1348,20 @@ export class World {
     if (!this.skuas.length) {
       this.skuaCooldown -= dt;
       if (this.skuaCooldown > 0) return;
+      /*
+       * On the mountain a bird only comes for a penguin who is standing.
+       *
+       * Not a softening — the opposite. It is what makes the wall a real
+       * answer rather than a lucky one: the ledges are the hunting ground, so
+       * being on rock is being safe, and the price of being safe is the arm.
+       * Launching at a climber already halfway up a shaft would be the thing
+       * this chapter deliberately does not have, a threat with no reply.
+       */
+      if (this.roost && (!this.player.onGround || this.player.clinging)) return;
       // Assist mode halves the frequency rather than switching it off: the
       // point of easy mode is fewer surprises, not a different game.
-      const rate = AMBUSH.rate * (this.assist ? 0.5 : 1);
+      const base = this.roost ? AMBUSH.roostRate : AMBUSH.rate;
+      const rate = base * (this.assist ? 0.5 : 1);
       if (Math.random() > rate * dt) return;
       this._launchHunt();
       return;
@@ -1396,6 +1464,33 @@ export class World {
         return false;
       }
 
+      /*
+       * It never takes a climber off rock.
+       *
+       * Ice under both hands is the one place on this mountain where a bird
+       * has nothing to grab, and the rule has to be absolute: a reply that
+       * only sometimes works teaches the player not to trust it, which is
+       * worse than having no reply at all.
+       *
+       * But it does not simply blink out either. The first version deleted the
+       * bird the instant a hand touched ice, and that made the wall a free
+       * exit — hop on, hop off, carry on. A real one with a spoiled dive pulls
+       * out, wheels, and comes back from the other side, so that is what this
+       * does: hold the wall through the whole pass, at the bar's own rate, and
+       * it gives up. Step off in the middle of it and it has you.
+       */
+      if (this.roost && this.player.clinging && !s.hit) {
+        this._tell('roost', t('world.roost'), 2.4);
+        if (s.wheeled) {
+          s.leaving = true;
+          return false;
+        }
+        s.state = 'wheel';
+        s.t = 0;
+        s.wheeled = true;
+        this.audio.screech?.();
+        return false;
+      }
       const box = { x: s.x - 26, y: s.y - 18, w: 52, h: 36 };
       if (!s.hit && !held && this.player.alive && rectsOverlap(this.player.box, box)) {
         s.hit = true;
@@ -1614,6 +1709,20 @@ export class World {
     if (roll < AMBUSH.huntChance * ramp) kind = 'hunt';
     else if (roll < AMBUSH.huntChance * ramp + AMBUSH.feintChance * ramp) kind = 'feint';
 
+    /*
+     * The mountain gets the plain dive and nothing else.
+     *
+     * A hunter steers all the way down and is answered by the struggle rather
+     * than the sidestep; a pair takes both directions away. Either of those on
+     * a ledge is a threat whose only reply is the one thing this bird is built
+     * to have — and the wall has to be an answer that *works*, or the whole
+     * arrangement is a coin flip with a rock face next to it.
+     */
+    if (this.roost) {
+      this._launchSkua({ kind: 'lock' });
+      return;
+    }
+
     this._launchSkua({ kind });
     // A second bird, from the other side, a beat later. Never two hunters:
     // that is not a question, it is an execution.
@@ -1626,7 +1735,7 @@ export class World {
     const p = this.player;
     // Aim where the penguin is going, not where it is: a bird that dives at
     // your current position is dodged by simply continuing to walk.
-    const base = kind === 'hunt' ? AMBUSH.huntWarn : AMBUSH.warn;
+    const base = kind === 'hunt' ? AMBUSH.huntWarn : this.roost ? AMBUSH.roostWarn : AMBUSH.warn;
     const warn = Math.max(0.34, base + (this.radar ?? 0)) * (this.assist ? 1.35 : 1);
     const lead = clamp(p.vx * warn * 0.8, -180, 180);
     const targetX = clamp(p.centerX + lead, this.spawn.x, this.worldW - 40);

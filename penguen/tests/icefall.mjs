@@ -93,7 +93,54 @@ for (const def of arenas) {
   });
 }
 
-console.log('\n4) Ve durduğu yer bir cevabın üstünde değil');
+console.log('\n4) Düşen buz bir yere iniyor');
+{
+  /*
+   * The bug this section exists for.
+   *
+   * `drop` — how far there is to fall before the ice meets the ground — was
+   * passed in by the tunnels the day they were written and thrown away by the
+   * entity, which fell a flat six hundred and twenty pixels instead. In a
+   * tunnel that merely looked odd. In an open arena the ice went through the
+   * floor, off the bottom of the screen, and into a cooldown somewhere below
+   * the world: the one moment the whole hazard is built around never happened
+   * where anybody could see it.
+   *
+   * So the landing is checked as an event — it stops at the floor, it says so
+   * once, and what is left is not still lethal.
+   */
+  for (const def of arenas) {
+    let bursts = 0;
+    const w = new World(def, {
+      ...deps(),
+      particles: { puff() {}, splash() {}, sparkle() {}, burstIce: () => bursts++ },
+    });
+    const ice = w.hazards.find((h) => h.kind === 'icicle');
+    const floor = ice.baseY + (ice.drop ?? 0) + ice.h;
+    const mid = ice.x + ice.w / 2;
+    const p = w.player;
+    let fled = false;
+    for (let i = 0; i < 1400 && ice.state !== 'cooldown'; i++) {
+      const cx = p.x + p.w / 2;
+      if (ice.state === 'warn') fled = true;
+      const axis = fled ? -1 : cx < mid - 2 ? 1 : cx > mid + 2 ? -1 : 0;
+      w.update(STEP, { axis, jumpHeld: false, jumpPressed: false });
+    }
+    check(ice.state === 'cooldown', `${def.id}. ${def.name}: buz düşüşünü bitiriyor`);
+    check(
+      Math.abs(ice.y + ice.h - floor) < 2,
+      `${def.id}. ${def.name}: zeminde duruyor (${Math.round(ice.y + ice.h)}px, zemin ${Math.round(floor)}px)`,
+    );
+    check(bursts > 0, `${def.id}. ${def.name}: çarpma görülüyor ve duyuluyor`);
+    check(!ice.lethal, `${def.id}. ${def.name}: kırılmış yığın artık öldürmüyor`);
+    check(
+      floor <= def.worldH + 4,
+      `${def.id}. ${def.name}: iniş noktası dünyanın içinde (${Math.round(floor)} ≤ ${def.worldH})`,
+    );
+  }
+}
+
+console.log('\n5) Ve durduğu yer bir cevabın üstünde değil');
 {
   /*
    * Level 71 taught this one. The icefall went over the middle of the arena

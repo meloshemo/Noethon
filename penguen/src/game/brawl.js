@@ -245,6 +245,14 @@ const BRAWL_PLANS = [
       a.thinIce({ at: 0.62, w: 160 });
       a.scatterFish(3);
       a.fishAt(0.86, 0.3, 'speed');
+      /* The arena's own rotten fish.
+         The wind-up is this chapter's entire fairness: the arm goes back, the
+         line is drawn, and you have that long to not be standing on it. This
+         one shortens it — the rivals do not throw harder or more often, they
+         find the range sooner, so the cover you picked on the old timing stops
+         being cover. Every other bait in the game is about the penguin; this
+         is the first that is about the level. */
+      a.fishAt(0.44, 0.26, 'marked');
     },
   },
   {

@@ -6,7 +6,7 @@
  */
 
 import {
-  ICE, STORM, BRAWL, WIND, SWING, windAt, swingAt, lobShot, tailWindow, lullWindow,
+  ICE, STORM, BRAWL, WIND, SWING, ROT, windAt, swingAt, lobShot, tailWindow, lullWindow,
 } from './config.js';
 import { clamp, easeOutCubic, lerp } from '../core/util.js';
 
@@ -391,6 +391,9 @@ export class Hazard {
     this.lift = 0;
     /** Serac: when its cycle started, or null while it is still asleep. */
     this.armedAt = null;
+    /** Set for one frame when falling ice hits the ground, so the world can
+        shatter it. Cleared by whoever reads it. */
+    this.landed = false;
   }
 
   get lethal() {
@@ -400,6 +403,11 @@ export class Hazard {
     // Falling ice is only dangerous while it is falling. Hanging above you it
     // is a warning, and once it is past you it is scenery.
     if (this.kind === 'shard') return this.state === 'drop';
+    // Same rule for the ice that falls on a clock of your own making: hanging
+    // over you it is a spike, falling it is the hazard, and lying shattered on
+    // the floor it is a heap of broken ice. Killing somebody who walks into
+    // the pile afterwards is punishing them for a hazard that already went off.
+    if (this.kind === 'icicle') return this.state !== 'cooldown';
     return true;
   }
 
@@ -435,7 +443,28 @@ export class Hazard {
         } else if (this.state === 'drop') {
           this.vy += 2000 * dt;
           this.y += this.vy * dt;
-          if (this.y > this.baseY + 620) {
+          /*
+           * It lands on something now.
+           *
+           * `drop` — how far there is to fall before the ice meets the ground
+           * under it — has been passed in by the tunnels since they were
+           * written, and was thrown away here in favour of a flat six hundred
+           * and twenty pixels. Every icicle in the game therefore fell the
+           * same distance regardless of what was underneath it, which in a
+           * tunnel merely looked odd and in an open arena looked broken: the
+           * ice sank straight through the floor and off the bottom of the
+           * screen, so the one thing the player was watching for — the moment
+           * it hits — never happened.
+           *
+           * The landing is now an event. It stops where the ground is, it says
+           * so once (`burst`, read by the World for the shatter), and what is
+           * left is a spent pile rather than a live spike.
+           */
+          const fall = this.drop ?? 620;
+          if (this.y >= this.baseY + fall) {
+            this.y = this.baseY + fall;
+            this.vy = 0;
+            this.landed = true;
             this.state = 'cooldown';
             this.timer = 2.4;
           }
@@ -534,6 +563,7 @@ export class Hazard {
     this.state = 'idle';
     this.vy = 0;
     this.timer = 0;
+    this.landed = false;
     // A serac that has already been woken goes back to sleep on a retry, so a
     // respawn always buys the same full warning the first attempt did.
     this.armedAt = null;
@@ -550,8 +580,14 @@ export class Hazard {
  *   speed  — red and gold, a temporary sprint, always a detour
  *   heavy / dizzy / blind — rotten, a temporary curse, always on the line
  */
-/** The rotten kinds. A fish is bait if its kind is in here, and only then. */
-const ROT_KINDS = ['heavy', 'slick', 'dizzy', 'blind'];
+/**
+ * The rotten kinds. A fish is bait if its kind is in here, and only then.
+ *
+ * Read from the definitions rather than typed out again: this list and the one
+ * in `player.js` and the one in the generator were three separate copies of
+ * the same four words, which is three places to forget a fifth.
+ */
+const ROT_KINDS = Object.keys(ROT);
 /** The fish that hand the jump button a new meaning for a few seconds. */
 const CHARGED_KINDS = ['coil', 'quantum', 'slack'];
 
@@ -705,7 +741,20 @@ export class Rival {
         return null;
       }
       this.state = 'windup';
-      this.timer = BRAWL.windup;
+      /*
+       * Marked.
+       *
+       * The wind-up is the whole of the arena's fairness: the arm goes back,
+       * the line is drawn, and you have that long to not be standing on it.
+       * The arena's own rotten fish shortens it — the rivals do not throw
+       * harder or more often, they simply find the range sooner, and the cover
+       * you chose on the old timing stops being cover.
+       *
+       * Read off the player rather than stored on the rival, so it lifts the
+       * moment the curse does, mid-wind-up included.
+       */
+      const marked = player.curse?.marked > 0 ? ROT.marked.aim : 1;
+      this.timer = BRAWL.windup * marked;
       this.aim = { x: cx, y: cy };
       this.facing = cx < hand.x ? -1 : 1;
       return null;

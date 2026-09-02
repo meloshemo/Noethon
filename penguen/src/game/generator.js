@@ -270,10 +270,20 @@ export function generateLevel(id, opts = {}) {
   // Pickups last, once the shape of the course is known.
   c.scatterFish(3, 62);
   if (rng() < lerp(0.4, 0.85, d)) c.sprint(0.3 + rng() * 0.4);
-  // All four curses, not three. `slick` was added to the crafted levels and
-  // never reached here, so a player past seventy-six met one fewer bad fish
-  // than a player on level sixteen.
-  const kinds = ['heavy', 'slick', 'dizzy', 'blind'];
+  /*
+   * The curses that mean something on open ice, and only those.
+   *
+   * Written out rather than taken from `ROT`, and this is the one place where
+   * a hand-kept list is right: the newer curses are aimed at the answers other
+   * chapters have — a wall to hold, lungs to count, cover to stand behind —
+   * and none of those exist out here. A bait that costs nothing where it is
+   * dropped is worse than no bait, because the player learns the fish is
+   * harmless and then eats one in a chapter where it is not.
+   *
+   * `stiff` makes the cut because the wings and the motor are used everywhere,
+   * and taking them away is a real problem on the shelf's longest gaps.
+   */
+  const kinds = ['heavy', 'slick', 'dizzy', 'blind', 'stiff'];
   const rots = Math.round(lerp(0, 2.6, d));
   for (let i = 0; i < rots; i++) {
     c.temptation(0.25 + (i + rng() * 0.5) * 0.26, kinds[Math.floor(rng() * kinds.length)]);

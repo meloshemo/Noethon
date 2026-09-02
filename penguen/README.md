@@ -8,7 +8,7 @@ istiyor.
 
 **Bağımlılık yok, derleme adımı yok, backend yok, görsel/ses dosyası yok.**
 Penguen de, buz da, kuzey ışıkları da, bütün sesler de kodla üretiliyor.
-Toplam yük tek dosyada 666 KB ve çevrimdışı çalışıyor.
+Toplam yük tek dosyada 679 KB ve çevrimdışı çalışıyor.
 
 ▶ **[Oyunu aç](https://claude.ai/code/artifact/2f6dd29b-3ad8-4d60-b4f7-c8490114b96f)**
 
@@ -28,7 +28,7 @@ Toplam yük tek dosyada 666 KB ve çevrimdışı çalışıyor.
 | **6 tehlike** | sarkıt · fok · fırtına kuşağı · yükselen hava sütunu · orka · serak |
 | **4 yeni fiil** | **sessiz alan** (yerçekimi yarıya iner) · **sallanan buz** (ipin ucunda sarkaç) · **kavisli atış** (siperin üstünden) · **çukur** (derinlik nefese mal olur) |
 | **2 pusu** | Bölümün planlamadığı anda dalan kutup kuşu · bayrağa 100 px kala kopan buzul |
-| **4 çürük balık etkisi** | ağırlaşma · **ayak tutmaması** · ters kontrol · körlük |
+| **8 çürük balık etkisi** | ağırlaşma · ayak tutmaması · ters kontrol · körlük · **ekipman kilidi** · **tutunamama** · **delik ciğer** · **işaretlenme** |
 | **3 yüklü balık** | yay (tek dev zıplama) · kuantum (havada ışınlanma) · gevşeme (senin dışında her şey yavaşlar) |
 | **29 penguen + 10 iz** | 5 nadirlik seviyesi, 290 kombin |
 | **4 elmas penguen** | Tek yetenek taşıyan tek tür: zıplama · hız · süzülme · mıknatıs |
@@ -343,7 +343,7 @@ geçmez, hata verip durur.
 
 ## Testler
 
-Tek komut, 48 paket (38 node + paketleme + 10 tarayıcı), kendi sunucusunu
+Tek komut, 50 paket (40 node + paketleme + 10 tarayıcı), kendi sunucusunu
 kurup kapatıyor ve portu doluysa bir yanına kayıyor:
 
 ```bash
@@ -583,7 +583,7 @@ boşluk o sayıya göre ölçülüyor.
 - **Sabit adımlı fizik (1/120 s).** 60 Hz, 120 Hz ve 144 Hz ekranlarda oyun aynı
   hissettiriyor; arka planda kalan sekme geri geldiğinde penguen ışınlanmıyor.
 - **Görsel/ses varlığı yok.** Penguen, buzlar, kuzey ışıkları, su ve bütün sesler
-  kodla üretiliyor. Tek dosya sürümü 666 KB ve çevrimdışı çalışıyor.
+  kodla üretiliyor. Tek dosya sürümü 679 KB ve çevrimdışı çalışıyor.
 - **Metin koddan ayrı.** Arayüz metinleri tek sözlükte, içeriğe ait metinler
   girdinin kendi `en` bloğunda. Bir dil eklemek bir tablo eklemek.
 
@@ -1720,6 +1720,110 @@ el yapımı satırlar hareket ettiriyor. Aynı sebeple iki bayrak eklendi:
 bir araç bir kez çalıştırılıp sonra hafızadan tartışılıyor) ve `shelf-run` için
 `--sample=` (kanıt değil, "bu bir şeyi sıkıştırdı mı?" sorusunun saniyeler
 içinde cevabı).
+
+## Düşen buz düşmüyordu
+
+Şikâyet şuydu: "tepeden düşen buzul parçası çalışmıyor, çizgi çizmişsin aşağıya
+doğru." Mekanik çalışıyordu — altına gel, çatlasın, düşsün, öldürsün — ama
+**gözle görülen hiçbir şey doğru değildi.**
+
+Üç ayrı şey birbirini örtüyordu:
+
+1. **`drop` okunmuyordu.** Tüneller, buzun altındaki zemine kadar olan mesafeyi
+   ilk yazıldıkları günden beri hesaplayıp veriyordu. Varlık onu kullanmıyor,
+   sabit **620 piksel** düşüyordu. Yani buz zeminin içinden geçip ekranın
+   altından kayboluyor, sonra dünyanın dışında bir yerde soğumaya giriyordu.
+   Bütün tehlikenin etrafında kurulduğu an — çarpma — hiç yaşanmıyordu.
+2. **Kırılan yığın hâlâ öldürüyordu.** `lethal` çürük buz için de `true`
+   dönüyordu; düşmüş, işi bitmiş bir buz parçasına dokunan oyuncu ölüyordu.
+3. **Uyarı çizgisi yanlış anda vardı.** Kesikli iniş çizgisi yalnızca `idle`
+   hâlde çiziliyordu — yani anlam kazandığı anda, buz titremeye başladığında,
+   **kayboluyordu.** Üstelik arenada tavan yok: gökyüzünün ortasında asılı bir
+   üçgen ve tepeden aşağı çekilmiş bir çizgi. Kaynağı yok, hedefi yok.
+
+Şimdi: `drop` okunuyor ve buz **zemine iniyor**, çarpınca kırılıyor (parçacık,
+ses, sarsıntı), geriye ölümcül olmayan bir yığın kalıyor. Arenadaki buzun
+asılacağı bir **kaya kütlesi** var. İniş çizgisi uyarı boyunca da duruyor ve
+kızarıyor, ve zemine **inişin nereye olacağını gösteren bir halka** çiziliyor —
+uyarı süresi boyunca doluyor. Nereye düşeceği artık hesaplanacak değil
+bakılacak bir şey.
+
+`tests/icefall.mjs` bunu artık bir olay olarak kontrol ediyor: zeminde duruyor
+mu, çarpma görülüyor mu, yığın öldürmeyi bırakıyor mu, iniş noktası dünyanın
+içinde mi.
+
+## Dağın kuşu: bedava mola bitti
+
+İkinci şikâyet: "yukarı tırmanışlarda hiçbir zorluk yok, hiçbir kuş alması
+yok." İkisi de doğruydu ve ikisi aynı sebepten.
+
+Chapter II'nin kendi notu kuşu **reddediyordu**, ve gerekçesi sağlamdı: bir
+şaftın içinde kuşun dalacağı yer de tırmanıcının kaçacağı yer de yok. Gerekçe
+doğru — ama yalnızca *şaftlar* hakkında. Bir tırmanış baştan sona şaft değil:
+basamaklar, traversler, sahanlıklar, ve aralarında şaftlar. Kol gücü çubuğu
+**yalnızca duvar tutulurken** eriyor ve **yalnızca yerde** doluyor. Yani zemin
+sadece güvenli değildi — chapter'ın kaynağı geri verdiği yerdi, bedava, istediğin
+kadar. **On beş zor şaft, aralarında sınırsız mola.**
+
+Kuş tam olarak orayı avlıyor:
+
+- **Duvardaki ya da havadaki pengueni hiç hedef almıyor.** Eski itiraz doğruydu
+  ve korunuyor: şaftlar tam olarak eskiden oldukları problem.
+- **Kayadaki pengueni asla almıyor.** Mutlak bir kural, çünkü bazen işleyen bir
+  cevap oyuncuya o hamleye *güvenmemeyi* öğretir.
+- **Ama duvar bedava çıkış da değil.** İlk hâl, el buza değdiği anda kuşu
+  siliyordu; ölçüldüğünde bu kaçışın bedeli **%0**'dı. Gerçek bir kuş bozulan
+  dalıştan sonra döner, tur atar, öbür taraftan gelir — bu da öyle yapıyor.
+  Bütün geçiş boyunca tutunmak gerekiyor, çubuğun kendi hızında.
+- **Sade dalış, tek kuş, uzun uyarı** (1,05 sn; sahanlıkta 0,72). Avcı kuş ve
+  ikili saldırı dağa hiç gelmiyor: dar bir sahanlıkta ikisi de cevapsız tehdit.
+- **35. bölümden itibaren**, çünkü kavramanın öğretildiği ilk üç bölümde cevabı
+  henüz verilmemiş bir tehdit tehdit değil, duvardır.
+
+Ölçüm: kıpırdamadan duran penguen **12 denemenin 12'sinde** yakalanıyor.
+
+Bir de yan bulgu: taşınırken penguen aynı anda *havada, kuşun pençesinde ve
+duvara tutunmuş* sayılabiliyordu. Görünür bir sonucu yoktu, ama dağın verdiği
+söz ("kuş seni kayadan almaz") bunu yanlış bir cümleye çeviriyordu. Artık
+taşınan penguen tutunamıyor.
+
+## Sekiz çürük balık: dördü bir cevabı geri alıyor
+
+Üçüncü şikâyet: "balık türleri daha farklı işlev görmeli, birkaç renkli balık
+daha, farklı dezavantajlar."
+
+Dört çürük balık vardı ve dördü **tek bir fikrin dört yüzüydü**: ağırlaşma,
+kayma, ters kontrol, körlük. Hepsi pengueni zaten yaptığı şeyde kötüleştiriyor
+ve hepsi aynı şekilde atlatılıyor — birkaç saniye yavaşla, geçsin. Dört chapter
+sonra bu bir karar olmaktan çıkmıştı.
+
+Bir de renk sorunu vardı, ve gerçekti: çizimdeki renk tablosunda üç giriş ve bir
+yedek renk vardı. `slick` tabloda hiç yoktu — yani **elinin tutmamasına** sebep
+olan balıkla **kontrolleri ters çeviren** balık aynı yeşildi. Tek uyarısı rengi
+olan bir eşyada iki farklı dört saniyelik problem, tek resim. Renk artık
+tanımın parçası, `CHARGED`'ın rengi gibi, ve çizim onunla çelişemiyor.
+
+Yeni dördü pengueni kötüleştirmiyor; **oyuncunun güvendiği bir cevabı** alıyor,
+ve her biri o cevabın var olduğu chapter'a nişanlı:
+
+| Balık | Ne alıyor | Nerede |
+|---|---|---|
+| **Donmuş Tüy** (pembe) | Kanat ve motor — satın alınan ekipman çalışmıyor | Sahanlık (31) + sonsuz mod |
+| **Uyuşmuş Pençe** (kehribar) | Buz duvarı tutulmuyor | Dağ (36) |
+| **Delik Ciğer** (deniz yeşili) | Nefes iki kat gidiyor | Deniz (57 "İki Ciğer") |
+| **İşaretlenme** (kırmızı) | Rakiplerin nişan kilidi %45 kısalıyor | Arena (74) |
+
+Yerleştirme kuralı da bir kural: **düştüğü yerde bedeli olmayan yem yem
+değildir**, çünkü oyuncuya o balığın zararsız olduğunu öğretir ve sonra bedeli
+olan bir chapter'da bir tane yer. `tests/bait.mjs` her chapter'a özel yemin
+kendi chapter'ında olduğunu doğruluyor. Üretici de yalnızca açık buzda anlamı
+olanları çekiyor.
+
+Son olarak: üç lanetin ekran etkisi vardı, beşinin yoktu — `slick` yazıldığı
+günden beri açık olduğunu hiç söylemiyordu. **Farkına varamadığın dört saniyelik
+bir problem zorluk değil, kontrollerin bozulması gibi görünür.** Artık kendi
+resmi olmayan her lanet, ekranın kenarında kendi renginde nefes alan bir bant
+bırakıyor.
 
 ## Zorluk: geometri tavana vurdu, o yüzden zaman kısaldı
 
@@ -2950,11 +3054,11 @@ anlatmak değil, olan bir şeyi olduğundan iyi anlatmaktır.
 | Kimlik | Ad, `PNG-XXXXX` kimliği, 7 unvan, hepsi cihazda |
 | Hayalet | Kendi rekorun yanında koşuyor, paylaşım koduyla arkadaşınki de |
 | Müzik | Tek tema, 5 sahne, 5 katman, ses saatinde planlanıyor, ses dosyası yok |
-| Dil | Türkçe ve İngilizce, 313 metin, tarayıcıdan seçiliyor |
+| Dil | Türkçe ve İngilizce, 314 metin, tarayıcıdan seçiliyor |
 | Kayıt | Tek sürümlü JSON, ileri göç, dosyaya aktarma, tek tuşla silme |
-| Çevrimdışı | Servis çalışanı + tek dosya sürümü (666 KB) |
+| Çevrimdışı | Servis çalışanı + tek dosya sürümü (679 KB) |
 | Girdi | Klavye, dokunmatik, gamepad |
-| Test | 38 node + paketleme + 10 tarayıcı paketi, hepsi tek komutta |
+| Test | 40 node + paketleme + 10 tarayıcı paketi, hepsi tek komutta |
 | Zorluk | Ölçülen eğri: `node tools/difficulty.mjs` |
 
 ### Yok, ve neden

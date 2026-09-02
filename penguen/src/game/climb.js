@@ -143,6 +143,15 @@ const CLIMB_PLANS = [
       t.steps({ n: 2, rise: 0.62, w: 135 });
       // Tall enough that creeping cannot do it — the nub halfway is the whole
       // reason it is passable, and finding it is the level.
+      /* The mountain's own rotten fish, on the way in to the longest shaft.
+         Every bait in the game until now made the penguin worse at what it
+         was already doing — heavier, slippier, backwards, blinder — and all
+         four are survived the same way, by slowing down for a few seconds.
+         This one takes the wall away for three and a half, on the level whose
+         whole answer is a wall. It sits below the shaft rather than inside it,
+         so eating it is a decision made before the commitment and not a
+         sentence handed down in the middle of one. */
+      t.fishAt(3, 52, 'clumsy');
       t.chimney({ height: 380, rests: 1 });
       /* The level is a long shaft with one ledge in it, and the ledge is the
          whole point. So part of the shaft is glare ice: there is a rest on

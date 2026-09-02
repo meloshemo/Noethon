@@ -47,6 +47,7 @@ const RIVAL_H = 40;
  * whole arena and made the duels block each other. Thin perches give short,
  * steep, local lines: three penguins and one shot, all in view at once.
  */
+const ICEFALL_H = 46;
 const PERCH_W = 14;
 /** Keep everything this far from the edges of the world. */
 const PAD = 46;
@@ -663,9 +664,7 @@ export class Arena {
       banks: this.banks,
       checkpoints: this.checkpoints,
       signs: this.signs,
-      hazards: this._icefalls.map(({ at, up, w }) => ({
-        kind: 'icicle',
-        x: Math.round(this.width * at - w / 2),
+      hazards: this._icefalls.map(({ at, up, w }) => {
         /*
          * Hung inside the arena, above the highest perch.
          *
@@ -675,10 +674,31 @@ export class Arena {
          * it gives — the whole reason it is fair — could not be seen until it
          * was already falling.
          */
-        y: Math.round(this.groundY - this.height * up),
-        w,
-        h: 46,
-      })),
+        const y = Math.round(this.groundY - this.height * up);
+        return {
+          kind: 'icicle',
+          x: Math.round(this.width * at - w / 2),
+          y,
+          w,
+          h: ICEFALL_H,
+          /*
+           * How far there is to fall, so it lands on the floor of the arena.
+           *
+           * Without this the entity used a flat six hundred and twenty pixels
+           * and the ice went straight through the ice — down past the floor,
+           * off the bottom of the screen, and into a cooldown somewhere below
+           * the world. The moment the whole hazard is built around, the one a
+           * player is watching for, simply never happened on screen.
+           */
+          drop: this.groundY - y - ICEFALL_H,
+          /* Something to hang from. An arena has no roof, so a triangle in the
+             middle of the sky reads as a bug rather than as ice: the crag is
+             the answer to "what is that and why is it up there". Drawn only —
+             it is not solid, because a ledge up there would be a place to
+             stand and this room is about the floor. */
+          crag: true,
+        };
+      }),
       zones: [],
       /** The intended solution: which throw takes out which guard, from where. */
       plan: this.plan,

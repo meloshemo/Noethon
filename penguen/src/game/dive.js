@@ -364,6 +364,14 @@ const DIVE_PLANS = [
       // where the cold goes. It is deep and it is right after the only breath
       // on the level, which means the choice is made at the moment the player
       // has the most air and the least reason to think about it.
+      /* The sea's own rotten fish, on the level called Two Lungs.
+         Nothing in this chapter has ever cost the chapter's own resource: the
+         bait made you heavy or blind or backwards, all of which are problems
+         about *moving*, on fifteen levels that are about *breathing*. Five
+         seconds of double drain is most of a lungful here, and it is placed
+         where the level's own note says the second breath has to be spent
+         well — off the line, so it is an offer and never an ambush. */
+      d.fishAt(2, 52, 'leak');
       d.trench({ at: 0.6, dip: 0.66, len: 340 });
       d.gate({ at: 0.7, gap: 160 });
       /* Water going down, on the level about getting up.

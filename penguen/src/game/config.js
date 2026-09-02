@@ -640,15 +640,76 @@ export const CHARGED = {
  * Each is survivable on its own. None is survivable if you were already in
  * trouble, which is the point.
  */
+/**
+ * Every kind carries its own colour.
+ *
+ * It used to live in the renderer as a three-entry lookup with a fallback, and
+ * the fallback was doing real work: `slick` was not in the table, so the fish
+ * that takes your grip away and the fish that reverses your controls were the
+ * same shade of green. Two different four-second problems, one picture. Now
+ * the colour is part of the definition, the way a charged fish's is, and the
+ * drawing cannot disagree with the effect.
+ */
 export const ROT = {
   /** Lead in the belly: heavier, shorter jump. */
-  heavy: { duration: 5, jump: -0.22, speed: -0.18, label: 'Ağırlaştın!', en: { label: 'You got heavy!' } },
+  heavy: {
+    duration: 5, jump: -0.22, speed: -0.18, tint: '#7a5cff',
+    label: 'Ağırlaştın!', en: { label: 'You got heavy!' },
+  },
   /** Every floe is polished ice. You keep what you had and cannot get more. */
-  slick: { duration: 4.2, label: 'Ayağın tutmuyor!', en: { label: 'No grip!' } },
+  slick: {
+    duration: 4.2, tint: '#3fd0ff',
+    label: 'Ayağın tutmuyor!', en: { label: 'No grip!' },
+  },
   /** Left is right. Short, because it is the nastiest. */
-  dizzy: { duration: 3.2, label: 'Kontroller ters!', en: { label: 'Controls reversed!' } },
+  dizzy: {
+    duration: 3.2, tint: '#7fbf4d',
+    label: 'Kontroller ters!', en: { label: 'Controls reversed!' },
+  },
   /** Frost on the eyes: the view closes in. */
-  blind: { duration: 4, label: 'Göremiyorsun!', en: { label: 'You cannot see!' } },
+  blind: {
+    duration: 4, tint: '#8a8f9a',
+    label: 'Göremiyorsun!', en: { label: 'You cannot see!' },
+  },
+  /*
+   * And four that take away an *answer* rather than an ability.
+   *
+   * The first four all make the penguin worse at the thing it was already
+   * doing: heavier, slippier, backwards, blinder. That is one idea with four
+   * faces, and after four chapters it had stopped being a decision — every one
+   * of them is survived the same way, by slowing down for a few seconds.
+   *
+   * These take away something the player *relies* on, and each one is aimed at
+   * a chapter that has an answer worth removing: the equipment they bought,
+   * the wall they were about to grab, the lungs they were counting, the cover
+   * they were standing behind. A curse that costs nothing where it is dropped
+   * is not a curse, so each is placed only where its answer exists — and the
+   * generator, which draws at random, is given only the ones that bite on ice.
+   */
+  /** Frozen feathers: the gear you paid for does nothing. */
+  stiff: {
+    duration: 4.6, tint: '#ff7ac2',
+    label: 'Tüylerin dondu: ekipman çalışmıyor!',
+    en: { label: 'Feathers frozen: no gear!' },
+  },
+  /** Numb claws: ice walls cannot be held. The mountain's own bait. */
+  clumsy: {
+    duration: 3.6, tint: '#ffa03a',
+    label: 'Pençelerin uyuştu: tutunamıyorsun!',
+    en: { label: 'Numb claws: nothing to hold!' },
+  },
+  /** A hole in the lung: air goes twice as fast. The sea's own bait. */
+  leak: {
+    duration: 5.4, drain: 2, tint: '#2fb3a0',
+    label: 'Ciğerin delik: nefes iki kat gidiyor!',
+    en: { label: 'Lungs leaking: air goes twice as fast!' },
+  },
+  /** Marked: the rivals find the range sooner. The arena's own bait. */
+  marked: {
+    duration: 5, aim: 0.55, tint: '#ff4d4d',
+    label: 'İşaretlendin: daha çabuk nişan alıyorlar!',
+    en: { label: 'Marked: they find the range sooner!' },
+  },
 };
 
 /**
@@ -769,6 +830,40 @@ export const AMBUSH = {
   pairChance: 0.3,
   /** The second bird of a pair comes this long after the first. */
   pairGap: 0.55,
+  /**
+   * Kayalık kuşu — the mountain gets a bird after all.
+   *
+   * The note above this constant said the mountain does not, and gave a good
+   * reason: inside a shaft there is nowhere for a bird to dive from and
+   * nowhere for the climber to dodge to. That reason is sound and it is also
+   * only about the shafts. A climb is not all shaft — it is ledges, steps and
+   * traverses with shafts *between* them, and on all of that the chapter asked
+   * nothing at all: the arm bar only drains while you are holding a wall, so
+   * standing on a ledge was the safest place in the game. Fifteen levels of
+   * hard shafts joined by free ground.
+   *
+   * So the bird hunts exactly where the chapter was empty. It comes for a
+   * penguin *standing on a ledge*, and the answer to it is the one move this
+   * chapter owns: get on the wall. A bird will not follow you onto rock —
+   * which turns the ledges from rest into a decision, and pays for the safety
+   * in the only currency the mountain has.
+   *
+   * `roostFrom` is 35 rather than 32: the first three levels are where the
+   * grip itself is taught, and a threat whose answer is a control you have not
+   * been given yet is not a threat, it is a wall.
+   */
+  roostFrom: 35,
+  /**
+   * And a longer warning than the shelf gives.
+   *
+   * On open ice the dodge is to keep walking, and you can start walking at any
+   * moment. On a ledge the dodge is to reach a wall that may be a jump away,
+   * so the decision has to be made earlier — and made while the climber is
+   * already spending attention on something else.
+   */
+  roostWarn: 1.05,
+  /** Rarer than on the shelf: a climb is slower, so the same rate bites more. */
+  roostRate: 0.26,
   /**
    * Being carried.
    *

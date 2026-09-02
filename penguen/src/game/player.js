@@ -11,8 +11,14 @@ import {
 } from './config.js';
 import { clamp, damp, rectsOverlap } from '../core/util.js';
 
-/** Every rotten kind, in one place, so no decay loop can quietly forget one. */
-const CURSES = ['heavy', 'slick', 'dizzy', 'blind'];
+/**
+ * Every rotten kind, in one place, so no decay loop can quietly forget one.
+ *
+ * Read from the definitions rather than typed out again. It was typed out
+ * again — here, in `entities.js` and in the generator — which is three lists
+ * that have to be edited together and no way to notice when they are not.
+ */
+const CURSES = Object.keys(ROT);
 
 export class Player {
   constructor() {
@@ -51,7 +57,7 @@ export class Player {
     /** Set for one frame when the coil releases, so the world can hear it. */
     this.uncoiled = false;
     /** Rotten-fish curses: { heavy, slick, dizzy, blind } → seconds left. */
-    this.curse = { heavy: 0, slick: 0, dizzy: 0, blind: 0 };
+    this.curse = Object.fromEntries(CURSES.map((k) => [k, 0]));
     /** Afterimages, so the boost reads as speed rather than as a colour. */
     this.trail = [];
     /**
@@ -118,7 +124,7 @@ export class Player {
     this.quantumUsed = false;
     this.blinked = 0;
     this.uncoiled = false;
-    this.curse = { heavy: 0, slick: 0, dizzy: 0, blind: 0 };
+    this.curse = Object.fromEntries(CURSES.map((k) => [k, 0]));
     this.trail.length = 0;
     for (const p of this.history) {
       p.x = x;
@@ -218,13 +224,24 @@ export class Player {
     return this.moveSpeed * SWIM.speed;
   }
 
+  /*
+   * Frozen feathers.
+   *
+   * Both of these read the curse rather than the inventory, so the wings and
+   * the motor stop being there at all for a few seconds — not weaker, gone.
+   * That is the point of it: every other rotten fish makes the penguin worse
+   * at what it was doing, and this one takes away the thing the player *bought
+   * to answer* being in trouble. The most expensive habit in the game is
+   * "there is always the glide", and this is the fish that argues with it.
+   */
   get glideMax() {
-    if (!this.gear.wings) return 0;
+    if (!this.gear.wings || this.curse.stiff > 0) return 0;
     const tier = this.gear.wings === 1 ? 1 : this.gear.wings === 2 ? 1.7 : 2.6;
     return GEAR.wings.stamina * tier + (this.glideBonus ?? 0);
   }
 
   get rocketMax() {
+    if (this.curse.stiff > 0) return 0;
     return this.gear.rocket ?? 0;
   }
 
@@ -945,6 +962,10 @@ export class Player {
    * nothing in the first thirty-one levels changes underfoot.
    */
   _probeWall(solids) {
+    /* Numb claws: nothing can be held. The same channel glare ice uses, so a
+       cursed climber and a climber on verglas are in exactly the same
+       situation — which is the one this chapter already knows how to be in. */
+    if (this.curse.clumsy > 0) return 0;
     const REACH = 4;
     const top = this.y + this.h * 0.15;
     const h = this.h * 0.7;
