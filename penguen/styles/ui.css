@@ -1,0 +1,3846 @@
+/** Components: HUD, touch pads, overlays, buttons, cards. */
+
+/* ================================================================ HUD */
+
+.hud {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 3;
+  padding: var(--s-3) var(--s-3) 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.hud__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+}
+
+.hud__group {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.hud__group--right {
+  margin-left: auto;
+  pointer-events: auto;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.34em 0.72em;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-full);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chip--level {
+  background: linear-gradient(135deg, rgba(79, 215, 255, 0.22), rgba(155, 140, 255, 0.18));
+  border-color: rgba(79, 215, 255, 0.35);
+  color: var(--c-ice-100);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+}
+
+.chip--stat .icon {
+  width: 1.25em;
+  height: 1.25em;
+  opacity: 0.85;
+  flex: none;
+}
+
+.chip--time {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  min-width: 6.6em;
+  justify-content: center;
+}
+
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: var(--r-full);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  color: var(--text);
+  transition: background var(--t-fast), transform var(--t-fast);
+}
+
+.icon-btn svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.icon-btn:hover {
+  background: var(--surface-2);
+}
+
+.icon-btn:active {
+  transform: scale(0.92);
+}
+
+/* Progress */
+.progress {
+  position: relative;
+  height: 4px;
+  border-radius: var(--r-full);
+  background: rgba(143, 196, 226, 0.16);
+  overflow: visible;
+}
+
+.progress__fill {
+  height: 100%;
+  width: 0%;
+  border-radius: var(--r-full);
+  background: linear-gradient(90deg, var(--c-aqua), var(--c-mint));
+  transition: width 90ms linear;
+}
+
+.progress__pin {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 9px;
+  height: 9px;
+  margin: -4.5px 0 0 -4.5px;
+  border-radius: 50%;
+  background: var(--c-ice-100);
+  box-shadow: 0 0 0 3px rgba(79, 215, 255, 0.28);
+  transition: left 90ms linear;
+}
+
+/* Toast */
+.toast {
+  align-self: center;
+  margin-top: var(--s-2);
+  padding: 0.4em 0.9em;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  border-radius: var(--r-full);
+  background: rgba(92, 225, 166, 0.16);
+  border: 1px solid rgba(92, 225, 166, 0.4);
+  color: #d5fff0;
+  animation: toast-in var(--t-base) var(--e-out);
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ====================================================== Touch controls */
+
+/*
+ * The pads are sized from the stage, not from the root font size.
+ *
+ * They used to be a flat 4.2rem with one media query for a band of heights
+ * between 460 and 560 pixels — a band that no phone held sideways is in. A
+ * modern handset is 375 to 430 tall in landscape, below the floor of that
+ * rule, so it got the full desktop-sized pads: the bottom strip alone was a
+ * hundred and fifteen pixels of a three-hundred-and-ninety pixel screen,
+ * nearly a third of the game covered by its own buttons.
+ *
+ * `cqh` is the stage's height, so the pads shrink continuously with the screen
+ * instead of stepping at a breakpoint that has to be guessed per handset.
+ *
+ * The first tuning made the pads *too* small, and the reason is worth writing
+ * down: it aimed at 44px, which is the smallest target a thumb can be asked to
+ * hit — and a floor is not a size. Measured, every landscape handset landed on
+ * 44 to 49px, which is the number you choose when you have decided the control
+ * is allowed to be uncomfortable as long as it is technically hittable. This
+ * is a game held in two hands for minutes at a time, not a link in a form.
+ *
+ * The budget was not the constraint either, and the second tuning found out
+ * why: the number being budgeted against was measuring the wrong thing. It was
+ * the height of this container as a share of the stage, capped at a fifth —
+ * but the container spans the whole width while the pads sit in its two bottom
+ * corners, and measured it was **74% empty down the middle**. The pads were
+ * being charged for a rectangle of air, so they were shrunk to stay under a
+ * cap they were never really near: their real coverage was 3.9% of the screen.
+ *
+ * Sized against what a player actually loses instead, there was room for half
+ * as much again. A landscape phone now gets a direction pad around 78px and a
+ * jump around 96px, covering 6.5% of the screen with two thirds of the width
+ * still clear between the thumbs.
+ *
+ * The camera needs no help with this: it reads the strip's real measured
+ * height, so growing the pads moves the penguin up on its own.
+ *
+ * The floors are set below any handset that exists rather than at the size
+ * anything should actually be. They exist so that a stage shorter than every
+ * real phone still cannot push the strip past its fifth of the screen — at
+ * 300px tall the first pass landed on exactly 22.0%, which is not a margin,
+ * it is a coincidence. Nothing above 320px ever reaches them.
+ */
+.touch {
+  /*
+   * Sized against the *smaller* side of the stage, not its height.
+   *
+   * Keyed to height alone, a tall narrow screen gets the full cap: a 320 by
+   * 568 phone — the smallest still in daily use — has plenty of height and
+   * almost no width, so 80 pixel pads covered 12.1% of it, against 6.5% on a
+   * normal landscape handset. `cqmin` asks the question that actually matters,
+   * which is how much room there is in the tightest direction. On every
+   * landscape phone the smaller side *is* the height, so nothing there
+   * changes; only the cramped shapes get smaller pads.
+   */
+  --pad: clamp(3.25rem, 20cqmin, 5rem);
+  --pad-jump: clamp(4rem, 24.5cqmin, 6rem);
+  --pad-gap: clamp(0.45rem, 2.2cqh, 0.85rem);
+  --pad-edge: clamp(0.375rem, 1.6cqh, 1rem);
+  position: absolute;
+  inset: auto 0 0 0;
+  z-index: 4;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 0 var(--pad-edge) calc(var(--pad-edge) + var(--safe-b));
+  pointer-events: none;
+}
+
+.touch__side {
+  display: flex;
+  gap: var(--pad-gap);
+  pointer-events: auto;
+}
+
+.pad {
+  display: grid;
+  place-items: center;
+  width: var(--pad);
+  height: var(--pad);
+  border-radius: var(--r-full);
+  background: rgba(14, 31, 61, 0.5);
+  border: 1px solid var(--border-strong);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  color: var(--c-ice-200);
+  touch-action: none;
+  transition: transform var(--t-fast) var(--e-out), background var(--t-fast);
+}
+
+/* Proportional to the pad, so the glyph never grows out of a shrinking pad. */
+.pad svg {
+  width: 40%;
+  height: 40%;
+}
+
+.pad--jump {
+  width: var(--pad-jump);
+  height: var(--pad-jump);
+  background: linear-gradient(150deg, rgba(79, 215, 255, 0.3), rgba(92, 225, 166, 0.22));
+  border-color: rgba(79, 215, 255, 0.5);
+  color: #eafcff;
+}
+
+.pad--jump svg {
+  width: 38%;
+  height: 38%;
+}
+
+.pad.is-pressed {
+  transform: scale(0.9);
+  background: rgba(79, 215, 255, 0.32);
+}
+
+/*
+ * On a sideways phone the pads sit over the level rather than beside it, so
+ * they step back until a thumb is on them. The glyph keeps its brightness —
+ * it is the part you have to be able to find without looking.
+ */
+@container stage (max-height: 560px) {
+  .pad {
+    background: rgba(14, 31, 61, 0.34);
+    border-color: rgba(148, 190, 226, 0.28);
+  }
+  .pad--jump {
+    background: linear-gradient(150deg, rgba(79, 215, 255, 0.24), rgba(92, 225, 166, 0.17));
+    border-color: rgba(79, 215, 255, 0.4);
+  }
+  .pad.is-pressed {
+    background: rgba(79, 215, 255, 0.34);
+  }
+}
+
+/*
+ * The heads-up display on a sideways phone.
+ *
+ * Same reasoning as the pads: three hundred and ninety pixels of height, and
+ * the top strip was taking ninety of them at desktop sizes. Nothing is
+ * removed — the level, the name, the fish, the deaths, the clock and the
+ * pause button are all still there — they are simply drawn at the size a
+ * phone deserves.
+ */
+@container stage (max-height: 560px) {
+  .hud {
+    padding: var(--s-2) var(--s-2) 0;
+    gap: var(--s-1);
+  }
+  .hud__bar {
+    gap: var(--s-2);
+  }
+  .chip {
+    padding: 0.24em 0.6em;
+    font-size: var(--fs-2xs);
+  }
+  .chip--time {
+    min-width: 5.4em;
+  }
+  .icon-btn {
+    width: 1.85rem;
+    height: 1.85rem;
+  }
+}
+
+/* ============================================================ Overlay */
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  padding: calc(var(--s-5) + var(--safe-t)) var(--s-5) calc(var(--s-5) + var(--safe-b));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(11, 30, 58, 0.72), rgba(3, 9, 20, 0.9));
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+  animation: overlay-in var(--t-base) var(--e-out);
+}
+
+.overlay[data-screen='none'] {
+  display: none;
+}
+
+/* The title sits over a live scene, so the scrim only has to make text
+   legible — not hide what is behind it. */
+.overlay[data-screen='title'] {
+  background:
+    radial-gradient(90% 70% at 50% 40%, rgba(5, 14, 30, 0.86), rgba(5, 14, 30, 0.5) 70%),
+    linear-gradient(180deg, rgba(4, 12, 26, 0.55), rgba(4, 12, 26, 0.8));
+  backdrop-filter: blur(3px) saturate(115%);
+  -webkit-backdrop-filter: blur(3px) saturate(115%);
+}
+
+.overlay[data-screen='intro'],
+.overlay[data-screen='assist'] {
+  background: linear-gradient(180deg, rgba(3, 9, 20, 0.55), rgba(3, 9, 20, 0.2));
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.overlay[data-screen='intro'] {
+  pointer-events: none;
+  align-items: start;
+  padding-top: calc(var(--s-8) + var(--safe-t));
+}
+
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.screen {
+  width: min(100%, 62rem);
+  /* A flex item will not shrink below its content's minimum unless told to,
+     and one long unbreakable word in a header was enough to push a whole
+     screen twenty pixels off the right edge of a phone. */
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+  animation: screen-in var(--t-slow) var(--e-out);
+}
+
+@keyframes screen-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.99); }
+  to   { opacity: 1; transform: none; }
+}
+
+.screen--title,
+.screen--sheet,
+.screen--intro {
+  align-items: center;
+  text-align: center;
+}
+
+.screen__head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  /* The meta on the right ("102 / 228 yıldız") used to be pushed off a narrow
+     screen by a long title. Both are allowed to give ground now. */
+  flex-wrap: wrap;
+}
+
+.screen__title {
+  font-size: var(--fs-xl);
+  font-weight: 700;
+}
+
+.screen__meta {
+  margin-left: auto;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.screen__lede {
+  max-width: 34rem;
+  font-size: var(--fs-md);
+  color: var(--text-muted);
+  line-height: var(--lh-body);
+}
+
+.screen__foot {
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}
+
+/* ============================================================== Brand */
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.brand__mark {
+  width: clamp(4.5rem, 14vw, 6.5rem);
+  filter: drop-shadow(0 12px 26px rgba(79, 215, 255, 0.28));
+  animation: bob 3.6s var(--e-in-out) infinite;
+}
+
+@keyframes bob {
+  0%, 100% { transform: translateY(0) rotate(-1.5deg); }
+  50%      { transform: translateY(-9px) rotate(1.5deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand__mark { animation: none; }
+}
+
+.brand__title {
+  font-size: var(--fs-3xl);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  background: linear-gradient(180deg, #ffffff 12%, #9fd8f5 92%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.brand__tagline {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+  color: var(--c-ice-400);
+}
+
+/* ============================================================ Buttons */
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-4);
+  width: 100%;
+}
+
+/*
+ * The menu, as a grid rather than a wrapping row.
+ *
+ * Six buttons of six different widths wrapped into a ragged three-two-one
+ * shape that changed every time a label did. Equal cells make it a menu
+ * instead of a paragraph of buttons, and two columns is the right count on a
+ * phone: wide enough for "Nasıl oynanır", tall enough to thumb.
+ */
+.actions__row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: var(--s-2);
+  width: 100%;
+}
+.actions__row .btn {
+  width: 100%;
+}
+
+.btn {
+  --btn-bg: var(--surface-2);
+  --btn-border: var(--border);
+  --btn-fg: var(--text);
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1em;
+  padding: 0.72em 1.35em;
+  min-height: 2.9rem;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  color: var(--btn-fg);
+  background: var(--btn-bg);
+  border: 1px solid var(--btn-border);
+  border-radius: var(--r-full);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  transition: transform var(--t-fast) var(--e-out), background var(--t-fast),
+    border-color var(--t-fast), box-shadow var(--t-fast);
+}
+
+.btn:hover {
+  --btn-bg: rgba(34, 55, 92, 0.85);
+  --btn-border: var(--border-strong);
+}
+
+.btn:active {
+  transform: translateY(1px) scale(0.985);
+}
+
+.btn--primary {
+  --btn-bg: linear-gradient(140deg, #6fe3ff, #45c3ff 55%, #6ad9ff);
+  --btn-border: transparent;
+  --btn-fg: #04283a;
+  font-weight: 700;
+  box-shadow: var(--glow-accent);
+}
+
+.btn--primary:hover {
+  --btn-bg: linear-gradient(140deg, #8aeaff, #58ccff 55%, #7fe2ff);
+}
+
+.btn--xl {
+  padding: 0.85em 2.6em;
+  font-size: var(--fs-md);
+  min-height: 3.6rem;
+}
+
+.btn__sub {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  opacity: 0.72;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.btn--ghost {
+  --btn-bg: transparent;
+  --btn-border: var(--border);
+  color: var(--text-muted);
+}
+
+.btn--danger {
+  --btn-bg: rgba(255, 107, 129, 0.14);
+  --btn-border: rgba(255, 107, 129, 0.4);
+  color: #ffd7de;
+}
+
+.btn--back {
+  padding-inline: 1em;
+}
+
+/* The shop badge is absolutely positioned against its button. */
+#shopBtn {
+  overflow: visible;
+}
+
+/* ======================================================== Level select */
+
+.levels {
+  display: grid;
+  /* `minmax(0, …)` on the track, not just the floor: without it a long level
+     name sets the column's minimum content width and the last column is pushed
+     off the right edge of a phone. */
+  grid-template-columns: repeat(auto-fill, minmax(min(7.5rem, 100%), 1fr));
+  gap: var(--s-3);
+}
+.levels > .level {
+  min-width: 0;
+}
+
+/*
+ * A chapter heading spans the whole grid rather than sitting in a cell — it is
+ * a divider in a list of levels, not another level.
+ */
+/*
+ * Chapter headings stick to the top of the list.
+ *
+ * On a list this long the heading scrolls away in a second and a half, and
+ * then level 51 is just a number — you cannot tell whether you are in the sea
+ * or the arena without scrolling back. Stuck to the top it is a running label
+ * for wherever you happen to be.
+ */
+.levels__chapter {
+  grid-column: 1 / -1;
+  position: sticky;
+  top: -1px;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'name done'
+    'verb done';
+  gap: 0 var(--s-3);
+  margin: var(--s-3) 0 0;
+  padding: var(--s-2) 0;
+  border-top: 1px solid rgba(150, 200, 240, 0.18);
+  /* Opaque, because level cards scroll underneath it. */
+  background: linear-gradient(180deg, var(--bg) 72%, rgba(5, 13, 28, 0));
+}
+.levels__chapterName {
+  grid-area: name;
+}
+.levels__chapterVerb {
+  grid-area: verb;
+}
+.levels__chapterDone {
+  grid-area: done;
+  align-self: center;
+  color: var(--text-faint);
+  font-size: var(--fs-2xs);
+  font-variant-numeric: tabular-nums;
+}
+.levels__chapter:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+.levels__chapterName {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.levels__chapterVerb {
+  font-size: 0.78rem;
+  font-weight: 500;
+  opacity: 0.66;
+}
+
+.level {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: var(--s-3);
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  transition: transform var(--t-fast) var(--e-out), border-color var(--t-fast),
+    background var(--t-fast);
+}
+
+.level:hover:not(:disabled) {
+  transform: translateY(-3px);
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+}
+
+.level:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.level__num {
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--c-ice-400);
+}
+
+.level__name {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.level__stars {
+  display: flex;
+  gap: 2px;
+  margin-top: var(--s-1);
+  color: var(--c-amber);
+}
+
+.level__stars svg {
+  width: 0.82rem;
+  height: 0.82rem;
+}
+
+.level__stars .off {
+  color: rgba(255, 196, 90, 0.22);
+}
+
+/*
+ * Every card the same height.
+ *
+ * Two-word level names wrap and one-word names do not, so the grid used to
+ * come out ragged — rows of different depths with the stars at four different
+ * heights. A minimum height plus a name clamped to two lines makes the list
+ * scan as a list, which on eighty-eight items is the difference between
+ * reading it and giving up on it.
+ */
+.level {
+  min-height: 6.6rem;
+}
+
+.level__name {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.level__foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-2);
+  margin-top: auto;
+  padding-top: var(--s-1);
+  min-height: 1.1rem;
+}
+
+/* Where you are. The ring is the eye-catch, the word is the answer. */
+.level--current {
+  border-color: var(--c-aqua);
+  box-shadow: 0 0 0 1px rgba(79, 215, 255, 0.4), 0 8px 24px -14px rgba(79, 215, 255, 0.7);
+}
+
+.level__next {
+  font-style: normal;
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--c-aqua);
+}
+
+/* Three stars is worth a whisper, not a shout. */
+.level--perfect .level__num {
+  color: var(--c-amber);
+}
+
+/* ---- Chapter chips -------------------------------------------------- */
+
+.chapters {
+  display: flex;
+  gap: var(--s-2);
+  min-width: 0;
+  overflow-x: auto;
+  padding: var(--s-1) 0 var(--s-3);
+  margin-bottom: var(--s-1);
+  scrollbar-width: none;
+}
+.chapters::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.05rem;
+  flex: 0 0 auto;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: var(--r-full);
+  background: var(--surface-2);
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.16s, background 0.16s;
+}
+.chip:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  background: var(--surface);
+}
+.chip--locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.chip__name {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.chip__meta {
+  font-size: var(--fs-2xs);
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.level__time {
+  font-size: var(--fs-2xs);
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.level--current {
+  border-color: rgba(79, 215, 255, 0.55);
+  box-shadow: var(--glow-accent);
+}
+
+.level--endless .level__num {
+  color: var(--c-violet);
+}
+
+/* ============================================================== Cards */
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: var(--s-4);
+  text-align: left;
+}
+
+.card {
+  padding: var(--s-5);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.card__title {
+  font-size: var(--fs-md);
+  font-weight: 700;
+}
+
+.card__note {
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}
+
+.keys li,
+.tips li,
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 0.28rem 0;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.tips li {
+  align-items: flex-start;
+  line-height: var(--lh-snug);
+}
+
+.tips li::before {
+  content: '';
+  flex: none;
+  width: 5px;
+  height: 5px;
+  margin-top: 0.55em;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.9rem;
+  padding: 0.18em 0.5em;
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--text);
+  background: rgba(143, 196, 226, 0.12);
+  border: 1px solid var(--border-strong);
+  border-bottom-width: 2px;
+  border-radius: var(--r-sm);
+}
+
+.legend__swatch {
+  flex: none;
+  width: 2.2rem;
+  height: 1.05rem;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: linear-gradient(180deg, #f2fbff, #cfeaf8);
+  position: relative;
+  overflow: hidden;
+}
+
+.legend__swatch[data-type='crack']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(115deg, transparent 44%, var(--c-aqua) 45%, transparent 47%),
+    linear-gradient(70deg, transparent 60%, var(--c-aqua) 61%, transparent 63%);
+}
+
+.legend__swatch[data-type='trap']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 40%, var(--c-coral) 42%, transparent 45%);
+}
+
+.legend__swatch[data-type='slip']::after {
+  content: '';
+  position: absolute;
+  inset: 30% 15% auto;
+  height: 2px;
+  background: #fff;
+  box-shadow: 0 5px 0 #fff;
+}
+
+.legend__swatch[data-type='melt'] {
+  background: linear-gradient(180deg, #eaf8ff, #8fd8ef);
+  opacity: 0.7;
+}
+
+.legend__swatch[data-type='move']::after {
+  content: '⇄';
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 0.7rem;
+  color: #4a7fa0;
+}
+
+.legend__swatch[data-type='fall']::after {
+  content: '';
+  position: absolute;
+  inset: auto 15% 22% 15%;
+  height: 0;
+  border-top: 2px dashed #6f93b3;
+}
+
+.legend__text strong {
+  display: block;
+  font-size: var(--fs-sm);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.legend__text small {
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}
+
+/* =========================================================== Settings */
+
+.settings {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding: var(--s-4) var(--s-5);
+  cursor: pointer;
+  transition: background var(--t-fast);
+}
+
+.row + .row {
+  border-top: 1px solid var(--border);
+}
+
+.row:hover {
+  background: var(--surface-2);
+}
+
+.row__text {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.row__text strong {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.row__text small {
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}
+
+/* The language picker: not a toggle, so it does not sit in a .row's hover. */
+.row--lang {
+  cursor: default;
+}
+
+.row--lang:hover {
+  background: transparent;
+}
+
+.langs {
+  display: flex;
+  gap: var(--s-2);
+  margin-left: auto;
+  flex: none;
+}
+
+.lang {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  min-width: 4.25rem;
+  min-height: 2.75rem;
+  padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  color: var(--text-faint);
+  cursor: pointer;
+  transition: border-color var(--t-fast), color var(--t-fast), background var(--t-fast);
+}
+
+.lang b {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.lang span {
+  font-size: var(--fs-xs);
+}
+
+.lang:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.lang.is-on {
+  color: var(--text);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.switch {
+  appearance: none;
+  flex: none;
+  margin-left: auto;
+  width: 3rem;
+  height: 1.7rem;
+  border-radius: var(--r-full);
+  background: rgba(143, 196, 226, 0.18);
+  border: 1px solid var(--border);
+  position: relative;
+  cursor: pointer;
+  transition: background var(--t-base) var(--e-out);
+}
+
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: -0.625rem;
+  border-radius: 50%;
+  background: var(--c-ice-200);
+  transition: transform var(--t-base) var(--e-spring);
+}
+
+.switch:checked {
+  background: linear-gradient(120deg, var(--c-aqua), var(--c-mint));
+  border-color: transparent;
+}
+
+.switch:checked::after {
+  transform: translateX(1.28rem);
+  background: #04283a;
+}
+
+.danger {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-2);
+}
+
+.danger__note {
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}
+
+/* ============================================================= Sheets */
+
+.sheet {
+  width: min(100%, 27rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-4);
+  padding: var(--s-6) var(--s-5);
+  background: linear-gradient(180deg, rgba(22, 41, 74, 0.92), rgba(9, 21, 42, 0.94));
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-lg);
+  animation: sheet-in var(--t-slow) var(--e-spring);
+}
+
+@keyframes sheet-in {
+  from { opacity: 0; transform: translateY(22px) scale(0.96); }
+  to   { opacity: 1; transform: none; }
+}
+
+.sheet--win {
+  border-color: rgba(92, 225, 166, 0.4);
+}
+
+/*
+ * The win card, in three columns.
+ *
+ * Measured, the card is nine hundred and fifty pixels tall: a title, a star
+ * row, four results, a payout box that is a total *and* a breakdown *and* a
+ * doubling offer *and* a way to the shop, a league box, a hint, and three
+ * stacked buttons. Nowhere had that much height. Not a phone held sideways
+ * (390), not a phone held upright (844), not a desktop, where the stage is a
+ * 16:9 card inside the window and only 693 pixels tall. So on every device the
+ * player finished a level and had to scroll to find "Sıradaki bölüm".
+ *
+ * The fix is width, where there is any: past 44rem of stage the three blocks
+ * stand side by side and the card is 331 tall. A phone held upright has no
+ * width to trade, so there the buttons go into a row and the numbers tighten,
+ * which is the hundred and fifty pixels it was over by.
+ */
+.win__half {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-4);
+  width: 100%;
+  min-width: 0;
+}
+
+/*
+ * The win card on a screen that is short *and* narrow.
+ *
+ * The three-column rule below rescues a wide screen, and a tall one has the
+ * room to stack. A 320 by 568 phone has neither: measured, the card came to
+ * **852 pixels in a 568 pixel screen**, so "Sıradaki bölüm" sat two hundred
+ * and thirty pixels below the bottom edge. The overlay scrolls, so it was
+ * reachable — but a player who has just finished a level should not have to go
+ * looking for the button that starts the next one.
+ *
+ * Two things, and the second is the one that guarantees it. The card gets
+ * tighter: the secondary buttons share a row and the padding comes in. And
+ * then the actions are pinned to the bottom of the card, so however long the
+ * payout grows — a
+ * doubling offer, a league box, a share panel — the primary button is on
+ * screen. The details scroll behind it, which is the right way round: the
+ * numbers are for reading, the button is for pressing.
+ */
+@container stage (max-height: 40rem) {
+  .sheet--win {
+    padding: var(--s-4) var(--s-4) 0;
+    gap: var(--s-3);
+  }
+  /*
+   * The buttons come before the trophies in their own column.
+   *
+   * This is what actually fixed it, and it is worth saying why the obvious
+   * things did not. Two-up results are *taller* than four-up, because four
+   * items in two columns is two rows. A sticky footer cannot work here at all:
+   * `.sheet__actions` lives inside the third `.win__half`, and a sticky box
+   * can never leave its own parent, so it stopped exactly where that column
+   * stopped — below the screen. And shaving padding got the primary button to
+   * within four pixels of fitting, which is not a fix, it is a coincidence
+   * waiting for a longer word in another language.
+   *
+   * Moving the actions to the top of their column moves them a hundred and
+   * forty-five pixels up in one step, because that is what the rewards and the
+   * hint underneath them are worth. Nothing is hidden: the earned items are
+   * still there, below the button, for a player who wants to look. The button
+   * that starts the next level is not something you should have to look for.
+   */
+  .sheet--win .sheet__actions {
+    order: -1;
+  }
+  .sheet--win .results {
+    padding: var(--s-2) 0;
+  }
+  .sheet--win .win__half {
+    gap: var(--s-2);
+  }
+  /*
+   * The itemised breakdown goes, the total and the doubling offer stay.
+   *
+   * The rows are a receipt for a number that is printed directly above them,
+   * so on the one screen size where the card does not fit they are the
+   * cheapest hundred pixels in it. What must not go is the offer to double the
+   * catch — that is the whole reason the card pauses here — so it stays, and
+   * the button that starts the next level comes up above the fold with it.
+   */
+  .sheet--win .payout__rows,
+  .sheet--win .payout__missions,
+  .sheet--win #winShopBtn {
+    display: none;
+  }
+  .sheet--win .stars {
+    transform: scale(0.8);
+    margin: calc(var(--s-2) * -1) 0;
+  }
+  .sheet--win .sheet__actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .sheet--win .sheet__actions .btn--primary {
+    width: 100%;
+  }
+  .sheet--win .sheet__actions .btn {
+    width: auto;
+    flex: 1 1 8rem;
+  }
+}
+
+@container stage (min-width: 44rem) {
+  .sheet--win {
+    width: min(100%, 62rem);
+    flex-direction: row;
+    align-items: stretch;
+    gap: var(--s-5);
+    padding: var(--s-4) var(--s-5);
+  }
+  .sheet--win .win__half {
+    flex: 1 1 0;
+    gap: var(--s-3);
+    justify-content: center;
+  }
+  /* The two that carry boxes need a little more of the width than the score. */
+  .sheet--win .win__half:not(:first-child) {
+    flex-grow: 1.15;
+  }
+}
+
+/*
+ * Everything below is about fitting, and applies whichever way the card is
+ * laid out — a narrow phone needs it to fit in one column, a sideways one
+ * needs the columns to be short.
+ */
+.sheet--win .sheet__actions {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.sheet--win .sheet__actions .btn {
+  width: auto;
+  flex: 1 1 8rem;
+  /* Side by side in a third of a card, the default padding wrapped "Sıradaki
+     bölüm" onto two lines. The words matter more than the air around them. */
+  padding-inline: 0.9em;
+}
+
+.sheet--win .results dd {
+  white-space: nowrap;
+}
+
+/*
+ * One column and no width to trade: tighten the spacing instead. Without this
+ * the card is nine hundred and eighteen pixels against a phone's eight hundred
+ * and forty-four, and the buttons are under the fold on the most common screen
+ * the game has.
+ */
+@container stage (max-width: 44rem) {
+  .sheet--win {
+    gap: var(--s-3);
+    padding: var(--s-4);
+  }
+  .sheet--win .win__half {
+    gap: var(--s-3);
+  }
+}
+
+@container stage ((max-height: 620px) or (max-width: 44rem)) {
+  .sheet--win .payout {
+    gap: var(--s-1);
+    padding: var(--s-2) var(--s-3);
+  }
+  .sheet--win .payout__total {
+    font-size: var(--fs-md);
+  }
+  .sheet--win .payout__double {
+    margin-top: var(--s-2);
+  }
+  /* Three lines of small print turned the button into a lozenge. */
+  .sheet--win .payout__double .btn__sub {
+    font-size: var(--fs-3xs);
+  }
+  .sheet--win .results {
+    gap: var(--s-2);
+    padding: var(--s-2) 0;
+  }
+  .sheet--win .results dt {
+    font-size: var(--fs-3xs);
+  }
+}
+
+.sheet__kicker {
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+  color: var(--c-mint);
+}
+
+.sheet__title {
+  font-size: var(--fs-lg);
+}
+
+.sheet__meta,
+.sheet__hint {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.sheet__hint {
+  color: var(--c-amber);
+  font-weight: 500;
+}
+
+.sheet__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  width: 100%;
+}
+
+.sheet__actions .btn {
+  width: 100%;
+}
+
+/* Stars */
+.stars {
+  display: flex;
+  gap: var(--s-2);
+}
+
+.star {
+  width: 2.7rem;
+  height: 2.7rem;
+  background: rgba(255, 196, 90, 0.14);
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  transition: background var(--t-base), transform var(--t-base);
+}
+
+.star.on {
+  background: linear-gradient(160deg, #ffe0a0, var(--c-amber));
+  animation: star-pop var(--t-slow) var(--e-spring) backwards;
+  filter: drop-shadow(0 6px 14px rgba(255, 196, 90, 0.4));
+}
+
+.star.on[data-i='0'] { animation-delay: 120ms; }
+.star.on[data-i='1'] { animation-delay: 300ms; }
+.star.on[data-i='2'] { animation-delay: 480ms; }
+
+@keyframes star-pop {
+  0%   { transform: scale(0.2) rotate(-40deg); opacity: 0; }
+  70%  { transform: scale(1.18) rotate(6deg); opacity: 1; }
+  100% { transform: none; }
+}
+
+.results {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--s-2);
+  width: 100%;
+  padding: var(--s-3) 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.results div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+}
+
+.results dt {
+  font-size: var(--fs-2xs);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-faint);
+}
+
+.results dd {
+  font-family: var(--font-num);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ======================================================== Intro card */
+
+.intro {
+  width: min(100%, 30rem);
+  padding: var(--s-5);
+  background: linear-gradient(180deg, rgba(22, 41, 74, 0.86), rgba(9, 21, 42, 0.8));
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-md);
+  animation: intro-in var(--t-slow) var(--e-out);
+}
+
+@keyframes intro-in {
+  from { opacity: 0; transform: translateY(-16px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.intro__kicker {
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+  color: var(--c-aqua);
+}
+
+.intro__title {
+  font-size: var(--fs-lg);
+  margin-top: 2px;
+}
+
+.intro__text {
+  margin-top: var(--s-2);
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.intro.is-out {
+  animation: intro-out var(--t-base) var(--e-in-out) forwards;
+}
+
+@keyframes intro-out {
+  to { opacity: 0; transform: translateY(-14px); }
+}
+
+/* ======================================================= Rotate hint */
+
+.rotate-hint {
+  position: absolute;
+  bottom: calc(var(--s-4) + var(--safe-b));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  padding: 0.5em 1em;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-full);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  pointer-events: none;
+  animation: toast-in var(--t-base) var(--e-out);
+}
+
+/* ============================================================ Mobile */
+
+@media (max-width: 560px) {
+  .overlay {
+    padding: calc(var(--s-4) + var(--safe-t)) var(--s-4) calc(var(--s-4) + var(--safe-b));
+    align-items: start;
+  }
+
+  .screen {
+    gap: var(--s-4);
+  }
+
+  .results {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--s-3);
+  }
+
+  .levels {
+    grid-template-columns: repeat(auto-fill, minmax(6.4rem, 1fr));
+  }
+
+  .hud {
+    padding: calc(var(--s-2) + var(--safe-t)) var(--s-2) 0;
+  }
+}
+
+@media (max-height: 430px) {
+  .brand__mark { display: none; }
+  .screen__lede { display: none; }
+  .screen { gap: var(--s-3); }
+}
+
+/* ============================================================== Wallet */
+
+/*
+ * The purse is a door.
+ *
+ * It was a read-only pill at the top of the screen, which is a strange thing
+ * to do with the one number a shop exists to spend: the obvious gesture — tap
+ * your money — did nothing. Now it goes where the money goes.
+ */
+/*
+ * The purse.
+ *
+ * It is the only number in the game a player watches go up, and it appears on
+ * the title screen, in the shop header and on the win card — so it is worth
+ * more than a tinted pill. Lit along the top edge, sunk at the bottom, with a
+ * ring inside the border: a small gold object rather than a label.
+ */
+.wallet {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.34em 0.9em;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  color: #ffdd9b;
+  background:
+    linear-gradient(180deg, rgba(255, 214, 130, 0.24), rgba(255, 196, 90, 0.07));
+  border: 1px solid rgba(255, 196, 90, 0.42);
+  border-radius: var(--r-full);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 240, 205, 0.35),
+    inset 0 -1px 0 rgba(80, 44, 0, 0.35),
+    0 6px 18px -12px rgba(255, 176, 60, 0.85);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+}
+
+.wallet--btn {
+  cursor: pointer;
+  transition: border-color 0.16s, transform 0.16s, background 0.16s;
+}
+.wallet--btn:hover,
+.wallet--btn:focus-visible {
+  background: rgba(255, 196, 90, 0.2);
+  border-color: rgba(255, 196, 90, 0.6);
+  transform: translateY(-1px);
+}
+.wallet__go {
+  padding-left: 0.5em;
+  margin-left: 0.15em;
+  border-left: 1px solid rgba(255, 196, 90, 0.3);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.wallet svg {
+  width: 1.25em;
+  height: 1.25em;
+  flex: none;
+  filter: drop-shadow(0 1px 0 rgba(70, 38, 0, 0.5));
+}
+
+.wallet--inline {
+  margin-left: auto;
+}
+
+.chip--shield {
+  color: var(--c-violet);
+  border-color: rgba(155, 140, 255, 0.4);
+  background: rgba(155, 140, 255, 0.14);
+}
+
+.chip--shield.is-spent {
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+
+/* ======================================================= Daily challenge */
+
+.daily {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: min(100%, 24rem);
+  padding: 0.8em 1.1em;
+  text-align: left;
+  color: var(--text);
+  background: linear-gradient(130deg, rgba(155, 140, 255, 0.18), rgba(79, 215, 255, 0.12));
+  border: 1px solid rgba(155, 140, 255, 0.4);
+  border-radius: var(--r-lg);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  transition: transform var(--t-fast) var(--e-out), border-color var(--t-fast);
+}
+
+.daily:hover {
+  transform: translateY(-2px);
+  border-color: rgba(155, 140, 255, 0.7);
+}
+
+.daily:active {
+  transform: translateY(0) scale(0.99);
+}
+
+.daily__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: var(--r-full);
+  background: rgba(155, 140, 255, 0.22);
+  color: var(--c-violet);
+}
+
+.daily__icon svg {
+  width: 1.3rem;
+  height: 1.3rem;
+}
+
+.daily__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.daily__text strong {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.daily__text small {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
+.daily__streak {
+  margin-left: auto;
+  flex: none;
+  padding: 0.2em 0.6em;
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: #1c1030;
+  background: linear-gradient(120deg, #ffd76a, var(--c-amber));
+  border-radius: var(--r-full);
+}
+
+.daily--done {
+  border-color: rgba(92, 225, 166, 0.45);
+  background: linear-gradient(130deg, rgba(92, 225, 166, 0.16), rgba(79, 215, 255, 0.1));
+}
+
+.daily--done .daily__icon {
+  background: rgba(92, 225, 166, 0.22);
+  color: var(--c-mint);
+}
+
+/* ============================================================ Missions */
+
+.missions {
+  width: min(100%, 24rem);
+  padding: var(--s-4);
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+}
+
+.missions__title {
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+  color: var(--c-ice-400);
+  margin-bottom: var(--s-2);
+}
+
+.mission {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 0.35rem 0;
+}
+
+.mission__check {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--accent-ink);
+  background: rgba(143, 196, 226, 0.14);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+}
+
+.mission--done .mission__check {
+  background: var(--success);
+  border-color: transparent;
+}
+
+.mission__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.mission__text {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
+.mission--done .mission__text {
+  color: var(--text-faint);
+  text-decoration: line-through;
+}
+
+.mission__bar {
+  display: block;
+  height: 3px;
+  border-radius: var(--r-full);
+  background: rgba(143, 196, 226, 0.16);
+  overflow: hidden;
+}
+
+.mission__bar i {
+  display: block;
+  height: 100%;
+  border-radius: var(--r-full);
+  background: linear-gradient(90deg, var(--c-aqua), var(--c-mint));
+  transition: width var(--t-base) var(--e-out);
+}
+
+.mission__reward {
+  flex: none;
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  color: var(--c-amber);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ================================================================ Shop */
+
+.screen__lede--tight {
+  font-size: var(--fs-sm);
+  max-width: 40rem;
+}
+
+.shop {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: var(--s-3);
+  text-align: left;
+}
+
+/*
+ * A shop card.
+ *
+ * A flex column rather than a grid of areas, for one reason that matters more
+ * than it sounds: the action is pinned to the bottom with `margin-top:auto`,
+ * so two cards side by side whose descriptions wrap to different heights still
+ * put their buttons on the same line. Before this the buttons in one row sat
+ * at three different heights and the whole shop read as unfinished.
+ */
+/* ================================================== Market: the cards */
+/*
+ * These were nine flat rectangles in one blue. Everything on them was true and
+ * nothing on them was worth looking at, which is a strange thing for the
+ * screen a player is meant to *want* to open.
+ *
+ * The rebuild is state, depth and one accent — not more colour:
+ *
+ *   · every card is a slab of glass: a sheen across the top, a hairline of
+ *     light along its upper edge, and a shadow under it, so it sits on the
+ *     page instead of being printed on it;
+ *   · the three states look like three different things. Affordable has a lit
+ *     rim and wants pressing. Out of reach is cooled down and carries a bar
+ *     showing how close you are. Finished is mint and sealed;
+ *   · the levels are a rail rather than three dots — earned segments lit, the
+ *     next one breathing.
+ *
+ * Gold is reserved for money and mint for "done". Nothing else is allowed to
+ * be either, which is what stops a screen with nine cards on it turning into a
+ * fruit machine.
+ */
+.item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-4);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0) 42%),
+    linear-gradient(180deg, var(--c-navy-soft), rgba(10, 22, 45, 0.92));
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow:
+    inset 0 1px 0 rgba(226, 244, 255, 0.09),
+    0 10px 26px -18px rgba(0, 0, 0, 0.9);
+  overflow: hidden;
+  transition:
+    border-color var(--t-base) var(--e-out),
+    transform var(--t-base) var(--e-out),
+    box-shadow var(--t-base) var(--e-out);
+}
+
+/* A slow diagonal light across the glass. Purely a surface, never a colour. */
+.item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  /* Soft and cornered rather than a wedge across the middle. The first
+     version had a hard edge to it and read as a rendering seam. */
+  background: radial-gradient(120% 90% at 100% 0%,
+    rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0) 58%);
+  pointer-events: none;
+}
+
+.item:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgba(226, 244, 255, 0.14),
+    0 18px 34px -20px rgba(0, 0, 0, 0.95);
+}
+
+/*
+ * Affordable. The rim is lit and there is a wash of the accent behind the
+ * card, so the ones you can actually have read first from across the screen.
+ */
+.item:not(.item--dear):not(.item--maxed) {
+  border-color: rgba(79, 215, 255, 0.4);
+  box-shadow:
+    inset 0 1px 0 rgba(226, 244, 255, 0.14),
+    0 0 0 1px rgba(79, 215, 255, 0.08),
+    0 14px 30px -20px rgba(0, 0, 0, 0.95),
+    0 0 34px -18px rgba(79, 215, 255, 0.55);
+}
+
+/* Out of reach: cooled down, but never hidden — you are meant to want it. */
+.item--dear {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0) 42%),
+    linear-gradient(180deg, rgba(18, 33, 60, 0.9), rgba(8, 18, 38, 0.92));
+  border-color: rgba(143, 196, 226, 0.13);
+}
+.item--dear .item__name,
+.item--dear .item__blurb {
+  color: var(--text-muted);
+}
+.item--dear .item__icon {
+  background: rgba(143, 196, 226, 0.08);
+  color: rgba(143, 196, 226, 0.55);
+  box-shadow: inset 0 1px 0 rgba(226, 244, 255, 0.06);
+}
+
+/* Finished. */
+.item--maxed {
+  border-color: rgba(92, 225, 166, 0.38);
+  background:
+    linear-gradient(180deg, rgba(92, 225, 166, 0.07), rgba(255, 255, 255, 0) 46%),
+    linear-gradient(180deg, var(--c-navy-soft), rgba(10, 22, 45, 0.92));
+}
+
+.item__icon {
+  display: grid;
+  place-items: center;
+  width: 2.7rem;
+  height: 2.7rem;
+  border-radius: var(--r-md);
+  /* An object, not a swatch: a lit top edge, a darker floor, an inner ring. */
+  background:
+    radial-gradient(120% 90% at 30% 8%, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 60%),
+    linear-gradient(180deg, rgba(79, 215, 255, 0.26), rgba(79, 215, 255, 0.08));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 0 0 1px rgba(79, 215, 255, 0.22);
+  color: var(--c-ice-100);
+  flex: 0 0 auto;
+}
+.item--maxed .item__icon {
+  background:
+    radial-gradient(120% 90% at 30% 8%, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0) 60%),
+    linear-gradient(180deg, rgba(92, 225, 166, 0.3), rgba(92, 225, 166, 0.09));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 0 0 1px rgba(92, 225, 166, 0.26);
+  color: #eafff6;
+}
+
+.item__icon svg {
+  width: 1.4rem;
+  height: 1.4rem;
+  filter: drop-shadow(0 1px 0 rgba(3, 20, 38, 0.5));
+}
+
+.item__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+
+.item__name {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* "1/3" beats three dots: a number is read, a dot pattern is counted. */
+.item__level {
+  margin-left: auto;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(4, 12, 28, 0.66);
+  box-shadow: inset 0 0 0 1px rgba(143, 196, 226, 0.14);
+  color: var(--text-faint);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.item--maxed .item__level {
+  color: var(--c-mint);
+  box-shadow: inset 0 0 0 1px rgba(92, 225, 166, 0.3);
+}
+
+.item__blurb {
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+}
+
+.item__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+
+/*
+ * The levels, as a rail.
+ *
+ * Three dots said how many you had. A rail says how much of the thing you own
+ * — and the segment you would buy next breathes, which is the only animation
+ * on the card and points at the only button on it.
+ */
+.item__rail {
+  display: flex;
+  gap: 3px;
+  height: 4px;
+}
+
+.item__rail i {
+  flex: 1;
+  border-radius: 999px;
+  background: rgba(143, 196, 226, 0.16);
+}
+
+.item__rail i.on {
+  background: linear-gradient(90deg, var(--c-mint), #8ff0c8);
+  box-shadow: 0 0 10px -2px rgba(92, 225, 166, 0.7);
+}
+
+.item:not(.item--dear) .item__rail i.next {
+  background: rgba(79, 215, 255, 0.45);
+  animation: railBreathe 2.4s ease-in-out infinite;
+}
+
+@keyframes railBreathe {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 1; }
+}
+
+/* The action, always last and always on the same line as its neighbours'. */
+.item__foot {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  margin-top: auto;
+  padding-top: var(--s-2);
+}
+
+.btn--buy {
+  flex: 0 0 auto;
+  min-height: 2.4rem;
+  padding: 0.45rem 1.05rem;
+  font-size: var(--fs-xs);
+}
+.btn__price b {
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * How far, and how far along.
+ *
+ * "240 more fish" is a number you have to hold against a price you have to go
+ * and look up. A bar that is nearly full is a feeling, and the feeling is what
+ * brings somebody back to this screen.
+ */
+.item__short {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.item__shortBar {
+  display: block;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(143, 196, 226, 0.16);
+  overflow: hidden;
+}
+
+.item__shortBar i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 196, 90, 0.55), var(--c-amber));
+}
+
+.item__shortText {
+  color: var(--c-amber);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.item__done {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(92, 225, 166, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(92, 225, 166, 0.3);
+  color: var(--c-mint);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+
+/* ---- Shop groups ---------------------------------------------------- */
+/*
+ * A header, a subtitle, a count and a meter. The meter is the change: "3/8" is
+ * a fact you read, a bar three-eighths full is a shelf you are filling — and
+ * these three groups are the only structure this screen has.
+ */
+.shop__group {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: baseline;
+  gap: var(--s-2);
+  grid-column: 1 / -1;
+  margin: var(--s-5) 0 calc(var(--s-2) * -1);
+  padding-bottom: var(--s-2);
+  border-bottom: 1px solid var(--border);
+}
+.shop__group:first-of-type {
+  margin-top: var(--s-2);
+}
+.shop__groupName {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.shop__group.is-done .shop__groupName {
+  color: var(--c-mint);
+}
+.shop__groupNote {
+  color: var(--text-faint);
+  font-size: var(--fs-2xs);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.shop__groupCount {
+  color: var(--text-faint);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.shop__group.is-done .shop__groupCount {
+  color: var(--c-mint);
+}
+.shop__groupBar {
+  grid-column: 1 / -1;
+  display: block;
+  height: 3px;
+  margin-top: 2px;
+  border-radius: 999px;
+  background: rgba(143, 196, 226, 0.14);
+  overflow: hidden;
+}
+.shop__groupBar i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(79, 215, 255, 0.7), var(--c-mint));
+  transition: width var(--t-slow) var(--e-out);
+}
+
+/* A purchase should be felt where the money is, not only where you pressed. */
+.wallet--hit {
+  animation: walletHit 0.42s ease-out;
+}
+@keyframes walletHit {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.16); filter: brightness(1.35); }
+  100% { transform: scale(1); }
+}
+
+.item__effect {
+  padding: 0.25em 0.7em;
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  color: var(--c-ice-200);
+  background: rgba(143, 196, 226, 0.12);
+  border-radius: var(--r-full);
+}
+
+/*
+ * The count sits *inside* the button.
+ *
+ * Hung outside it, the badge was clipped by whatever the button happened to be
+ * next to and looked like a rendering fault rather than a number worth reading.
+ */
+.btn__badge {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  min-width: 1.15rem;
+  padding: 0 0.3em;
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  line-height: 1.15rem;
+  color: #1c1030;
+  background: var(--c-amber);
+  border-radius: var(--r-full);
+}
+
+/* ============================================================= Payout */
+
+.payout {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-3);
+  background: rgba(255, 196, 90, 0.08);
+  border: 1px solid rgba(255, 196, 90, 0.28);
+  border-radius: var(--r-md);
+}
+
+.payout__total {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4em;
+  font-size: var(--fs-lg);
+  color: var(--c-amber);
+}
+
+.payout__total svg {
+  width: 1.1em;
+  height: 1.1em;
+}
+
+.payout__rows li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-3);
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  padding: 1px 0;
+}
+
+.payout__missions {
+  font-size: var(--fs-2xs);
+  color: var(--c-mint);
+  text-align: center;
+}
+
+.payout__shop {
+  width: 100%;
+  margin-top: var(--s-2);
+}
+
+/*
+ * The doubling offer.
+ *
+ * Warmer than everything around it and directly under the number it is
+ * offering to change, because that is the whole pitch: the player has just
+ * been paid, the figure is on screen, and this says it could be twice that.
+ * It sits above the shop button — one changes the number, the other spends it,
+ * and that is the order those two decisions happen in.
+ */
+.payout__double {
+  width: 100%;
+  margin-top: var(--s-3);
+  background: linear-gradient(180deg, #f6c453, #e0a327);
+  color: #221703;
+  border-color: #c8901c;
+  font-weight: 700;
+}
+
+.payout__double:hover:not(:disabled) {
+  background: linear-gradient(180deg, #ffd873, #eeb134);
+}
+
+.payout__double:disabled {
+  opacity: 0.75;
+  cursor: default;
+}
+
+.payout__double .btn__sub {
+  color: #4a3a12;
+  font-weight: 500;
+}
+
+/* The shop's opening line is context, not content: it should never be the
+   tallest thing above the fold. */
+/*
+ * A room, not a form.
+ *
+ * The shop is a list of nine cards and it was sitting on the same flat ground
+ * as every other screen. One cold light from above the header is enough to
+ * make it a place — anything more competes with the cards, which are the part
+ * that is supposed to glow.
+ */
+.screen--shop {
+  position: relative;
+}
+
+.screen--shop::before {
+  content: '';
+  position: absolute;
+  inset: -10% -20% auto -20%;
+  height: 60%;
+  background:
+    radial-gradient(60% 100% at 50% 0%, rgba(79, 215, 255, 0.09), rgba(79, 215, 255, 0) 70%),
+    radial-gradient(40% 80% at 82% 6%, rgba(155, 140, 255, 0.08), rgba(155, 140, 255, 0) 70%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.screen--shop .screen__lede {
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+  max-width: 46ch;
+}
+
+/*
+ * On a phone a shop card becomes a row.
+ *
+ * A column of full-width cards meant one upgrade filled a screen and a half,
+ * so choosing between eight of them was a scrolling exercise with no way to
+ * compare. As rows they are four to a screen: icon, what it is, what it costs,
+ * in the order you read them.
+ */
+@media (max-width: 560px) {
+  .shop {
+    grid-template-columns: 1fr;
+    gap: var(--s-2);
+  }
+  .item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'icon head foot'
+      'icon blurb foot'
+      'icon meta foot'
+      'rail rail rail';
+    align-items: center;
+    gap: 0.2rem var(--s-3);
+    padding: var(--s-3);
+  }
+  /* Full width along the bottom rather than a stub under the icon: it is a
+     measure of the card, so it should be as wide as the card. */
+  .item__rail {
+    grid-area: rail;
+    margin-top: 0.45rem;
+  }
+  .item__icon {
+    grid-area: icon;
+    align-self: center;
+  }
+  .item__head {
+    grid-area: head;
+  }
+  .item__blurb {
+    grid-area: blurb;
+  }
+  .item__meta {
+    grid-area: meta;
+  }
+  .item__foot {
+    grid-area: foot;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.15rem;
+    margin-top: 0;
+    padding-top: 0;
+  }
+  .item__level {
+    margin-left: 0;
+  }
+  .item__short {
+    align-items: flex-end;
+  }
+  .item__shortBar {
+    width: 4.5rem;
+  }
+}
+
+.legend__swatch[data-type='burst'] {
+  background: linear-gradient(180deg, #f2fbff, #cfeaf8);
+}
+
+.legend__swatch[data-type='burst']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 25% 65%, var(--c-aqua) 0 2px, transparent 3px),
+    radial-gradient(circle at 50% 65%, var(--c-aqua) 0 2px, transparent 3px),
+    radial-gradient(circle at 75% 65%, var(--c-aqua) 0 2px, transparent 3px);
+}
+
+.legend__swatch[data-type='snap'] {
+  background: linear-gradient(180deg, #eef5fa, #c4d4e2);
+}
+
+.legend__swatch[data-type='snap']::after {
+  content: '';
+  position: absolute;
+  inset: 35% 12% auto;
+  height: 1px;
+  background: rgba(90, 120, 150, 0.7);
+}
+
+/* ---- Title screen density -------------------------------------------
+   The title now carries a wallet, a daily card and three missions on top of
+   the brand. Rather than let it overflow on a laptop, it tightens as vertical
+   space runs out — the brand shrinks first, then the blurb goes. */
+
+.screen--title {
+  gap: var(--s-4);
+}
+
+.wallet {
+  align-self: center;
+}
+
+@container stage (max-height: 900px) {
+  .screen--title { gap: var(--s-3); }
+  .brand__mark { width: clamp(3.2rem, 8vw, 4.2rem); }
+  .brand__title { font-size: clamp(2.2rem, 1.5rem + 3vw, 3.6rem); }
+  .missions { padding: var(--s-3); }
+  .mission { padding: 0.22rem 0; }
+  .overlay { align-items: start; }
+}
+
+@container stage (max-height: 780px) {
+  .screen--title .screen__lede { display: none; }
+  .screen--title { gap: var(--s-2); }
+}
+
+/*
+ * A phone held sideways.
+ *
+ * Three hundred and ninety pixels of height, and the logo alone was taking two
+ * hundred and seventy of them — so "Oyna" was below the fold on the screen
+ * whose entire job is to have "Oyna" on it. Everything decorative gets smaller
+ * and the two things that matter keep their size.
+ */
+@container stage (max-height: 560px) {
+  .screen--title {
+    gap: var(--s-2);
+  }
+  .brand {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--s-3);
+  }
+  .brand__mark {
+    width: 2.4rem;
+  }
+  .brand__title {
+    font-size: clamp(1.6rem, 1.2rem + 2vw, 2.2rem);
+  }
+  .brand__tagline {
+    display: none;
+  }
+  .who {
+    padding: 0.4rem 0.7rem;
+  }
+  .who__art {
+    width: 32px;
+    height: 32px;
+  }
+  .missions,
+  .goals {
+    display: none;
+  }
+}
+
+@container stage (max-height: 640px) {
+  .brand__mark { display: none; }
+  .brand__tagline { font-size: var(--fs-2xs); }
+  .missions__title { margin-bottom: var(--s-1); }
+  .daily { padding: 0.55em 0.9em; }
+  .btn--xl { min-height: 3rem; padding: 0.6em 2.2em; }
+}
+
+@container stage (max-height: 520px) {
+  .missions { display: none; }
+}
+
+/* ========================================================= Speed charge */
+
+.charge {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 0.2rem 0.5rem;
+  align-self: stretch;
+  animation: toast-in var(--t-base) var(--e-out);
+}
+
+.charge__bolt {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 1.2rem;
+  height: 1.2rem;
+  color: #ffd23f;
+  filter: drop-shadow(0 0 6px rgba(255, 90, 80, 0.8));
+}
+
+.charge__bolt svg {
+  width: 100%;
+  height: 100%;
+}
+
+.charge__track {
+  flex: 1;
+  height: 5px;
+  border-radius: var(--r-full);
+  background: rgba(255, 90, 80, 0.2);
+  overflow: hidden;
+}
+
+.charge__track i {
+  display: block;
+  height: 100%;
+  width: 100%;
+  border-radius: var(--r-full);
+  background: linear-gradient(90deg, #ff3b48, #ffd23f);
+  box-shadow: 0 0 10px rgba(255, 90, 80, 0.7);
+  transition: width 90ms linear;
+}
+
+.charge.is-fading {
+  animation: charge-flicker 0.24s steps(2, end) infinite;
+}
+
+@keyframes charge-flicker {
+  50% { opacity: 0.45; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .charge.is-fading { animation: none; }
+}
+
+/* ======================================================== Fatal error */
+
+.fatal {
+  position: fixed;
+  inset: 0;
+  z-index: 99;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--s-3);
+  padding: calc(var(--s-5) + var(--safe-t)) var(--s-5) calc(var(--s-5) + var(--safe-b));
+  background: var(--surface-solid);
+  color: var(--text);
+  overflow-y: auto;
+}
+
+.fatal h2 {
+  font-size: var(--fs-lg);
+}
+
+.fatal p {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.fatal pre {
+  margin: 0;
+  padding: var(--s-3);
+  font-family: ui-monospace, monospace;
+  font-size: var(--fs-2xs);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #ffd7de;
+  background: rgba(255, 107, 129, 0.1);
+  border: 1px solid rgba(255, 107, 129, 0.35);
+  border-radius: var(--r-md);
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.fatal .btn {
+  align-self: flex-start;
+}
+
+/* ========================================================== Ghost race */
+
+/* The gap to the record holder. Green when you are up, coral when you are
+   not — the sign is meant to be readable in peripheral vision. */
+.chip--ghost {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  min-width: 4.4em;
+  justify-content: center;
+  transition: color var(--t-fast) var(--e-out), border-color var(--t-fast) var(--e-out);
+}
+
+.chip--ghost.is-ahead {
+  color: var(--c-mint);
+  border-color: rgba(92, 225, 166, 0.4);
+  background: rgba(92, 225, 166, 0.12);
+}
+
+.chip--ghost.is-behind {
+  color: var(--c-coral);
+  border-color: rgba(255, 107, 129, 0.4);
+  background: rgba(255, 107, 129, 0.12);
+}
+
+/* ---- Share block on the win sheet ---- */
+
+.share {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--s-2);
+}
+
+.share__rank {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.share__rank strong {
+  color: var(--c-ice-100);
+  font-weight: 700;
+}
+
+.share__name {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.share__name .field__label {
+  flex: none;
+}
+
+.share__fallback {
+  width: 100%;
+  min-height: 5.5rem;
+  padding: var(--s-2);
+  font-family: ui-monospace, monospace;
+  font-size: var(--fs-2xs);
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  resize: vertical;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.btn--share {
+  border-color: rgba(155, 140, 255, 0.4);
+  background: linear-gradient(135deg, rgba(155, 140, 255, 0.2), rgba(79, 215, 255, 0.14));
+}
+
+/* ========================================================== Leaderboard */
+
+.boardtop {
+  display: grid;
+  grid-template-columns: minmax(7rem, 1fr) minmax(12rem, 2.2fr);
+  gap: var(--s-3);
+  width: 100%;
+}
+
+@container (max-width: 560px) {
+  .boardtop {
+    grid-template-columns: 1fr;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  min-width: 0;
+}
+
+.field__label {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.field__row {
+  display: flex;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.field__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.6em 0.8em;
+  font-family: var(--font-ui);
+  font-size: var(--fs-sm);
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  transition: border-color var(--t-fast) var(--e-out), box-shadow var(--t-fast) var(--e-out);
+}
+
+.field__input::placeholder {
+  color: var(--text-faint);
+}
+
+.field__input:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(79, 215, 255, 0.2);
+}
+
+.board__msg {
+  width: 100%;
+  font-size: var(--fs-xs);
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-sm);
+}
+
+.board__msg.is-ok {
+  color: var(--c-mint);
+  background: rgba(92, 225, 166, 0.1);
+  border: 1px solid rgba(92, 225, 166, 0.28);
+}
+
+.board__msg.is-bad {
+  color: var(--c-coral);
+  background: rgba(255, 107, 129, 0.1);
+  border: 1px solid rgba(255, 107, 129, 0.28);
+}
+
+.board {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: var(--s-3);
+}
+
+.board__empty {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  text-align: center;
+  padding: var(--s-5) 0;
+}
+
+.board__level {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+
+.board__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+
+.board__title {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--c-ice-300);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn--tiny {
+  flex: none;
+  padding: 0.3em 0.7em;
+  font-size: var(--fs-2xs);
+  min-height: 0;
+}
+
+.board__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.board__row {
+  display: grid;
+  grid-template-columns: 1.4rem 1fr auto auto;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 0.32em 0;
+  font-size: var(--fs-sm);
+  border-top: 1px solid rgba(143, 196, 226, 0.09);
+}
+
+.board__row:first-child {
+  border-top: 0;
+}
+
+.board__row.is-you {
+  color: var(--c-aqua);
+  font-weight: 600;
+}
+
+.board__rank {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-faint);
+  font-size: var(--fs-xs);
+  text-align: right;
+}
+
+.board__row:first-child .board__rank {
+  color: var(--c-amber);
+  font-weight: 700;
+}
+
+.board__who {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.board__time {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.board__tag {
+  font-size: var(--fs-2xs);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+  color: var(--text-faint);
+}
+
+.board__drop {
+  width: 1.4rem;
+  height: 1.4rem;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-full);
+  color: var(--text-faint);
+  font-size: var(--fs-sm);
+  line-height: 1;
+  transition: color var(--t-fast) var(--e-out), background var(--t-fast) var(--e-out);
+}
+
+.board__drop:hover,
+.board__drop:focus-visible {
+  color: var(--c-coral);
+  background: rgba(255, 107, 129, 0.14);
+}
+
+/* ============================================================== League */
+
+.league {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  padding: var(--s-3);
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  transition: border-color var(--t-fast) var(--e-out), transform var(--t-fast) var(--e-out);
+}
+
+.league:hover,
+.league:focus-visible {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.league__badge {
+  flex: none;
+  width: 2.2rem;
+  height: 2.2rem;
+  display: grid;
+  place-items: center;
+  color: var(--c-amber);
+}
+
+.league__badge svg {
+  width: 100%;
+  height: 100%;
+}
+
+.league__body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+  min-width: 0;
+}
+
+.league__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+
+.league__head strong {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.league__points {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
+.league__bar {
+  height: 5px;
+  border-radius: var(--r-full);
+  background: rgba(143, 196, 226, 0.14);
+  overflow: hidden;
+}
+
+.league__bar i {
+  display: block;
+  height: 100%;
+  border-radius: var(--r-full);
+  transition: width var(--t-slow) var(--e-out);
+}
+
+.league__next {
+  font-size: var(--fs-2xs);
+  color: var(--text-faint);
+}
+
+/* ======================================================= Daily goals */
+
+.goals {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+}
+
+.goal {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  padding: 0.15em 0;
+}
+
+.goal__tick {
+  flex: none;
+  width: 1.05rem;
+  height: 1.05rem;
+  display: grid;
+  place-items: center;
+  font-size: var(--fs-2xs);
+  font-weight: 800;
+  color: var(--c-mint);
+  border: 1px solid rgba(143, 196, 226, 0.28);
+  border-radius: var(--r-sm);
+}
+
+.goal--done {
+  color: var(--c-mint);
+}
+
+.goal--done .goal__tick {
+  border-color: rgba(92, 225, 166, 0.5);
+  background: rgba(92, 225, 166, 0.14);
+}
+
+.goal--fresh {
+  animation: goal-pop var(--t-slow) var(--e-out);
+}
+
+@keyframes goal-pop {
+  from { transform: scale(0.94); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* ========================================================== Rewards */
+
+.rewards {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.reward {
+  padding: var(--s-3);
+  background: rgba(79, 215, 255, 0.07);
+  border: 1px solid rgba(79, 215, 255, 0.22);
+  border-radius: var(--r-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.reward__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-2);
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
+.reward__head strong {
+  font-size: var(--fs-md);
+  color: var(--c-aqua);
+}
+
+.reward__rows li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-3);
+  font-size: var(--fs-2xs);
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.reward__note {
+  font-size: var(--fs-xs);
+  color: var(--c-mint);
+}
+
+.reward--league.is-promoted {
+  border-color: rgba(255, 210, 63, 0.45);
+  background: rgba(255, 210, 63, 0.1);
+}
+
+.reward--unlock {
+  border-color: rgba(155, 140, 255, 0.45);
+  background: rgba(155, 140, 255, 0.12);
+}
+
+/* ======================================================= Collection */
+
+.skins {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  gap: var(--s-3);
+}
+
+.skin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-3);
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  transition: border-color var(--t-fast) var(--e-out);
+}
+
+.skin--worn {
+  border-color: var(--accent);
+  box-shadow: var(--glow-accent);
+}
+
+/* Dimmed, not drained: you have to be able to see what you are chasing, and
+   a grey silhouette sells nothing. */
+.skin--locked .skin__art {
+  filter: brightness(0.72) saturate(0.85);
+  opacity: 0.9;
+}
+
+.skin--locked .skin__name {
+  color: var(--text-muted);
+}
+
+.skin__art {
+  width: 5.5rem;
+  height: 5.5rem;
+}
+
+/*
+ * The card's text grows; its button does not move.
+ *
+ * Blurbs are one to three lines and unlock conditions are one line or none, so
+ * a row of four cards used to put its four buttons at four different heights.
+ * The body takes the slack, the button is pinned to the bottom, and the row
+ * reads as a row.
+ */
+.skin__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+  width: 100%;
+  flex: 1 1 auto;
+}
+.skin__btn,
+.skin__worn {
+  margin-top: auto;
+}
+/* The one you are wearing says so plainly; the button beside it is spent. */
+.skin__worn {
+  display: block;
+  width: 100%;
+  padding: 0.55rem 0;
+  border-radius: var(--r-full);
+  background: rgba(79, 215, 255, 0.14);
+  border: 1px solid rgba(79, 215, 255, 0.42);
+  color: var(--c-aqua);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+.skin__name {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.skin__blurb {
+  font-size: var(--fs-2xs);
+  color: var(--text-faint);
+  line-height: 1.35;
+}
+
+.skin__state {
+  font-size: var(--fs-2xs);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.skin--worn .skin__state {
+  color: var(--c-aqua);
+}
+
+.skin__bar {
+  display: block;
+  height: 4px;
+  border-radius: var(--r-full);
+  background: rgba(143, 196, 226, 0.14);
+  overflow: hidden;
+}
+
+.skin__bar i {
+  display: block;
+  height: 100%;
+  border-radius: var(--r-full);
+  background: var(--accent);
+}
+
+.skin__btn {
+  width: 100%;
+}
+
+/* Earned but not yet collected — the card says so instead of showing a full
+   bar and no way through. */
+.skin--ready {
+  border-color: rgba(92, 225, 166, 0.5);
+}
+
+/* ============================================================ Gear HUD */
+
+.gear {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  align-self: flex-end;
+  pointer-events: none;
+}
+
+.gear__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.28em 0.6em;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-full);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  color: var(--c-ice-200);
+  transition: color var(--t-fast) var(--e-out), border-color var(--t-fast) var(--e-out);
+}
+
+.gear__item svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex: none;
+}
+
+.gear__item.is-active {
+  color: var(--c-aqua);
+  border-color: rgba(79, 215, 255, 0.5);
+}
+
+.gear__item.is-empty {
+  color: var(--text-faint);
+  opacity: 0.6;
+}
+
+.gear__track {
+  width: 3.4rem;
+  height: 4px;
+  border-radius: var(--r-full);
+  background: rgba(143, 196, 226, 0.16);
+  overflow: hidden;
+}
+
+.gear__track i {
+  display: block;
+  height: 100%;
+  background: currentColor;
+  border-radius: var(--r-full);
+  transition: width 90ms linear;
+}
+
+.gear__pips {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.gear__pips i {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-full);
+  background: rgba(143, 196, 226, 0.25);
+}
+
+.gear__pips i.on {
+  background: var(--c-amber);
+  box-shadow: 0 0 6px rgba(255, 196, 90, 0.6);
+}
+
+/* ================================================= Collection · tabs */
+
+.tabs {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-full);
+  align-self: flex-start;
+}
+
+.tab {
+  padding: 0.42em 1.1em;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--text-muted);
+  border-radius: var(--r-full);
+  transition: color var(--t-fast) var(--e-out), background var(--t-fast) var(--e-out);
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+.tab.is-on {
+  color: #06121f;
+  background: var(--accent);
+}
+
+/* ---- rarity ---- */
+
+.skin__rarity {
+  font-size: var(--fs-2xs);
+  font-weight: 800;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+/* The card border carries the rarity, so the wall reads at a glance. */
+.skin--rare { border-color: rgba(79, 215, 255, 0.32); }
+.skin--epic { border-color: rgba(155, 140, 255, 0.36); }
+.skin--mythic {
+  border-color: rgba(255, 210, 63, 0.42);
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(255, 210, 63, 0.1), transparent 70%),
+    var(--surface);
+}
+
+.skin--mythic:not(.skin--locked) {
+  box-shadow: 0 0 0 1px rgba(255, 210, 63, 0.18), 0 10px 34px rgba(255, 196, 90, 0.14);
+}
+
+.skin--worn {
+  border-color: var(--accent);
+  box-shadow: var(--glow-accent);
+}
+
+/* ============================================================== Offer */
+
+.offer {
+  --offer-color: var(--c-amber);
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  padding: var(--s-3);
+  text-align: left;
+  background:
+    radial-gradient(120% 140% at 8% 50%, color-mix(in srgb, var(--offer-color) 14%, transparent), transparent 62%),
+    var(--surface);
+  border: 1px solid color-mix(in srgb, var(--offer-color) 38%, var(--border));
+  border-radius: var(--r-md);
+  transition: transform var(--t-fast) var(--e-out), border-color var(--t-fast) var(--e-out);
+}
+
+.offer:hover,
+.offer:focus-visible {
+  transform: translateY(-1px);
+  border-color: var(--offer-color);
+}
+
+.offer.is-owned {
+  opacity: 0.62;
+}
+
+.offer__art {
+  flex: none;
+  width: 3.5rem;
+  height: 3.5rem;
+  display: grid;
+  place-items: center;
+}
+
+.offer__art canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.offer__body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15em;
+  min-width: 0;
+}
+
+.offer__kicker {
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--offer-color);
+}
+
+.offer__kicker em {
+  font-style: normal;
+  color: var(--text-faint);
+}
+
+.offer__name {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.offer__blurb {
+  font-size: var(--fs-2xs);
+  color: var(--text-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.offer__price {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  margin-top: 0.15em;
+}
+
+.offer__price s {
+  font-size: var(--fs-2xs);
+  color: var(--text-faint);
+}
+
+.offer__price b {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--c-amber);
+}
+
+.offer__off {
+  font-style: normal;
+  font-size: var(--fs-2xs);
+  font-weight: 800;
+  padding: 0.1em 0.45em;
+  border-radius: var(--r-full);
+  color: #06121f;
+  background: var(--offer-color);
+}
+
+/* =========================================================== Monument */
+
+/*
+ * The monument sits above everything else in the shop, so it has to earn the
+ * position. It was a dashed banner; it is the one thing here that is not for
+ * sale in the ordinary sense — a hole you can pour a hundred thousand fish
+ * into — and it should read as the deep end of the screen rather than as the
+ * first row of it.
+ */
+.monument {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  width: 100%;
+  padding: var(--s-4);
+  text-align: left;
+  background:
+    radial-gradient(90% 140% at 0% 0%, rgba(155, 140, 255, 0.16), rgba(155, 140, 255, 0) 62%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0) 40%),
+    linear-gradient(160deg, rgba(24, 42, 78, 0.95), rgba(8, 18, 38, 0.95));
+  border: 1px solid rgba(143, 196, 226, 0.22);
+  border-radius: var(--r-lg);
+  box-shadow:
+    inset 0 1px 0 rgba(226, 244, 255, 0.1),
+    0 14px 34px -22px rgba(0, 0, 0, 0.95);
+  overflow: hidden;
+  transition:
+    border-color var(--t-base) var(--e-out),
+    transform var(--t-base) var(--e-out),
+    box-shadow var(--t-base) var(--e-out);
+}
+
+/* A cold aurora across the top, slow enough that you notice it only if you
+   stop. It is the only moving light in the shop. */
+.monument::before {
+  content: '';
+  position: absolute;
+  inset: -60% -20% auto -20%;
+  height: 160%;
+  background: linear-gradient(100deg,
+    rgba(79, 215, 255, 0) 30%,
+    rgba(126, 200, 240, 0.1) 50%,
+    rgba(155, 140, 255, 0) 70%);
+  pointer-events: none;
+  animation: monumentAurora 9s ease-in-out infinite;
+}
+
+@keyframes monumentAurora {
+  0%, 100% { transform: translateX(-12%); }
+  50%      { transform: translateX(12%); }
+}
+
+.monument.is-affordable {
+  border-color: rgba(79, 215, 255, 0.5);
+  box-shadow:
+    inset 0 1px 0 rgba(226, 244, 255, 0.16),
+    0 14px 34px -22px rgba(0, 0, 0, 0.95),
+    0 0 40px -20px rgba(79, 215, 255, 0.6);
+}
+
+.monument:hover,
+.monument:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(143, 196, 226, 0.42);
+}
+
+.monument__art {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--r-md);
+  background:
+    radial-gradient(120% 90% at 30% 8%, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0) 60%),
+    linear-gradient(180deg, rgba(155, 140, 255, 0.3), rgba(79, 215, 255, 0.12));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 0 0 1px rgba(155, 140, 255, 0.28);
+  color: var(--c-ice-100);
+}
+
+.monument__art svg {
+  width: 62%;
+  height: 62%;
+  filter: drop-shadow(0 1px 0 rgba(3, 20, 38, 0.55));
+}
+
+.monument__body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1em;
+  min-width: 0;
+}
+
+.monument__kicker {
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.monument__rank {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--c-ice-100);
+}
+
+.monument__blurb {
+  font-size: var(--fs-2xs);
+  color: var(--text-faint);
+}
+
+.monument__buy {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1em;
+}
+
+.monument__buy b {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--c-amber);
+  font-variant-numeric: tabular-nums;
+}
+
+.monument__buy small {
+  font-size: var(--fs-2xs);
+  color: var(--text-faint);
+}
+
+/* ---- diamond tier: the only cards that carry a perk ---- */
+
+.skin--diamond {
+  border-color: rgba(124, 232, 255, 0.5);
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(124, 232, 255, 0.14), transparent 70%),
+    var(--surface);
+}
+
+.skin--diamond:not(.skin--locked) {
+  box-shadow: 0 0 0 1px rgba(124, 232, 255, 0.24), 0 10px 34px rgba(124, 232, 255, 0.18);
+}
+
+.skin__perk {
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  color: var(--c-aqua);
+  padding: 0.18em 0.5em;
+  border-radius: var(--r-full);
+  background: rgba(79, 215, 255, 0.12);
+  border: 1px solid rgba(79, 215, 255, 0.3);
+  align-self: center;
+}
+
+/* ─────────────────────────  Kimlik  ───────────────────────────────── */
+
+/*
+ * The player chip on the title screen.
+ *
+ * It sits between the logo and the pitch because that is where the eye already
+ * is on the first launch, and because the one thing worth saying before "here
+ * is a game" is "here is who you are in it".
+ */
+.who {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 26rem;
+  margin: 0.25rem auto 0;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg, 16px);
+  background: var(--surface-2);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.18s, transform 0.18s;
+}
+.who:hover,
+.who:focus-visible {
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+.who__art {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: rgba(8, 19, 42, 0.6);
+  overflow: hidden;
+}
+.who__art canvas {
+  width: 100%;
+  height: 100%;
+}
+.who__art--big {
+  width: 84px;
+  height: 84px;
+}
+.who__body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 0.1rem;
+}
+.who__name {
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.who__title {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+}
+.who__id {
+  margin-left: auto;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(8, 19, 42, 0.55);
+  color: var(--text-faint);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.04em;
+}
+
+.who__setup {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0.6rem 0 0.2rem;
+  text-align: left;
+}
+.who__setup .field {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sheet--who {
+  max-width: 24rem;
+}
+.sheet__hint--fine {
+  color: var(--text-faint);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+.field__hint {
+  display: block;
+  margin-top: 0.3rem;
+  color: var(--text-faint);
+  font-size: 0.72rem;
+}
+.field__hint--bad {
+  color: var(--c-coral);
+}
+
+/*
+ * A button that behaves like a link, because in a sentence it should.
+ *
+ * Inline text is about sixteen pixels tall and a thumb is about forty-four, so
+ * the visible link keeps the line height it needs and the *hit area* is grown
+ * underneath it with a pseudo-element. Padding would have worked too and would
+ * have pushed the sentence around it apart.
+ */
+.linkish {
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.linkish::after {
+  content: '';
+  position: absolute;
+  inset: -0.7rem -0.4rem;
+}
+.linkish:hover {
+  color: var(--c-ice-100);
+}
+
+/* ─────────────────────────  Profil  ───────────────────────────────── */
+
+.profile {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-bottom: 2rem;
+}
+.profile__card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg, 16px);
+  background: var(--surface-2);
+}
+.profile__who {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+.profile__name {
+  font-size: 1.3rem;
+  letter-spacing: -0.02em;
+}
+.profile__title {
+  color: var(--c-amber);
+  font-size: 0.85rem;
+}
+.profile__id {
+  color: var(--text-faint);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+}
+.profile__next {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.84rem;
+}
+.profile__note {
+  margin: 0;
+  color: var(--text-faint);
+  font-size: 0.76rem;
+  line-height: 1.6;
+}
+.results--wide {
+  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+}
+
+.settings--links {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+
+/* ─────────────────────────  Yasal  ────────────────────────────────── */
+
+.legal {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding-bottom: 2rem;
+  font-size: 0.88rem;
+  line-height: 1.65;
+}
+.legal__lede {
+  margin: 0;
+  color: var(--text-muted);
+}
+.legal__block {
+  border: 1px solid var(--border);
+  border-radius: var(--r-md, 12px);
+  background: var(--surface-2);
+  padding: 0.7rem 0.9rem;
+}
+.legal__block summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--c-ice-200);
+}
+.legal__block[open] summary {
+  margin-bottom: 0.5rem;
+}
+.legal__block p,
+.legal__block ul {
+  margin: 0.4rem 0;
+  color: var(--text-muted);
+}
+.legal__block ul {
+  padding-left: 1.15rem;
+  /* The global reset strips markers; a list of what is stored about you is
+     exactly the place to put them back. */
+  list-style: disc outside;
+}
+.legal__block li {
+  margin: 0.15rem 0;
+}
+.legal__block code {
+  padding: 0.05rem 0.3rem;
+  border-radius: 4px;
+  background: rgba(8, 19, 42, 0.6);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.82em;
+}
+.legal__data {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+}
+.legal__foot {
+  margin: 0;
+  color: var(--text-faint);
+  font-size: 0.74rem;
+}
+
+@media (max-width: 26rem) {
+  .legal__data,
+  .settings--links {
+    grid-template-columns: 1fr;
+  }
+  .who__setup {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .who__setup .who__art--big {
+    align-self: center;
+  }
+}
+
+
+/* ─────────────────────────  Boş durumlar  ─────────────────────────── */
+
+/*
+ * An empty state is a screen with a job.
+ *
+ * A single centred sentence tells the player what they already knew — that
+ * there is nothing here — and leaves them on a blank page to find their own
+ * way out. A mark, a line and the button that fixes it is the whole pattern.
+ */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-6) var(--s-4);
+  text-align: center;
+}
+.empty__mark {
+  display: grid;
+  place-items: center;
+  width: 3.4rem;
+  height: 3.4rem;
+  border-radius: 50%;
+  background: rgba(143, 196, 226, 0.1);
+  color: var(--c-ice-400);
+}
+.empty__mark svg {
+  width: 1.7rem;
+  height: 1.7rem;
+}
+.empty__text {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+}
+
+/* The board's identity line: who you are here, and the way to change it. */
+.boardwho {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  min-height: 2.6rem;
+}
+.boardwho__name {
+  font-size: var(--fs-md, 1rem);
+  font-weight: 700;
+}

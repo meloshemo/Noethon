@@ -1,0 +1,165 @@
+/** Reset + page shell. Keep this file free of component styling. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-ui);
+  font-size: var(--fs-base);
+  line-height: var(--lh-body);
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+}
+
+img,
+svg,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 700;
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-tight);
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+ul {
+  list-style: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: var(--r-sm);
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* ---------------------------------------------------------------- */
+
+.app {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: calc(var(--safe-t)) calc(var(--safe-r)) calc(var(--safe-b)) calc(var(--safe-l));
+  background:
+    radial-gradient(120% 80% at 50% 0%, #113059 0%, transparent 60%),
+    radial-gradient(90% 60% at 20% 100%, #0b2444 0%, transparent 55%),
+    var(--bg);
+}
+
+.stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+  /* The overlays live inside the stage, not the window — on a desktop the
+     stage is a 16:9 box that can be much shorter than the viewport. Sizing
+     their layout off the stage is the only way the density rules match what
+     the player actually sees. */
+  container-type: size;
+  container-name: stage;
+}
+
+#game {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--c-deep);
+  touch-action: none;
+}
+
+/* On a roomy desktop screen the game sits in a framed card. */
+@media (min-width: 1100px) and (min-height: 720px) {
+  .app {
+    padding: var(--s-5);
+  }
+  .stage {
+    width: min(100%, 1500px);
+    aspect-ratio: 16 / 9;
+    height: auto;
+    max-height: 100%;
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    outline: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+.noscript {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--s-6);
+  text-align: center;
+  background: var(--bg);
+  font-size: var(--fs-md);
+}
+
+/* Utility */
+[hidden] {
+  display: none !important;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

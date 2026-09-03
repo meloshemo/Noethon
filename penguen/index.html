@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="tr" data-lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<title>Pengu: Antarktika'dan Kaçış</title>
+<meta name="description" content="Yeni doğmuş bir penguen, eriyen buzlar arasında Antarktika'dan kaçmaya çalışıyor. Zıpla, buzlar kırılmadan geç, salı yakala." />
+<meta name="description:en" content="A newborn penguin is trying to escape Antarctica across melting ice. Jump, cross before the floes break, reach the raft." />
+<meta name="theme-color" content="#08132a" />
+<meta name="color-scheme" content="dark" />
+
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Pengu: Antarktika'dan Kaçış" />
+<meta property="og:description" content="Eriyen buzlar, kırılan zeminler ve büyüyen bir penguen. Kaçabilecek misin?" />
+<meta property="og:image" content="assets/og-card.svg" />
+
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="assets/favicon.svg" />
+<link rel="manifest" href="manifest.webmanifest" />
+
+<!--
+  No webfont, on purpose.
+
+  This used to pull Outfit from Google Fonts, which meant every launch made a
+  request to two other companies' servers before the game drew a pixel, on a
+  page whose own privacy screen says nothing leaves the device. It also meant
+  the first paint waited on a network the player might not have, and the
+  single-file build (which cannot carry the link) already rendered with the
+  fallbacks, so nobody was seeing the same game twice.
+
+  The system stack below is the one the operating system already has loaded.
+  It costs nothing, arrives instantly, works on a plane, and makes the promise
+  on the legal screen literally true, which is checked by a test.
+-->
+
+<link rel="stylesheet" href="styles/tokens.css" />
+<link rel="stylesheet" href="styles/base.css" />
+<link rel="stylesheet" href="styles/ui.css" />
+</head>
+<body>
+
+<div class="app" id="app">
+  <div class="stage" id="stage">
+    <canvas id="game" data-i18n-aria="hud.canvas" aria-label="Oyun alanı" role="img"></canvas>
+
+    <!-- ─────────────────────────────  HUD  ───────────────────────────── -->
+    <div class="hud" id="hud" hidden>
+      <div class="hud__bar">
+        <div class="hud__group">
+          <span class="chip chip--level" id="hudLevel">Bölüm 1</span>
+          <span class="chip" id="hudName">İlk Adımlar</span>
+        </div>
+
+        <div class="hud__group hud__group--right">
+          <span class="chip chip--stat" data-i18n-title="hud.fish" title="Toplanan balık">
+            <svg viewBox="0 0 24 16" class="icon" aria-hidden="true"><path d="M14 8c0 3-3.6 5.5-7 5.5S1 11 1 8s2.6-5.5 6-5.5S14 5 14 8Z" fill="currentColor"/><path d="M14.5 8 22 3v10l-7.5-5Z" fill="currentColor"/></svg>
+            <span id="hudFish">0/3</span>
+          </span>
+          <span class="chip chip--stat" data-i18n-title="hud.tries" title="Deneme">
+            <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7Z" fill="currentColor"/></svg>
+            <span id="hudDeaths">0</span>
+          </span>
+          <span class="chip chip--stat chip--shield" id="hudShield" hidden data-i18n-title="hud.shield" title="Kalın tüy">
+            <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3Z" fill="currentColor"/></svg>
+          </span>
+          <span class="chip chip--ghost" id="hudGhost" hidden data-i18n-title="hud.ghost" title="Rekor sahibine göre farkın"></span>
+          <span class="chip chip--time" id="hudTime">00:00.00</span>
+          <button class="icon-btn" id="pauseBtn" data-i18n-aria="hud.pause" aria-label="Duraklat">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.4" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.4" fill="currentColor"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="gear" id="gearBar" hidden aria-hidden="true">
+        <span class="gear__item" id="gearWings" hidden>
+          <svg viewBox="0 0 24 24"><path d="M12 8c-3-4-8-5-11-4 1 4 4 7 8 8l3-4Zm0 0c3-4 8-5 11-4-1 4-4 7-8 8l-3-4Z" fill="currentColor"/></svg>
+          <span class="gear__track"><i id="gearWingsFill"></i></span>
+        </span>
+        <span class="gear__item" id="gearRocket" hidden>
+          <svg viewBox="0 0 24 24"><path d="M12 2c3 2.5 5 6.5 5 11l-3 3h-4l-3-3c0-4.5 2-8.5 5-11Zm-2 17h4l-2 4-2-4Z" fill="currentColor"/></svg>
+          <span class="gear__pips" id="gearRocketPips"></span>
+        </span>
+      </div>
+
+      <div class="charge" id="chargeBar" hidden aria-hidden="true">
+        <span class="charge__bolt">
+          <svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" fill="currentColor"/></svg>
+        </span>
+        <span class="charge__track"><i id="chargeFill"></i></span>
+      </div>
+
+      <div class="progress" aria-hidden="true">
+        <div class="progress__fill" id="progressFill"></div>
+        <div class="progress__pin" id="progressPin"></div>
+      </div>
+
+      <div class="toast" id="toast" hidden></div>
+    </div>
+
+    <!-- ──────────────────────  Touch controls  ─────────────────────── -->
+    <div class="touch" id="touch" hidden>
+      <div class="touch__side touch__side--left">
+        <button class="pad" id="padLeft" data-i18n-aria="touch.left" aria-label="Sol">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7" stroke="currentColor" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="pad" id="padRight" data-i18n-aria="touch.right" aria-label="Sağ">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7" stroke="currentColor" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <div class="touch__side touch__side--right">
+        <button class="pad pad--jump" id="padJump" data-i18n-aria="touch.jump" aria-label="Zıpla">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 5 12h4v7h6v-7h4L12 4Z" fill="currentColor"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ────────────────────────  Overlays  ─────────────────────────── -->
+    <div class="overlay" id="overlay" data-screen="title">
+
+      <!-- Title -->
+      <section class="screen screen--title" data-name="title">
+        <button class="wallet wallet--btn" id="walletTitle" type="button"
+                data-i18n-aria="title.wallet" aria-label="Balıkların, markete git">
+          <svg viewBox="0 0 24 16" aria-hidden="true"><path d="M14 8c0 3-3.6 5.5-7 5.5S1 11 1 8s2.6-5.5 6-5.5S14 5 14 8Z" fill="currentColor"/><path d="M14.5 8 22 3v10l-7.5-5Z" fill="currentColor"/></svg>
+          <span id="walletTitleValue">0</span>
+          <span class="wallet__go" data-i18n="nav.shop" aria-hidden="true">Market</span>
+        </button>
+        <div class="brand">
+          <div class="brand__mark" aria-hidden="true">
+            <svg viewBox="0 0 64 64"><ellipse cx="32" cy="40" rx="17" ry="19" fill="#26364a"/><ellipse cx="32" cy="42" rx="11" ry="14" fill="#f6fbff"/><ellipse cx="32" cy="20" rx="13" ry="11" fill="#26364a"/><ellipse cx="26" cy="19" rx="3.4" ry="3.8" fill="#fff"/><ellipse cx="37" cy="19" rx="3.4" ry="3.8" fill="#fff"/><circle cx="26.8" cy="19.4" r="1.7" fill="#0e1723"/><circle cx="37.4" cy="19.4" r="1.7" fill="#0e1723"/><path d="M32 23.5 39 26l-7 2.5Z" fill="#ff9c3f"/><ellipse cx="25" cy="58" rx="5" ry="2.4" fill="#ff9c3f"/><ellipse cx="39" cy="58" rx="5" ry="2.4" fill="#ff9c3f"/></svg>
+          </div>
+          <h1 class="brand__title">Pengu</h1>
+          <p class="brand__tagline" data-i18n="title.tagline">Antarktika'dan Kaçış</p>
+        </div>
+
+        <button class="who" id="whoChip" type="button">
+          <span class="who__art"><canvas id="whoArt" width="72" height="72" aria-hidden="true"></canvas></span>
+          <span class="who__body">
+            <strong class="who__name" id="whoName">Kimliğini oluştur</strong>
+            <small class="who__title" id="whoTitle">Adını ve penguenini seç</small>
+          </span>
+          <span class="who__id" id="whoId"></span>
+        </button>
+
+        <p class="screen__lede" data-i18n="title.lede">
+          Buzlar eriyor. Yeni doğmuş bir penguensin ve kuzeye açılan sala ulaşman gerek.
+          Ama her buz seni taşımaz.
+        </p>
+
+        <div class="actions">
+          <button class="btn btn--primary btn--xl" id="playBtn">
+            <span id="playLabel">Oyna</span>
+            <small id="playSub" class="btn__sub">Bölüm 1</small>
+          </button>
+
+          <button class="daily" id="dailyBtn">
+            <span class="daily__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 2 9.6 8.4 3 9.2l4.9 4.5L6.5 21 12 17.4 17.5 21l-1.4-7.3L21 9.2l-6.6-.8L12 2Z" fill="currentColor"/></svg>
+            </span>
+            <span class="daily__text">
+              <strong data-i18n="title.daily">Günün Bölümü</strong>
+              <small id="dailyState">Herkes için aynı, süreni karşılaştır</small>
+            </span>
+            <span class="daily__streak" id="dailyStreak" hidden></span>
+          </button>
+          <ul class="goals" id="dailyGoals"></ul>
+
+          <div class="actions__row">
+            <button class="btn" id="levelsBtn" data-i18n="nav.levels">Bölümler</button>
+            <button class="btn" id="shopBtn">
+              <span data-i18n="nav.shop">Market</span>
+              <small class="btn__badge" id="shopBadge" hidden></small>
+            </button>
+            <button class="btn" id="skinsBtn">
+              <span data-i18n="nav.skins">Koleksiyon</span>
+              <small class="btn__badge" id="skinsBadge" hidden></small>
+            </button>
+            <button class="btn" id="boardBtn" data-i18n="nav.board">Sıralama</button>
+            <button class="btn" id="howtoBtn" data-i18n="nav.howto">Nasıl oynanır</button>
+            <button class="btn" id="settingsBtn" data-i18n="nav.settings">Ayarlar</button>
+          </div>
+        </div>
+
+        <button class="offer" id="offerCard" type="button">
+          <span class="offer__art"><canvas id="offerArt" width="112" height="112" aria-hidden="true"></canvas></span>
+          <span class="offer__body">
+            <span class="offer__kicker"><span data-i18n="title.offer">Günün Pengu'su</span> · <em id="offerClock">24 sa</em></span>
+            <strong class="offer__name" id="offerName">·</strong>
+            <small class="offer__blurb" id="offerBlurb"></small>
+            <span class="offer__price">
+              <s id="offerWas"></s>
+              <b id="offerNow"></b>
+              <i class="offer__off" id="offerOff"></i>
+            </span>
+          </span>
+        </button>
+
+        <button class="league" id="leagueCard" type="button">
+          <span class="league__badge" id="leagueBadge" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M5 3h14v4a5 5 0 0 1-4 4.9V15h3v2H6v-2h3v-3.1A5 5 0 0 1 5 7V3Z" fill="currentColor"/><path d="M3 5h2v3a3 3 0 0 1-2-2.8V5Zm16 0h2v.2A3 3 0 0 1 19 8V5Z" fill="currentColor"/></svg>
+          </span>
+          <span class="league__body">
+            <span class="league__head">
+              <strong id="leagueName">Bronz Lig</strong>
+              <span class="league__points" id="leaguePoints">0</span>
+            </span>
+            <span class="league__bar"><i id="leagueFill"></i></span>
+            <small class="league__next" id="leagueNext">Bu hafta</small>
+          </span>
+        </button>
+
+        <div class="missions" id="missionsCard">
+          <h3 class="missions__title" data-i18n="title.missions">Günün görevleri</h3>
+          <ul class="missions__list" id="missionsList"></ul>
+        </div>
+
+        <p class="screen__foot" id="titleStats"></p>
+      </section>
+
+      <!-- Level select -->
+      <section class="screen screen--levels" data-name="levels" hidden>
+        <header class="screen__head">
+          <button class="btn btn--ghost btn--back" data-back><span data-i18n="nav.back">← Geri</span></button>
+          <h2 class="screen__title" data-i18n="nav.levels">Bölümler</h2>
+          <span class="screen__meta" id="levelsMeta"></span>
+        </header>
+
+        <nav class="chapters" id="chapterJump" data-i18n-aria="nav.levels" aria-label="Bölümler"></nav>
+        <div class="levels" id="levelGrid"></div>
+        <p class="screen__foot" data-i18n="levels.foot">31 bölümden sonra sonsuz mod başlar. Sonrası hep biraz daha zor.</p>
+      </section>
+
+      <!-- How to play -->
+      <section class="screen screen--howto" data-name="howto" hidden>
+        <header class="screen__head">
+          <button class="btn btn--ghost btn--back" data-back><span data-i18n="nav.back">← Geri</span></button>
+          <h2 class="screen__title" data-i18n="nav.howto">Nasıl oynanır</h2>
+        </header>
+
+        <div class="cards">
+          <article class="card">
+            <h3 class="card__title" data-i18n="howto.controls">Kontroller</h3>
+            <ul class="keys">
+              <li><kbd>←</kbd><kbd>→</kbd><span data-i18n="howto.walk">Yürü</span></li>
+              <li><kbd data-i18n="howto.space">Boşluk</kbd><span data-i18n="howto.jump">Zıpla. Basılı tutarsan daha yükseğe çıkarsın.</span></li>
+              <li><kbd>R</kbd><span data-i18n="howto.restart">Bölümü baştan başlat</span></li>
+              <li><kbd>Esc</kbd><span data-i18n="hud.pause">Duraklat</span></li>
+            </ul>
+            <p class="card__note" data-i18n="howto.touch">Dokunmatik ekranda alttaki tuşları kullan.</p>
+          </article>
+
+          <article class="card">
+            <h3 class="card__title" data-i18n="howto.dangers">Tehlikeler</h3>
+            <ul class="tips">
+              <li data-i18n-html="howto.icicle"><strong>Buz sarkıtı.</strong> Altından geçince titrer, sonra düşer.</li>
+              <li data-i18n-html="howto.seal"><strong>Fok.</strong> Yanından değil üstünden atla. Üstüne basarsan seni fırlatır.</li>
+              <li data-i18n-html="howto.orca"><strong>Orka.</strong> Boşluktan sıçrar. Yüzgecini gördüysen bekle.</li>
+              <li data-i18n-html="howto.updraft"><strong>Yükselen hava.</strong> Işıldayan sütuna zıplarsan seni normalden yükseğe taşır.</li>
+              <li data-i18n-html="howto.storm"><strong>Fırtına.</strong> Dört vuruşluk bir soluk: önce sana karşı, sonra dinginlik, sonra arkandan. Başının üstündeki ibre hangi vuruşta olduğunu gösterir. Bazı boşluklar yalnızca arkadan esen rüzgârla geçilir.</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3 class="card__title" data-i18n="howto.icetypes">Buz türleri</h3>
+            <ul class="legend" id="iceLegend"></ul>
+          </article>
+
+          <article class="card">
+            <h3 class="card__title" data-i18n="howto.tips">İpuçları</h3>
+            <ul class="tips">
+              <li data-i18n="tip.run">Koşarken zıplarsan daha uzağa gidersin.</li>
+              <li data-i18n="tip.coyote">Kenardan düştükten sonra bile kısa bir an zıplayabilirsin. Acele etme.</li>
+              <li data-i18n="tip.fish">Her bölümde 3 balık var. Hepsini toplarsan ikinci yıldız senindir.</li>
+              <li data-i18n="tip.grow">Bölüm ilerledikçe penguen büyür: daha ağır zıplar, daha geniş yer ister.</li>
+              <li data-i18n="tip.money">Balıklar aynı zamanda paradır. Markette bot, krampon ve kalın tüy var.</li>
+              <li data-i18n="tip.geyser">Gayzer tıslamaya başladıysa bir buçuk adımın var. Kaç.</li>
+              <li data-i18n="tip.bait">Alçakta duran cazip buzlara güvenme. Bazıları tam inerken kaçar.</li>
+              <li data-i18n-html="tip.speed">Kırmızı-altın <strong>hız balığı</strong> seni birkaç saniyeliğine şimşeğe çevirir. Yol üstünde değildir, sapman gerekir.</li>
+              <li data-i18n="tip.rotten">Her balık iyi balık değildir. Yeşilimsi olanlara iki kere bak.</li>
+              <li data-i18n="tip.wind">Rüzgâr seni geri itiyorsa dur ve bekle. Duran penguen sürüklenmez, dinginlik birkaç saniye içinde gelir.</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <h3 class="card__title" data-i18n="howto.ghost">Hayalet yarışı</h3>
+            <p class="card__note" data-i18n-html="ghost.p1">
+              Bir bölümü bitirdiğinde koşun kaydedilir. Bir daha oynadığında en iyi süren
+              saydam bir penguen olarak yanında koşar. Üstteki <strong>−0.42</strong> gibi
+              rakam ona göre önde mi geride mi olduğunu gösterir.
+            </p>
+            <p class="card__note" data-i18n-html="ghost.p2">
+              Kodunu paylaşırsan arkadaşın senin hayaletinle yarışır. Onun kodunu
+              <strong>Sıralama</strong> ekranına yapıştırırsan sen onunkiyle yarışırsın.
+              Sıralamanın birincisi buzun üstünde yanında belirir.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <!-- Shop -->
+      <section class="screen screen--shop" data-name="shop" hidden>
+        <header class="screen__head">
+          <button class="btn btn--ghost btn--back" data-back><span data-i18n="nav.back">← Geri</span></button>
+          <h2 class="screen__title" data-i18n="nav.shop">Market</h2>
+          <span class="wallet wallet--inline">
+            <svg viewBox="0 0 24 16" aria-hidden="true"><path d="M14 8c0 3-3.6 5.5-7 5.5S1 11 1 8s2.6-5.5 6-5.5S14 5 14 8Z" fill="currentColor"/><path d="M14.5 8 22 3v10l-7.5-5Z" fill="currentColor"/></svg>
+            <span id="walletShop">0</span>
+          </span>
+        </header>
+        <p class="screen__lede screen__lede--tight" data-i18n="shop.lede">
+          Balıklarını harca. Hiçbir bölüm satın almayı gerektirmiyor. Buradakiler
+          seni hızlandırır, oyunu kolaylaştırmaz.
+        </p>
+        <button class="monument" id="monumentCard" type="button">
+          <span class="monument__art" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 2 4 22h16L12 2Zm0 6.5L16.6 20H7.4L12 8.5Z" fill="currentColor"/></svg>
+          </span>
+          <span class="monument__body">
+            <span class="monument__kicker" data-i18n="shop.monument">Buzul Anıtı</span>
+            <strong class="monument__rank" id="monumentRank">Buz Parçası</strong>
+            <small class="monument__blurb" data-i18n="shop.monumentBlurb">Hiçbir işe yaramaz. Bitmez de.</small>
+          </span>
+          <span class="monument__buy">
+            <b id="monumentCost">500</b>
+            <small id="monumentBlocks">0 blok</small>
+          </span>
+        </button>
+
+        <div class="shop" id="shopGrid"></div>
+        <p class="screen__foot" data-i18n="shop.foot">
+          Balık kazanma yolları: bölüm bitirmek, yeni yıldız, ölmeden geçmek,
+          günün bölümü ve günlük görevler.
+        </p>
+      </section>
+
+      <!-- Settings -->
+      <section class="screen screen--settings" data-name="settings" hidden>
+        <header class="screen__head">
+          <button class="btn btn--ghost btn--back" data-back><span data-i18n="nav.back">← Geri</span></button>
+          <h2 class="screen__title" data-i18n="nav.settings">Ayarlar</h2>
+        </header>
+
+        <div class="settings">
+          <label class="row">
+            <span class="row__text"><strong data-i18n="set.sfx">Ses efektleri</strong><small data-i18n="set.sfxSub">Zıplama, kırılma, su sesi</small></span>
+            <input type="checkbox" id="setSfx" class="switch" />
+          </label>
+          <label class="row">
+            <span class="row__text"><strong data-i18n="set.music">Müzik</strong><small data-i18n="set.musicSub">Bölüme göre değişen arka plan melodisi</small></span>
+            <input type="checkbox" id="setMusic" class="switch" />
+          </label>
+          <label class="row">
+            <span class="row__text"><strong data-i18n="set.motion">Az hareket</strong><small data-i18n="set.motionSub">Sarsıntı, kar ve parçacıkları azaltır</small></span>
+            <input type="checkbox" id="setMotion" class="switch" />
+          </label>
+          <label class="row">
+            <span class="row__text"><strong data-i18n="set.assist">Kolay mod</strong><small data-i18n="set.assistSub">Buzlar geç kırılır, tuzaklar yavaşlar</small></span>
+            <input type="checkbox" id="setAssist" class="switch" />
+          </label>
+        </div>
+
+        <div class="settings">
+          <div class="row row--lang">
+            <span class="row__text"><strong data-i18n="set.lang">Dil</strong><small data-i18n="set.langSub">Language</small></span>
+            <div class="langs" id="langPicker" role="group" data-i18n-aria="set.lang" aria-label="Dil"></div>
+          </div>
+        </div>
+
+        <div class="settings settings--links">
+          <button class="btn" id="settingsProfile" type="button" data-i18n="set.identity">Kimliğim</button>
+          <button class="btn" id="settingsLegal" type="button" data-i18n="set.legal">Yasal ve veri</button>
+        </div>
+
+        <div class="danger">
+          <button class="btn btn--danger" id="resetBtn" data-i18n="set.reset">İlerlemeyi sıfırla</button>
+          <p class="danger__note" data-i18n="set.resetNote">Tüm bölümler, yıldızlar ve rekorlar silinir.</p>
+        </div>
+      </section>
+
+      <!-- First run: who are you -->
+      <section class="screen screen--sheet" data-name="identity" hidden>
+        <div class="sheet sheet--who">
+          <p class="sheet__kicker" data-i18n="id.hello">Merhaba</p>
+          <h2 class="sheet__title" data-i18n="id.title">Sana ne diyelim?</h2>
+          <p class="sheet__meta" data-i18n="id.meta">
+            Rekorların, unvanın ve paylaştığın hayaletler bu adla anılacak.
+            Sonradan değiştirebilirsin.
+          </p>
+
+          <div class="who__setup">
+            <span class="who__art who__art--big"><canvas id="idArt" width="112" height="112" aria-hidden="true"></canvas></span>
+            <label class="field">
+              <span class="field__label" data-i18n="id.name">Adın</span>
+              <input class="field__input" id="idName" type="text" maxlength="14"
+                     data-i18n-ph="id.placeholder" placeholder="Buzkanat" autocomplete="off" spellcheck="false"
+                     enterkeyhint="done" aria-describedby="idHint" />
+              <small class="field__hint" id="idHint">2-14 karakter</small>
+            </label>
+          </div>
+
+          <div class="sheet__actions">
+            <button class="btn btn--primary" id="idSave" type="button" data-i18n="id.start">Başla</button>
+          </div>
+
+          <p class="sheet__hint sheet__hint--fine">
+            <span data-i18n-html="id.fine">Bu ad <strong>yalnızca bu cihazda</strong> saklanır. Sunucu yok, hesap yok.
+            Bir hayalet kodu paylaşmadıkça hiçbir yere gitmez.</span>
+            <button class="linkish" id="idLegal" type="button" data-i18n="id.legal">Yasal metinler</button>
+          </p>
+        </div>
+      </section>
+
+      <!-- Profile -->
+      <section class="screen screen--profile" data-name="profile" hidden>
+        <header class="screen__head">
+          <button class="btn btn--ghost btn--back" data-back><span data-i18n="nav.back">← Geri</span></button>
+          <h2 class="screen__title" data-i18n="prof.title">Kimlik</h2>
+        </header>
+
+        <div class="profile">
+          <div class="profile__card">
+            <span class="who__art who__art--big"><canvas id="profArt" width="112" height="112" aria-hidden="true"></canvas></span>
+            <div class="profile__who">
+              <strong class="profile__name" id="profName">·</strong>
+              <span class="profile__title" id="profTitle">·</span>
+              <code class="profile__id" id="profId">·</code>
+            </div>
+          </div>
+
+          <p class="profile__next" id="profNext"></p>
+
+          <dl class="results results--wide">
+            <div><dt data-i18n="stat.levels">Bölüm</dt><dd id="profLevels">·</dd></div>
+            <div><dt data-i18n="stat.stars">Yıldız</dt><dd id="profStars">·</dd></div>
+            <div><dt data-i18n="stat.fish">Balık</dt><dd id="profFish">·</dd></div>
+            <div><dt data-i18n="stat.tries">Deneme</dt><dd id="profDeaths">·</dd></div>
+            <div><dt data-i18n="stat.penguin">Penguen</dt><dd id="profSkins">·</dd></div>
+            <div><dt data-i18n="stat.since">Başladığın gün</dt><dd id="profSince">·</dd></div>
+          </dl>
+
+          <label class="field">
+            <span class="field__label" data-i18n="prof.rename">Adını değiştir</span>
+            <input class="field__input" id="profNameInput" type="text" maxlength="14"
+                   autocomplete="off" spellcheck="false" enterkeyhint="done" />
+            <small class="field__hint" id="profHint">2-14 karakter</small>
+          </label>
+          <div class="sheet__actions">
+            <button class="btn btn--primary" id="profSave" type="button" data-i18n="prof.save">Kaydet</button>
+          </div>
+
+          <p class="profile__note">
+            <span data-i18n="prof.note">Hepsi bu cihazda duruyor. Hesap yok, sunucu yok, takip yok.</span>
+            <button class="linkish" id="profLegal" type="button" data-i18n="prof.legal">Yasal metinler ve veri</button>
+          </p>
+        </div>
+      </section>
+
+      <!-- Legal -->
+      <section class="screen screen--legal" data-name="legal" hidden>
+        <header class="screen__head">
+          <button class="btn btn--ghost btn--back" data-back><span data-i18n="nav.back">← Geri</span></button>
+          <h2 class="screen__title" data-i18n="legal.title">Yasal</h2>
+        </header>
+
+        <div class="legal">
+          <p class="legal__lede" data-i18n-html="legal.lede">
+            Kısası: <strong>bu oyun senin hakkında hiçbir şey toplamıyor.</strong>
+            Sunucu yok, hesap yok, çerez yok, reklam yok, analitik yok.
+            Aşağıdakiler bunun uzun hâli.
+          </p>
+
+          <details class="legal__block" open>
+            <summary data-i18n="legal.privacy">Gizlilik: ne saklanıyor</summary>
+            <p data-i18n-html="legal.privacyP">Her şey tarayıcının <code>localStorage</code> alanında, tek bir kayıtta duruyor:</p>
+            <ul data-i18n-html="legal.privacyList">
+              <li>Adın, penguen kimliğin (<code>PNG-XXXXX</code>) ve başladığın tarih</li>
+              <li>Bölüm ilerlemen: yıldızlar, rekor süreler, deneme sayısı</li>
+              <li>Balığın, aldıkların, giydiğin penguen ve izi</li>
+              <li>Ayarların ve günün görevleri</li>
+              <li>Kendi koşularının hayalet kayıtları ve içe aktardığın rakip kodları</li>
+            </ul>
+            <p data-i18n="legal.privacyFoot">
+              Bunların hiçbiri cihazından çıkmıyor. Oyunun ağ üzerinden konuştuğu
+              tek bir adres yok. Kaynak koddan doğrulayabilirsin.
+            </p>
+          </details>
+
+          <details class="legal__block">
+            <summary data-i18n="legal.share">Paylaştığında ne gidiyor</summary>
+            <p data-i18n-html="legal.shareP">
+              Bir hayalet kodu paylaştığında kodun içinde <strong>adın, bölüm numarası,
+              süren ve koşunun sıkıştırılmış hareket kaydı</strong> bulunur. Bu kodu
+              nereye yapıştıracağına sen karar veriyorsun. Oyun kendiliğinden
+              hiçbir yere göndermiyor.
+            </p>
+          </details>
+
+          <details class="legal__block">
+            <summary data-i18n="legal.terms">Kullanım şartları</summary>
+            <p data-i18n="legal.termsP">
+              Oyun olduğu gibi sunuluyor. Kişisel ve ticari olmayan kullanım
+              serbest. Kaynak kodu değiştirip dağıtmak isteyen olursa depodaki
+              lisans dosyasına baksın. Oyunun kesintisiz ya da hatasız çalışacağı
+              taahhüt edilmiyor.
+            </p>
+          </details>
+
+          <details class="legal__block">
+            <summary data-i18n="legal.kids">Çocuklar</summary>
+            <p data-i18n="legal.kidsP">
+              Oyun her yaşa uygun: şiddet, sohbet, kullanıcı içeriği ve harcama
+              yok. Hiçbir kişisel veri toplanmadığı için ebeveyn onayı gerektiren
+              bir işleme de yok. Ad alanına gerçek isim yazmak zorunlu değil.
+              alan zaten bir tanesiyle dolu geliyor.
+            </p>
+          </details>
+
+          <details class="legal__block">
+            <summary data-i18n="legal.gdpr">KVKK / GDPR</summary>
+            <p data-i18n-html="legal.gdprP">
+              Verilerin bir "veri sorumlusuna" aktarılmadığı için oyun bu
+              mevzuatların tanımladığı anlamda bir işleme yapmıyor. Yine de
+              haklarının karşılığı burada bir tuş: <em>İlerlemeyi sıfırla</em>
+              kaydın tamamını siler ve geri alınamaz. Verini görmek istersen
+              tarayıcı geliştirici araçlarından <code>localStorage</code> içindeki
+              <code>pengu.save.v1</code> anahtarına bakabilirsin.
+            </p>
+          </details>
+
+          <div class="legal__data">
+            <button class="btn" id="legalExport" type="button" data-i18n="legal.export">Kaydımı dosyaya aktar</button>
+            <button class="btn btn--danger" id="legalWipe" type="button" data-i18n="legal.wipe">Her şeyi sil</button>
+          </div>
+          <p class="legal__foot" data-i18n-html="legal.foot">
+            Tam metinler ve kaynak kod: <code>docs/GIZLILIK.md</code>,
+            <code>docs/KULLANIM-SARTLARI.md</code>
+          </p>
+        </div>
+      </section>
+
+      <!-- Pause -->
+      <section class="screen screen--sheet" data-name="pause" hidden>
+        <div class="sheet">
+          <h2 class="sheet__title" data-i18n="pause.title">Duraklatıldı</h2>
+          <p class="sheet__meta" id="pauseMeta"></p>
+          <div class="sheet__actions">
+            <button class="btn btn--primary" id="resumeBtn" data-i18n="pause.resume">Devam et</button>
+            <button class="btn" id="retryBtn" data-i18n="pause.retry">Baştan başla</button>
+            <button class="btn btn--ghost" id="menuBtn" data-i18n="pause.menu">Ana menü</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Level complete -->
+      <section class="screen screen--sheet" data-name="complete" hidden>
+        <!--
+          Three columns, because on a phone held sideways there are three
+          hundred and ninety pixels of height and this card wants seven
+          hundred: the payout, the doubling offer and "Sıradaki bölüm" all sat
+          below the fold. Sideways the three stand side by side; everywhere
+          else they stack and the card looks exactly as it always did.
+        -->
+        <div class="sheet sheet--win">
+          <div class="win__half">
+            <p class="sheet__kicker" id="winKicker">Bölüm tamam</p>
+            <h2 class="sheet__title" id="winTitle">İlk Adımlar</h2>
+
+            <div class="stars" id="winStars" role="img" data-i18n-aria="stat.stars" aria-label="Yıldızlar">
+              <span class="star" data-i="0"></span>
+              <span class="star" data-i="1"></span>
+              <span class="star" data-i="2"></span>
+            </div>
+
+            <dl class="results">
+              <div><dt data-i18n="stat.time">Süre</dt><dd id="winTime">·</dd></div>
+              <div><dt data-i18n="stat.fish">Balık</dt><dd id="winFish">·</dd></div>
+              <div><dt data-i18n="stat.tries">Deneme</dt><dd id="winDeaths">·</dd></div>
+              <div><dt data-i18n="stat.best">Rekor</dt><dd id="winBest">·</dd></div>
+            </dl>
+          </div>
+
+          <div class="win__half">
+            <div class="payout" id="winPayout"></div>
+          </div>
+
+          <div class="win__half">
+            <div class="rewards" id="winRewards" hidden></div>
+
+            <div class="share" id="winShare" hidden>
+              <p class="share__rank" id="winRank"></p>
+              <label class="share__name" id="shareName" hidden>
+                <span class="field__label" data-i18n="id.name">Adın</span>
+                <input class="field__input" id="shareNameInput" type="text" maxlength="14"
+                       data-i18n-ph="win.you" placeholder="Sen" autocomplete="off" spellcheck="false" />
+              </label>
+              <button class="btn btn--share" id="shareBtn" type="button">
+                <span data-i18n="win.share">Kodunu paylaş</span>
+                <small class="btn__sub" data-i18n="win.shareSub">arkadaşın hayaletinle yarışsın</small>
+              </button>
+            </div>
+
+            <p class="sheet__hint" id="winHint"></p>
+
+            <div class="sheet__actions">
+              <button class="btn btn--primary" id="nextBtn" data-i18n="win.next">Sıradaki bölüm</button>
+              <button class="btn" id="againBtn" data-i18n="win.again">Tekrar oyna</button>
+              <button class="btn btn--ghost" id="winMenuBtn" data-i18n="pause.menu">Ana menü</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Collection -->
+      <section class="screen screen--skins" data-name="skins" hidden>
+        <header class="screen__head">
+          <button class="btn btn--ghost btn--back" data-back><span data-i18n="nav.back">← Geri</span></button>
+          <h2 class="screen__title" data-i18n="nav.skins">Koleksiyon</h2>
+          <span class="screen__meta" id="skinsMeta"></span>
+        </header>
+        <div class="tabs" id="skinTabs" role="tablist">
+          <button class="tab is-on" type="button" data-tab="skins" role="tab" data-i18n="skins.tabSkins">Penguenler</button>
+          <button class="tab" type="button" data-tab="trails" role="tab" data-i18n="skins.tabTrails">İzler</button>
+        </div>
+        <div class="skins" id="skinGrid"></div>
+        <p class="screen__foot" data-i18n="skins.foot">
+          Penguenlerin çoğu satın alınmaz, kazanılır. Seçtiğin penguen ve iz bölümde
+          gerçekten üstünde durur: yirmi penguen ve on iz, iki yüz kombinasyon demek.
+        </p>
+      </section>
+
+      <!-- Leaderboard -->
+      <section class="screen screen--board" data-name="board" hidden>
+        <header class="screen__head">
+          <button class="btn btn--ghost btn--back" data-back><span data-i18n="nav.back">← Geri</span></button>
+          <h2 class="screen__title" data-i18n="nav.board">Sıralama</h2>
+          <span class="screen__meta" id="boardMeta"></span>
+        </header>
+
+        <div class="boardtop">
+          <!--
+            One place to set a name.
+
+            This used to be a second name field, with the profile screen as a
+            third: three inputs writing the same value, so whichever you
+            edited last won and none of them said so. The board shows who you
+            are and sends you to the one screen that changes it.
+          -->
+          <div class="field field--name">
+            <span class="field__label" data-i18n="board.name">Sıralamadaki adın</span>
+            <div class="boardwho">
+              <strong class="boardwho__name" id="boardWho">·</strong>
+              <button class="linkish" id="boardRename" type="button" data-i18n="board.rename">Değiştir</button>
+            </div>
+          </div>
+          <div class="field field--code">
+            <span class="field__label" data-i18n="board.code">Rakip kodu</span>
+            <div class="field__row">
+              <input class="field__input" id="boardCode" type="text" placeholder="PG1.3.1842…"
+                     autocomplete="off" spellcheck="false" autocapitalize="off" />
+              <button class="btn btn--primary" id="boardAdd" type="button" data-i18n="board.add">Ekle</button>
+            </div>
+          </div>
+        </div>
+
+        <p class="board__msg" id="boardMsg" hidden role="status"></p>
+
+        <div class="board" id="boardList"></div>
+
+        <p class="screen__foot" data-i18n="board.foot">
+          Süreler bu cihazda saklanır. Kodunu gönder, gelen kodu ekle.
+          Sıralamanın birincisi bölümde hayalet olarak yanında koşar.
+        </p>
+      </section>
+
+      <!-- Assist offer -->
+      <section class="screen screen--sheet" data-name="assist" hidden>
+        <div class="sheet">
+          <p class="sheet__kicker" data-i18n="assist.kicker">Zorlanıyor musun?</p>
+          <h2 class="sheet__title" data-i18n="assist.title">Kolay moda geçelim mi?</h2>
+          <p class="sheet__meta" data-i18n="assist.meta">Buzlar daha geç kırılır, tuzaklar yavaşlar. İstediğin an ayarlardan kapatabilirsin.</p>
+          <div class="sheet__actions">
+            <button class="btn btn--primary" id="assistYes" data-i18n="assist.yes">Evet, kolaylaştır</button>
+            <button class="btn btn--ghost" id="assistNo" data-i18n="assist.no">Hayır, devam</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Level intro card -->
+      <section class="screen screen--intro" data-name="intro" hidden>
+        <div class="intro" id="introCard">
+          <p class="intro__kicker" id="introKicker">Bölüm 1</p>
+          <h2 class="intro__title" id="introTitle">İlk Adımlar</h2>
+          <p class="intro__text" id="introText"></p>
+        </div>
+      </section>
+
+    </div>
+
+    <div class="rotate-hint" id="rotateHint" hidden>
+      <p data-i18n="rotate">Telefonu yan çevirirsen oyun alanı büyür 🐧</p>
+    </div>
+  </div>
+</div>
+
+<noscript>
+  <div class="noscript">Bu oyunu oynamak için JavaScript'i açman gerekiyor. · You need to enable JavaScript to play this game.</div>
+</noscript>
+
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
