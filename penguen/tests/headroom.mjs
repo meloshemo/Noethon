@@ -80,6 +80,7 @@ function swingTo(solids, t) {
 }
 
 console.log('Sıçrayışların üstünde tavan var mı?\n');
+console.log('1) Yükselen her sıçrayışın üstünde yer var');
 
 let scanned = 0;
 let worst = null;
@@ -155,9 +156,100 @@ if (worst) {
   ok(`en dar: L${worst.id} ${worst.name} ${worst.i}. adım — %${(worst.rate * 100).toFixed(1)}`);
 }
 
+/*
+ * And the same question again in the real World, on the shape that was
+ * reported: the step off a column head.
+ *
+ * The sweep above drives the `Player` against static level data, which is the
+ * right rig for asking about geometry. This one runs the actual `World` — the
+ * bird, the weather, the wet ice, the hazards, all of it — because the report
+ * was about playing the game, not about a diagram. What it asks is not just
+ * "can it be done" but "does the *natural* input do it": a player holding the
+ * jump button expects to go up, and if only a clipped tap works then the level
+ * is a guessing game however passable it measures.
+ */
+console.log('\n2) Sütun başından kalkan sıçrayışlar, gerçek dünyada');
+{
+  const { World } = await import('../src/game/world.js');
+  const noop = () => {};
+  const deps = () => ({
+    particles: { puff: noop, splash: noop, sparkle: noop, burstIce: noop },
+    audio: new Proxy({}, { get: () => noop }),
+    assist: false,
+    upgrades: {},
+    skin: 'normal',
+  });
+  let heads = 0;
+  let tightest = null;
+  for (const def of CLIMB_LEVELS) {
+    for (let i = 1; i < def.route.length; i++) {
+      const a = def.route[i - 1];
+      const b = def.route[i];
+      if (!a.head || b.via !== 'jump') continue;
+      heads++;
+      let hit = 0;
+      let tried = 0;
+      const holds = new Set();
+      for (const from of [0.15, 0.35, 0.5, 0.65, 0.85]) {
+        for (const delay of [0, 0.08, 0.16, 0.28, 0.4]) {
+          for (const hold of [1.1, 0.6, 0.45, 0.34, 0.26, 0.2, 0.15]) {
+            tried++;
+            const w = new World(def, deps());
+            const p = w.player;
+            p.x = a.x + a.w * from - p.w / 2;
+            p.y = a.y - p.h;
+            p.vx = 0;
+            p.vy = 0;
+            let t = 0;
+            let jumped = false;
+            for (let k = 0; k < 600; k++) {
+              const press = !jumped && t >= delay;
+              if (press) jumped = true;
+              const dir = Math.sign(b.x + b.w / 2 - p.centerX) || 1;
+              w.update(STEP, { axis: dir, jumpHeld: jumped && t - delay < hold, jumpPressed: press });
+              t += STEP;
+              if (jumped && p.onGround && Math.abs(p.y + p.h - b.y) < 5) {
+                const over = Math.min(p.x + p.w, b.x + b.w) - Math.max(p.x, b.x);
+                if (over > 2) {
+                  hit++;
+                  holds.add(hold);
+                  break;
+                }
+              }
+              if (w.status !== 'playing') break;
+              if (p.y > a.y + 400) break;
+            }
+          }
+        }
+      }
+      const rate = hit / tried;
+      if (!tightest || rate < tightest.rate) tightest = { id: def.id, name: def.name, i, rate };
+      if (rate < 0.15) {
+        bad(
+          `L${def.id} ${def.name}: ${i}. adım sütun başından yalnızca ` +
+            `%${(rate * 100).toFixed(1)} girdiyle iniyor`,
+        );
+      }
+      if (holds.size < 5) {
+        bad(
+          `L${def.id} ${def.name}: ${i}. adım yalnızca ${holds.size}/7 basılı tutma ` +
+            `süresiyle iniyor — düğmeyi basılı tutmak çalışmıyor`,
+        );
+      }
+    }
+  }
+  ok(`${heads} sütun başı sıçrayışı gerçek dünyada denendi`);
+  if (tightest) {
+    ok(
+      `en dar: L${tightest.id} ${tightest.name} ${tightest.i}. adım — ` +
+        `%${(tightest.rate * 100).toFixed(1)}`,
+    );
+  }
+}
+
 console.log('');
 if (fails) {
   console.log(`✗ ${fails} kontrol düştü.`);
   process.exit(1);
 }
-console.log('✓ Hiçbir yükselen sıçrayış tavana çarpmıyor.');
+console.log('✓ Hiçbir yükselen sıçrayış tavana çarpmıyor — ve düğmeyi basılı tutmak her sütun başında çalışıyor.');
