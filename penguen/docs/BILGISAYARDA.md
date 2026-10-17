@@ -1,8 +1,12 @@
 # Bilgisayarda yapılacaklar
 
-Bu dosya, **uzaktaki oturumun yapamadığı** işlerin listesi. Her biri için ne
-yapıldı, sana ne kaldı ve nasıl yapılacağı yazıyor. Sıra önemli: 1 ve 2 on
-dakika sürüyor ve gerisinin çoğunu açıyor.
+Bu dosya, **uzaktaki oturumun yapamadığı** işlerin **nasıl** yapılacağını
+anlatıyor: her iş için ne yapıldı, sana ne kaldı, hangi düğmeye basılacak.
+
+Hangisinin bittiğini buradan değil, [YAPILACAKLAR.md](YAPILACAKLAR.md)
+dosyasından takip et. Orada **durum** var, burada **adım**. Bir iş bittiğinde
+işareti orada değişir; buradaki tarif durur, çünkü bir gün yeniden gerekebilir
+(yeni bir depo, yeni bir alan adı, yeni bir cihaz).
 
 Kod tarafında hazırlanabilecek her şey hazırlandı: komutlar, CI dosyaları,
 servis çalışanı, test koşucusu. Aşağıdakiler yalnızca **senin hesabında,
@@ -17,7 +21,7 @@ git clone https://github.com/meloshemo/Noethon.git
 cd Noethon/penguen
 git checkout claude/penguen-game-dev-6ym6pg
 
-node tools/test.mjs --no-browser     # hiçbir kurulum gerektirmez, ~7 sn
+node tools/test.mjs --no-browser     # hiçbir kurulum gerektirmez, ~2 dk
 npm start                            # http://localhost:8123
 ```
 
@@ -34,9 +38,10 @@ npm test                             # her şey: lint + node + paket + tarayıc�
 
 ---
 
-## 1. GitHub Pages'i aç: `meloshemo/cld` (2 dk)
+## 1. GitHub Pages'i aç: `meloshemo/cld` — **bitti**
 
-**Neden bu sende kaldı:** repo ayarlarını API'den değil, ancak sen açabilirsin.
+Açıldı, yayında: <https://meloshemo.github.io/cld/>. Aşağıdaki adımlar bir
+kere yapıldı; yeni bir depoda yayına almak istersen tarif duruyor.
 
 1. https://github.com/meloshemo/cld/settings/pages
 2. **Source** → `GitHub Actions` seç. (Deploy from a branch **değil**.)
@@ -51,19 +56,19 @@ Actions sekmesindeki son çalışmanın kırmızı adımına bak.
 
 ---
 
-## 2. CI'yı gör (1 dk)
+## 2. CI'yı gör — **bitti**
 
-Her `git push`'ta iki iş çalışıyor:
+Koşuyor. Her `git push`'ta iki iş çalışıyor:
 
 | İş | Ne yapıyor | Süre |
 |---|---|---|
-| **Bölümler ve kurallar** | lint + 10 node testi + paketleme | ~15 sn |
-| **Mekanikler** | Chromium indirip 3 tarayıcı testi | ~2 dk |
+| **Bölümler ve kurallar** | lint + 42 node paketi + paketleme | ~2 dk |
+| **Mekanikler** | Chromium indirip 10 tarayıcı paketi | ~3 dk |
 
 - Noethon deposunda: `.github/workflows/pengu-ci.yml`
 - cld deposunda: `.github/workflows/ci.yml`
 
-**Sende kalan (isteğe bağlı, 1 dk):** `main` dalını koru.
+**Sende kalan (isteğe bağlı, 1 dk):** `main` dalını koru — bu hâlâ açık.
 Settings → Branches → Add rule → `main` → *Require status checks to pass* →
 `Bölümler ve kurallar` seç. Böylece testi düşüren bir değişiklik main'e
 giremiyor.
@@ -231,7 +236,7 @@ asenkron bir "başkasına karşı oynama" veriyor, çoğu oyuncu için farkı bu
 ```bash
 npm start              # sunucu → http://localhost:8123
 npm test               # hepsi (tarayıcı dahil)
-npm run test:node      # kurulumsuz, ~7 sn
+npm run test:node      # kurulumsuz, ~2 dk
 npm run test:browser   # sadece tarayıcı testleri
 npm run lint           # proje kuralları
 npm run build          # dist/pengu.html

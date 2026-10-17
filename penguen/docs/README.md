@@ -6,7 +6,8 @@
 | [KULLANIM-SARTLARI.md](KULLANIM-SARTLARI.md) | Ücret, hesap, garanti, uygun kullanım | Oyunculara |
 | [PRIVACY.md](PRIVACY.md) | Gizlilik metninin İngilizcesi | English-speaking players |
 | [TERMS.md](TERMS.md) | Kullanım şartlarının İngilizcesi | English-speaking players |
-| [BILGISAYARDA.md](BILGISAYARDA.md) | Uzaktan yapılamayan işler ve nasıl yapılacakları | Sana |
+| [YAPILACAKLAR.md](YAPILACAKLAR.md) | Projenin tek iş listesi: ne bitti, ne açık, ne bilerek yapılmadı | Sana |
+| [BILGISAYARDA.md](BILGISAYARDA.md) | O işlerin nasıl yapılacağı, adım adım | Sana |
 | [../README.md](../README.md) | Oyunun kendisi: tasarım, mimari, testler | Koda bakacaklara |
 | [../CHANGELOG.md](../CHANGELOG.md) | Ne zaman ne değişti | Herkese |
 
