@@ -80,6 +80,29 @@ planda yama iki yüzde bin sağa kaydı — çünkü besteci reddedince onu
 *küçültüyor* (230px → 184px), ve istendiğinden küçük teslim edilen bir parça
 bölümü tarif etmeyi bırakmış bir plandır.
 
+### Ve çizimi, ekran görüntüsü alınana kadar yanlıştı
+
+Kaygan buzun tek işareti üç tane sabit beyaz çizgiydi, ve bu yalnızca kaygan
+buz *bütün bir floe* olduğu sürece yetiyordu: floe'nun kendisi yama, yani
+oyuncu **şekli** okuyor ve çizgiler sadece hangi şekil olduğunu söylüyor.
+Arenada ise bölüm boyu uzanan bir zeminin üstüne serilmiş bir bant, ve orada
+şekil hiçbir şey söylemiyor — karanlık bir zeminde üç çizgi süs gibi okunuyor,
+ve cevabın üstünden kayan oyuncunun bunu neyin yaptığını anlamasının yolu yok.
+
+Yüzey artık boyanıyor (uzaktan görülebilen kısım bu), çizgiler sayıyla değil
+**genişliğe göre** aralanıyor, ve iki ucuna birer dikme çiziliyor — çünkü
+aslında okunması gereken şey buzun nerede **başladığı** ve nerede **bittiği**:
+fren yapacak oyuncunun ihtiyacı kenar, orta değil. Oluğun iki ucundaki kesik
+çizgilerle aynı gerekçe.
+
+Düzeltme sahanlığı da düzeltti: 5. bölüm Cilalı Buz'da kaygan floe'lar artık
+sağlam olanlardan ilk bakışta ayrılıyor.
+
+Bu arada bir hata da ekran görüntüsünden çıktı: yeni çizim floe'nun yüksekliğini
+`h` diye okuyordu, ve o fonksiyona `h` hiç geçirilmiyor. 43 node paketinin
+hepsi yeşilken oyun tarayıcıda açılmıyordu. Hiçbir node testi tuvale bakmıyor;
+bakan tek şey gözdü.
+
 `tests/slick.mjs` altı şeyi kontrol ediyor: istenen arenalara ulaştı mı, kırılan
 değil kaygan bir zemin mi, her arenada sağlam buzda duracak bir yer kaldı mı,
 başlangıç temiz mi, her bayraktan bir gövde uzakta mı, hiçbir atış hattının

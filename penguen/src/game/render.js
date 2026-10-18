@@ -1539,11 +1539,44 @@ export class Renderer {
     }
 
     if (f.type === 'slip') {
+      /**
+       * A sheen over the whole patch, and then the streaks.
+       *
+       * Three fixed marks were enough while glare ice was only ever a whole
+       * floe: the floe is the patch, so the player reads the *shape* and the
+       * marks only say which shape it is. In the arena it is a band laid on a
+       * floor that runs the width of the level, and there the shape says
+       * nothing — three dashes on a dark floor read as decoration, and a
+       * player who slides past the answer has no way to know what did it.
+       *
+       * So the surface is tinted, which is the part that can be seen from
+       * across the arena, and the streaks are spaced by width rather than
+       * counted, so a wide band is as densely marked as a narrow one.
+       */
+      const band = Math.min(13, f.h ?? 20);
+      ctx.fillStyle = 'rgba(198,236,255,0.42)';
+      ctx.fillRect(x, y, w, band);
+      /*
+       * And a tick at each end, which is the part that actually has to be
+       * legible. Where glare ice *starts* and *stops* is the whole decision —
+       * a player braking for it needs the edge, not the middle — and on a
+       * floor that already runs the width of the level the middle is the only
+       * thing a tint can show. Same reasoning as the dashed ends on a flume.
+       */
+      ctx.strokeStyle = 'rgba(236,250,255,0.85)';
+      ctx.lineWidth = 2;
+      for (const ex of [x + 1, x + w - 1]) {
+        ctx.beginPath();
+        ctx.moveTo(ex, y);
+        ctx.lineTo(ex, y + band);
+        ctx.stroke();
+      }
       ctx.strokeStyle = 'rgba(255,255,255,0.9)';
       ctx.lineWidth = 2.5;
       ctx.lineCap = 'round';
-      for (let i = 0; i < 3; i++) {
-        const sx = x + w * (0.2 + i * 0.28);
+      const streaks = Math.max(3, Math.round(w / 64));
+      for (let i = 0; i < streaks; i++) {
+        const sx = x + 10 + ((w - 34) * i) / Math.max(1, streaks - 1);
         ctx.beginPath();
         ctx.moveTo(sx, y + 9);
         ctx.lineTo(sx + 22, y + 9);
