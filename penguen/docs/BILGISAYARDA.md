@@ -62,7 +62,7 @@ Koşuyor. Her `git push`'ta iki iş çalışıyor:
 
 | İş | Ne yapıyor | Süre |
 |---|---|---|
-| **Bölümler ve kurallar** | lint + 43 node paketi + paketleme | ~2 dk |
+| **Bölümler ve kurallar** | lint + 44 node paketi + paketleme | ~2 dk |
 | **Mekanikler** | Chromium indirip 10 tarayıcı paketi | ~3 dk |
 
 - Noethon deposunda: `.github/workflows/pengu-ci.yml`

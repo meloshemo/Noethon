@@ -343,7 +343,7 @@ geçmez, hata verip durur.
 
 ## Testler
 
-Tek komut, 53 paket (43 node + paketleme + 10 tarayıcı), kendi sunucusunu
+Tek komut, 54 paket (44 node + paketleme + 10 tarayıcı), kendi sunucusunu
 kurup kapatıyor ve portu doluysa bir yanına kayıyor:
 
 ```bash
@@ -2907,6 +2907,59 @@ esnemiyor, tasarlanan 16:9 hiç değişmiyor, çevirince ölçek sapması %15'in
 altında, geniş ekran en az %20 fazlasını görüyor, ve ölçülemeyen bir sahne
 görüntüyü bozmuyor.
 
+### Kamera: görüntüyü doğru boyda vermek yetmiyor, doğru yere de bakmalı
+
+Görüntünün *büyüklüğü* yukarıdaki iş. Nereye baktığı ayrı bir soru ve kimse
+sormuyordu.
+
+Üst şerit ve dokunmatik tuşlar tuvalin **üstüne** çiziliyor, yani görüntünün
+altı ve üstü oyuncunun değil. Kamera ise pengueni görüntünün tamamına göre
+çerçeveliyordu: tırmanışta "%64", yani kafasının üstünde %36 gökyüzü. Yan
+tutulan telefonda görüntü 658 birim, şerit 97 alıyor, tuşlar 172 — geriye
+gerçekten görünen **389** birim kalıyor. O bandın içinde penguen %83'e düşüyor
+ve ayağının altında **bir buçuk gövde** dünya kalıyor.
+
+Sayı 64 diyor, ekran 83 gösteriyor, ve projede bu farkı görebilen hiçbir ölçüm
+yok — çünkü hiçbir şey *çizildiği yer* ile *görülebildiği yer* arasındaki
+boşluğu ölçmüyordu.
+
+Üç değişiklik, üçü de `CAM` içinde tek yerde:
+
+**Oran banda göre.** Penguen artık görüntünün değil, arayüzün altında kalmayan
+şeridin %64'ünde. Masaüstünde bu on dokuz piksel oynatıyor ve kimse fark
+etmiyor; yan telefonda %83'ten %58'e çekiyor.
+
+**Ayağının altına bir taban.** Oran bir dilek, ayağının altındaki yer bir
+şart, ve şart kazanıyor: en az iki gövde. Bilerek, *geniş* ekranların zaten
+tutturduğu sayıya ayarlandı — böylece tek bir duruma dokunuyor (yan telefon,
+%64 → %58) ve masaüstü, tablet, dik telefon bir piksel bile kıpırdamıyor.
+
+**Düşerken aşağı bakmak.** Oyunda kör yapılan tek şey düşmekti. Çerçeve
+pengueni takip ettiği için dört yüz piksellik bir düşüşte ekran, dururkenki
+resmin aynısını gösteriyor ve ineceğin buz ekranın dışından geliyordu. Oysa bu
+oyunda her gidiş önden bakılıyor: koşu yana, tırmanış yukarıya. Düşmek de bir
+gidiş.
+
+Asimetrik, çünkü bilgi aşağıda: inerken kamera 230 piksele kadar peşinden
+eğiliyor, zıplarken yalnızca 70, çünkü bir zıplama kısa ve başladığı yerde
+biter. Tutunurken sıfır — duvardaki bir tırmanıcının dikey hızı saniyede
+birkaç kez yön değiştiriyor ve ona cevap veren bir kamera deniz tutuyor. Ve
+düşüş hızlandıkça takip de hızlanıyor, yoksa eğim çiziliyor ama hiç varılmıyor.
+
+Ölçüldüğünde: yan tutulan telefonda, saniyede 1163 piksel düşerken penguenin
+ayağının altında görünen dünya **−51 pikselden 156 piksele** çıkıyor. Eksi
+işareti yazım hatası değil — eski kamerayla hızlı düşen penguen tuşların
+arkasındaydı.
+
+`tests/camera.mjs` dört gerçek ekran şeklinde, yetmiş altı bölümün hepsinde:
+oran banda göre mi uygulanıyor, hiçbir bölüm pengueni arayüzün altında
+başlatıyor mu, altında iki gövde yer var mı (ya da dünyanın dibi zaten ekranda
+mı), düşerken kamera gerçekten aşağı bakıyor mu ve o bakışa yetişiyor mu,
+duran bir penguende iki kamera fonksiyonu aynı şeyi söylüyor mu.
+
+O son madde ayrı bir iş: kamerayı yerleştiren ve kamerayı takip ettiren kod
+aynı üç oranın iki ayrı kopyasıydı. Şimdi tek bir `_cameraTarget`.
+
 ### Bölüm sonu kartı hiçbir ekrana sığmıyormuş
 
 Bunu, yatay modu düzeltirken *ölçtüğüm için* buldum. Kart 950 piksel: başlık,
@@ -3302,7 +3355,7 @@ anlatmak değil, olan bir şeyi olduğundan iyi anlatmaktır.
 | Kayıt | Tek sürümlü JSON, ileri göç, dosyaya aktarma, tek tuşla silme |
 | Çevrimdışı | Servis çalışanı + tek dosya sürümü (679 KB) |
 | Girdi | Klavye, dokunmatik, gamepad |
-| Test | 43 node + paketleme + 10 tarayıcı paketi, hepsi tek komutta |
+| Test | 44 node + paketleme + 10 tarayıcı paketi, hepsi tek komutta |
 | Zorluk | Ölçülen eğri: `node tools/difficulty.mjs` |
 
 ### Yok, ve neden

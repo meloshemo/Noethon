@@ -11,7 +11,7 @@ import { Floe, Hazard, Fish, Checkpoint, Rival, Snowball } from './entities.js';
 import { Player } from './player.js';
 import { GhostRecorder, Ghost } from './ghost.js';
 import {
-  VIEW, VIEW_LIMITS, ASSIST, ICE, STORM, WIND, SWIM, BRAWL, BOOST, CHARGED, ROT, REWARDS, AMBUSH, COLLAPSE, HUSH,
+  VIEW, VIEW_LIMITS, CAM, ASSIST, ICE, STORM, WIND, SWIM, BRAWL, BOOST, CHARGED, ROT, REWARDS, AMBUSH, COLLAPSE, HUSH,
   hushAt, glazeAt, sapAt, flowAt, flumeAt, trenchDrainAt, scaleForLevel, upgradeEffect, hazardPhase, ventAt, VENT,
 } from './config.js';
 import { WATER_Y } from './levels.js';
@@ -438,12 +438,49 @@ export class World {
     return { min: 0, max: this.worldW - VIEW.w };
   }
 
-  _centerCamera() {
+  /**
+   * Where the penguin sits on the screen, in view units from the top.
+   *
+   * Measured inside the band the interface is *not* standing on, which is the
+   * whole point — see `CAM`. The floor keeps the arithmetic sane on a screen
+   * whose pads and strip would otherwise meet in the middle; it has never
+   * bound on a real device and exists so that a silly measurement produces a
+   * silly picture rather than a divide-by-nothing.
+   */
+  get _frameY() {
+    const frame = this.axis === 'up' ? CAM.frameUp : this.diving ? CAM.frameDive : CAM.frameAcross;
+    const band = Math.max(160, VIEW.h - VIEW.padTop - VIEW.padBottom);
+    // The fraction is a wish; the room under his feet is a requirement. On a
+    // screen with a band tall enough for both this changes nothing at all.
+    const room = this.player.h * (1 + CAM.below);
+    const most = Math.max(0.2, (band - room) / band);
+    return VIEW.padTop + band * Math.min(frame, most);
+  }
+
+  /**
+   * Where the camera wants to be, given how the penguin is moving.
+   *
+   * One function, used both when a level starts and on every frame after it,
+   * because the two used to be separate copies of the same three numbers and
+   * a copy is a disagreement waiting to happen.
+   */
+  _cameraTarget({ lead = 0, drop = 0 } = {}) {
     const up = this.axis === 'up';
     const x = this._camXRange;
     const y = this._camYRange;
-    this.camera.x = clamp(this.player.centerX - VIEW.w * (up ? 0.5 : 0.42), x.min, x.max);
-    this.camera.y = clamp(this.player.y - VIEW.h * (up ? 0.64 : this.diving ? 0.5 : 0.55), y.min, y.max);
+    return {
+      x: clamp(this.player.centerX + lead - VIEW.w * (up ? 0.5 : 0.42), x.min, x.max),
+      y: clamp(this.player.y + drop - this._frameY, y.min, y.max),
+    };
+  }
+
+  _centerCamera() {
+    // Still, by definition: a level starts with the penguin standing, and a
+    // camera that opened on a lead would slide into place in front of a player
+    // who has not pressed anything yet.
+    const at = this._cameraTarget();
+    this.camera.x = at.x;
+    this.camera.y = at.y;
   }
 
   /** Progress along the level, 0..1 — drives the HUD bar. */
@@ -1292,18 +1329,28 @@ export class World {
 
   _followCamera(dt) {
     // Look ahead in the direction of travel so fast runs still show the path.
-    // On a mountain the direction of travel is up, so the lead is vertical and
-    // the penguin sits low in the frame: what matters is the next hold, and the
-    // next hold is always above.
+    // On a mountain the direction of travel is up, so there is no sideways
+    // lead: the climb is narrower than the screen and a lead would only rock
+    // the picture from side to side while the penguin swaps hands.
     const up = this.axis === 'up';
-    const lead = up ? 0 : clamp(this.player.vx * 0.35, -110, 110);
-    const xr = this._camXRange;
-    const yr = this._camYRange;
-    const targetX = clamp(this.player.centerX + lead - VIEW.w * (up ? 0.5 : 0.42), xr.min, xr.max);
-    const frame = up ? 0.64 : this.diving ? 0.5 : 0.55;
-    const targetY = clamp(this.player.y - VIEW.h * frame, yr.min, yr.max);
-    this.camera.x = damp(this.camera.x, targetX, 7, dt);
-    this.camera.y = damp(this.camera.y, targetY, 5, dt);
+    const lead = up ? 0 : clamp(this.player.vx * CAM.lead, -CAM.leadMax, CAM.leadMax);
+    /*
+     * And the same, downwards.
+     *
+     * Clinging is excluded because a climber on a wall is not travelling: the
+     * vertical speed while hauling up a chimney swings either way several
+     * times a second, and a camera that answered it would be seasick. The lead
+     * is for a body that has been let go of.
+     */
+    const falling = this.player.clinging ? 0 : this.player.vy;
+    const drop = clamp(falling * CAM.drop, -CAM.riseMax, CAM.dropMax);
+    const at = this._cameraTarget({ lead, drop });
+    // Quicker vertically while the ground is coming up, or the lead is drawn
+    // and never arrived at.
+    const hurry = CAM.followY
+      + CAM.followFall * Math.min(1, Math.max(0, falling) / CAM.followFallAt);
+    this.camera.x = damp(this.camera.x, at.x, CAM.followX, dt);
+    this.camera.y = damp(this.camera.y, at.y, hurry, dt);
     this.camera.shake = damp(this.camera.shake, 0, 9, dt);
   }
 

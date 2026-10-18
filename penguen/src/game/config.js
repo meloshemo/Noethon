@@ -108,6 +108,102 @@ export function viewFor(cw, ch) {
 }
 
 /**
+ * The camera.
+ *
+ * Every number here used to be a literal inside `world.js`, written twice —
+ * once where the camera is placed at the start of a level and once where it
+ * follows — which is two chances to disagree about the same thing.
+ *
+ * ### Why the frame is a fraction of the *band* and not of the view
+ *
+ * The heads-up strip and the touch pads are drawn **over** the canvas, so the
+ * top and the bottom of the view are not the player's to look at. Framing the
+ * penguin at 0.64 of the whole view therefore does not put him 64% of the way
+ * down what he can see — it puts him 64% down a picture whose bottom fifth is
+ * behind a thumb.
+ *
+ * Measured on a phone held sideways, which is how the game is most likely to
+ * be played: the view is 658 units tall, the strip takes 97 and the pads take
+ * 172, so the band that is genuinely visible is 389. The old rule framed the
+ * climbing penguin at 421 — eighty-three percent of the way down that band,
+ * with **one body height** of world under him. You climb looking at sky and
+ * fall into a surprise.
+ *
+ * Reading the fractions against the band instead puts him at 346, which is
+ * the 64% the number was always claiming, and more than doubles what is under
+ * him. On a desktop, where nothing covers the bottom, the same arithmetic
+ * moves him nineteen pixels and nobody notices — which is the point: the rule
+ * stops depending on what the interface happens to be doing.
+ */
+export const CAM = {
+  /**
+   * Where the penguin sits in the visible band, top to bottom.
+   *
+   * A climb puts him low because what matters next is above him. A dive
+   * centres him because the sea is a column and both directions are live. The
+   * shelf is just below centre: you run to the right, and what you need to see
+   * is a little ahead and a little down.
+   */
+  frameUp: 0.64,
+  frameDive: 0.5,
+  frameAcross: 0.55,
+  /**
+   * How much world must stay under the penguin's feet, in body heights.
+   *
+   * The fractions above are a wish; this is a requirement, and it wins.
+   *
+   * It is deliberately set to the number the *roomy* screens already manage,
+   * so that it binds on exactly one case and leaves everything else alone. A
+   * desktop band is 487 units and the climbing fraction leaves 115 under the
+   * penguin's feet — a shade over two bodies. A phone held sideways has a band
+   * of 389 and the same fraction leaves 85, a body and a half, which is not
+   * enough to see a ledge coming. At two the phone is pulled from 64% to 58%
+   * and given its two bodies; the desktop, the tablet and the phone held
+   * upright do not move by a pixel.
+   *
+   * Raising it would be a different change — a decision about how the mountain
+   * is framed everywhere — and it should be argued for on its own rather than
+   * smuggled in as a floor.
+   */
+  below: 2,
+  /** How far ahead the camera looks in the direction of travel, sideways. */
+  lead: 0.35,
+  leadMax: 110,
+  /**
+   * And the same idea on the vertical, which the camera never had.
+   *
+   * Falling was the one thing in the game you did blind. The frame is fixed to
+   * the penguin, so a drop of four hundred pixels showed exactly the same
+   * picture on the way down as it did standing still, and the ice you were
+   * about to land on arrived from off-screen. Every other kind of travel in
+   * this game is led: a run is led sideways, a climb is framed for the hold
+   * above. A fall is travel too.
+   *
+   * Asymmetric on purpose. Going down is where the information is — the next
+   * floe, the sea, the thing that was underneath you — so the camera leans a
+   * long way after it. Going up it leans barely at all, because a jump is
+   * short, it ends where it started, and a camera that chases every hop is a
+   * camera nobody can read.
+   */
+  drop: 0.17,
+  dropMax: 230,
+  riseMax: 70,
+  /** How fast the camera closes on its target, per axis. */
+  followX: 7,
+  followY: 5,
+  /**
+   * And a little faster while the ground is coming up at you.
+   *
+   * At terminal velocity the soft follow is a quarter of a second behind,
+   * which is most of the way through a long drop — the lead above would be
+   * drawn and then never caught up with. This is what lets the lead actually
+   * arrive.
+   */
+  followFall: 4,
+  followFallAt: 420,
+};
+
+/**
  * Physics.
  *
  * Tuned for a *snappy* game: high speed, hard gravity, short airtime. The

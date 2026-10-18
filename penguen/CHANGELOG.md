@@ -5,6 +5,60 @@ değiştiği yeterli. En yeni en üstte.
 
 ---
 
+## Kamera: doğru boyda bakıyordu, yanlış yere
+
+Şikâyet şuydu: pengu yukarıdayken aşağısı ekranda tam gözükmüyor. Ölçüldü ve
+tek bir satırdan çıkıyordu.
+
+Üst şerit ve dokunmatik tuşlar tuvalin **üstüne** çiziliyor, yani görüntünün
+altı ve üstü oyuncunun değil. Kamera ise pengueni görüntünün tamamına göre
+çerçeveliyordu. Yan tutulan bir telefonda görüntü 658 birim; şerit 97, tuşlar
+172 alıyor, gerçekten görünen bant **389**. Tırmanışın "%64"ü o bandın
+**%83'üne** denk geliyor ve ayağının altında bir buçuk gövde dünya kalıyor.
+Sayı 64 diyor, ekran 83 gösteriyor, ve projede bu farkı görebilen hiçbir ölçüm
+yoktu.
+
+Üç değişiklik:
+
+**Oran banda göre.** Masaüstünde on dokuz piksel oynuyor, yan telefonda %83 →
+%58.
+
+**Ayağının altına bir taban: en az iki gövde.** Bilerek geniş ekranların zaten
+tutturduğu sayıya ayarlandı, böylece tek bir duruma dokunuyor ve masaüstü,
+tablet, dik telefon bir piksel kıpırdamıyor. Yükseltmek ayrı bir karar ve
+kendi başına savunulmalı; bir taban olarak kaçak geçirilmemeli.
+
+**Düşerken aşağı bakmak.** Oyunda kör yapılan tek şey düşmekti: çerçeve
+pengueni takip ettiği için dört yüz piksellik bir düşüşte ekran dururkenki
+resmin aynısını gösteriyor, ineceğin buz ekranın dışından geliyordu. Oysa bu
+oyunda her gidiş önden bakılıyor — koşu yana, tırmanış yukarı. Düşmek de bir
+gidiş. İnerken 230 piksele kadar, zıplarken yalnızca 70 (bir zıplama kısadır
+ve başladığı yerde biter), duvara tutunurken sıfır (duvardaki bir tırmanıcının
+dikey hızı saniyede birkaç kez yön değiştirir ve ona cevap veren kamera deniz
+tutar). Düşüş hızlandıkça takip de hızlanıyor, yoksa eğim çizilir ve hiç
+varılmaz.
+
+Ölçüm, yan tutulan telefonda saniyede 1163 piksel düşerken, penguenin ayağının
+altında görünen dünya:
+
+| | Önce | Sonra |
+|---|---|---|
+| Düşerken görünen zemin | **−51px** | **156px** |
+
+Eksi işareti yazım hatası değil: eski kamerayla hızlı düşen penguen tuşların
+arkasındaydı.
+
+Ve bir de şu çıktı: kamerayı yerleştiren kod ile takip ettiren kod aynı üç
+oranın iki ayrı kopyasıydı. Hiç anlaşmazlığa düşmemelerinin tek sebebi
+kimsenin birini değiştirmemiş olması. Tek bir `_cameraTarget` oldu, ve
+`tests/camera.mjs` ikisinin duran bir penguende aynı şeyi söylediğini de
+kontrol ediyor.
+
+Yeni paket dört gerçek ekran şeklinde, yetmiş altı bölümün hepsinde koşuyor.
+54 paket (44 node + paketleme + 10 tarayıcı).
+
+---
+
 ## Denizin bütçe modeli: denendi, ölçüldü, geri alındı
 
 Dalış bölümünün altı seviyesi hedef bandının üstünde kolay duruyor ve şüphe

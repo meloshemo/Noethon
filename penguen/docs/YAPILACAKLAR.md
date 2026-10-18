@@ -9,7 +9,7 @@ orada **adımlar** var, burada **durum** var. Bir iş bittiğinde işareti burad
 değişir.
 
 Son güncelleme: 2026-10-18 · dal `claude/penguen-game-dev-6ym6pg` · 76 bölüm ·
-53 test paketi (43 node + paketleme + 10 tarayıcı)
+54 test paketi (44 node + paketleme + 10 tarayıcı)
 
 ---
 
@@ -48,6 +48,7 @@ sonra listenin durumu:
 | 2.3 | Zirvenin kalan kol gücü | **tavan** — plan hakkında değil |
 | 2.4 | Arenanın dağarcığı / metriği | dağarcık **kapandı** (%5 → %1), metrik bir taban |
 | 2.5 | Küçük işler | biri sende (kullanıcı adı), biri tavan |
+| 2.6 | `skua.mjs` seyrek takılıyor | **açık** — elli koşuda bir, tekrarlanamadı |
 
 Oyunun en tekrarlı bölümü artık 47–61 (%4), ve o %4'ün tamamı 47'nin kendini
 öğreten alt kümesi.
@@ -167,6 +168,18 @@ rotayı değiştirmiyor, rotanın bedelini değiştiriyor. Arenayı zorlaştırm
 kapatmak demek — yani geometri — ve bu sayı yalnızca en güvenli rota
 kapandığında kıpırdar.
 
+### 2.6 `tests/skua.mjs` seyrek takılıyor
+
+Kamera turunda elli koşuda bir kere düştü ve bir daha tekrarlanamadı: arka
+arkaya elli koşuda sıfır hata, değişiklikten önceki kodda da sıfır. Kuşun
+kanat salınımı `Math.random()` ile başlıyor, yani paket gerçekten
+deterministik değil.
+
+Tahmin yürütüp tetiklenmesini göremediğim bir testi değiştirmek, hatayı
+düzeltmek değil gizlemek olur. Buraya yazılıyor ki bir dahaki sefere
+"bilinmeyen bir şey" değil, **bilinen bir şey** olsun: düşerse önce kuşun
+tohumuna bakılmalı.
+
 ### 2.5 Küçük işler
 
 - Sütun başları penguenden dar (44px baş, 49px gövde, 21 yerde). Durmak
@@ -194,7 +207,7 @@ tartışman gerekir.
 ## 4. Nasıl ölçülür
 
 ```bash
-node tools/test.mjs --no-browser   # 43 paket, ~2 dk, kurulumsuz
+node tools/test.mjs --no-browser   # 44 paket, ~2 dk, kurulumsuz
 node tools/lint.mjs                # proje kuralları
 node tools/variety.mjs --twins     # tekrar: hangi bölümler birbirine benziyor
 node tools/difficulty.mjs --chapter=2,3,4   # zorluk eğrisi (I kırk dakika sürer)

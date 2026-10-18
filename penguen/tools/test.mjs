@@ -53,6 +53,7 @@ const NODE_SUITES = [
   ['tests/flume.mjs', 'oluk'],
   ['tests/icefall.mjs', 'buz düşmesi'],
   ['tests/slick.mjs', 'buzlu zemin'],
+  ['tests/camera.mjs', 'kamera'],
   ['tests/gear-sea.mjs', 'denizin üç gücü'],
   ['tests/wardrobe.mjs', 'gardırop'],
   ['tests/eddy.mjs', 'girdap'],
