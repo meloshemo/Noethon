@@ -229,11 +229,37 @@ export function generateLevel(id, opts = {}) {
         });
         tunnels++;
         break;
+      /*
+       * The three pieces the floor could not reach.
+       *
+       * `floorGap` closes the easy end of the jump range as the run goes
+       * deeper, and it moved two of the four sampled deep levels and left the
+       * other two exactly where they were. The reason was not the dial: it was
+       * that a summit laid its steps at a flat 0.36 whatever it was handed,
+       * geysers took a `gap` the generator never passed, and bait stepped up
+       * at a hard-coded 0.26. Between them they turn up on about half of the
+       * deep courses, so half the courses had a piece in them that the floor
+       * simply did not apply to.
+       *
+       * The tops are below the ones the flat pieces use, because all three ask
+       * for a *rising* jump and a rise spends part of the same reach. The
+       * validator and `shelf-run` get the last word on every seed either way.
+       */
       case 'summit':
-        c.summit({ height: lerp(180, 260, d), steps: 3, w: lerp(200, 165, d) });
+        c.summit({
+          height: lerp(180, 260, d),
+          steps: 3,
+          w: lerp(200, 165, d),
+          gap: floorGap(0.36, 0.46),
+        });
         break;
       case 'geysers':
-        c.geysers({ n: 2 + Math.floor(rng() * 2), rise: rng() < 0.5 ? 0.34 : 0, timed: d > 0.5 });
+        c.geysers({
+          n: 2 + Math.floor(rng() * 2),
+          rise: rng() < 0.5 ? 0.34 : 0,
+          timed: d > 0.5,
+          gap: floorGap(0.36, 0.46),
+        });
         break;
       case 'orca':
         c.orcaGap({ gap: lerp(0.5, 0.58, d), period: 3.4 - d * 0.6 });
@@ -254,7 +280,7 @@ export function generateLevel(id, opts = {}) {
         lifts++;
         break;
       case 'bait':
-        c.bait();
+        c.bait({ gap: floorGap(0.26, 0.42) });
         baits++;
         break;
       default:

@@ -73,12 +73,30 @@ işe yarıyor: besteci bütçe dolduğu için reddediyor, oyuncu ise hâlâ yüz
 yirmi nefesle çıkıyor. Kapatmak isteyen önce o payı küçültmeli, bölümlere
 parça eklemeye çalışmamalı.
 
-### 2.2 Sonsuz modun iki bölümü sıkışmıyor
+### 2.2 Sonsuz modun iki bölümü sıkışmıyor — **kapandı**
 
-`floorGap` üretilmiş bölümlerin boşluk aralığını aşağıdan kapatıyor ve 302
-ile 305'i sıktı (0,55 → 0,44 ve 0,61 → 0,40). 296 ile 299 kımıldamadı: onların
-gevşekliği `summit`, `geysers` ve `bait` gibi **boşluk parametresi olmayan**
-parçalardan geliyor.
+`floorGap` üretilmiş bölümlerin boşluk aralığını aşağıdan kapatıyor ve 302 ile
+305'i sıktı; 296 ile 299 kımıldamıyordu. Neden dialin kendisi değildi: üç parça
+onu **göremiyordu**.
+
+- `summit` basamaklarını, planın ne dediğine bakmadan, düz 0,36'ya koyuyordu
+- `geysers` bir `gap` parametresi alıyordu ve üretici hiç geçirmiyordu
+- `bait` çıkış basamağını sabit 0,26'ya koyuyordu
+
+Üçü birlikte derin kursların yaklaşık yarısında çıkıyor, yani yarısında tabanın
+hiç uygulanmadığı bir parça vardı. Üçü de artık `gap` alıyor ve üretici
+geçiriyor; üstleri düz parçalardan dar, çünkü üçü de **yükselen** bir sıçrama
+istiyor ve yükseliş aynı erişimden harcıyor.
+
+| Bölüm | Önce | Sonra |
+|---|---|---|
+| 296 | 0,434 | **0,384** |
+| 299 | 0,515 | **0,448** |
+| 302 | 0,454 | 0,455 |
+| 305 | 0,428 | **0,353** |
+
+Taban hedefi 0,22; dördü de hâlâ gevşek tarafta, ama artık dördü de dialin
+ucunda. Kalanı 2.1b ile aynı cins bir iş.
 
 ### 2.3 Zirvenin kalan kol gücü hedefin üstünde — ve kaldırılamıyor
 

@@ -285,7 +285,7 @@ export class Course {
    * placed by a real margin. It is bait, which means it has to be *seen* and
    * chosen. Ice that vanishes out of sight is not a trap, it is a rumour.
    */
-  bait({ w = 92, dy = 54, at = 0.3, ledge = 150 } = {}) {
+  bait({ w = 92, dy = 54, at = 0.3, ledge = 150, gap = 0.26 } = {}) {
     /**
      * The line steps up, and the bait hangs in the gap below it.
      *
@@ -313,13 +313,19 @@ export class Course {
     // A ledge at the raised height, so the bait has a high neighbour on *both*
     // sides. Lifting only the far side left the first one still level with the
     // shelf behind it.
-    const step = this.put(this.gapOf(0.26), ledge, this.y, 'solid');
+    // The step up is the only jump this verb asks for, so it is the only thing
+    // a plan can make harder — `gap` exists for the endless generator, which
+    // needs to lift the easy end of its range and could not reach this one.
+    const step = this.put(this.gapOf(gap), ledge, this.y, 'solid');
 
-    const gap = this.gapOf(at);
-    const x = Math.round(this.x + gap);
+    // How far into the gap the bait hangs — named `into` rather than `gap`
+    // because the verb now takes a `gap` of its own, and the two are different
+    // things: one is a jump, the other a place inside it.
+    const into = this.gapOf(at);
+    const x = Math.round(this.x + into);
     const y = clampY(step.y + dy);
     const CLEAR = 26;
-    const width = Math.max(48, Math.min(w, this.gapOf(0.56) - gap - CLEAR));
+    const width = Math.max(48, Math.min(w, this.gapOf(0.56) - into - CLEAR));
     const floe = { x, y, w: Math.round(width), type: 'snap' };
     for (const other of this.floes) {
       if (other.x + other.w <= floe.x || other.x >= floe.x + floe.w) continue;
@@ -704,11 +710,22 @@ export class Course {
    * A summit: a hard climb onto a high plateau. Expensive in vertical space,
    * which is exactly why it feels like somewhere.
    */
-  summit({ height = 220, w = 240, steps = 3 } = {}) {
+  /**
+   * `gap` is a parameter and not a constant because of the endless run.
+   *
+   * The generator closes the *floor* of its jump range as the run goes deeper —
+   * the easiest jump on a course stops being easy, the hardest never moves —
+   * and two sampled levels refused to tighten at all. The reason was here: a
+   * summit laid every one of its steps at a flat 0.36 whatever the plan asked
+   * for, so a piece that turns up on a third of deep courses was permanently
+   * at the shallow end of the range. A dial the plans could not reach is a
+   * dial nobody can turn.
+   */
+  summit({ height = 220, w = 240, steps = 3, gap = 0.36 } = {}) {
     const per = height / steps;
     for (let i = 0; i < steps; i++) {
       const rise = Math.min(this.riseOf(0.62), per);
-      this.put(this.gapOf(0.36), i === steps - 1 ? w : 118, clampY(this.y - rise));
+      this.put(this.gapOf(gap), i === steps - 1 ? w : 118, clampY(this.y - rise));
     }
     const last = this.floes[this.floes.length - 1];
     this.rock(last.x + 4, last.y + 26, last.w - 8, WATER - last.y, 'cliff');

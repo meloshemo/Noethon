@@ -5,6 +5,38 @@ değiştiği yeterli. En yeni en üstte.
 
 ---
 
+## Sonsuz modun tabanı üç parçaya daha ulaştı
+
+`floorGap` derinleşen koşuda sıçrama aralığının **alt** ucunu kapatıyor: en
+kolay sıçrama kolay olmaktan çıkıyor, en zoru hiç kımıldamıyor. Ölçüldüğünde
+dört örnek bölümden ikisi kımıldamıştı, ikisi kımıldamamıştı — ve neden dialde
+değildi:
+
+- `summit` basamaklarını, kendisine ne verilirse verilsin, düz 0,36'ya koyuyordu
+- `geysers` zaten bir `gap` alıyordu, üretici hiç geçirmiyordu
+- `bait` çıkış basamağını sabit 0,26'ya koyuyordu
+
+Üçü birlikte derin kursların yarısında çıkıyor. Yani tabanın hiç uygulanmadığı
+bir parça, kursların yarısında vardı. Planların ulaşamadığı bir dial, kimsenin
+çeviremediği bir dialdir.
+
+| Bölüm | Önce | Sonra |
+|---|---|---|
+| 296 | 0,434 | **0,384** |
+| 299 | 0,515 | **0,448** |
+| 302 | 0,454 | 0,455 |
+| 305 | 0,428 | **0,353** |
+
+Üstleri düz parçaların kullandığından dar tutuldu (0,46 ve 0,42), çünkü üçü de
+**yükselen** bir sıçrama istiyor ve yükseliş aynı erişimden harcıyor. Her
+tohumda son sözü doğrulayıcı ile `shelf-run` veriyor; ikisi de yeşil.
+
+Yolda `bait` içinde bir isim çakışması çıktı: verbin kendi `gap`'i ile yemin
+boşluk içindeki yerini tutan yerel `gap` aynı addı. Yerel olan `into` oldu —
+biri bir sıçrama, öteki o sıçramanın içindeki bir yer.
+
+---
+
 ## Denizdeki iki ikiz kırıldı
 
 `tools/variety.mjs` aylardır aynı şeyi söylüyordu: oyunun en tekrarlı bölümü
