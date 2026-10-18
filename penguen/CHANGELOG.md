@@ -5,6 +5,52 @@ değiştiği yeterli. En yeni en üstte.
 
 ---
 
+## Denizin bütçe modeli: denendi, ölçüldü, geri alındı
+
+Dalış bölümünün altı seviyesi hedef bandının üstünde kolay duruyor ve şüphe
+tek bir yerdeydi: **rezerv**, yani bir bacağın sonunda nefes almak için
+saklanan pay. Tek bir çarpanla fiyatlanıyordu ve o çarpan sütunun **en kötü
+noktasından** okunuyordu — oysa yüzeye çıkan bacak akıntı bandını yalnızca
+kısmen geçiyor. Bacak, bandın tamamını bandın hızıyla ödüyordu, ve fark yirmi
+puana varıyordu.
+
+Dürüst model yazıldı: rezerv artık bacak bacak, her bacak gerçekten yüzüldüğü
+yerde, `swimCost` ile fiyatlanıyor — dünyanın okuduğu zone'ların aynısıyla,
+ikinci bir aritmetik kopyası olmadan. Yolda üç ayrı şey de çıktı ve üçü de
+gerçek hatalardı: uzunluğu verilmemiş bir bant nokta testine sıfır genişlik
+gösteriyor (büyütülmeden sorulunca rezerv durgun su okuyor), baca rezervi
+`run` üstündeki üç yüz piksellik tabanı kaçırıyordu, ve baca rezervi **mevcut**
+hattan okunuyordu — oysa baca *aşağıda*, yani pahalı hat buzun hemen
+altındaki.
+
+Sonra ölçüm konuştu:
+
+| | Önce | Düzeltilmiş model |
+|---|---|---|
+| 52 Akıntı | %45 | %42 |
+| 53 Testere Dişi | %36 | %33 |
+| 54 Buzul Karnı | %22 | %25 |
+| 56 Kara Su | %31 | %33 |
+| 59 Leopar ve Akıntı | %2 | **bitirilemedi** |
+
+**Pay hata değilmiş.** Çoğu, kusursuz bir hattın maliyeti ile *yüzülebilir* bir
+hattın maliyeti arasındaki fark — ve eski rezerv onu kazara karşılıyordu. Payı
+sıfırlayınca 59 yüz elli piksel uzadı ve çözücü, ki oyuncunun yüzdüğü gibi
+yüzüyor planın çizdiği gibi değil, çıkışa ulaşamadı.
+
+Paya bir isim verip ayarlamak da kurtarmadı: 1,12'de 57 bitirilemedi ve dört
+bölüm *kolaylaştı*; 1,04'te on beşi de geçiyor ama iki bölüm üç puan sıkışırken
+iki bölüm iki puan gevşiyor. Net sonuç sıfır, bedeli chapter'ın bütün bütçe
+modelini yeniden akıtmak. Bu dosyanın başka bir yerinde yazdığı kuralın
+aynısı: yerel olarak doğru ama her bölümü yeniden akıtan bir değişiklik
+iyileştirme değildir.
+
+Geri alındı. Kalan şey ölçüm: bu altı bölümün kolaylığı tek bir modelden
+gelmiyor, ve sıkıştırmak isteyen tek tek planlara bakmalı — 58 ile 59'da işe
+yarayan buydu.
+
+---
+
 ## Arenanın sekizinci fiili: buzlu zemin
 
 `tools/variety.mjs` ikizler turundan sonra en tekrarlı bölüm olarak **kar

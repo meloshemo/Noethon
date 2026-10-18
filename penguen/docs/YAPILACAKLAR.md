@@ -59,19 +59,40 @@ kendini öğretirken her bölümün bir şey eklemesi — kusur değil.
 
 Ayrıntısı ve ölçüm sırasında öğrenilen üç şey `CHANGELOG.md` içinde.
 
-### 2.1b Denizin altı bölümü hâlâ hedefinin üstünde kolay
+### 2.1b Denizin altı bölümü hedefinin üstünde kolay — **denendi, kapatıldı**
 
 `node tools/difficulty.mjs --chapter=3` altı bölüme "kolay" diyor: 47, 50, 52,
 53, 56, 60. İkizler turunda 58 (%29 → %15) ve 59 (%22 → %2) banda girdi ve
-toplam sapma 3,8 → 3,0'a indi, ama kalanlar durdu.
+toplam sapma 3,8 → 3,0'a indi; kalanlar durdu.
 
-Nedeni ölçüldü ve tek bir yerde: bestecinin bir bacak için tahmini ile o
-bacağın **gerçek** maliyeti arasında yirmi puana varan bir pay var, ve pay
-akıntı bandı olan bacaklarda en büyük (bir bant rezervi, sütunun geçilecek en
-kötü noktasından fiyatlanıyor). Bacağa parça eklemek bu yüzden bir yere kadar
-işe yarıyor: besteci bütçe dolduğu için reddediyor, oyuncu ise hâlâ yüzde
-yirmi nefesle çıkıyor. Kapatmak isteyen önce o payı küçültmeli, bölümlere
-parça eklemeye çalışmamalı.
+Şüphe şuradaydı: bestecinin bir bacak için tahmini ile o bacağın **gerçek**
+maliyeti arasında yirmi puana varan bir pay var. Rezerv — yani nefes almak için
+saklanan pay — tek bir çarpanla fiyatlanıyordu ve o çarpan **sütunun en kötü
+noktasından** okunuyordu, oysa yüzeye çıkan bacak bandı yalnızca kısmen
+geçiyor. Yani bacak, bandın tamamını bandın hızıyla ödüyordu.
+
+Yazıldı ve ölçüldü. Rezerv artık bacak bacak, her bacak gerçekten yüzüldüğü
+yerde, `swimCost` ile fiyatlanıyor — yani dünyanın okuduğu zone'ların aynısıyla.
+Sonuç:
+
+| | Önce | Düzeltilmiş model |
+|---|---|---|
+| 52 Akıntı | %45 | %42 |
+| 53 Testere Dişi | %36 | %33 |
+| 54 Buzul Karnı | %22 | %25 |
+| 56 Kara Su | %31 | %33 |
+| 59 Leopar ve Akıntı | %2 | **bitirilemedi** |
+
+**Pay hata değilmiş.** Çoğu, *kusursuz bir hattın* maliyeti ile *yüzülebilir*
+bir hattın maliyeti arasındaki fark. Payı sıfırlayınca 59 yüz elli piksel
+uzadı ve çözücü — ki oyuncunun yüzdüğü gibi yüzüyor, planın çizdiği gibi değil
+— çıkışa ulaşamadı. Paya bir isim verip (`SWIM_MARGIN`) ayarlamak da işe
+yaramadı: 1,12'de 57 bitirilemedi ve dört bölüm *kolaylaştı*; 1,04'te on beşi
+de geçiyor ama iki bölüm üç puan sıkışırken iki bölüm iki puan gevşiyor. Net
+sonuç sıfır, bedeli chapter'ın bütün bütçe modelini yeniden akıtmak.
+
+Değişiklik **geri alındı**. Bu bölümlerin kolaylığı tek bir modelden gelmiyor;
+sıkıştırmak isteyen tek tek planlara bakmalı — 58 ile 59'da işe yarayan buydu.
 
 ### 2.2 Sonsuz modun iki bölümü sıkışmıyor — **kapandı**
 
