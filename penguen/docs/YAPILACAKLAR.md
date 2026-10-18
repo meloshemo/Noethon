@@ -8,7 +8,7 @@ kararlar (bir daha tartışılmasın diye nedeniyle birlikte duruyorlar).
 orada **adımlar** var, burada **durum** var. Bir iş bittiğinde işareti burada
 değişir.
 
-Son güncelleme: 2026-10-17 · dal `claude/penguen-game-dev-6ym6pg` · 76 bölüm ·
+Son güncelleme: 2026-10-18 · dal `claude/penguen-game-dev-6ym6pg` · 76 bölüm ·
 52 test paketi (42 node + paketleme + 10 tarayıcı)
 
 ---
@@ -39,21 +39,39 @@ Otomatik bir testin göremediği tek şey bu. Kötü hissettiren her şeyin ayar
 
 Hepsi ölçülmüş; yanlarındaki sayı tahmin değil, aracın okuması.
 
-### 2.1 Denizde iki gerçek ikiz — `tools/variety.mjs`
+### 2.1 Denizde iki gerçek ikiz — **kapandı**
 
 ```
-47–61   12 fiil   6/105 çift %80+ aynı  (%6)   ← oyunun en tekrarlı chapter'ı
+47–61   12 fiil   4/105 çift %80+ aynı  (%4)   ← önce %6
 ```
 
-Altı çiftin dördü 47 ile 48–51 arasında, ve bu **kusur değil**: 47'nin
-dağarcığı diğerlerinin alt kümesi, yani chapter kendini öğretirken her bölüm
-bir şey ekliyor. Geriye iki gerçek ikiz kalıyor:
+54 Buzul Karnı ile 58 Kılçık ve 59 Leopar ve Akıntı ile 61 Açık Deniz birebir
+aynı dağarcığı kullanıyordu. Dördü de kendi notunun zaten iddia ettiği bir
+fiil aldı: 54'e bir oluk (adı "tavan alçalıyor"), 58'e sütunun üstünde bir
+akıntı bandı (sığ–derin ritminin iki ucu artık farklı şeye mal oluyor), 59'a
+bir girdap (gözüne ikinci leopar kondu), 61'e bir oluk — ekleme değil, son
+geçidin **takası**, çünkü o bölümde eklemeye yer yok. Zincirleme olarak 52
+Akıntı da 59'un alt kümesi hâline geldi ve iki yarısının arasına bir boğaz
+girdi.
 
-- **54 Buzul Karnı ~ 58 Kılçık** — altı fiil, birebir aynı
-- **59 Leopar ve Akıntı ~ 61 Açık Deniz** — yedi fiil, birebir aynı
+Kalan dört çiftin dördü de 47'nin 48–51'in alt kümesi olması, yani chapter
+kendini öğretirken her bölümün bir şey eklemesi — kusur değil.
 
-Bir çifti kırmak için **ikisine de ayrı birer fiil** gerekiyor: tek ekleme
-6/7 = 0,86 yapıyor ve eşik 0,80.
+Ayrıntısı ve ölçüm sırasında öğrenilen üç şey `CHANGELOG.md` içinde.
+
+### 2.1b Denizin altı bölümü hâlâ hedefinin üstünde kolay
+
+`node tools/difficulty.mjs --chapter=3` altı bölüme "kolay" diyor: 47, 50, 52,
+53, 56, 60. İkizler turunda 58 (%29 → %15) ve 59 (%22 → %2) banda girdi ve
+toplam sapma 3,8 → 3,0'a indi, ama kalanlar durdu.
+
+Nedeni ölçüldü ve tek bir yerde: bestecinin bir bacak için tahmini ile o
+bacağın **gerçek** maliyeti arasında yirmi puana varan bir pay var, ve pay
+akıntı bandı olan bacaklarda en büyük (bir bant rezervi, sütunun geçilecek en
+kötü noktasından fiyatlanıyor). Bacağa parça eklemek bu yüzden bir yere kadar
+işe yarıyor: besteci bütçe dolduğu için reddediyor, oyuncu ise hâlâ yüzde
+yirmi nefesle çıkıyor. Kapatmak isteyen önce o payı küçültmeli, bölümlere
+parça eklemeye çalışmamalı.
 
 ### 2.2 Sonsuz modun iki bölümü sıkışmıyor
 

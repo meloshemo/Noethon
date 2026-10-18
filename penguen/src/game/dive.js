@@ -177,6 +177,26 @@ const DIVE_PLANS = [
       d.current({ flow: 0.34, band: 0.36, at: 0.74, keep: true });
       d.gate({ at: 0.35, gap: 172 });
       d.hole();
+      /* The hinge between the two lessons, and the one place depth is not a
+         choice.
+         The first half of this level teaches that depth is worth paying for —
+         two straight rivers, one fighting and one helping, and the slots do
+         not care which you are in. The second half turns that over. In
+         between, for three hundred pixels, there is a tube: one bore, one
+         line, water running *up* the column instead of along it. There is no
+         depth to pick inside it, which is the only thing this level has never
+         said.
+         It sits here and not in the first half for a reason the composer
+         found. A band with no length runs from where it starts to the next
+         breath, and both opening bands do — so a channel cut in the first half
+         has a current band drawn straight across its walls. Nothing in the
+         game breaks, because the water above the bore is inside solid ice and
+         does nothing; but `tests/current.mjs` drops the real penguin into the
+         middle of the first band to prove the sea carries it, and the middle of
+         the band had become a wall. The lid over the air hole closes the bands.
+         On this side of it the tube is in still water, which is also where it
+         reads as a tube rather than as a hole in a river. */
+      d.flume({ rise: -0.62, len: 300, at: 0.5 });
       d.current({ flow: -0.26, band: 0.36, at: 0.26 });
       d.current({ flow: -0.44, band: 0.36, at: 0.76, keep: true });
       /* And then the two rivers meet.
@@ -253,6 +273,16 @@ const DIVE_PLANS = [
       d.mouth();
       d.gate({ at: 0.72, gap: 156 });
       d.gate({ at: 0.76, gap: 152 });
+      /* The title, made literal.
+         A slot is a low ceiling for one metre. A flume is a low ceiling for
+         three hundred, and the water in it is pushing up — toward the only
+         part of this level that was ever comfortable, in a level whose air is
+         in the floor. Everything else here asks the swimmer to stay down; the
+         tube is the first thing that *won't let* them, and the crack they are
+         heading for is directly underneath it. The ceiling comes down and then
+         it closes, which is what the name of the level has been promising
+         since it was written. */
+      d.flume({ rise: -0.72, len: 300, at: 0.74 });
       /* On a level where the ceiling never lifts, the air stops being up.
          Every slot here is already down in the expensive half of the water,
          so a hole in the ice was the one moment the level let you go back to
@@ -420,6 +450,28 @@ const DIVE_PLANS = [
          only way to take it is to stop moving in the one level built out of
          not stopping. */
       d.vent();
+      /* The rib that only touches one end of the bone.
+         This level alternates shallow, deep, shallow, deep — and until now the
+         two ends of that alternation differed only in where they were. The
+         band is a third of the column deep and it sits at the *top*, so from
+         here on the shallow half of the rhythm is threaded in moving water and
+         the deep half in still: the same beat, costing two different things,
+         which is what a fishbone is. It runs from the breath to the surface,
+         so the second half of the level is the first half with the sea
+         pushing.
+         It is deliberately not Kara Su's current. There a band and a slot
+         arrived together to teach that the two fight each other, and that
+         level ended by asking for a clock-breath *inside* the flow. Here the
+         flow starts where the clock-breath ends, and the question is not can
+         you hold one spot in moving water but can you keep a rhythm when
+         every other beat of it is being shoved.
+         It went in front of the vent first, over the four slots of the opening
+         run, and the composer refused it in pixels: 4100px of leg against a
+         3927px lung. Weakening it until it fitted left a current too soft to
+         notice. The second leg had the room, and it is also the leg the
+         difficulty tool said was loose — so the band went where both numbers
+         wanted it. */
+      d.current({ flow: -0.36, band: 0.34, at: 0.26 });
       d.gate({ at: 0.32, gap: 144 });
       // The level alternates shallow and deep, over and over, and until now
       // the two halves of that alternation cost the same. Putting the cold
@@ -448,7 +500,19 @@ const DIVE_PLANS = [
       d.seal({ span: 340, speed: 180 });
       d.gate({ at: 0.38, gap: 148 });
       d.hole();
-      d.current({ flow: -0.44, band: 0.55 });
+      /* The one still metre on a level about being moved — and it is a trap.
+         An eddy is the only piece in the sea whose answer is a *place*: the
+         eye in the middle, where the ring's two halves cancel and the water
+         lets go of you. Every other level that has one uses it as the rest it
+         looks like. This one puts the second leopard seal on the far rim, so
+         the eye stops being a rest and becomes a decision — the water will
+         hold you there for free, the air will not wait, and the thing between
+         you and the air is faster than you in a straight line.
+         Hence the ring, and not a third current band: the level's title is
+         already two currents and the drifting is already said. What it had
+         never said is that water can offer you something. */
+      d.eddy({ at: 0.5, r: 150, spin: 0.5 });
+      d.current({ flow: -0.44, band: 0.55, len: 420 });
       d.seal({ span: 360, speed: 185 });
       d.stretch({ gap: 150, from: 0.42 });
       d.surfaceOut();
@@ -507,7 +571,20 @@ const DIVE_PLANS = [
       d.seal({ span: 340, speed: 185 });
       d.gate({ at: 0.8, gap: 140 });
       d.hole();
-      d.gate({ at: 0.24, gap: 140 });
+      /* The slot at the top of the column, replaced by a throat.
+         A gate is a low ceiling for one metre: the swimmer lines it up and is
+         through before the water can argue. This is the same place in the
+         column asked for over three hundred, with the current running up the
+         tube — so the line has to be *held* rather than hit, in the leg that
+         is already the longest unbreathed swim in the game.
+         It is a swap and not an addition, and that is forced: both legs of
+         this level price out at the full budget, so the composer refuses
+         anything added anywhere. A finale with no room left in it can only be
+         changed by trading one piece for a harder one.
+         It is also the chapter's last word on its own title. Where the ice
+         ends it does not simply stop — it narrows to one channel, and the open
+         sea is on the far side of it. */
+      d.flume({ rise: -0.5, len: 260, at: 0.24 });
       d.current({ flow: -0.52, band: 0.62 });
       d.seal({ span: 360, speed: 195 });
       d.stretch({ gap: 136, len: 190, from: 0.24 });

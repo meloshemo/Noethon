@@ -5,6 +5,71 @@ değiştiği yeterli. En yeni en üstte.
 
 ---
 
+## Denizdeki iki ikiz kırıldı
+
+`tools/variety.mjs` aylardır aynı şeyi söylüyordu: oyunun en tekrarlı bölümü
+denizin altı, ve orada **birebir aynı** dağarcığa sahip iki çift var.
+
+- 54 Buzul Karnı ile 58 Kılçık — altı fiil, aynı altı fiil
+- 59 Leopar ve Akıntı ile 61 Açık Deniz — yedi fiil, aynı yedi fiil
+
+Bir çifti kırmak için ikisine de **ayrı birer** fiil gerekiyor: tek ekleme
+6/7 = 0,86 yapar ve eşik 0,80. Dördü de aldı, ve dördünde de eklenen şey
+bölümün kendi notunun zaten iddia ettiği şeydi:
+
+| Bölüm | Eklenen | Neden o |
+|---|---|---|
+| 54 Buzul Karnı | `flume` | Adı "tavan alçalıyor". Geçit bir metrelik alçak tavan; oluk üç yüz metrelik, ve suyu yukarı itiyor — bu bölümün havası tabanda |
+| 58 Kılçık | `current` | Sığ–derin diye giden ritmin iki ucu bugüne kadar aynı şeye mal oluyordu. Bant sütunun üstünde, yani sığ yarısı akıntıda, derin yarısı durgun suda |
+| 59 Leopar ve Akıntı | `eddy` | Girdabın gözü denizdeki tek "cevabı bir yer olan" parça. Dış halkaya ikinci leopar konunca göz dinlenme olmaktan çıkıp karara dönüşüyor |
+| 61 Açık Deniz | `flume` | Buzun bittiği yer bitmiyor, **daralıyor**. Sütunun üst ucundaki geçit bir boğaza takas edildi |
+| 52 Akıntı | `flume` | Zincirleme: 59 girdabı alınca 52 onun alt kümesi oldu. İki yarısının arasına bir boğaz girdi |
+
+Sayılar: III. bölümün tekrar oranı **%6 → %4**, ve kalan dört çiftin dördü de
+47'nin 48–51'in alt kümesi olması — yani chapter kendini öğretirken her bölümün
+bir şey eklemesi, kusur değil.
+
+### Üç şey ölçüm sırasında öğrenildi
+
+**Bir fiil eklemek, eklendiği bacağın bütçesini ister.** 58'in akıntısı ilk
+olarak açılıştaki dört geçidin üstüne kondu ve besteci piksel sayarak reddetti:
+4100px'lik bacak, 3927px'lik ciğer. Sığdırana kadar zayıflatmak, fark
+edilmeyecek bir akıntı bıraktı. İkinci bacakta hem yer vardı hem de zorluk
+aracının "gevşek" dediği bacak oydu; bant iki sayının birden istediği yere
+gitti. Bölüm %29'dan **%15**'e indi (hedef %10).
+
+**61'e nefes vermek onu kolaylaştırdı — ve geri alınamadı.** Açılış bacağı
+eskiden tek ciğerin tamamıydı ve bölümün en zor bacağıydı. Oraya bir `vent`
+konunca bacak ikiye bölündü, bölüm **%4'ten %32'ye** çıktı ve sonraki bacağa
+hiçbir şey eklenerek geri indirilemedi: bestecinin o bacak için tahmini zaten
+bütçe sınırında, gerçek maliyeti ise tahminin yirmi puan altında. Yani sınır
+tahminde, oynanışta değil. `vent` geri alındı ve son geçit bir `flume`'a
+**takas** edildi — ekleme değil takas, çünkü eklemeye yer yok. Bölüm %4 → %2
+oldu, yani biraz da zorlaştı.
+
+**Bir ikizi kırmak bir başkasını doğurabilir.** 59 girdabı alınca 52 Akıntı
+onun alt kümesi hâline geldi (0,875) — çünkü 59 artık tam olarak 52 + leopar.
+Girdabı 61'e taşımak işe yaramıyor: 61 de akıntı + leopar, yani aynı şey oradan
+çıkıyor. Yani 52 kaçınılmaz olarak bir fiil almak zorundaydı, ve `open` gibi
+anlamsız bir ekleme ölçüyü kandırmaktan başka bir şey olmazdı. 52'nin iki
+yarısının **arasına** bir oluk kondu: ilk yarı derinliğin bir seçim olduğunu
+öğretiyor, ikinci yarı bunu tersine çeviriyor, ve aradaki üç yüz piksellik
+boğazda seçilecek derinlik yok.
+
+İlk denemesi ilk yarıdaydı ve `tests/current.mjs` onu yakaladı. Uzunluğu
+verilmemiş bir bant başladığı yerden **sonraki nefese** kadar uzuyor, ve
+açılıştaki iki bandın ikisi de öyle — dolayısıyla ilk yarıya kazılan bir kanal,
+duvarlarının üstünden akıntı bandı geçerek çizilmiş oluyor. Oyunda bir şey
+bozulmuyor, çünkü boğazın üstündeki su katı buzun içinde ve hiçbir şey yapmıyor;
+ama o test denizin penguen taşıdığını kanıtlamak için gerçek penguen'i ilk
+bandın tam ortasına bırakıyor, ve bandın ortası duvar olmuştu. Nefes deliğinin
+kapağı bantları kapatıyor; oluk kapağın öbür tarafında durgun suda, ve orada
+bir nehrin içindeki delik gibi değil, boğaz gibi okunuyor.
+
+Zorluk eğrisinin toplam sapması 3,8 → **3,0**.
+
+---
+
 ## Ölçüm aleti kalıcı oldu, ve dördüncü fiil geldi
 
 `tools/variety.mjs` artık projenin bir parçası. Her bölümün gerçekten çağırdığı
