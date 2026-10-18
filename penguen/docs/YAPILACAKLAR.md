@@ -51,7 +51,7 @@ sonra listenin durumu:
 | 2.6 | Arena odası ekrandan geniş | **kapandı** — masaüstünde %87 → %0 |
 | 2.7 | `skua.mjs` seyrek takılıyor | **açık** — elli koşuda bir, tekrarlanamadı |
 | 2.8 | Kamera ölü bölgesi | **kapandı** — 1185px → 0px |
-| 2.9 | İki nefes deliği şeridin altında | **açık** — küçük, ölçüsü hazır |
+| 2.9 | İki nefes deliği şeridin altında | **yanlış alarm** — ölçüldü, deliğin yalnızca üst kenarı kırpılıyor |
 
 Oyunun en tekrarlı bölümü artık 47–61 (%4), ve o %4'ün tamamı 47'nin kendini
 öğreten alt kümesi.
@@ -219,15 +219,16 @@ verdiği en kötü yöne itildiğinde masaüstünde bir nefes deliği tam şerid
 kenarında çıkıyor — orada harcanacak pay yok. Kural `tests/camera.mjs` içinde:
 **kutu, görünen bir şeyi gizlemeyecek.**
 
-### 2.9 İki nefes deliği yan telefonda şeridin altında
+### 2.9 İki nefes deliği — **yanlış alarmmış**
 
-Ölü bölge ölçülürken çıktı ve ölü bölgenin sebep olduğu bir şey değil: yan
-tutulan telefonda, 53 ve 61. bölümlerde birer nefes deliği, yüzücü tam
-altındayken üst şeridin otuz piksel altında kalıyor. Küçük, ama bölümün tek
-hedefi o delik.
+Ölü bölge taramasında 53 ve 61. bölümlerde birer nefes deliğinin yan tutulan
+telefonda şeridin altında kaldığı çıkmıştı. Ölçünce öyle değil: delik ekranda
+65–175 arasında, şerit 97'de bitiyor. Yani **üst kenarının 32 pikseli** şeridin
+arkasında, geri kalan 78 piksel görünüyor — ve içine girilen ağzı zaten altta.
 
-Ölçüsü hazır: `tests/camera.mjs` §9 bunu "zaten gizli" diye ayırıp geçiyor,
-yani düzelten biri sayıyı hemen görür.
+Tarama deliğin `y`'sini, yani tavandaki üst kenarını okuyordu; yüzücünün
+baktığı yer orası değil. Kayıt duruyor ki bir dahaki sefere yeniden
+keşfedilmesin: **bu bir kusur değil.**
 
 ### 2.7 `tests/skua.mjs` seyrek takılıyor
 

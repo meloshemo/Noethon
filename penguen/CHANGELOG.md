@@ -68,9 +68,13 @@ deliği masaüstünde tam şeridin kenarında çıkıyor, yani orada harcanacak 
 yok. Riskli olduğunu tahmin etmiştim; hangi sayıda riskli olduğunu ölçüm
 söyledi.
 
-Aynı tarama bir şey daha buldu ve o ölü bölgenin değil: yan tutulan telefonda
-53 ve 61. bölümlerde birer nefes deliği, yüzücü tam altındayken üst şeridin
-otuz piksel altında kalıyor. `docs/YAPILACAKLAR.md` §2.9.
+Aynı tarama bir şey daha gösterdi, ve ölçülünce **yanlış alarm** çıktı: 53 ve
+61. bölümlerde birer nefes deliği yan tutulan telefonda şeridin altında
+görünüyordu, ama delik ekranda 65–175 arasında ve şerit 97'de bitiyor — üst
+kenarının otuz iki pikseli kırpılıyor, kalan yetmiş sekiz piksel ve içine
+girilen ağzı görünüyor. Tarama deliğin tavandaki üst kenarını okuyordu, oysa
+yüzücünün baktığı yer orası değil. `docs/YAPILACAKLAR.md` §2.9'da duruyor ki
+bir dahaki sefere yeniden keşfedilmesin.
 
 ---
 

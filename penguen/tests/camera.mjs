@@ -414,11 +414,14 @@ for (const s of SCREENS) {
        *
        * Stated as "the box does not hide what was visible" rather than "every
        * target is visible", because the second is a different claim and two
-       * targets fail it already: on a phone held sideways, one air hole on 53
-       * and one on 61 sit about thirty pixels under the strip when the swimmer
-       * is directly below them. That is a framing fact this change neither
-       * caused nor fixed; it is written down in `docs/YAPILACAKLAR.md` instead
-       * of being smuggled into a test about something else.
+       * targets fail it already — and both turned out to be this test's own
+       * fault rather than the game's. An air hole is read here by its `y`,
+       * which is its top edge up in the ice; on levels 53 and 61, on a phone
+       * held sideways, that edge is thirty-two pixels under the strip while
+       * the other seventy-eight of the hole, including the mouth the swimmer
+       * actually swims into, is in plain view. Measured rather than assumed,
+       * and written down in `docs/YAPILACAKLAR.md` §2.9 so it is not
+       * rediscovered as a bug a third time.
        */
       const was = next.y - w.camera.y >= VIEW.padTop;
       const now = next.y - (w.camera.y + box) >= VIEW.padTop;
