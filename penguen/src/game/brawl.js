@@ -159,6 +159,18 @@ const BRAWL_PLANS = [
       // and the only ground left is the ground you are crossing.
       a.pillar({ at: 0.5, w: 38, h: 108 });
       a.lobber({ at: 0.5, up: 0.36, phase: 0.7 });
+      /* And the ground you are crossing is glare ice.
+         This level's own note ends on that sentence — one thrower owns the
+         open floor, the other owns the shadow behind the rock, and the only
+         ground left is the ground you are crossing. Said out loud, that is a
+         level about *travel*, and travel was the one thing in this chapter
+         that had always been free. It is not free here. The stand-spot on the
+         far side is where it always was and the line through the guard is as
+         clean as it ever was; arriving on it is the new question.
+         It is the first glare ice in the arena, which is why it is one patch
+         in the middle rather than two at the ends: the level that introduces a
+         verb should be the level where you can see what it did. */
+      a.slick({ at: 0.5, w: 210 });
       a.scatterFish(3);
       a.fishAt(0.5, 0.16, 'speed');
     },
@@ -180,6 +192,14 @@ const BRAWL_PLANS = [
       // moving between the two — which is what this level is called.
       a.lobber({ at: 0.3, up: 0.5, phase: 0.15 });
       a.lobber({ at: 0.74, up: 0.46, phase: 0.65 });
+      /* The lane between the two pillars, and it is thin ice.
+         The level's answer is written in its own note: nothing works except
+         keeping moving between the two halves. Which means there is a lane,
+         the lane is the answer, and the answer had no cost. Thin ice gives it
+         one — the crossing is still there, it simply cannot be made twice in
+         the same place, so "keep moving" stops being a direction and becomes
+         a budget. */
+      a.thinIce({ at: 0.52, w: 160 });
       a.scatterFish(3);
     },
   },
@@ -272,6 +292,14 @@ const BRAWL_PLANS = [
       // moving. This is the last arena before the two that end the game, and
       // it is where the player should stop believing in safe corners.
       a.pillar({ at: 0.8, w: 36, h: 100 });
+      /* A corner that lasts three shots, on the level that is here to stop you
+         believing in corners.
+         The note above says this is where the player should stop believing in
+         safe corners, and a level makes that point best by *handing* one over.
+         The bank is a real corner: it blocks, it is exactly where you would
+         want it, and the two watchers behind the rock take it down while you
+         are using it. Taking cover away teaches less than lending it. */
+      a.bank({ at: 0.28 });
       a.lobber({ at: 0.84, up: 0.6, phase: 0.75 });
       a.scatterFish(3);
     },
@@ -302,6 +330,21 @@ const BRAWL_PLANS = [
          nothing between you and the count. */
       a.bank({ at: 0.22 });
       a.bank({ at: 0.64 });
+      /* And when the banks are gone, the floor is glare ice.
+         Everything here throws on the same beat, so the whole level is one
+         instant repeated: be somewhere else at the count. Being somewhere else
+         is a measured distance and a measured distance is the thing glare ice
+         takes away — the penguin arrives, and then keeps arriving. The two
+         banks are the two breaths; this is what the breaths are buying time to
+         work out. */
+      /* At 0.46 and not 0.44, which is where it was asked for first: the
+         flag on this level sits at 0.34 and a patch edge within half a body of
+         a flag makes the respawn guard throw the flag away. The composer
+         refuses such a patch and shrinks it instead — 230px became 184px — and
+         a piece quietly delivered smaller than it was asked for is a plan that
+         has stopped describing the level. Moved two hundredths right, it fits
+         at full width. */
+      a.slick({ at: 0.46, w: 230 });
       a.checkpointAt(0.34);
     },
   },
@@ -319,6 +362,15 @@ const BRAWL_PLANS = [
       a.duel({ guardAt: 0.8, guardUp: 0.35, standAt: 0.52, shooterUp: 0.53, phase: 0.8 });
       a.heckler({ at: 0.5, up: 0.66, phase: 0.15 });
       a.heckler({ at: 0.92, up: 0.5, phase: 0.55 });
+      /* Five doors, two watchers, no rock anywhere — and now the ceiling.
+         This is the one arena in the chapter built entirely out of penguins:
+         there is nothing on the floor and nothing hanging over it, so every
+         question on it is a sight-line and every answer is a step. That makes
+         it the level with the most places that are briefly safe, and the
+         ceiling is the only thing in the chapter that can say a *place* is
+         wrong rather than a line. One of them, over the stretch five lines
+         cross, so the crowd's one quiet square is on a clock. */
+      a.icefall({ at: 0.58, up: 0.6 });
       a.scatterFish(3);
       a.checkpointAt(0.22);
     },
@@ -343,6 +395,12 @@ const BRAWL_PLANS = [
       // already; this makes hiding lethal too.
       a.lobber({ at: 0.34, up: 0.6, period: 2.4, phase: 0.3 });
       a.thinIce({ at: 0.7, w: 150 });
+      /* The last level in the game should be able to say every word the
+         chapter knows, and glare ice was the one it was missing. Between the
+         rock at the near end and the thin ice at the far one there was a long
+         flat run that cost nothing to cross; five throwers on one clock make
+         standing still lethal, and this makes walking expensive. */
+      a.slick({ at: 0.46, w: 240 });
       a.scatterFish(3);
       a.fishAt(0.6, 0.34, 'speed');
       // The last level in the game puts all three in the air at once, over an

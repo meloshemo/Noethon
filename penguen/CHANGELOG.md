@@ -5,6 +5,89 @@ değiştiği yeterli. En yeni en üstte.
 
 ---
 
+## Arenanın sekizinci fiili: buzlu zemin
+
+`tools/variety.mjs` ikizler turundan sonra en tekrarlı bölüm olarak **kar
+topunu** gösterdi: on beş arena, **yedi** fiil, ve on beş çiftin beşi birebir
+aynı dağarcık.
+
+```
+62–76   7 fiil   5/105 çift %80+ aynı  (%5)
+```
+
+Sayıyı kapatmanın iki yolu vardı ve biri yanlıştı. Ölçüyü, arenanın gerçekte
+bölümleri birbirinden ayıran şeyi — düello sayısı, nişan periyodu, duruş yeri —
+okuyacak şekilde genişletmek sayıyı düşürürdü ve oyunu değiştirmezdi. Bu
+projenin kendi kuralı bunu zaten yazıyor: bir vekili ölçen ölçüm, vekilin
+iyileştirilmesini sağlar. Chapter IV'ün dağarcığı **gerçekten** oyunun en
+incesi, ve eksik olan belliydi.
+
+### Eksik cümle
+
+Arenanın bütün dağarcığı **hat** hakkında bir tartışma. Kaya bir hattı yiyor,
+siper o yemeye süre koyuyor, kavisli atış üstünden geçiyor, düşen buz "o kare
+yanlış" diyor. Hepsi bir **yer** hakkında bir cümle — ve bölümün duracak yere
+*gitmek* hakkında söyleyecek hiçbir şeyi yoktu. On beş arenanın on beşinde her
+düello tek bir zemin parçasında tek bir anda duruluyor, ve oraya yürümek
+bedavaydı.
+
+Buzlu zemin o cümle. Duracak yer yerinde, kapıdakinden geçen hat eskisi kadar
+temiz, ve penguen cevabın üstünden kayıyor: doğru kurulmuş bir plan yanlış
+oynanıyor. Sahanlığın kaygan buzu, değiştirilmeden — aynı floe türü, aynı
+sürtünme, aynı çizim.
+
+Tek kuralı planın bitmesini bekliyor, o yüzden kaya ve siper gibi `build`
+içinde yerleşiyor: **en az bir duracak yer sağlam buzda kalır.** Bütün
+cevapların üstünü birden kaplayan bir yama daha zor bir arena değil, bölümün
+tek sözünün geri alınması.
+
+### Beş ikizin dördü kırıldı, biri bilerek duruyor
+
+| Çift | Verilen | Neden o |
+|---|---|---|
+| 68 Çapraz Ateş ~ 73 Gözcüler | 68'e **buzlu zemin**, 73'e **siper** | 68'in kendi notu "geriye yalnızca üstünden geçtiğin zemin kalıyor" diyor — yani bölüm yolculuk hakkında. 73 "güvenli köşelere inanmayı bırak" diyor, ve bunu en iyi bir köşeyi **ödünç vererek** anlatıyor |
+| 65 Kaya ~ 69 Dar Alan | 69'a **ince buz** | 69'un cevabı "iki yarı arasında durmadan hareket et" — yani bir şerit var, şerit cevap, ve cevabın bedeli yoktu |
+| 64 Tepedeki ~ 74 Aynı Anda | 74'e **buzlu zemin** | Her rakip aynı vuruşta atıyor, yani bütün bölüm tek bir an: sayımda başka bir yerde ol. "Başka bir yer" ölçülmüş bir mesafe |
+| 70 Sabırsızlar ~ 75 Kalabalık | 75'e **düşen buz** | Zeminde hiçbir şey, tavanda hiçbir şey: chapter'ın tek tamamen penguenlerden kurulu arenası. Tavan, bir *yerin* yanlış olduğunu söyleyebilen tek şey |
+
+76 da aldı, çünkü oyunun son bölümü chapter'ın bildiği her kelimeyi
+söyleyebilmeli.
+
+**62 Kapıdaki ~ 63 İki Kapıcı bilerek duruyor.** İkisi de saf düello, ve 62'nin
+ekranında bir tabela var: biri bir kapı, öteki iki kapı ve aralarında yarım
+vuruş. Bu, chapter'ın kendini tanıtması — denizdeki 47'nin 48–51'in alt kümesi
+olmasıyla birebir aynı şey, ve o da kusur değil.
+
+```
+62–76   8 fiil   1/105 çift %80+ aynı  (%1)
+```
+
+### Bir pikselin taşıdığı yük
+
+Yama zeminle **aynı hizada** değil, bir piksel yukarıda. İlk sürüm hizalıydı ve
+ölçüm onu reddetti: aynı yükseklikte iki floe varken penguenin zemini hangisi
+önce cevap verirse o oluyor, ki o da arena boyu uzanan sağlam buz — yani
+bölümde kaygan olmayan bir buzlu zemin çizilmişti. Kayma beş piksel çıktı,
+çıplak buzun aynısı. İnce buz da aynı sebeple bir piksel yukarıda duruyor ve
+yazıldığı günden beri öyle.
+
+Ve o piksel ikinci bir kural doğurdu. `tests/checkpoint.mjs` 74. bölümde düştü:
+diriliş koruması penguenin **bütün gövdesini** yere koyuyor ve gövde katı bir
+şeyin içindeyse noktayı reddediyor, dolayısıyla kenarı bir bayrağa yarım gövde
+yaklaşan bir yama o bayrağı her ölümde sessizce çöpe atıyor. Bayrak ile yama
+**bir buçuk piksel** kaçırmıştı. Besteci artık böyle bir yamayı reddediyor, ve
+planda yama iki yüzde bin sağa kaydı — çünkü besteci reddedince onu
+*küçültüyor* (230px → 184px), ve istendiğinden küçük teslim edilen bir parça
+bölümü tarif etmeyi bırakmış bir plandır.
+
+`tests/slick.mjs` altı şeyi kontrol ediyor: istenen arenalara ulaştı mı, kırılan
+değil kaygan bir zemin mi, her arenada sağlam buzda duracak bir yer kaldı mı,
+başlangıç temiz mi, her bayraktan bir gövde uzakta mı, hiçbir atış hattının
+altından çıkıyor mu — ve gerçek `World` içinde penguen buzda 45 piksel, sağlam
+buzda 5 piksel kayıyor.
+
+---
+
 ## Sonsuz modun tabanı üç parçaya daha ulaştı
 
 `floorGap` derinleşen koşuda sıçrama aralığının **alt** ucunu kapatıyor: en

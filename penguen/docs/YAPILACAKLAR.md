@@ -9,7 +9,7 @@ orada **adımlar** var, burada **durum** var. Bir iş bittiğinde işareti burad
 değişir.
 
 Son güncelleme: 2026-10-18 · dal `claude/penguen-game-dev-6ym6pg` · 76 bölüm ·
-52 test paketi (42 node + paketleme + 10 tarayıcı)
+53 test paketi (43 node + paketleme + 10 tarayıcı)
 
 ---
 
@@ -106,12 +106,26 @@ bacası tam bütçe çizgisinde. Üçüncü bacaya kırk piksel eklendi ve sayı
 kımıldamadı, çünkü belirleyici adım başka yerde ve o da bir sınıra dayanmış.
 **Bayrak tavan hakkında bir gerçek, plan hakkında değil.**
 
-### 2.4 Arenanın "en yakın top"u bir kadran değil
+### 2.4 Arenanın dağarcığı açıldı, metriği hâlâ bir taban
 
-Final 55px, hedef 16px. Baskı eklemek **işe yaramıyor**: ikinci bir lobber
-asıldığında sayı kötüleşti (55 → 57px), çünkü metrik çözücünün seçtiği rotayı
-ölçüyor ve çözücü en güvenli rotayı seçiyor. Arenayı zorlaştırmak rota kapatmak
-demek — yani geometri.
+**Dağarcık kapandı.** İkizler turundan sonra en tekrarlı bölüm kar topuydu: on
+beş arena, yedi fiil, beş birebir çift. Sekizinci fiil geldi — **buzlu zemin**,
+sahanlığın kaygan buzu değiştirilmeden — ve bölümün *varmak* hakkındaki ilk
+cümlesi oldu: duracak yer yerinde, hat temiz, penguen cevabın üstünden kayıyor.
+Beş çiftin dördü kırıldı (68, 69, 73, 74, 75 ve finale 76 birer fiil aldı);
+62 ile 63 bilerek duruyor, çünkü ikisi chapter'ın kendini tanıtması.
+
+```
+62–76   8 fiil   1/105 çift %80+ aynı  (%1)   ← önce 7 fiil, %5
+```
+
+**Metrik hâlâ kıpırdamıyor, ve bu dosyada kalıyor.** Final 55px, hedef 16px.
+Sayı, çözücünün seçtiği rotada bir topun ne kadar yaklaştığını ölçüyor ve
+çözücü en güvenli rotayı seçiyor; ölçüldü, ikinci bir lobber asıldığında sayı
+**kötüleşti** (55 → 57px). Buzlu zemin de onu kıpırdatmadı, çünkü kayma
+rotayı değiştirmiyor, rotanın bedelini değiştiriyor. Arenayı zorlaştırmak rota
+kapatmak demek — yani geometri — ve bu sayı yalnızca en güvenli rota
+kapandığında kıpırdar.
 
 ### 2.5 Küçük işler
 
@@ -140,7 +154,7 @@ tartışman gerekir.
 ## 4. Nasıl ölçülür
 
 ```bash
-node tools/test.mjs --no-browser   # 42 paket, ~2 dk, kurulumsuz
+node tools/test.mjs --no-browser   # 43 paket, ~2 dk, kurulumsuz
 node tools/lint.mjs                # proje kuralları
 node tools/variety.mjs --twins     # tekrar: hangi bölümler birbirine benziyor
 node tools/difficulty.mjs --chapter=2,3,4   # zorluk eğrisi (I kırk dakika sürer)

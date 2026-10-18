@@ -343,7 +343,7 @@ geçmez, hata verip durur.
 
 ## Testler
 
-Tek komut, 52 paket (42 node + paketleme + 10 tarayıcı), kendi sunucusunu
+Tek komut, 53 paket (43 node + paketleme + 10 tarayıcı), kendi sunucusunu
 kurup kapatıyor ve portu doluysa bir yanına kayıyor:
 
 ```bash
@@ -2801,6 +2801,43 @@ bölümde her şeyin oynandığı yer, bütün duracak noktalar orada ve zeminde
 çıkan bir sütun cevabın iki parçası arasına duvar koyuyor. Tavandan sarkınca
 getirildiği işi yapıyor: hatları yiyor, altından yürüyüp geçiyorsun.
 
+### Buzlu zemin: bölümün *varmak* hakkındaki tek cümlesi
+
+Arenanın bütün dağarcığı **hat** hakkında bir tartışma. Kaya bir hattı yiyor,
+siper o yemeye süre koyuyor, kavisli atış üstünden geçiyor, düşen buz "o kare
+yanlış" diyor. Hepsi bir **yer** hakkında bir cümle, ve bölümün duracağı yere
+*gitmek* hakkında söyleyecek hiçbir şeyi yoktu: on beş arenanın on beşinde her
+düello tek bir zemin parçasında tek bir anda duruluyor ve oraya yürümek
+bedavaydı.
+
+Buzlu zemin o eksik cümle. Duracak yer yerinde duruyor, kapıdakinden geçen hat
+eskisi kadar temiz, ve penguen cevabın üstünden **kayıyor**. Yani doğru kurulmuş
+bir plan yanlış oynanıyor, ki bu buradaki her şeyden farklı bir zorluk cinsi.
+
+Sahanlığın kaygan buzu, değiştirilmeden: aynı floe türü, aynı sürtünme, aynı
+çizim. Zaten kanıtlanmış bir mekanizmaya hiç sorulmamış bir soru sormak, yeni
+bir mekanizma yazmaktan iyidir — düşen buz da aynı cümlenin altında yazıldı.
+
+Tek kuralı var ve o kural planın bitmesini bekliyor, o yüzden kaya ve siper
+gibi `build` içinde yerleşiyor: **en az bir duracak yer sağlam buzda kalır.**
+Bütün cevapların üstünü birden kaplayan bir yama daha zor bir arena değil,
+bölümün tek sözünün geri alınması — durulacak bir yer var — ve arena yamayı
+kısaltmayı durulacak yeri kaybetmeye tercih ediyor. Başlangıç da aynı sebeple
+temiz tutuluyor: ekran açıldığında zaten kayıyor olan bir bölüm henüz hiçbir şey
+anlatmamıştır.
+
+68, 74 ve 76'da var. 68 onu tanıtıyor ve bölümün kendi notu zaten onu istiyordu
+("geriye yalnızca üstünden geçtiğin zemin kalıyor" — yani bu bölüm *yolculuk*
+hakkında, ve yolculuk bedavaydı). 74'te her rakip aynı vuruşta atıyor, yani
+bütün bölüm tek bir an: sayımda başka bir yerde ol. "Başka bir yer" ölçülmüş bir
+mesafe, ve ölçülmüş mesafe buzlu zeminin elinden aldığı şey. 76 oyunun son
+bölümü ve chapter'ın bildiği her kelimeyi söyleyebilmeli.
+
+`tests/slick.mjs` dördünü de kontrol ediyor: istenen arenalara ulaştı mı, kırılan
+değil kaygan bir zemin mi, her arenada sağlam buzda duracak bir yer kaldı mı,
+yama hiçbir atış hattının altından yukarı çıkıyor mu — ve gerçek `World` içinde
+penguen buzda 45 piksel, sağlam buzda 5 piksel kayıyor.
+
 ---
 
 ## Arayüz
@@ -3265,7 +3302,7 @@ anlatmak değil, olan bir şeyi olduğundan iyi anlatmaktır.
 | Kayıt | Tek sürümlü JSON, ileri göç, dosyaya aktarma, tek tuşla silme |
 | Çevrimdışı | Servis çalışanı + tek dosya sürümü (679 KB) |
 | Girdi | Klavye, dokunmatik, gamepad |
-| Test | 42 node + paketleme + 10 tarayıcı paketi, hepsi tek komutta |
+| Test | 43 node + paketleme + 10 tarayıcı paketi, hepsi tek komutta |
 | Zorluk | Ölçülen eğri: `node tools/difficulty.mjs` |
 
 ### Yok, ve neden

@@ -124,6 +124,7 @@ export class Arena {
     this._pillars = [];
     /** Ice hanging from the ceiling, placed in `build` like the pillars. */
     this._icefalls = [];
+    this._slicks = [];
   }
 
   /* --------------------------------------------------------- pieces */
@@ -495,6 +496,99 @@ export class Arena {
     return this;
   }
 
+  /**
+   * Glare ice on the floor: the answer is still there, you just slide past it.
+   *
+   * The chapter's whole vocabulary is an argument about *lines* — who can see
+   * where, and what is between them. Pillars eat lines, banks put a clock on
+   * the eating, a lobber goes over the top, an icefall says the spot itself is
+   * wrong. Every one of those is a statement about a place. This is the first
+   * one about *getting* to a place.
+   *
+   * Because the chapter's real verb is not dodging, it is arriving: every duel
+   * is solved by standing on one patch of floor at one moment, and until now
+   * walking there was free. On glare ice it is not. The stand-spot is where it
+   * always was, the line through the guard is as clean as it ever was, and the
+   * penguin overshoots it — so a plan that was correct is played wrong, which
+   * is a different kind of hard from anything else in here.
+   *
+   * It is the slip ice from the shelf, unchanged: the same floe type, the same
+   * friction, the same drawing, already proven and already tested. A new
+   * question does not need a new mechanism when an old one has never been
+   * asked it — which is the same sentence `icefall` is written under, and for
+   * the same reason.
+   *
+   * Deferred to `build`, like a pillar and a bank, because the only rule it
+   * has needs the finished plan: **at least one stand-spot stays on firm
+   * ice.** A patch over every answer at once is not a harder arena, it is the
+   * chapter's one promise withdrawn — there is a place to stand — and the
+   * arena would rather have a shorter patch than no place to stand on. The
+   * spawn is kept clear for the same reason the shelf keeps its first floe
+   * flat: a level that is already sliding when it fades in has not told you
+   * anything yet.
+   */
+  slick({ at = 0.5, w = 170 } = {}) {
+    this._slicks.push({ at, w });
+    return this;
+  }
+
+  _placeSlicks() {
+    const body = this.penguinW;
+    const firmSpots = (patches) =>
+      this.plan.filter(
+        (p) => !patches.some((f) => p.stand.x > f.x - body * 0.5 && p.stand.x < f.x + f.w + body * 0.5),
+      ).length;
+    const placed = this.floes.filter((f) => f.type === 'slip');
+    for (const req of this._slicks) {
+      for (let shrink = 1; shrink >= 0.4; shrink -= 0.2) {
+        const w = Math.round(req.w * shrink);
+        if (w < body * 1.6) break;
+        const patch = {
+          /**
+           * One pixel proud of the floor, and that pixel is load-bearing.
+           *
+           * Laid flush with the ground the patch is simply a second floe at
+           * the same height as the first, and the penguin's ground is
+           * whichever one answers first — which is the arena-wide solid. The
+           * level then has glare ice drawn on it that is not slippery:
+           * measured, the slide came out at five pixels, the same as bare
+           * ice. Thin ice sits a pixel high for the same reason and has since
+           * it was written.
+           */
+          x: Math.round(this.width * req.at - w / 2),
+          y: this.groundY - 1,
+          w,
+          h: 22,
+          type: 'slip',
+        };
+        // Somewhere to land on, and somewhere to start from.
+        if (patch.x < this.spawn.x + body * 2.5) continue;
+        if (!firmSpots([...placed, patch])) continue;
+        /**
+         * And clear of every flag, by a whole body.
+         *
+         * Not about slipperiness — a flag on glare ice would be a fine joke
+         * and `tests/checkpoint.mjs` allows it, because slip ice is firm ice.
+         * It is about that same load-bearing pixel: the respawn guard puts the
+         * penguin's whole box down and refuses the point if the box is inside
+         * anything solid, so a patch whose edge lands within half a body of a
+         * flag makes the flag unusable — and a checkpoint that is silently
+         * thrown away on every death is the worst kind of bug, because the
+         * level still works. Level seventy-four's flag and its patch missed
+         * each other by one and a third pixels, and the pack caught it.
+         */
+        const nearFlag = this.checkpoints.some(
+          (c) => c.x > patch.x - body && c.x < patch.x + patch.w + body,
+        );
+        if (nearFlag) continue;
+        this.floes.push(patch);
+        placed.push(patch);
+        break;
+      }
+    }
+    return this;
+  }
+
   /* --------------------------------------------------------- checks */
 
   get _blockers() {
@@ -631,6 +725,9 @@ export class Arena {
     }
     this._placePillars();
     this._placeBanks();
+    // After the banks, because a bank is a wall for as long as it lasts and a
+    // stand-spot behind one is not a stand-spot the glare ice may also take.
+    this._placeSlicks();
     this._verify();
     return {
       ...meta,
