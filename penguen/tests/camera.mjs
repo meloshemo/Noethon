@@ -47,11 +47,27 @@ const check = (cond, msg) => {
  * hardest against.
  */
 const SCREENS = [
-  { name: 'masaüstü 16:9', w: 960, h: 540, padTop: 53, padBottom: 0 },
-  { name: 'telefon yatay', w: 1423, h: 658, padTop: 97, padBottom: 172 },
-  { name: 'telefon dikey', w: 600, h: 1298, padTop: 176, padBottom: 168 },
-  { name: 'tablet dikey', w: 600, h: 800, padTop: 48, padBottom: 120 },
+  { name: 'masaüstü 16:9', w: 960, h: 540, padTop: 53, padBottom: 0, stage: [1280, 720] },
+  { name: 'telefon yatay', w: 1423, h: 658, padTop: 97, padBottom: 172, stage: [844, 390] },
+  { name: 'telefon dikey', w: 600, h: 1298, padTop: 176, padBottom: 168, stage: [390, 844] },
+  { name: 'tablet dikey', w: 600, h: 800, padTop: 48, padBottom: 120, stage: [768, 1024] },
 ];
+
+/**
+ * The same zoom `render.js` works out, so a measurement here is a measurement
+ * of the game rather than of a screen the game never draws.
+ *
+ * An arena asks the camera to pull back until the room fits, and stops when
+ * the penguin would get smaller than `CAM.roomPenguin` real pixels. Pulling
+ * back makes every logical unit smaller on the glass, so the strips the
+ * interface stands on grow in logical units by the same factor.
+ */
+const roomZoom = (s, world) => {
+  if (!world.brawl) return 1;
+  const base = Math.min(s.stage[0] / s.w, s.stage[1] / s.h);
+  const room = world.worldW / s.w;
+  return Math.max(1, Math.min(room, (world.player.h * base) / CAM.roomPenguin, CAM.roomZoom));
+};
 
 const saved = { ...VIEW };
 const useScreen = (s) => {
@@ -305,12 +321,21 @@ console.log('\n8) Arenada atışın geldiği yer okunabiliyor');
  * is on screen, and marks the edge it came from.
  */
 for (const s of SCREENS) {
-  useScreen(s);
   let off = 0;
   let duels = 0;
   const blind = [];
+  let zoom = 1;
   for (const def of ALL_LEVELS.filter((d) => d.brawl)) {
+    useScreen(s);
     const w = new World(def, deps());
+    zoom = roomZoom(s, w);
+    // The arena's own box: wider, and with wider strips to match.
+    useScreen({
+      w: Math.round(s.w * zoom),
+      h: Math.round(s.h * zoom),
+      padTop: Math.round(s.padTop * zoom),
+      padBottom: Math.round(s.padBottom * zoom),
+    });
     for (const plan of def.plan ?? []) {
       duels++;
       w.player.x = plan.stand.x - w.player.w / 2;
@@ -330,11 +355,116 @@ for (const s of SCREENS) {
   }
   check(
     blind.length === 0,
-    `${s.name}: atıcıların %${Math.round((off / duels) * 100)}'i ekran dışında, ` +
-      `ama hattın görünen kısmı ${blind.slice(0, 3).join(' ') || 'her düelloda 200px+'}`,
+    `${s.name}: ×${zoom.toFixed(2)} geri çekiliyor, atıcıların %${Math.round((off / duels) * 100)}'i ` +
+      `hâlâ ekran dışında, hattın görünen kısmı ${blind.slice(0, 3).join(' ') || 'her düelloda 200px+'}`,
   );
 }
 restore();
+
+/* 9 --------------------------------------------------------------------- */
+console.log('\n9) Ölü bölge, uzanacağın şeyi saklamıyor');
+/*
+ * The dead box is the one change here that can take something away. It lets
+ * the camera sit up to `CAM.dead.y` from where it would otherwise be, and the
+ * worst direction is *down*: the view slides down, the penguin rides higher in
+ * the frame, and the sky above him shrinks. On a mountain and under the ice
+ * that sky is where the next hold and the next hole in the ice are.
+ *
+ * So it is checked rather than argued: stand on every slab in the game, settle
+ * the camera, then shove it the full width of the box in the direction that
+ * hurts, and the thing you would reach for next must still be on the screen.
+ */
+for (const s of SCREENS) {
+  useScreen(s);
+  const lost = [];
+  for (const def of ALL_LEVELS) {
+    const axis = def.axis ?? 'across';
+    const w = new World(def, deps());
+    const box = w._deadZone(0).y;
+    const slabs = [...(def.floes ?? []), ...(def.terrain ?? [])].filter((f) => f.w > 20);
+    /*
+     * What counts as "the thing you would reach for next", per chapter.
+     *
+     * Not simply the nearest slab above: under the ice the nearest slab above
+     * is the ice *cap*, which is the ceiling of the world and nobody has ever
+     * reached for it — on a phone held upright, where the view is taller than
+     * the whole water column and the camera centres it, that cap sits under
+     * the strip and always has. The sea's targets are the holes cut through
+     * it. On a shelf it is whatever a jump can rise to, about a hundred and
+     * forty pixels; on a mountain, the next hold.
+     */
+    const reach = axis === 'up' ? 240 : 150;
+    const targets = axis === 'dive' ? (def.air ?? []) : slabs;
+    for (const from of slabs) {
+      let next = null;
+      for (const f of targets) {
+        if (f === from || f.y >= from.y - 8) continue;
+        if (from.y - f.y > (axis === 'dive' ? 300 : reach)) continue;
+        if (f.x > from.x + from.w + 260 || f.x + f.w < from.x - 260) continue;
+        if (!next || f.y > next.y) next = f;
+      }
+      if (!next) continue;
+      w.player.x = from.x + from.w / 2 - w.player.w / 2;
+      w.player.y = from.y - w.player.h;
+      w.player.vx = 0;
+      w.player.vy = 0;
+      w._centerCamera();
+      /*
+       * The box at its worst: the view pushed down, the sky above squeezed.
+       *
+       * Stated as "the box does not hide what was visible" rather than "every
+       * target is visible", because the second is a different claim and two
+       * targets fail it already: on a phone held sideways, one air hole on 53
+       * and one on 61 sit about thirty pixels under the strip when the swimmer
+       * is directly below them. That is a framing fact this change neither
+       * caused nor fixed; it is written down in `docs/YAPILACAKLAR.md` instead
+       * of being smuggled into a test about something else.
+       */
+      const was = next.y - w.camera.y >= VIEW.padTop;
+      const now = next.y - (w.camera.y + box) >= VIEW.padTop;
+      if (was && !now) lost.push(`L${def.id}@${Math.round(next.y - w.camera.y - box)}`);
+    }
+  }
+  check(lost.length === 0, `${s.name}: ${lost.slice(0, 4).join(' ') || 'bir sonraki tutamak hep ekranda'}`);
+}
+restore();
+
+/* 10 -------------------------------------------------------------------- */
+console.log('\n10) Ve küçük adımlarda resim duruyor');
+{
+  useScreen(SCREENS[0]);
+  /*
+   * The number the box was written for. Pacing ninety pixels either side of
+   * one spot for five seconds, in a room: how far does the picture travel?
+   */
+  const def = ALL_LEVELS.find((d) => d.brawl);
+  const pace = (on) => {
+    const w = new World(def, deps());
+    const x0 = def.worldW / 2;
+    w.player.x = x0;
+    w._centerCamera();
+    let travel = 0;
+    let prev = w.camera.x;
+    for (let i = 0; i < 600; i++) {
+      const t = i * STEP;
+      w.player.x = x0 + Math.sin((t * Math.PI) / 0.6) * 90;
+      w.player.vx = Math.cos((t * Math.PI) / 0.6) * PHYS.moveSpeed;
+      if (on) {
+        w._followCamera(STEP);
+      } else {
+        const at = w._cameraTarget();
+        w.camera.x += (at.x - w.camera.x) * (1 - Math.exp(-CAM.followX * STEP));
+      }
+      travel += Math.abs(w.camera.x - prev);
+      prev = w.camera.x;
+    }
+    return Math.round(travel);
+  };
+  const withBox = pace(true);
+  const without = pace(false);
+  check(withBox < without * 0.25, `beş saniyelik gidiş gelişte resim ${without}px → ${withBox}px`);
+  restore();
+}
 
 console.log('');
 if (fails) {

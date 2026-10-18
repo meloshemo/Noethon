@@ -9,7 +9,7 @@
  */
 
 import {
-  VIEW, viewFor, AMBUSH, CHARGED, COIL, QUANTUM, SLACK, CLIMB, BRAWL, TRENCH, VENT, BANK, GLAZE,
+  VIEW, viewFor, CAM, AMBUSH, CHARGED, COIL, QUANTUM, SLACK, CLIMB, BRAWL, TRENCH, VENT, BANK, GLAZE,
   CURRENT, FLUME, EDDY, SWIM, ROT, lobShot, swimSpeed,
 } from './config.js';
 import { getSkin, getTrail } from './skins.js';
@@ -95,6 +95,15 @@ const MAX_CANVAS_SIDE = 4096;
 export class Renderer {
   constructor(canvas) {
     this.canvas = canvas;
+    /**
+     * How far back the camera is pulled, as a multiple of what the screen is
+     * owed. One until a level asks for more; see `_zoomFor`. Set before
+     * anything else, because `resize` runs during construction and reads it.
+     */
+    this.zoom = 1;
+    this.stageW = 960;
+    this.stageH = 540;
+    this.fit = { w: VIEW.w, h: VIEW.h };
     // `alpha: false` is a speed win but is the first thing to fail when memory
     // is tight, so fall back rather than ending up with a null context.
     this.ctx =
@@ -166,26 +175,56 @@ export class Renderer {
     }
     dpr = Math.max(1, dpr);
 
-    const fit = viewFor(cw, ch);
-    VIEW.w = fit.w;
-    VIEW.h = fit.h;
-
-    // Uniform scale; the clamps inside viewFor only bind on extreme aspect
-    // ratios, and then the leftover is centred rather than stretched.
-    const scale = Math.min(cw / VIEW.w, ch / VIEW.h);
-    this.viewScale = scale;
-    this.offsetX = (cw - VIEW.w * scale) / 2;
-    this.offsetY = (ch - VIEW.h * scale) / 2;
+    this.stageW = cw;
+    this.stageH = ch;
     this.dpr = dpr;
+    // What this screen is owed before any level asks for more. Kept, because
+    // the zoom below is a multiple of it and a multiple of an already-zoomed
+    // box compounds every time a level starts.
+    this.fit = viewFor(cw, ch);
+    this._applyFit();
 
     this.canvas.style.width = `${cw}px`;
     this.canvas.style.height = `${ch}px`;
     this.canvas.width = Math.round(cw * dpr);
     this.canvas.height = Math.round(ch * dpr);
+  }
+
+  /**
+   * How much further back this level wants the camera, as a multiple.
+   *
+   * One asks: the snowball fight, because its levels are rooms rather than
+   * routes and the whole chapter is sight-lines across one. Everything else
+   * is a route, and a route is meant to arrive a screen at a time.
+   *
+   * The cap is the penguin. Pulling back until the room fits is only an
+   * improvement while there is still something to look at, so the zoom stops
+   * at whatever keeps him `CAM.roomPenguin` real pixels tall — which on a
+   * desktop is the whole room and on a phone held upright is almost nothing,
+   * and both of those are the right answer for that screen.
+   */
+  _zoomFor(world) {
+    if (!world?.brawl || !this.fit) return 1;
+    const base = Math.min(this.stageW / this.fit.w, this.stageH / this.fit.h);
+    const body = (world.player?.h ?? 50) * base;
+    const room = world.worldW / this.fit.w;
+    return clamp(Math.min(room, body / CAM.roomPenguin), 1, CAM.roomZoom);
+  }
+
+  /** Push `fit × zoom` into VIEW and rebuild everything measured from it. */
+  _applyFit() {
+    VIEW.w = Math.round(this.fit.w * this.zoom);
+    VIEW.h = Math.round(this.fit.h * this.zoom);
+    // Uniform scale; the clamps inside viewFor only bind on extreme aspect
+    // ratios, and then the leftover is centred rather than stretched.
+    const scale = Math.min(this.stageW / VIEW.w, this.stageH / VIEW.h);
+    this.viewScale = scale;
+    this.offsetX = (this.stageW - VIEW.w * scale) / 2;
+    this.offsetY = (this.stageH - VIEW.h * scale) / 2;
 
     this.measureChrome();
 
-    // Snowflakes are laid out in logical space, so respread them on resize.
+    // Snowflakes are laid out in logical space, so respread them.
     for (const f of this.snow) {
       if (f.x > VIEW.w) f.x = Math.random() * VIEW.w;
       if (f.y > VIEW.h) f.y = Math.random() * VIEW.h;
@@ -228,6 +267,17 @@ export class Renderer {
   /** @param {import('./world.js').World} world */
   draw(world, particles, time) {
     if (this.contextLost) return;
+    /*
+     * A level can ask for a wider box than the screen is owed, and the ask
+     * changes when the level does — so it is re-read here rather than in
+     * `resize`, which only fires when the window moves. A no-op on every
+     * frame but the first of a level.
+     */
+    const zoom = this._zoomFor(world);
+    if (zoom !== this.zoom) {
+      this.zoom = zoom;
+      this._applyFit();
+    }
     /*
      * The expression layer, driven here rather than in the simulation.
      *

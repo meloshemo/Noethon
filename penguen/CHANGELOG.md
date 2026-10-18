@@ -5,6 +5,75 @@ değiştiği yeterli. En yeni en üstte.
 
 ---
 
+## Arena bir odaymış: kamera geri çekildi, ve resim durdu
+
+Önceki turda iki şey ölçülmüş, yazılmış ve **yapılmamıştı**, çünkü ikisi de
+tasarım kararıydı. İkisi de yapıldı.
+
+### Oda ekrandan genişti, ve daraltılamıyor
+
+Arena 1500 birim, masaüstü görüntüsü 960. Bölümün kendi kurduğu duracak yerde
+dururken hattı çizen atıcı masaüstünde **%87** oranında ekran dışındaydı.
+
+Önce ucuz yol denendi — arenaları daraltmak, yeni hiçbir makine istemiyor — ve
+**besteci reddetti**: 1300 birimde 74. bölüme temiz hat kuramıyor, 1150'de
+71'i, 960'ta 67'yi kaybediyor. Bir düello cevabından geriye doğru kuruluyor ve
+hat o yeri istiyor. Genişlik dolgu değil, chapter'ın kendisi.
+
+O yüzden kamera geri çekiliyor, ve yalnızca kar topu bölümünde, çünkü yalnızca
+orası bir oda; geri kalan her şey bir yol, ve bir yol ekran ekran varılmak
+üzere yapılmıştır. Sonsuza kadar da değil: penguen gerçek ekranda 34 pikselden
+küçülmeyecek kadar. Tek cümle, üç ekranda üç farklı doğru cevap:
+
+| Ekran | Geri çekilme | Penguen | Atıcı ekran dışında |
+|---|---|---|---|
+| Masaüstü 1280×720 | ×1,47 | 45px | **%87 → %0** |
+| Telefon yatay 844×390 | ×1,00 | 33px | %3 |
+| Telefon dikey 390×844 | ×1,05 | 34px | %100 |
+
+Dik telefonda oda bakılmaya değer hiçbir ölçekte sığmıyor ve orada doğru cevap
+**geri çekilmemek**; o ekranı hattın kenar işaretleri taşıyor. Masaüstünde ise
+76. bölümün tamamı tek ekranda: beş kapıcı, iki gözcü, kaya, ince buz, buzlu
+zemin, üç yüklü balık ve bütün hatlar.
+
+### Ve kamera her adımı takip etmeyi bıraktı
+
+Bir arenada tek bir noktanın doksan piksel sağına soluna beş saniye gidip
+gelince kamera **1185 piksel** yol yapıyordu — yan öncü kaldırıldıktan sonra
+bile. Hiç durmayan bir resim oynanmaz, okunur.
+
+Artık ekranın ortasında kameranın cevap vermediği bir kutu var: içindeyken
+kamera kıpırdamıyor, dışına çıkınca kutuyu itiyorsun. Aynı ölçüm **1185px →
+0px**.
+
+Kutu eksen ve chapter başına ayrı, çünkü risk her yerde aynı değil:
+
+| | Yatay | Dikey |
+|---|---|---|
+| Sahanlık | 86 | 28 |
+| Arena | 120 | 40 |
+| Dağ | 44 | 30 |
+| Deniz | 70 | **0** |
+
+Yatay kutu koşarken kapanıyor — koşmak gerçekten gitmektir — ama arenada
+kapanmıyor, çünkü bir odada hızlı gitmek bir yere gitmek değil. Dikey kutu
+düşerken açılıyor, çünkü düşüş öncüsü zemini göstermek için var ve kutu onun
+ilk yarısını yerdi.
+
+**Denizin sıfırı tahmin değil.** Kural şöyle kuruldu: *kutu, görünen bir şeyi
+gizlemeyecek.* Sonra yetmiş altı bölümün her buzunun üstüne penguen kondu,
+kamera oturtuldu ve kutunun izin verdiği en kötü yöne itildi. Sahanlıkta en dar
+tepe payı 40 piksel, dağda 44 — ikisi de kutuya yer bırakıyor. Denizde nefes
+deliği masaüstünde tam şeridin kenarında çıkıyor, yani orada harcanacak pay
+yok. Riskli olduğunu tahmin etmiştim; hangi sayıda riskli olduğunu ölçüm
+söyledi.
+
+Aynı tarama bir şey daha buldu ve o ölü bölgenin değil: yan tutulan telefonda
+53 ve 61. bölümlerde birer nefes deliği, yüzücü tam altındayken üst şeridin
+otuz piksel altında kalıyor. `docs/YAPILACAKLAR.md` §2.9.
+
+---
+
 ## Kamera: doğru boyda bakıyordu, yanlış yere
 
 Şikâyet şuydu: pengu yukarıdayken aşağısı ekranda tam gözükmüyor. Ölçüldü ve

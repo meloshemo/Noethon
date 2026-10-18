@@ -2960,6 +2960,35 @@ duran bir penguende iki kamera fonksiyonu aynı şeyi söylüyor mu.
 O son madde ayrı bir iş: kamerayı yerleştiren ve kamerayı takip ettiren kod
 aynı üç oranın iki ayrı kopyasıydı. Şimdi tek bir `_cameraTarget`.
 
+### Ölü bölge: kameranın cevap vermediği kutu
+
+Kamera penguenin **her** adımını takip ediyordu. Bir arenada tek bir noktanın
+doksan piksel sağına soluna beş saniye gidip gelince kamera **1185 piksel** yol
+yapıyordu — yan öncü kaldırıldıktan sonra bile. Yani resim hiç durmuyor, ve hiç
+durmayan bir resim oynanmaz, okunur.
+
+Artık ekranın ortasında kameranın cevap vermediği bir kutu var: içindeyken
+kamera hiç kıpırdamıyor, kutudan çıkınca kutuyu **itiyorsun**. Aynı ölçüm:
+1185px → **0px**.
+
+Kutu eksen ve chapter başına ayrı, çünkü risk her yerde aynı değil:
+
+| | Yatay | Dikey | Neden |
+|---|---|---|---|
+| Sahanlık | 86 | 28 | Koşarken yatay kutu kapanıyor — koşmak gerçekten gitmektir |
+| Arena | 120 | 40 | Kapanmıyor: bir odada hızlı gitmek bir yere gitmek değil |
+| Dağ | 44 | 30 | Bir sonraki tutamak yukarıda |
+| Deniz | 70 | **0** | Ölçüldü: nefes deliği tam şerit hizasında, herhangi bir kutu onu alıyor |
+
+Denizin sıfırı tahmin değil. Her bölümün her buzunun üstüne penguen koyup
+kamerayı oturtup kutunun izin verdiği **en kötü** yöne ittiğimde, masaüstünde
+bir nefes deliği tam şeridin kenarında çıkıyor — yani orada harcanacak pay yok.
+`tests/camera.mjs` kuralı şöyle tutuyor: **kutu, görünen bir şeyi
+gizlemeyecek.**
+
+Dikey kutu düşerken de açılıyor: düşüş öncüsü zemini göstermek için var ve bir
+kutu onun ilk yarısını yerdi.
+
 ### Arenada atıcıların çoğu ekran dışındaydı — ve haberi yoktu
 
 Kamerayı ölçerken çıktı, ve bu bir çerçeveleme sorunu değil: arena **1500**
@@ -2990,12 +3019,29 @@ dışındaki şey.
 `tests/camera.mjs` ölçüyü de kuralı da tutuyor: her arenada, her düelloda,
 duracak yerde dururken hattın ekranda görünen kısmı en az 200 piksel.
 
-**Asıl karar hâlâ açık.** Bu bir yama ve iyi bir yama; ama odanın ekrandan
-geniş olması tasarım gerilimi olarak duruyor. İki yol var ve ikisi de bedelli:
-arenaları 960 birime daraltmak (bütün hatları yeniden akıtır, `_verify`
-menzil ve kaçış paylarını yeniden hesaplar) ya da kar topu bölümünde kamerayı
-uzaklaştırmak (penguen bir chapter boyunca küçülür). Ölçü `docs/YAPILACAKLAR.md`
-içinde duruyor.
+**Ve sonra asıl karar verildi: kamera geri çekiliyor.**
+
+İki yol vardı. Arenaları daraltmak önce denendi, çünkü yeni hiçbir makine
+istemiyor — ve besteci **reddetti**: 1300 birimde 74. bölüme temiz hat
+kuramıyor, 1150'de 71'i, 960'ta 67'yi kaybediyor. Bir düello cevabından geriye
+doğru kuruluyor ve hat o yeri istiyor; genişlik dolgu değil, chapter'ın
+kendisi.
+
+O yüzden kamera geri çekiliyor. Kar topu bölümünde — ve yalnızca orada, çünkü
+yalnızca orası bir oda — görüntü kutusu oda sığana kadar büyüyor. Ama
+sonsuza kadar değil: penguen gerçek ekranda **34 pikselden** küçülmeyecek
+kadar. Bu tek cümle üç ekranda üç farklı doğru cevap veriyor:
+
+| Ekran | Geri çekilme | Penguen | Hattı çizen atıcı ekran dışında |
+|---|---|---|---|
+| Masaüstü 1280×720 | ×1,47 | 45px | **%87 → %0** |
+| Telefon yatay 844×390 | ×1,00 | 33px | %3 (zaten 1423 birim görüyor) |
+| Telefon dikey 390×844 | ×1,05 | 34px | %100 — oda hiçbir boyutta sığmıyor |
+
+Dik tutulan telefonda oda bakılmaya değer hiçbir ölçekte sığmıyor, ve doğru
+cevap orada **geri çekilmemek**: kenar işaretleri o ekranı taşıyor. Masaüstünde
+ise 76. bölümün tamamı — beş kapıcı, iki gözcü, kaya, ince buz, buzlu zemin, üç
+yüklü balık ve bütün hatlar — tek ekranda.
 
 ### Bölüm sonu kartı hiçbir ekrana sığmıyormuş
 

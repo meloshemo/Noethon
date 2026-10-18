@@ -48,9 +48,10 @@ sonra listenin durumu:
 | 2.3 | Zirvenin kalan kol gücü | **tavan** — plan hakkında değil |
 | 2.4 | Arenanın dağarcığı / metriği | dağarcık **kapandı** (%5 → %1), metrik bir taban |
 | 2.5 | Küçük işler | biri sende (kullanıcı adı), biri tavan |
-| 2.6 | Arena odası ekrandan geniş | yama kondu, **asıl karar açık** |
+| 2.6 | Arena odası ekrandan geniş | **kapandı** — masaüstünde %87 → %0 |
 | 2.7 | `skua.mjs` seyrek takılıyor | **açık** — elli koşuda bir, tekrarlanamadı |
-| 2.8 | Kamera ölü bölgesi | **açık, senin kararın** — ölçüldü, his kararı olduğu için yapılmadı |
+| 2.8 | Kamera ölü bölgesi | **kapandı** — 1185px → 0px |
+| 2.9 | İki nefes deliği şeridin altında | **açık** — küçük, ölçüsü hazır |
 
 Oyunun en tekrarlı bölümü artık 47–61 (%4), ve o %4'ün tamamı 47'nin kendini
 öğreten alt kümesi.
@@ -170,48 +171,63 @@ rotayı değiştirmiyor, rotanın bedelini değiştiriyor. Arenayı zorlaştırm
 kapatmak demek — yani geometri — ve bu sayı yalnızca en güvenli rota
 kapandığında kıpırdar.
 
-### 2.6 Arena odası ekrandan geniş — asıl karar açık
+### 2.6 Arena odası ekrandan geniş — **kapandı**
 
-Arena 1500 birim, masaüstü görüntüsü 960. Bölümün kendi kurduğu duracak yerde
-dururken hattı çizen atıcı **masaüstünde %87**, dik telefonda **%100** oranında
-ekran dışında kalıyor. Bu bir kamera ayarı sorunu değil: oda ekrandan geniş.
+Arena 1500 birim, masaüstü görüntüsü 960'tı. Bölümün kendi kurduğu duracak
+yerde dururken hattı çizen atıcı masaüstünde %87 oranında ekran dışında
+kalıyordu.
 
-Yapılan şey bir yama ve iyi bir yama: gövde eleniyor, telgraf elenmiyor —
-ekranı kesen hat çiziliyor ve kol arkasında kaldığı kenara "hangi yönden, ne
-kadar vaktin var" işareti alıyor. Her düelloda hattın görünen kısmı en az 200
-piksel, ve `tests/camera.mjs` bunu tutuyor.
+İki yol vardı. **Arenaları daraltmak denendi ve besteci reddetti:** 1300
+birimde 74. bölüme temiz hat kuramıyor, 1150'de 71'i, 960'ta 67'yi kaybediyor.
+Bir düello cevabından geriye doğru kuruluyor ve hat o yeri istiyor.
 
-Asıl karar duruyor ve iki yolu var:
+O yüzden **kamera geri çekiliyor** — yalnızca kar topu bölümünde, çünkü
+yalnızca orası bir oda. Görüntü kutusu oda sığana kadar büyüyor, ama penguen
+gerçek ekranda 34 pikselden küçülmeyecek kadar.
 
-| Yol | Bedeli |
-|---|---|
-| Arenaları 960 birime daraltmak | Bütün hatlar yeniden akar; `_verify` menzil ve kaçış paylarını baştan hesaplar, chapter yeniden dengelenir |
-| Kar topu bölümünde kamerayı uzaklaştırmak | Çizicide bölüm başına bir yakınlaştırma gerekir ve penguen bir chapter boyunca küçülür |
+| Ekran | Geri çekilme | Penguen | Atıcı ekran dışında |
+|---|---|---|---|
+| Masaüstü 1280×720 | ×1,47 | 45px | **%87 → %0** |
+| Telefon yatay 844×390 | ×1,00 | 33px | %3 |
+| Telefon dikey 390×844 | ×1,05 | 34px | %100 |
 
-İkisi de tasarım kararı, ölçüm değil — o yüzden burada duruyor.
+Dik telefonda oda bakılmaya değer hiçbir ölçekte sığmıyor ve doğru cevap geri
+çekilmemek; o ekranı hattın kenar işaretleri taşıyor.
 
-### 2.8 Ölü bölge: kameranın bir sonraki adımı, ve bu karar sende
+### 2.8 Ölü bölge — **kapandı**
 
-Kamera turunda ölçülen son şey. Kamera penguenin **her** adımını takip ediyor:
-bir arenada tek bir noktanın doksan piksel sağına soluna beş saniye gidip
-gelince kamera 1524 piksel yol yapıyor — yan öncü kaldırıldıktan *sonra*.
-Yani kalan hareketin tamamı "kamera pengueni takip ediyor"dan geliyor.
+Kamera penguenin her adımını takip ediyordu: bir arenada tek bir noktanın
+doksan piksel sağına soluna beş saniye gidip gelince kamera 1185 piksel yol
+yapıyordu. Artık ekranın ortasında kameranın cevap vermediği bir kutu var —
+aynı ölçüm **1185px → 0px**.
 
-Standart cevap bir **ölü bölge**: ekranın ortasında bir kutu, penguen onun
-içindeyken kamera hiç kıpırdamıyor, kutudan çıkınca kutuyu itiyor. Küçük
-adımlarda resim taş gibi duruyor, gerçekten gidince kamera geliyor.
+Kutu eksen ve chapter başına ayrı, çünkü risk her yerde aynı değil:
 
-Yapılmadı, çünkü bu bir **his** kararı ve yetmiş altı bölümün hepsini
-etkiliyor:
+| | Yatay | Dikey |
+|---|---|---|
+| Sahanlık | 86 | 28 |
+| Arena | 120 | 40 |
+| Dağ | 44 | 30 |
+| Deniz | 70 | **0** |
 
-- Sahanlıkta neredeyse kesin iyi: koşuyorsun, kamera yalnızca gerçekten
-  ilerleyince kayıyor.
-- Dağda riskli: dikey ölü bölge bir sonraki tutamağı saklayabilir.
-- Denizde riskli: sütun zaten dar, ve nefes deliği yukarıda.
+Yataydaki kutu koşarken kapanıyor (koşmak gerçekten gitmektir), arenada
+kapanmıyor (bir odada hızlı gitmek bir yere gitmek değil). Dikey kutu düşerken
+açılıyor, çünkü düşüş öncüsü zemini göstermek için var.
 
-Doğru sıra: **önce 1.5'i yap** (gerçek cihazda oyna), sonra "kamera adım başına
-sallanıyor mu" sorusunun cevabı sende olur. Cevabın evetse bu on dakikalık bir
-iş ve ölçüsü hazır.
+Denizin sıfırı tahmin değil: her bölümün her buzunun üstünde, kutunun izin
+verdiği en kötü yöne itildiğinde masaüstünde bir nefes deliği tam şeridin
+kenarında çıkıyor — orada harcanacak pay yok. Kural `tests/camera.mjs` içinde:
+**kutu, görünen bir şeyi gizlemeyecek.**
+
+### 2.9 İki nefes deliği yan telefonda şeridin altında
+
+Ölü bölge ölçülürken çıktı ve ölü bölgenin sebep olduğu bir şey değil: yan
+tutulan telefonda, 53 ve 61. bölümlerde birer nefes deliği, yüzücü tam
+altındayken üst şeridin otuz piksel altında kalıyor. Küçük, ama bölümün tek
+hedefi o delik.
+
+Ölçüsü hazır: `tests/camera.mjs` §9 bunu "zaten gizli" diye ayırıp geçiyor,
+yani düzelten biri sayıyı hemen görür.
 
 ### 2.7 `tests/skua.mjs` seyrek takılıyor
 

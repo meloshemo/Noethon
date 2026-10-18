@@ -188,6 +188,91 @@ export const CAM = {
   drop: 0.17,
   dropMax: 230,
   riseMax: 70,
+  /**
+   * How far the camera pulls back so a whole room fits, at most.
+   *
+   * Only the snowball fight asks for this, and it asks because its levels are
+   * not routes: an arena is one stage, 1500 units wide, and every question on
+   * it is a sight-line between two penguins standing on it. A desktop sees 960
+   * of those units, so standing on the spot a duel is *built around* put the
+   * thrower off the screen on 87% of the duels in the chapter.
+   *
+   * The other way out was to make the arenas narrower, and it was tried first
+   * because it needs no new machinery. The composer refuses: at 1300 units it
+   * cannot lay a clean line for level 74, at 1150 it loses 71, at 960 it loses
+   * 67. A duel is built backwards from its answer and the line needs the room
+   * — the width is not padding, it is the chapter.
+   *
+   * So the camera pulls back instead. Capped, because a room that fits on a
+   * screen the penguin is a speck on is not a solution either — see
+   * `roomPenguin`.
+   */
+  roomZoom: 1.6,
+  /**
+   * And the floor that cap is really made of, in real screen pixels.
+   *
+   * The zoom is only allowed as far as the penguin stays this big. A desktop
+   * has the pixels to spare and ends up showing the whole room; a phone held
+   * upright has 390 of them across and is allowed almost nothing, which is the
+   * right answer — on that screen the room cannot fit at any size worth
+   * looking at, and the edge markers on the aim lines are what carry it.
+   */
+  roomPenguin: 34,
+  /**
+   * The box in the middle of the screen the camera does not answer.
+   *
+   * A camera that follows every step is a camera that is always moving, and a
+   * picture that is always moving is one you read instead of play. Measured in
+   * an arena: pacing ninety pixels either side of one spot for five seconds
+   * moved the camera 1524 pixels — with the sideways lead already removed.
+   * All of it was "the camera follows the penguin".
+   *
+   * So it does not, inside a box. Step about and the picture is still; go
+   * somewhere and it comes with you, pushed rather than chased.
+   *
+   * Per axis and per chapter, because the risk is not the same in all four.
+   * Sideways it is nearly free everywhere. Vertically it is the one that can
+   * hide something you need: the next hold on a mountain is above you and the
+   * next hole in the ice is above you, so both of those get a small one and
+   * `tests/camera.mjs` checks, on every level, that the thing you are reaching
+   * for is still on screen at the worst offset the box allows.
+   */
+  dead: {
+    across: { x: 86, y: 28 },
+    brawl: { x: 120, y: 40 },
+    up: { x: 44, y: 30 },
+    /*
+     * No vertical box at all under the ice, and that is a measurement rather
+     * than a worry.
+     *
+     * The sea's target is the next hole, the next hole is directly above, and
+     * the frame has no headroom to spend: on a desktop the hole sits exactly
+     * at the edge of the strip when the swimmer is under it, so a box of any
+     * size at all takes it away. Sideways the sea is as free as anywhere else.
+     */
+    dive: { x: 70, y: 0 },
+  },
+  /**
+   * And it opens up while you are falling.
+   *
+   * The drop lead exists to show the ground coming; a dead box would eat the
+   * first half of it. Above this speed the vertical box is gone and the camera
+   * answers immediately, which is also when a player most wants it to.
+   */
+  deadFallAt: 300,
+  /**
+   * And sideways it closes as the penguin actually travels.
+   *
+   * A box that ignores small movements must not also ignore a run: at full
+   * speed the sideways box ate most of the look-ahead the lead was drawing,
+   * leaving 24 pixels of the 110 the chapter is tuned for. So it shrinks with
+   * speed, and is gone by three quarters of a run.
+   *
+   * Not in an arena, which is the one place where going fast is not going
+   * anywhere — the same distinction the lead itself is written under. There
+   * the box is the point, and pacing at full speed is exactly what it is for.
+   */
+  deadRunAt: 240,
   /** How fast the camera closes on its target, per axis. */
   followX: 7,
   followY: 5,

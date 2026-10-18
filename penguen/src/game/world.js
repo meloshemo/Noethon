@@ -1364,9 +1364,43 @@ export class World {
     // and never arrived at.
     const hurry = CAM.followY
       + CAM.followFall * Math.min(1, Math.max(0, falling) / CAM.followFallAt);
-    this.camera.x = damp(this.camera.x, at.x, CAM.followX, dt);
-    this.camera.y = damp(this.camera.y, at.y, hurry, dt);
+    const box = this._deadZone(falling);
+    this.camera.x = damp(this.camera.x, this._slack(this.camera.x, at.x, box.x, this._camXRange), CAM.followX, dt);
+    this.camera.y = damp(this.camera.y, this._slack(this.camera.y, at.y, box.y, this._camYRange), hurry, dt);
     this.camera.shake = damp(this.camera.shake, 0, 9, dt);
+  }
+
+  /**
+   * The box in the middle the camera does not answer, for this level.
+   *
+   * The vertical half opens up while the penguin is falling: the drop lead
+   * exists to show the ground coming, and a dead box would eat the first half
+   * of it. The sideways half never opens, because going sideways fast is what
+   * the sideways lead is already for.
+   */
+  _deadZone(falling) {
+    const box = CAM.dead[this.brawl ? 'brawl' : this.axis] ?? CAM.dead.across;
+    const open = Math.min(1, Math.max(0, falling) / CAM.deadFallAt);
+    // In a room, going fast is not going anywhere — the same sentence the
+    // sideways lead is written under, and the reason a brawl keeps its box
+    // while a shelf hands it back as soon as the penguin is really running.
+    const run = this.brawl ? 0 : Math.min(1, Math.abs(this.player.vx) / CAM.deadRunAt);
+    return { x: box.x * (1 - run), y: box.y * (1 - open) };
+  }
+
+  /**
+   * Where the camera should head, given that it may ignore `slack` pixels.
+   *
+   * Pushed rather than chased: inside the box nothing happens at all, and
+   * outside it the camera follows the *edge* of the box rather than the
+   * target, so stepping back and forth across the boundary does not snap the
+   * picture between two places. Re-clamped to the level, because the edge of
+   * a box is a position like any other and a level has ends.
+   */
+  _slack(now, want, slack, range) {
+    const gap = want - now;
+    if (Math.abs(gap) <= slack) return now;
+    return clamp(want - Math.sign(gap) * slack, range.min, range.max);
   }
 
   /**
