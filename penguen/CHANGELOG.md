@@ -79,6 +79,24 @@ rakibin duruşu, yani ekran dışındaki şey.
 Bu bir yama. Odanın ekrandan geniş olması tasarım gerilimi olarak duruyor ve
 iki yolu da bedelli; ölçü `docs/YAPILACAKLAR.md` §2.6'da.
 
+### Ve arenada yan öncü kaldırıldı
+
+Yan öncü — kameranın gidiş yönüne doğru öne bakması — *yolculuk* için var. Bir
+tırmanış ekrandan dar, yani bakılacak bir ön yok; zaten sıfırdı. Bir arena ise
+bir **oda**: tek bir sahnede bilerek ileri geri yürüyorsun, ve oyun bu farkı
+zaten biliyor — kar topu bölümünde `progress` mesafe değil, kalan kapıcı
+sayıyor.
+
+Ölçüldü: tek bir noktanın doksan piksel sağına soluna beş saniye gidip
+gelirken kamera öncüyle **2227**, öncüsüz **1524** piksel yol yapıyor. Tam
+olarak konumları okumak üzerine kurulu bir bölümde üçte bir fazla resim
+hareketi. Her fikir değiştirdiğinde savrulan bir kamera, oyunla tartışıyor
+demektir.
+
+Kalan 1524 piksel "kamera pengueni takip ediyor"dan geliyor ve cevabı bir ölü
+bölge — ölçüsü alındı, yapılmadı, gerekçesi `docs/YAPILACAKLAR.md` §2.8'de:
+his kararı, ve his kararı gerçek cihazda oynayanın.
+
 Yeni paket dört gerçek ekran şeklinde, yetmiş altı bölümün hepsinde koşuyor.
 54 paket (44 node + paketleme + 10 tarayıcı).
 

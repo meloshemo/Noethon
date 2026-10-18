@@ -254,6 +254,41 @@ console.log('\n7) Tırmanırken kamera tutuşla birlikte sallanmıyor');
   restore();
 }
 
+/* 7b -------------------------------------------------------------------- */
+console.log('\n7b) Arenada kamera adım başına sallanmıyor');
+{
+  useScreen(SCREENS[0]);
+  /*
+   * A brawl is a room, not a route: you walk back and forth across one stage
+   * on purpose. The sideways lead exists to show you where you are *going*,
+   * and in here there is nowhere to go — so it only swings the picture every
+   * time you change your mind, in the chapter whose whole subject is reading
+   * precise positions.
+   */
+  const def = ALL_LEVELS.find((d) => d.brawl);
+  const w = new World(def, deps());
+  const x0 = def.worldW / 2;
+  w.player.x = x0;
+  w.player.vx = PHYS.moveSpeed;
+  w._centerCamera();
+  const still = w.camera.x;
+  w._followCamera(1 / 120);
+  check(
+    Math.abs(w.camera.x - still) < 0.6,
+    `tam hızda yürürken kamera ${Math.abs(w.camera.x - still).toFixed(2)}px öne kaçıyor`,
+  );
+  // And the shelf still leads, because there it is the whole point.
+  const shelf = ALL_LEVELS.find((d) => (d.axis ?? 'across') === 'across' && !d.brawl);
+  const s2 = new World(shelf, deps());
+  s2.player.x = s2.def.worldW / 2;
+  s2.player.vx = PHYS.moveSpeed;
+  s2._centerCamera();
+  const before = s2.camera.x;
+  for (let i = 0; i < 60; i++) s2._followCamera(1 / 120);
+  check(s2.camera.x > before + 30, `sahanlıkta hâlâ ${Math.round(s2.camera.x - before)}px öne bakıyor`);
+  restore();
+}
+
 /* 8 --------------------------------------------------------------------- */
 console.log('\n8) Arenada atışın geldiği yer okunabiliyor');
 /*

@@ -50,6 +50,7 @@ sonra listenin durumu:
 | 2.5 | Küçük işler | biri sende (kullanıcı adı), biri tavan |
 | 2.6 | Arena odası ekrandan geniş | yama kondu, **asıl karar açık** |
 | 2.7 | `skua.mjs` seyrek takılıyor | **açık** — elli koşuda bir, tekrarlanamadı |
+| 2.8 | Kamera ölü bölgesi | **açık, senin kararın** — ölçüldü, his kararı olduğu için yapılmadı |
 
 Oyunun en tekrarlı bölümü artık 47–61 (%4), ve o %4'ün tamamı 47'nin kendini
 öğreten alt kümesi.
@@ -188,6 +189,29 @@ Asıl karar duruyor ve iki yolu var:
 | Kar topu bölümünde kamerayı uzaklaştırmak | Çizicide bölüm başına bir yakınlaştırma gerekir ve penguen bir chapter boyunca küçülür |
 
 İkisi de tasarım kararı, ölçüm değil — o yüzden burada duruyor.
+
+### 2.8 Ölü bölge: kameranın bir sonraki adımı, ve bu karar sende
+
+Kamera turunda ölçülen son şey. Kamera penguenin **her** adımını takip ediyor:
+bir arenada tek bir noktanın doksan piksel sağına soluna beş saniye gidip
+gelince kamera 1524 piksel yol yapıyor — yan öncü kaldırıldıktan *sonra*.
+Yani kalan hareketin tamamı "kamera pengueni takip ediyor"dan geliyor.
+
+Standart cevap bir **ölü bölge**: ekranın ortasında bir kutu, penguen onun
+içindeyken kamera hiç kıpırdamıyor, kutudan çıkınca kutuyu itiyor. Küçük
+adımlarda resim taş gibi duruyor, gerçekten gidince kamera geliyor.
+
+Yapılmadı, çünkü bu bir **his** kararı ve yetmiş altı bölümün hepsini
+etkiliyor:
+
+- Sahanlıkta neredeyse kesin iyi: koşuyorsun, kamera yalnızca gerçekten
+  ilerleyince kayıyor.
+- Dağda riskli: dikey ölü bölge bir sonraki tutamağı saklayabilir.
+- Denizde riskli: sütun zaten dar, ve nefes deliği yukarıda.
+
+Doğru sıra: **önce 1.5'i yap** (gerçek cihazda oyna), sonra "kamera adım başına
+sallanıyor mu" sorusunun cevabı sende olur. Cevabın evetse bu on dakikalık bir
+iş ve ölçüsü hazır.
 
 ### 2.7 `tests/skua.mjs` seyrek takılıyor
 
