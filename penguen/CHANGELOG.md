@@ -54,6 +54,31 @@ kimsenin birini değiştirmemiş olması. Tek bir `_cameraTarget` oldu, ve
 `tests/camera.mjs` ikisinin duran bir penguende aynı şeyi söylediğini de
 kontrol ediyor.
 
+### Ve aynı ölçüm arenada çok daha kötü bir şey buldu
+
+Arena **1500** birim geniş, masaüstü görüntüsü **960**. Bölümün kendi sözleşmesi
+"kol geri gider, hat buzun üstüne çizilir, o süre senindir" diyor — ama çizici,
+görüntüden çıkan rakipleri tamamen atlıyordu. Bölümün kendi kurduğu duracak
+yerde dururken:
+
+| Ekran | Hattı çizen atıcı ekran dışında |
+|---|---|
+| Masaüstü 16:9 | **%87** |
+| Telefon dik | **%100** |
+| Telefon yatay | %3 |
+
+62. bölümde — ekranında "yukarıdaki sana atıyor" yazan öğretici bölümde — sana
+atan penguen ekranda değildi.
+
+Artık gövde eleniyor, telgraf elenmiyor: ekranı kesen hat, onu çizen kol
+ekranda olmasa da çiziliyor, ve kol arkasında kaldığı kenara bir işaret alıyor —
+hangi yönden ve ne kadar vaktin kaldığı, tek bakışta. Hareket azaltma açıkken
+de çiziliyor, çünkü o modda hat zaten çizilmiyor ve geriye kalan tek ipucu
+rakibin duruşu, yani ekran dışındaki şey.
+
+Bu bir yama. Odanın ekrandan geniş olması tasarım gerilimi olarak duruyor ve
+iki yolu da bedelli; ölçü `docs/YAPILACAKLAR.md` §2.6'da.
+
 Yeni paket dört gerçek ekran şeklinde, yetmiş altı bölümün hepsinde koşuyor.
 54 paket (44 node + paketleme + 10 tarayıcı).
 

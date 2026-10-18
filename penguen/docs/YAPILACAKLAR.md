@@ -48,7 +48,8 @@ sonra listenin durumu:
 | 2.3 | Zirvenin kalan kol gücü | **tavan** — plan hakkında değil |
 | 2.4 | Arenanın dağarcığı / metriği | dağarcık **kapandı** (%5 → %1), metrik bir taban |
 | 2.5 | Küçük işler | biri sende (kullanıcı adı), biri tavan |
-| 2.6 | `skua.mjs` seyrek takılıyor | **açık** — elli koşuda bir, tekrarlanamadı |
+| 2.6 | Arena odası ekrandan geniş | yama kondu, **asıl karar açık** |
+| 2.7 | `skua.mjs` seyrek takılıyor | **açık** — elli koşuda bir, tekrarlanamadı |
 
 Oyunun en tekrarlı bölümü artık 47–61 (%4), ve o %4'ün tamamı 47'nin kendini
 öğreten alt kümesi.
@@ -168,7 +169,27 @@ rotayı değiştirmiyor, rotanın bedelini değiştiriyor. Arenayı zorlaştırm
 kapatmak demek — yani geometri — ve bu sayı yalnızca en güvenli rota
 kapandığında kıpırdar.
 
-### 2.6 `tests/skua.mjs` seyrek takılıyor
+### 2.6 Arena odası ekrandan geniş — asıl karar açık
+
+Arena 1500 birim, masaüstü görüntüsü 960. Bölümün kendi kurduğu duracak yerde
+dururken hattı çizen atıcı **masaüstünde %87**, dik telefonda **%100** oranında
+ekran dışında kalıyor. Bu bir kamera ayarı sorunu değil: oda ekrandan geniş.
+
+Yapılan şey bir yama ve iyi bir yama: gövde eleniyor, telgraf elenmiyor —
+ekranı kesen hat çiziliyor ve kol arkasında kaldığı kenara "hangi yönden, ne
+kadar vaktin var" işareti alıyor. Her düelloda hattın görünen kısmı en az 200
+piksel, ve `tests/camera.mjs` bunu tutuyor.
+
+Asıl karar duruyor ve iki yolu var:
+
+| Yol | Bedeli |
+|---|---|
+| Arenaları 960 birime daraltmak | Bütün hatlar yeniden akar; `_verify` menzil ve kaçış paylarını baştan hesaplar, chapter yeniden dengelenir |
+| Kar topu bölümünde kamerayı uzaklaştırmak | Çizicide bölüm başına bir yakınlaştırma gerekir ve penguen bir chapter boyunca küçülür |
+
+İkisi de tasarım kararı, ölçüm değil — o yüzden burada duruyor.
+
+### 2.7 `tests/skua.mjs` seyrek takılıyor
 
 Kamera turunda elli koşuda bir kere düştü ve bir daha tekrarlanamadı: arka
 arkaya elli koşuda sıfır hata, değişiklikten önceki kodda da sıfır. Kuşun

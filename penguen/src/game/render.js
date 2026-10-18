@@ -3025,7 +3025,26 @@ export class Renderer {
     const view = this._viewBounds(world);
 
     for (const r of world.rivals) {
-      if (r.x + r.w < view.left - 80 || r.x > view.right + 80) continue;
+      /**
+       * An arena is wider than the screen, and the tell was being culled.
+       *
+       * The chapter's whole fairness is the wind-up: the arm goes back, the
+       * line is drawn on the ice, and you have that long to not be standing on
+       * it. Rivals were skipped entirely once they left the view — and
+       * measured, standing on the spot the level is *built around*, that is
+       * thirty-four of seventy-eight throwers and doorkeepers off screen on a
+       * desktop and fifty-four on a phone held upright. A shot arriving from a
+       * thrower you were never shown is the one thing this chapter promises
+       * not to do.
+       *
+       * So the body is culled and the telegraph is not. A line that crosses
+       * the screen is drawn whether or not the arm that drew it is on it, and
+       * the arm gets a mark at the edge it is behind.
+       */
+      const offLeft = r.x + r.w < view.left - 80;
+      const offRight = r.x > view.right + 80;
+      const off = offLeft || offRight;
+      if (off && !r.aim) continue;
 
       if (r.out) {
         // A heap of snow where a penguin was. It stays for the rest of the
@@ -3102,6 +3121,10 @@ export class Renderer {
         ctx.restore();
       }
 
+      if (off) {
+        this._aimFromOffScreen(ctx, world, r, offLeft);
+        continue;
+      }
       this._rival(ctx, r, time);
     }
 
@@ -3125,6 +3148,48 @@ export class Renderer {
       ctx.stroke();
       ctx.lineCap = 'butt';
     }
+  }
+
+  /**
+   * A thrower winding up from behind the edge of the screen.
+   *
+   * Not a minimap and not an arrow pointing at a dot — a chevron on the edge
+   * it is behind, at the height the shot is coming from, filling as the arm
+   * goes back. The player already reads this chapter in exactly those two
+   * terms: *which side* and *how long have I got*. Anything more would be a
+   * second interface for a question the first one answers.
+   *
+   * Drawn even with motion reduced, because the aim line is not: with the
+   * line off, the only tell left is the rival's lean, and that is the thing
+   * that is off the screen.
+   */
+  _aimFromOffScreen(ctx, world, r, onLeft) {
+    const charge = clamp(1 - r.timer / BRAWL.windup, 0, 1);
+    const edge = onLeft ? world.camera.x + 16 : world.camera.x + VIEW.w - 16;
+    const dir = onLeft ? 1 : -1;
+    // Kept inside the band the interface is not standing on, for the same
+    // reason the camera is: a warning behind a thumb is not a warning.
+    const top = world.camera.y + VIEW.padTop + 18;
+    const bottom = world.camera.y + VIEW.h - VIEW.padBottom - 18;
+    const y = clamp(r.hand.y, top, bottom);
+
+    ctx.save();
+    ctx.globalAlpha = 0.32 + charge * 0.6;
+    ctx.fillStyle = r.lobs ? 'rgba(255,214,150,1)' : 'rgba(255,236,180,1)';
+    ctx.beginPath();
+    ctx.moveTo(edge + dir * 13, y);
+    ctx.lineTo(edge - dir * 5, y - 11);
+    ctx.lineTo(edge - dir * 5, y + 11);
+    ctx.closePath();
+    ctx.fill();
+    // The wind-up itself: a bar behind the chevron that fills as the arm goes
+    // back, so "which side" and "how long" are one glance.
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = 'rgba(12,28,46,0.55)';
+    ctx.fillRect(edge - dir * 7 - (dir < 0 ? 5 : 0), y - 13, 5, 26);
+    ctx.fillStyle = r.lobs ? 'rgba(255,196,120,1)' : 'rgba(255,226,150,1)';
+    ctx.fillRect(edge - dir * 7 - (dir < 0 ? 5 : 0), y + 13 - 26 * charge, 5, 26 * charge);
+    ctx.restore();
   }
 
   /**

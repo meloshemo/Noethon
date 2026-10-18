@@ -254,6 +254,53 @@ console.log('\n7) Tırmanırken kamera tutuşla birlikte sallanmıyor');
   restore();
 }
 
+/* 8 --------------------------------------------------------------------- */
+console.log('\n8) Arenada atışın geldiği yer okunabiliyor');
+/*
+ * An arena is 1500 units wide and a desktop sees 960 of them, so standing on
+ * the spot a duel is built around puts the thrower off the screen on more
+ * than a third of the duels in the chapter — and fifty-four of seventy-eight
+ * on a phone held upright. That was invisible until it was counted.
+ *
+ * The chapter's fairness is the wind-up, and the wind-up is drawn as a line
+ * on the ice. So the property is not "the thrower is visible" — it cannot be,
+ * the room is wider than the screen — it is that **the line is**: enough of
+ * it crosses the band for the player to read where the shot is coming from
+ * before it arrives. `render.js` draws it whether or not the arm that drew it
+ * is on screen, and marks the edge it came from.
+ */
+for (const s of SCREENS) {
+  useScreen(s);
+  let off = 0;
+  let duels = 0;
+  const blind = [];
+  for (const def of ALL_LEVELS.filter((d) => d.brawl)) {
+    const w = new World(def, deps());
+    for (const plan of def.plan ?? []) {
+      duels++;
+      w.player.x = plan.stand.x - w.player.w / 2;
+      w.player.vx = 0;
+      w.player.vy = 0;
+      w._centerCamera();
+      const left = w.camera.x;
+      const right = left + VIEW.w;
+      const r = def.rivals[plan.shooter];
+      const hand = { x: r.x + r.w / 2, y: r.y + r.h * 0.34 };
+      if (hand.x < left || hand.x > right) off++;
+      // How much of the shot's path is on screen before it reaches the spot.
+      const seen = Math.min(Math.max(hand.x, left), right);
+      const run = Math.abs(plan.stand.x - seen);
+      if (run < 200) blind.push(`L${def.id}:${Math.round(run)}px`);
+    }
+  }
+  check(
+    blind.length === 0,
+    `${s.name}: atıcıların %${Math.round((off / duels) * 100)}'i ekran dışında, ` +
+      `ama hattın görünen kısmı ${blind.slice(0, 3).join(' ') || 'her düelloda 200px+'}`,
+  );
+}
+restore();
+
 console.log('');
 if (fails) {
   console.log(`✗ ${fails} kontrol düştü.`);

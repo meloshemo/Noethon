@@ -2960,6 +2960,43 @@ duran bir penguende iki kamera fonksiyonu aynı şeyi söylüyor mu.
 O son madde ayrı bir iş: kamerayı yerleştiren ve kamerayı takip ettiren kod
 aynı üç oranın iki ayrı kopyasıydı. Şimdi tek bir `_cameraTarget`.
 
+### Arenada atıcıların çoğu ekran dışındaydı — ve haberi yoktu
+
+Kamerayı ölçerken çıktı, ve bu bir çerçeveleme sorunu değil: arena **1500**
+birim geniş, masaüstü görüntüsü **960**. Yani oda ekrandan geniş, ve bununla
+bir kamera ayarı baş edemez.
+
+Bölümün kendi sözleşmesi şu: *nişan kilidi bu chapter'ın bütün adaleti — kol
+geri gider, hat buzun üstüne çizilir, ve o süre boyunca o hattın üstünde
+durmamak senin işindir.* Oysa çizici, görüntüden çıkan rakipleri **tamamen**
+atlıyordu. Bölümün kendi kurduğu duracak yerde dururken ölçüldüğünde:
+
+| Ekran | Hattı çizen atıcı ekran dışında |
+|---|---|
+| Masaüstü 16:9 | **%87** |
+| Telefon dik | **%100** |
+| Telefon yatay (1423 birim) | %3 |
+
+Yani 62. bölümde — ekranında "yukarıdaki sana atıyor" yazan **öğretici**
+bölümde — sana atan penguen ekranda değildi.
+
+Artık **gövde eleniyor, telgraf elenmiyor**: ekranı kesen bir hat, onu çizen
+kol ekranda olmasa da çiziliyor, ve kol arkasında kaldığı kenara bir işaret
+alıyor — hangi yönden ve ne kadar vaktin kaldığı. Oyuncu bu bölümü zaten tam
+olarak bu iki soruyla okuyor. Hareket azaltma açıkken de çiziliyor, çünkü o
+modda hat çizilmiyor ve geriye kalan tek ipucu rakibin duruşu — yani ekran
+dışındaki şey.
+
+`tests/camera.mjs` ölçüyü de kuralı da tutuyor: her arenada, her düelloda,
+duracak yerde dururken hattın ekranda görünen kısmı en az 200 piksel.
+
+**Asıl karar hâlâ açık.** Bu bir yama ve iyi bir yama; ama odanın ekrandan
+geniş olması tasarım gerilimi olarak duruyor. İki yol var ve ikisi de bedelli:
+arenaları 960 birime daraltmak (bütün hatları yeniden akıtır, `_verify`
+menzil ve kaçış paylarını yeniden hesaplar) ya da kar topu bölümünde kamerayı
+uzaklaştırmak (penguen bir chapter boyunca küçülür). Ölçü `docs/YAPILACAKLAR.md`
+içinde duruyor.
+
 ### Bölüm sonu kartı hiçbir ekrana sığmıyormuş
 
 Bunu, yatay modu düzeltirken *ölçtüğüm için* buldum. Kart 950 piksel: başlık,
