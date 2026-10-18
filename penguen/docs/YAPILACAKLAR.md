@@ -37,7 +37,20 @@ Otomatik bir testin göremediği tek şey bu. Kötü hissettiren her şeyin ayar
 
 ## 2. Kodda açık kalanlar
 
-Hepsi ölçülmüş; yanlarındaki sayı tahmin değil, aracın okuması.
+Hepsi ölçülmüş; yanlarındaki sayı tahmin değil, aracın okuması. Bu turdan
+sonra listenin durumu:
+
+| | Konu | Durum |
+|---|---|---|
+| 2.1 | Denizde iki birebir ikiz | **kapandı** — %6 → %4 |
+| 2.1b | Denizin altı kolay bölümü | **denendi, kapatıldı** — model düzeltildi, net kazanç sıfır çıktı, geri alındı |
+| 2.2 | Sonsuz modun sıkışmayan bölümleri | **kapandı** — ortalama 0,533 → 0,505 |
+| 2.3 | Zirvenin kalan kol gücü | **tavan** — plan hakkında değil |
+| 2.4 | Arenanın dağarcığı / metriği | dağarcık **kapandı** (%5 → %1), metrik bir taban |
+| 2.5 | Küçük işler | biri sende (kullanıcı adı), biri tavan |
+
+Oyunun en tekrarlı bölümü artık 47–61 (%4), ve o %4'ün tamamı 47'nin kendini
+öğreten alt kümesi.
 
 ### 2.1 Denizde iki gerçek ikiz — **kapandı**
 
@@ -116,8 +129,14 @@ istiyor ve yükseliş aynı erişimden harcıyor.
 | 302 | 0,454 | 0,455 |
 | 305 | 0,428 | **0,353** |
 
-Taban hedefi 0,22; dördü de hâlâ gevşek tarafta, ama artık dördü de dialin
-ucunda. Kalanı 2.1b ile aynı cins bir iş.
+Altmış üretilmiş bölümün tamamı da kıpırdadı: **ortalama 0,533 → 0,505**, en
+sıkı bölüm 0,355 → 0,326.
+
+Taban hedefi 0,22; altmışın altmışı hâlâ gevşek tarafta, ama artık hepsi dialin
+ucunda. Buradan sonrası yeni parça ister, dial değil — çünkü `crevasse` ile
+`orcaGap` zaten tabanın üstünde sabit duruyor ve kalan gevşeklik sıçramanın
+kendisinde değil, kursun **ritminde**: bir avuç zor sıçrama, aralarında bol
+bol kolay zemin.
 
 ### 2.3 Zirvenin kalan kol gücü hedefin üstünde — ve kaldırılamıyor
 
