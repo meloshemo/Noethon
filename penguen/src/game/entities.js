@@ -6,7 +6,7 @@
  */
 
 import {
-  ICE, STORM, BRAWL, WIND, SWING, ROT, windAt, swingAt, lobShot, tailWindow, lullWindow,
+  ICE, BUOY, STORM, BRAWL, WIND, SWING, ROT, windAt, swingAt, lobShot, tailWindow, lullWindow,
 } from './config.js';
 import { clamp, easeOutCubic, lerp } from '../core/util.js';
 
@@ -76,6 +76,17 @@ export class Floe {
 
     // Sudden collapse (type: 'snap')
     this.snapped = false;
+
+    /**
+     * A raft: how far it has settled, and how far it is allowed to.
+     *
+     * `load` is 0 at the waterline it floats at and 1 when the sea is over the
+     * top of it. Kept as a fraction rather than as pixels because three
+     * separate things read it — the drawing, the hint, and the composer's own
+     * check — and a fraction is the one form none of them can misread.
+     */
+    this.draft = def.draft ?? BUOY.draft;
+    this.load = 0;
   }
 
   get breakable() {
@@ -167,7 +178,7 @@ export class Floe {
     return true;
   }
 
-  update(dt, time, ctxFx) {
+  update(dt, time, ctxFx, riding = false) {
     this.dx = 0;
     this.dy = 0;
 
@@ -195,6 +206,28 @@ export class Floe {
       this.y = this.pivotY + at.dy;
       this.dx = this.x - prevX;
       this.dy = this.y - prevY;
+      return;
+    }
+
+    /**
+     * A raft, which is the one piece of ice that answers the penguin.
+     *
+     * Not a timer and not a path: a floating body under load. While something
+     * is standing on it it settles, and the moment it is free the water pushes
+     * it back up — slower, because water is not a spring. `dy` carries the
+     * rider the same way the swinging slab's does, so a penguin standing still
+     * on a raft really is going down with it rather than hovering at the
+     * height it landed at.
+     */
+    if (this.type === 'buoy') {
+      const prevY = this.y;
+      const to = riding ? this.baseY + this.draft : this.baseY;
+      const rate = riding ? BUOY.sink : BUOY.rise;
+      this.y = riding
+        ? Math.min(to, this.y + rate * dt)
+        : Math.max(to, this.y - rate * dt);
+      this.dy = this.y - prevY;
+      this.load = this.draft > 0 ? Math.min(1, Math.max(0, (this.y - this.baseY) / this.draft)) : 0;
       return;
     }
 

@@ -482,6 +482,56 @@ export function swingAt(len, angle, phase, time) {
 }
 
 /** Timings for the different ice behaviours (seconds). */
+/**
+ * Buzda yüzen sal — the ice that answers your weight.
+ *
+ * Every other piece of ice in this game is a clock or a shape: cracking ice
+ * counts down, melting ice counts around, a geyser throws, a slab swings on
+ * somebody else's timing. All of them happen *to* the penguin, and the penguin
+ * is the one thing that never changes the world by being in it.
+ *
+ * A raft does. It floats, and a floating thing sits where the weight on it
+ * says — so this piece of ice is at a different height depending on how long
+ * you have been standing on it, and it is the only thing in the game whose
+ * geometry is the player's own fault. Step off and the water pushes it back
+ * up, which is the second half and the half that makes it a *rhythm* rather
+ * than another fuse: everything else in chapter one, once spent, is spent.
+ *
+ * The numbers are chosen so the three questions a raft asks have three
+ * different answers:
+ *
+ *   · leave inside `safe` and the next raft is an ordinary hop;
+ *   · leave later and it is a climb, up to what a jump can actually rise;
+ *   · stay and the sea comes over the top.
+ */
+export const BUOY = {
+  /** How fast it settles while it is carrying a penguin, in px/s. */
+  sink: 70,
+  /**
+   * And how fast it comes back up, which is deliberately slower.
+   *
+   * Water is not a spring. If the rise matched the sink, hopping on and off
+   * would cost nothing and a run of rafts would be a flat corridor with an
+   * animation on it; at a little over half, a second visit to the same raft
+   * starts lower than the first, so a route that doubles back pays for it.
+   */
+  rise: 40,
+  /** How far it can go down before the sea is over the top of it. */
+  draft: 200,
+  /**
+   * The part of that drop the composer promises is an ordinary jump.
+   *
+   * Not the whole draft: the point of the piece is that waiting costs you, so
+   * the guarantee covers leaving *promptly* — a little over a second — and
+   * everything after that is the player choosing a harder jump. A rise of
+   * ninety is comfortably inside what a jump clears; a rise of a hundred and
+   * eighty is not, and that is the cliff the clock is walking you towards.
+   */
+  safe: 90,
+  /** How high above the sea a raft floats when nothing is standing on it. */
+  float: 150,
+};
+
 export const ICE = {
   /** "crack": time between first touch and collapse. */
   crackDelay: 0.85,

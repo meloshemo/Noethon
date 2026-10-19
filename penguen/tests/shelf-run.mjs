@@ -25,7 +25,7 @@
  */
 
 import { Player } from '../src/game/player.js';
-import { WIND, windAt, scaleForLevel, PHYS, PENGUIN, hushAt, ICE } from '../src/game/config.js';
+import { WIND, windAt, scaleForLevel, PHYS, PENGUIN, hushAt, ICE, BUOY } from '../src/game/config.js';
 import { LEVELS } from '../src/game/levels.js';
 import { generateLevel } from '../src/game/generator.js';
 
@@ -109,6 +109,38 @@ function forcesAt(def, p, t, dir) {
  */
 function tryHop(def, solids, a, b, { start, phase, delay, hold }, centred = false) {
   const p = makePlayer(def, start, a.y, { centred });
+  /**
+   * Floating ice is not where the level file says it is.
+   *
+   * Every other floe here is a fixed rectangle and this one is a question
+   * about the weight on it: it settles while the penguin is standing on it
+   * and floats back the moment it is not. A sweep that reads it as a fixed
+   * rectangle is sweeping a level nobody plays — it jumps from the waterline
+   * the ice sits at *empty*, which is the one height it is never at when
+   * somebody is taking off from it.
+   *
+   * So the one rectangle this attempt is leaving from gets a copy of its own,
+   * moved every step by the rule the game uses. The rider is not carried down
+   * with it, which the real game does: that makes this pessimistic by about a
+   * frame's worth of fall, and pessimistic is the side a proof should be on.
+   */
+  let list = solids;
+  let raft = null;
+  if (a.type === 'buoy') {
+    /*
+     * Found by geometry rather than by identity, because `solidsOf` hands out
+     * copies: the route walks `def.floes` and the physics are given a cloned
+     * list, so `===` never matches and the first version of this was dead code
+     * that made the suite pass by not running.
+     */
+    const at = solids.findIndex(
+      (s2) => s2.type === 'buoy' && s2.x === a.x && s2.y === a.y && s2.w === a.w,
+    );
+    if (at >= 0) {
+      raft = { ...solids[at] };
+      list = solids.map((s2, i) => (i === at ? raft : s2));
+    }
+  }
   const targetX = b.x + b.w / 2;
   let t = phase;
   let jumpedAt = null;
@@ -125,11 +157,18 @@ function tryHop(def, solids, a, b, { start, phase, delay, hold }, centred = fals
     }
     if (held && jumpedAt !== null && elapsed - jumpedAt > hold) held = false;
 
+    if (raft) {
+      const to = p.onGround ? a.y + (a.draft ?? BUOY.draft) : a.y;
+      const rate = p.onGround ? BUOY.sink : BUOY.rise;
+      raft.y = p.onGround
+        ? Math.min(to, raft.y + rate * STEP)
+        : Math.max(to, raft.y - rate * STEP);
+    }
     const { push, lift, gravity } = forcesAt(def, p, t, dir);
     p.update(
       STEP,
       { axis: dir, jumpHeld: held, jumpPressed: wantJump, push, lift, gravity },
-      solids,
+      list,
       TUNING,
     );
     t += STEP;

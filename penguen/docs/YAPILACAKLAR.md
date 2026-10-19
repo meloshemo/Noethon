@@ -9,7 +9,7 @@ orada **adımlar** var, burada **durum** var. Bir iş bittiğinde işareti burad
 değişir.
 
 Son güncelleme: 2026-10-18 · dal `claude/penguen-game-dev-6ym6pg` · 76 bölüm ·
-54 test paketi (44 node + paketleme + 10 tarayıcı)
+55 test paketi (45 node + paketleme + 10 tarayıcı)
 
 ---
 
@@ -52,6 +52,7 @@ sonra listenin durumu:
 | 2.7 | `skua.mjs` seyrek takılıyor | **açık** — elli koşuda bir, tekrarlanamadı |
 | 2.8 | Kamera ölü bölgesi | **kapandı** — 1185px → 0px |
 | 2.9 | İki nefes deliği şeridin altında | **yanlış alarm** — ölçüldü, deliğin yalnızca üst kenarı kırpılıyor |
+| 2.10 | Yüzen buz | **geldi** — sıradaki iki fizik kuralı için not |
 
 Oyunun en tekrarlı bölümü artık 47–61 (%4), ve o %4'ün tamamı 47'nin kendini
 öğreten alt kümesi.
@@ -242,6 +243,25 @@ düzeltmek değil gizlemek olur. Buraya yazılıyor ki bir dahaki sefere
 "bilinmeyen bir şey" değil, **bilinen bir şey** olsun: düşerse önce kuşun
 tohumuna bakılmalı.
 
+### 2.10 Yüzen buz geldi — bir sonraki fizik kuralı için not
+
+Chapter I'in yeni fiili `buoys`: ağırlığa cevap veren tek zemin. 20, 26 ve 30.
+bölümlerde, ve sonsuz modda kurs başına bir kere. Ayrıntısı `README.md` ve
+`CHANGELOG.md` içinde.
+
+Sırada ne var sorusunun ölçülmüş cevabı: aynı cins bir kural (dünyanın oyuncuya
+cevap vermesi) her chapter'da farklı bir şey olurdu ve ikisi şu an **yok**:
+
+- **Dağda ağırlıkla inen tutamak.** İpteki kütlenin makinesi zaten var; tutunca
+  inen, bırakınca çıkan bir tutamak chapter II'nin para birimiyle (koldaki bar)
+  birebir aynı cümleyi söyler.
+- **Arenada rüzgârda sapan kar topu.** Kavisli atışın balistiği zaten
+  çiziliyor; yan rüzgâr hattı büker ve hat zaten ekrana çiziliyor, yani
+  okunabilir kalır.
+
+İkisi de yapılmadı, çünkü yüzen buz tek başına üç bölümü ve sonsuz modu
+değiştirdi ve bir turda bir fizik kuralı yeterli. Sıradaki tur için not.
+
 ### 2.5 Küçük işler
 
 - Sütun başları penguenden dar (44px baş, 49px gövde, 21 yerde). Durmak
@@ -269,7 +289,7 @@ tartışman gerekir.
 ## 4. Nasıl ölçülür
 
 ```bash
-node tools/test.mjs --no-browser   # 44 paket, ~2 dk, kurulumsuz
+node tools/test.mjs --no-browser   # 45 paket, ~2 dk, kurulumsuz
 node tools/lint.mjs                # proje kuralları
 node tools/variety.mjs --twins     # tekrar: hangi bölümler birbirine benziyor
 node tools/difficulty.mjs --chapter=2,3,4   # zorluk eğrisi (I kırk dakika sürer)

@@ -417,6 +417,15 @@ const PLANS = [
         if (i < 3) c.slope({ n: 2, rise: 0.48, gap: 0.44, w: 150 });
       }
       c.cliff({ drop: 380, ledges: 4 });
+      /* And the bottom of that cliff is open water with ice floating on it.
+         A whale takes away four gaps on the way down; what it cannot do is
+         take away a *place*, because it comes up through a hole and goes back
+         down. Floating ice does the opposite: the place is the problem, and it
+         is a problem that gets worse the longer you look at the next jump.
+         It goes at the bottom on purpose. The drop lands the penguin at the
+         waterline with nothing left to descend to, which is exactly where ice
+         floats and exactly where standing still has somewhere to go. */
+      c.buoys({ n: 3, gap: 0.33, w: 155 });
       c.landing();
       c.scatterFish(3, 62);
       // The first coil in the game, hung over the orca run.
@@ -570,6 +579,13 @@ const PLANS = [
       c.shelf({ n: 2, gap: 0.4, w: 160 });
       c.slope({ n: 3, rise: -0.44, gap: 0.44, w: 155 });
       c.tunnel({ n: 9, headroom: 104, gap: 0.5, w: 128, icicles: 6, types: ['solid', 'melt'] });
+      /* The river the level is named after, and now you are standing on it.
+         Nine floes of tunnel teach the opposite habit: under a hundred-and-four
+         pixel ceiling the way through is stop, look, go, and the level has
+         just spent a minute rewarding that. Floating ice is where stopping
+         stops working — the same route, one chapter's worth of instinct
+         turned around, and nothing new to learn beyond "it is going down". */
+      c.buoys({ n: 3, gap: 0.32, w: 150 });
       c.crevasse({ pillars: 3, gap: 0.64, depth: 220 });
       c.slope({ n: 4, rise: 0.5, gap: 0.46, w: 140 });
       c.landing();
@@ -665,6 +681,13 @@ const PLANS = [
       c.tunnel({ n: 6, headroom: 104, gap: 0.48, w: 130, icicles: 4, types: ['solid', 'crack'] });
       c.crevasse({ pillars: 4, gap: 0.64, depth: 280 });
       c.cliff({ drop: 360, ledges: 4 });
+      /* Everything at once, and the last thing is the floor.
+         This level's whole claim is in its subtitle, and until now the list
+         was things that happen *to* the penguin: the wind, the geyser, the
+         ice that cracks, the ceiling, the drop. The one thing it could not
+         say was that the penguin is also something that happens to the world.
+         So the last stretch before the finish is ice that answers back. */
+      c.buoys({ n: 3, gap: 0.33, w: 148 });
       c.landing();
       c.scatterFish(3, 58);
       c.temptation(0.4, 'heavy');

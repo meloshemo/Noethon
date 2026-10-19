@@ -1538,12 +1538,12 @@ export class Renderer {
       }
       ctx.stroke();
 
-      this._floeDecor(ctx, f, x, y, w, time);
+      this._floeDecor(ctx, f, x, y, w, time, world.waterY);
       ctx.restore();
     }
   }
 
-  _floeDecor(ctx, f, x, y, w, time) {
+  _floeDecor(ctx, f, x, y, w, time, waterY = Infinity) {
     const cx = x + w / 2;
     if (f.type === 'crack' || (f.state === 'cracking' && f.type !== 'trap' && !f.isFake)) {
       const progress = f.state === 'cracking' ? 1 - clamp(f.timer / f.breakDelay(), 0, 1) : 0.25;
@@ -1598,6 +1598,68 @@ export class Renderer {
       ctx.lineTo(x + w * 0.58, y + 8);
       ctx.lineTo(x + w * 0.86, y + 3);
       ctx.stroke();
+    }
+
+    /**
+     * Floating ice, and the sea coming over the top of it.
+     *
+     * Two things have to be readable and they are different things. *Before*
+     * anybody steps on it, that this piece floats — otherwise it is ordinary
+     * ice right up until the moment the ground moves, and ground that moves
+     * without warning is the one thing this game does not do. *While* somebody
+     * is on it, how far down it has gone, because that is the clock.
+     *
+     * The first is a waterline scored into the ice at the height it floats at
+     * when empty: a mark that means nothing on solid ice and everything on
+     * this. The second is the sea itself. The water is painted before the
+     * floes, so a raft that has gone under would otherwise be drawn on top of
+     * the sea it is sinking into — so the submerged part is tinted here, in
+     * the floe's own pass, with the same two colours the sea is made of.
+     */
+    if (f.type === 'buoy') {
+      const load = f.load ?? 0;
+      // The waterline it floats at when nothing is on it.
+      ctx.strokeStyle = `rgba(150,214,246,${0.5 + load * 0.4})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x + 6, y + 7);
+      ctx.lineTo(x + w - 6, y + 7);
+      ctx.stroke();
+      // Three notches, so the mark reads as a scale rather than as a crack.
+      ctx.strokeStyle = `rgba(210,240,255,${0.35 + load * 0.5})`;
+      ctx.lineWidth = 1.6;
+      for (let i = 0; i < 3; i++) {
+        const nx = x + w * (0.28 + i * 0.22);
+        ctx.beginPath();
+        ctx.moveTo(nx, y + 3);
+        ctx.lineTo(nx, y + 12);
+        ctx.stroke();
+      }
+      // And whatever of it is under the sea.
+      const under = waterY - y;
+      if (under < 24) {
+        const from = Math.max(y, waterY);
+        ctx.fillStyle = 'rgba(28,86,142,0.55)';
+        ctx.fillRect(x, from, w, y + 26 - from + 6);
+        ctx.strokeStyle = 'rgba(190,232,255,0.6)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x - 4, waterY);
+        ctx.lineTo(x + w + 4, waterY);
+        ctx.stroke();
+      }
+      if (load > 0.04 && !this.reducedMotion) {
+        // A ripple at each end while it is actually moving: the eye reads the
+        // water being pushed long before it reads two pixels of height.
+        ctx.strokeStyle = `rgba(198,238,255,${0.2 + load * 0.45})`;
+        ctx.lineWidth = 1.6;
+        for (const sx of [x + 2, x + w - 2]) {
+          const r = 5 + load * 9 + Math.sin(time * 4 + f.id) * 2;
+          ctx.beginPath();
+          ctx.ellipse(sx, y + 9, r, 2.6, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
     }
 
     if (f.type === 'slip') {

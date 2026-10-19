@@ -148,6 +148,7 @@ export function generateLevel(id, opts = {}) {
   let hushes = 0;
   let lifts = 0;
   let baits = 0;
+  let rafts = 0;
 
   for (let i = 0; i < segments; i++) {
     const kind = weighted(rng, [
@@ -177,6 +178,15 @@ export function generateLevel(id, opts = {}) {
       ['windGap', storms < 2 ? lerp(0, 0.3, d) : 0],
       ['updraft', lifts < 1 ? lerp(0, 0.28, d) : 0],
       ['bait', baits < 2 ? lerp(0.05, 0.4, d) : 0],
+      /*
+       * Floating ice, capped at one run per course.
+       *
+       * It drops the route to the waterline and brings it back, so two of
+       * them in one level is a course that keeps walking downstairs; and it
+       * is the only piece out here whose difficulty is a clock the player
+       * starts themselves, which is worth meeting once and remembering.
+       */
+      ['buoys', rafts < 1 ? lerp(0.08, 0.42, d) : 0],
     ]);
 
     switch (kind) {
@@ -282,6 +292,17 @@ export function generateLevel(id, opts = {}) {
       case 'bait':
         c.bait({ gap: floorGap(0.26, 0.42) });
         baits++;
+        break;
+      case 'buoys':
+        // Narrower and closer together as the run goes deeper: the floor rule
+        // reaches this piece the same way it reaches the other three, and here
+        // a shorter pan is less room to stand about on while it settles.
+        c.buoys({
+          n: 2 + Math.floor(rng() * 2),
+          gap: floorGap(0.3, 0.42),
+          w: lerp(165, 132, d),
+        });
+        rafts++;
         break;
       default:
         break;

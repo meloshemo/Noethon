@@ -5,6 +5,66 @@ değiştiği yeterli. En yeni en üstte.
 
 ---
 
+## Yüzen buz: oyunun ilk "penguen de bir şey yapar" kuralı
+
+Bu oyundaki her buz parçası bir saat ya da bir şekildi. Çatlayan buz geriye
+sayıyor, eriyen buz daire çiziyor, gayzer fırlatıyor, ipteki kütle başkasının
+temposuyla sallanıyor — hepsi penguene *oluyor*. Penguen, dünyada bulunarak
+hiçbir şeyi değiştirmeyen tek şeydi.
+
+Yüzen buz değiştiriyor. Yüzen bir cisim üstündeki ağırlığın söylediği yerde
+durur, yani bu buzun yüksekliği **üstünde ne kadar durduğunun** bir
+fonksiyonu: oyunda geometrisi oyuncunun kendi suçu olan ilk şey. Kalkınca su
+onu geri itiyor, ve asıl ikinci yarı bu — bir fitil değil, bir **ritim**.
+Chapter I'deki her şey bir kere harcanınca bitiyordu; bu geri geliyor.
+
+| | |
+|---|---|
+| `sink` 70 px/sn | Taşırken |
+| `rise` 40 px/sn | Boşken — bilerek daha yavaş |
+| `safe` 90 px | Bestecinin söz verdiği aralık |
+| `draft` 200 px | Denizin üstüne geldiği derinlik |
+
+Çıkış batıştan yavaş olmasaydı inip çıkmak bedelsiz olurdu ve bir dizi yüzen
+buz, üstünde animasyon olan düz bir koridor olurdu. Yarısından biraz fazlası,
+aynı buza ikinci gelişin birincisinden daha aşağıdan başlamasını sağlıyor.
+
+Üç soru, üç cevap: ilk bir saniyede kalkarsan sıradan bir sıçrayış (besteci
+boşlukları düz zeminden değil, doksan piksel batmış bir zeminden istiyor, ve
+doksan bir zıplamanın 141'inin rahatça içinde); geç kalkarsan aynı sıçrayış
+bir tırmanışa dönüşüyor; kalkmazsan deniz üstüne geliyor.
+
+### Kanıt üç yerde, ve biri hiç çalışmıyormuş
+
+`validate-levels.mjs` artık yüzen buzdan yapılan her sıçrayışı batmış hâlden
+ölçüyor — dosyadaki hâlini okumak, kimsenin oynamadığı bir bölümü doğrulamak
+olurdu, çünkü buz üstünden atlanırken asla boş su hattında değil.
+
+`shelf-run.mjs` çözücüsü bıraktığı buzun kendi kopyasını her adımda oyunun
+kuralıyla hareket ettiriyor. İlk sürümü kimliğe (`===`) bakıyordu ve
+`solidsOf` kopya dağıttığı için **hiç çalışmayan** bir koddu: testi koşmayarak
+geçiriyordu. Geometriyle eşleşince ölçü de ortaya çıktı.
+
+`tests/buoy.mjs` altı şeyi tutuyor, ve beşincisi iki kere ders verdi. "Vaktinde
+kalkan geçer" kontrolü önce 20. bölümde koşuyordu ve üç koşunun ikisinde
+düşüyordu — o bölümde çürük balık, bobin ve üç katil balina var, ve düz
+yürüyen bir penguen kare sayısının önüne koyduğuyla karşılaşıyor. Kendi
+kursunda koşunca da beşte bir düşmeye devam etti: on ikinci bölümden sonra buz
+sahanlığı yazı tura ile arkandan çöküyor, sekizinciden sonra kuş rastgele bir
+anda geliyor. İkisi de iyi; ikisi de yüzen buz değil. Altıncı bölüm numarası
+alan bir kursta on beş koşuda sıfır hata.
+
+### Ölçülen fark
+
+20. bölüm, tolerans ortalaması **0,483 → 0,385**. En dar sıçrayış değişmedi
+(0,181), yani bölüm hâlâ geçilebilir; değişen şey kaç yolla geçilebildiği — ki
+bu chapter'ın zorluk ölçüsü zaten tam olarak o.
+
+20, 26 ve 30. bölümlerde var; sonsuz modda kurs başına bir kere, ve `floorGap`
+onu da görüyor. 55 paket (45 node + paketleme + 10 tarayıcı).
+
+---
+
 ## Yirmi dört cihaz tarandı, üç şey çıktı
 
 "Her telefon her cihaz sorun çıkarmasın" diye yirmi dört gerçek ekran şekli

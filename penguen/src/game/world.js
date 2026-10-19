@@ -568,7 +568,12 @@ export class World {
     for (const b of this.banks) if (b.hit > 0) b.hit = Math.max(0, b.hit - dt * 3);
 
     for (const f of this.floes) {
-      f.update(wdt, this.time, fx);
+      // A raft has to know whether it is carrying anybody: it is the only
+      // piece of ice in the game whose position is the player's own doing.
+      f.update(wdt, this.time, fx, this.player.groundFloe === f);
+      if (f.type === 'buoy' && this.player.groundFloe === f) {
+        this._tell('buoy', t('world.buoy'), 2.4);
+      }
       // Standing on a slab that hangs on a rope, the first time. What needs
       // saying is not that it moves — that is visible — but that it *stops*,
       // because waiting for the end is the move and rushing the middle is how

@@ -8,7 +8,7 @@ istiyor.
 
 **Bağımlılık yok, derleme adımı yok, backend yok, görsel/ses dosyası yok.**
 Penguen de, buz da, kuzey ışıkları da, bütün sesler de kodla üretiliyor.
-Toplam yük tek dosyada 679 KB ve çevrimdışı çalışıyor.
+Toplam yük tek dosyada 694 KB ve çevrimdışı çalışıyor.
 
 ▶ **[Oyunu aç](https://claude.ai/code/artifact/2f6dd29b-3ad8-4d60-b4f7-c8490114b96f)**
 
@@ -343,7 +343,7 @@ geçmez, hata verip durur.
 
 ## Testler
 
-Tek komut, 54 paket (44 node + paketleme + 10 tarayıcı), kendi sunucusunu
+Tek komut, 55 paket (45 node + paketleme + 10 tarayıcı), kendi sunucusunu
 kurup kapatıyor ve portu doluysa bir yanına kayıyor:
 
 ```bash
@@ -583,7 +583,7 @@ boşluk o sayıya göre ölçülüyor.
 - **Sabit adımlı fizik (1/120 s).** 60 Hz, 120 Hz ve 144 Hz ekranlarda oyun aynı
   hissettiriyor; arka planda kalan sekme geri geldiğinde penguen ışınlanmıyor.
 - **Görsel/ses varlığı yok.** Penguen, buzlar, kuzey ışıkları, su ve bütün sesler
-  kodla üretiliyor. Tek dosya sürümü 679 KB ve çevrimdışı çalışıyor.
+  kodla üretiliyor. Tek dosya sürümü 694 KB ve çevrimdışı çalışıyor.
 - **Metin koddan ayrı.** Arayüz metinleri tek sözlükte, içeriğe ait metinler
   girdinin kendi `en` bloğunda. Bir dil eklemek bir tablo eklemek.
 
@@ -684,6 +684,74 @@ Zorluk elle ayarlanınca kolayca haksız hale gelir, o yüzden kurallar
 
 Bu doğrulayıcı geliştirme sırasında dokuz gerçek adaletsizlik yakaladı, geçilmesi
 matematiksel olarak imkânsız üç sıçrama dahil.
+
+---
+
+## Yüzen buz: ağırlığa cevap veren tek zemin
+
+Bu oyundaki her buz parçası bir **saat** ya da bir **şekil**. Çatlayan buz
+geriye sayıyor, eriyen buz daire çiziyor, gayzer fırlatıyor, ipteki kütle
+başkasının temposuyla sallanıyor. Hepsi penguene *oluyor*, ve penguen de
+dünyada bulunarak hiçbir şeyi değiştirmeyen tek şeydi.
+
+Yüzen buz değiştiriyor. Yüzen bir cisim, üstündeki ağırlığın söylediği yerde
+durur — yani bu buzun yüksekliği, üstünde ne kadar durduğunun bir fonksiyonu,
+ve oyunda geometrisi **oyuncunun kendi suçu** olan tek şey. Kalkınca su onu
+geri itiyor, ve asıl ikinci yarı bu: bir *ritim* oluyor, bir fitil değil.
+Chapter I'deki her şey bir kere harcanınca bitmiş oluyor; bu geri geliyor.
+
+### Üç soru, üç farklı cevap
+
+| | |
+|---|---|
+| `sink` 70 px/sn | Taşırken ne kadar hızlı çöküyor |
+| `rise` 40 px/sn | Boşken ne kadar hızlı çıkıyor — **bilerek daha yavaş** |
+| `safe` 90 px | Bestecinin söz verdiği aralık |
+| `draft` 200 px | Denizin üstüne geldiği derinlik |
+
+Çıkış batıştan yavaş olmasaydı inip çıkmak bedelsiz olurdu ve bir dizi yüzen
+buz, üstünde animasyon olan düz bir koridordan ibaret kalırdı. Yarısından
+biraz fazlası, aynı buza ikinci gelişin birincisinden daha aşağıdan
+başlamasını sağlıyor: geri dönen bir rota bunu ödüyor.
+
+Ve üç soru:
+
+- **İlk bir saniyede kalkarsan** sıradan bir sıçrayış. Besteci bunu garanti
+  ediyor: boşlukları düz zeminden değil, `BUOY.safe` kadar batmış bir zeminden
+  istiyor, ve doksan piksellik yükseliş bir zıplamanın (141px) rahatça içinde.
+- **Geç kalkarsan** aynı sıçrayış bir tırmanışa dönüşüyor, ta ki artık
+  sıçrayış olmayana kadar.
+- **Kalkmazsan** deniz üstüne geliyor.
+
+### Kanıtı nerede
+
+Üç ayrı yerde, ve üçü de aynı sayıyı okuyor:
+
+- `validate-levels.mjs` artık yüzen buzdan yapılan her sıçrayışı **batmış**
+  hâlden ölçüyor. Dosyadaki her floe sabit bir dikdörtgen; bunu da öyle okumak,
+  kimsenin oynamadığı bir bölümü doğrulamak olurdu — buz, üstünden atlanırken
+  asla boş su hattında değil.
+- `shelf-run.mjs` çözücüsü, bıraktığı buzun kendi kopyasını her adımda oyunun
+  kuralıyla hareket ettiriyor. İlk sürümü kimliğe (`===`) bakıyordu ve
+  `solidsOf` kopya dağıttığı için **hiç çalışmayan** bir koddu; testi
+  koşmayarak geçiriyordu.
+- `tests/buoy.mjs` altı şeyi tutuyor: iki hızın doğru olduğunu, yükün sıfırdan
+  başladığını, vaktinde kalkanın geçtiğini, duranın öldüğünü (gerçek `World`
+  içinde, gerçekten yürüyüp zıplayarak), ve bölümlerde hiç kaybolmadığını.
+
+### Ölçülen fark
+
+20. bölüm (Katil Balina), tolerans ortalaması:
+
+| | Önce | Sonra |
+|---|---|---|
+| Batmayan buz | 0,483 | — |
+| Yüzen buz | — | **0,385** |
+
+En dar sıçrayış değişmedi (0,181): bölüm hâlâ geçilebilir. Değişen şey **kaç
+yolla** geçilebildiği, ki bu bölümün zorluk ölçüsü zaten tam olarak o.
+
+20, 26 ve 30. bölümlerde var, ve sonsuz modda kurs başına bir kere.
 
 ---
 
@@ -3434,11 +3502,11 @@ anlatmak değil, olan bir şeyi olduğundan iyi anlatmaktır.
 | Kimlik | Ad, `PNG-XXXXX` kimliği, 7 unvan, hepsi cihazda |
 | Hayalet | Kendi rekorun yanında koşuyor, paylaşım koduyla arkadaşınki de |
 | Müzik | Tek tema, 5 sahne, 5 katman, ses saatinde planlanıyor, ses dosyası yok |
-| Dil | Türkçe ve İngilizce, 314 metin, tarayıcıdan seçiliyor |
+| Dil | Türkçe ve İngilizce, 315 metin, tarayıcıdan seçiliyor |
 | Kayıt | Tek sürümlü JSON, ileri göç, dosyaya aktarma, tek tuşla silme |
-| Çevrimdışı | Servis çalışanı + tek dosya sürümü (679 KB) |
+| Çevrimdışı | Servis çalışanı + tek dosya sürümü (694 KB) |
 | Girdi | Klavye, dokunmatik, gamepad |
-| Test | 44 node + paketleme + 10 tarayıcı paketi, hepsi tek komutta |
+| Test | 45 node + paketleme + 10 tarayıcı paketi, hepsi tek komutta |
 | Zorluk | Ölçülen eğri: `node tools/difficulty.mjs` |
 
 ### Yok, ve neden

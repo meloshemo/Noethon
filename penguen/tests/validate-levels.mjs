@@ -10,7 +10,7 @@
  */
 
 import {
-  PHYS, PENGUIN, ICE, WIND, HUSH, windAt, tailWindow, lullWindow, reachWithWind, riseWithLift,
+  PHYS, PENGUIN, ICE, BUOY, WIND, HUSH, windAt, tailWindow, lullWindow, reachWithWind, riseWithLift,
   reachInHush, crossableGap, scaleForLevel, reachFor, CRAFTED_LEVELS, MENACE_CEILING,
 } from '../src/game/config.js';
 import { LEVELS, WATER_Y } from '../src/game/levels.js';
@@ -84,12 +84,26 @@ function check(def, { tutorial = false } = {}) {
     const assistA = a.type === 'move' ? Math.abs(a.ax ?? 0) : 0;
     const assistB = b.type === 'move' ? Math.abs(b.ax ?? 0) : 0;
     const gap = b.x - (a.x + a.w) - assistA - assistB;
-    const rise = a.y - b.y + (b.type === 'move' ? Math.abs(b.ay ?? 0) : 0);
+    /**
+     * A raft is not where it is drawn: it is where the penguin's weight has
+     * put it.
+     *
+     * Every other floe in this file is a fixed number, and reading a raft the
+     * same way checks a level nobody plays — the jump off it is measured from
+     * the waterline it floats at while *empty*, which is the one height it is
+     * never at when somebody is jumping. `BUOY.safe` is the promise the
+     * composer makes: leave within the first second and a bit and the piece
+     * still works. So that is the height the arithmetic has to clear, and the
+     * distance has to be the distance of a jump that is also climbing it.
+     */
+    const settled = a.type === 'buoy' ? BUOY.safe : 0;
+    const rise = a.y + settled - b.y + (b.type === 'move' ? Math.abs(b.ay ?? 0) : 0);
+    const span = settled ? reachFor(scale, settled).distance : reach.distance;
 
     const hushCrossed = overHush.has(`${a.x + a.w}:${b.x}`);
     const windCrossed = overWind.has(`${a.x + a.w}:${b.x}`) || hushCrossed;
-    if (!windCrossed && gap > reach.distance * budget.distance) {
-      fail(`${i}→${i + 1} arası ${Math.round(gap)}px, erişim ${Math.round(reach.distance * budget.distance)}px`);
+    if (!windCrossed && gap > span * budget.distance) {
+      fail(`${i}→${i + 1} arası ${Math.round(gap)}px, erişim ${Math.round(span * budget.distance)}px`);
     }
     const liftCrossed = overLift.has(`${a.x + a.w}:${b.x}`) || hushCrossed;
     if (!liftCrossed && rise > reach.height * budget.rise) {

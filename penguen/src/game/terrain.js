@@ -25,7 +25,7 @@
 
 import {
   reachFor, reachInHush, reachWithWind, riseWithLift, crossableGap, openingWidth,
-  OPENING, PHYS, PENGUIN, ICE, STORM, WIND, HUSH, CHARGED, FIRM_ICE, settleFlags,
+  OPENING, PHYS, PENGUIN, ICE, BUOY, STORM, WIND, HUSH, CHARGED, FIRM_ICE, settleFlags,
 } from './config.js';
 import { nudgeClear } from '../core/util.js';
 
@@ -607,6 +607,41 @@ export class Course {
       const y = clampY(this.y + (wave ? Math.round(Math.sin(i * 1.7) * wave) : 0));
       this.put(i === 0 && this.floes.length === 0 ? 0 : this.gapOf(gap), w, y, t);
     }
+    return this;
+  }
+
+  /**
+   * A run of floating ice: the only ice in the game that answers the penguin.
+   *
+   * Called `buoys` after the physics rather than after the shape, because the
+   * shape is the same flat pan of ice as everything else here and the physics
+   * are the entire point: it floats, so where it sits is a question about the
+   * weight on it. `raft` was the other candidate and it is already taken —
+   * the raft is the boat at the end of chapter one, and two things called the
+   * same thing in one chapter is a bug waiting to be written.
+   *
+   * Laid on the water rather than at whatever height the route happened to
+   * reach, because ice that floats three hundred pixels above the sea is not
+   * floating, it is a platform with a story. Getting down to it is free —
+   * falling always is — and the run ends on firm ice at the same line, so the
+   * plan can climb away from it afterwards in the ordinary way.
+   *
+   * The gaps are asked for at `BUOY.safe` rather than from flat ground, and
+   * that one argument is the whole promise the piece makes: a penguin who
+   * leaves within the first second and a bit is jumping *up* ninety pixels and
+   * the jump still clears. Leave later and it is a taller climb out of a
+   * deeper hole, until it is not a jump at all. The composer guarantees the
+   * first case and the sea handles the rest.
+   */
+  buoys({ n = 3, gap = 0.34, w = 150 } = {}) {
+    const line = clampY(WATER - BUOY.float);
+    for (let i = 0; i < n; i++) {
+      this.put(this.gapOf(gap, BUOY.safe), w, line, 'buoy', { draft: BUOY.draft });
+    }
+    // Somewhere that does not move to land on, still at the waterline: a run
+    // of rafts that ends on a climb would be asking for the hardest jump in
+    // the piece from the one place the floor is falling away.
+    this.put(this.gapOf(gap, BUOY.safe), 185, line, 'solid');
     return this;
   }
 
