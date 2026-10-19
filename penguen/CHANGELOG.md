@@ -5,6 +5,60 @@ değiştiği yeterli. En yeni en üstte.
 
 ---
 
+## Yirmi dört cihaz tarandı, üç şey çıktı
+
+"Her telefon her cihaz sorun çıkarmasın" diye yirmi dört gerçek ekran şekli
+tarandı: SE1'den 4K'ya, katlanır telefonun kapalı hâlinden iPad Pro'ya, her
+biri hem dik hem yan.
+
+**Oynanış katmanı yirmi dördünde de temiz.** Hiçbir bölümde penguen arayüzün
+altında başlamıyor, hiçbir tuş kırk pikselin altına düşmüyor, hiçbir ekranda
+yatay taşma ya da konsol hatası yok. Arenanın geri çekilmesi de her ekranda
+mantıklı davranıyor: dar telefonlarda ×1,00, tablet ve masaüstünde ×1,56–1,60,
+ve penguen 26 pikselin altına hiç inmiyor (o da 280 piksel genişliğindeki
+katlanır telefonun kapalı hâli, ki orada başka türlüsü yok).
+
+Üç şey çıktı ve üçü de düzeltildi.
+
+### Yeni oyuncunun gördüğü ilk ekranın düğmesi ekranda değildi
+
+Ad sorma kartı, yan tutulan **her** kısa telefonda taşıyordu: 568×320'de
+"Başla" düğmesi altı yedi piksel aşağıda. Bu, oyunu ilk açan birinin gördüğü
+ilk ekran ve tek eylemi o düğme.
+
+Kaydırmak yerine sıkıştırıldı, ve sırası önemli: önce boşluklar ve iç kenar
+payı (okumaya hiçbir bedeli yok), sonra portre, sonra başlığın altındaki
+açıklama — "Adın" yazan bir kutuya ad yazarken bir oyuncunun vazgeçebileceği
+tek satır o. Küçük punto **kalıyor**: adın cihazdan çıkmadığını söyleyen cümle
+o, ve küçük ekranda kaybolan bir gizlilik sözü, sözsüzlükten kötüdür.
+
+### Bölüm sonu kartı yan telefonda tek sütuna düşüyordu
+
+Kart üç sütuna 44 rem genişlikte geçiyor; altında tek sütun oluyor. 667×375'te
+o tek sütun **630 piksel**, ekran 375 — ve sonraki bölümü başlatan düğme 22
+piksel aşağıda.
+
+Kart o ekranlarda geniş değil, **yüksek**: yan tutulan telefonun 568 pikselik
+genişliği boş dururken bir sütun alttan taşıyor. Artık satır düzeni "yeterince
+geniş **ya da** gerçekten kısa" ekranlarda da geçerli — ki o telefonlar tam
+olarak bu şekil. 568×320'de kart 586 pikselden 393'e indi.
+
+### Arena ilk karesinde yanlış kutuya göre çerçeveleniyordu
+
+`startLevel` kamerayı tek bir kare çizilmeden önce ortalıyor, geri çekilme ise
+ilk `draw` içinde hesaplanıyor — yani arenanın ilk karesi 960 birimlik görüntü
+için çerçevelenmiş, sonra görüntü 1410 oluyordu. Bölüm yanlış yere bakarak
+açılıp yarım saniyede yerine kayıyordu. Geri çekilme değişince kamera yeniden
+yerleştiriliyor.
+
+### Ve kalıcı test yedi şekle çıktı
+
+Beş şekil geçerken dört gerçek telefon geçmiyordu: 390'dan **kısa** her yan
+telefon. Listeye ikisi eklendi — hâlâ kullanımda olan en kısa yan telefon
+(568×320) ve hemen üstündeki (667×375).
+
+---
+
 ## Arena bir odaymış: kamera geri çekildi, ve resim durdu
 
 Önceki turda iki şey ölçülmüş, yazılmış ve **yapılmamıştı**, çünkü ikisi de

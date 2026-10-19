@@ -277,6 +277,18 @@ export class Renderer {
     if (zoom !== this.zoom) {
       this.zoom = zoom;
       this._applyFit();
+      /*
+       * And the camera is placed again, because it was placed against the old
+       * box.
+       *
+       * `startLevel` centres the camera before a single frame has been drawn,
+       * so on the first frame of an arena it had framed the penguin for a
+       * 960-unit view and then the view became 1410 — the level opens on a
+       * picture pointed at the wrong place and slides into position over half
+       * a second. A resize mid-run lands here too, and snapping is the right
+       * answer there as well: the whole screen has just changed shape.
+       */
+      world?._centerCamera?.();
     }
     /*
      * The expression layer, driven here rather than in the simulation.

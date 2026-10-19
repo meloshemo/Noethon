@@ -1237,7 +1237,40 @@ kbd {
   }
 }
 
-@container stage (min-width: 44rem) {
+/*
+ * And on the shortest landscape phone still in use, four pixels.
+ *
+ * 568×320: the primary button ended four pixels below the fold, which is the
+ * kind of number the previous round warned about — "shaving padding got it to
+ * within four pixels of fitting, which is not a fix, it is a coincidence
+ * waiting for a longer word in another language". So this does not shave four
+ * pixels off a padding. The stars are a decoration the result line already
+ * states in words, and taking them out is worth thirty.
+ */
+@container stage (max-height: 21rem) {
+  .sheet--win .stars {
+    display: none;
+  }
+  .sheet--win {
+    padding-top: var(--s-2);
+  }
+}
+
+/*
+ * Side by side when there is width for it — or when there is no height.
+ *
+ * The second half of that question is the one the sweep found. Forty-four rems
+ * is the width at which three columns are comfortable, and below it the card
+ * stacks into one: on a phone held sideways at 667×375 that one column is 630
+ * pixels tall on a 375-pixel screen, and the button that starts the next level
+ * is 22 pixels under the bottom edge. At 568×320 it is 36.
+ *
+ * The card is not too wide on those screens, it is too *tall*: a sideways
+ * phone has 568 pixels of width doing nothing while a column runs off the
+ * bottom. So the row layout also applies to a stage that is merely wide
+ * *enough* and genuinely short, which is exactly the shape those phones are.
+ */
+@container stage ((min-width: 44rem) or ((min-width: 33rem) and (max-height: 30rem))) {
   .sheet--win {
     width: min(100%, 62rem);
     flex-direction: row;
@@ -3616,6 +3649,56 @@ kbd {
 
 .sheet--who {
   max-width: 24rem;
+}
+
+/*
+ * The name card on a phone held sideways.
+ *
+ * Found by sweeping twenty-four real device shapes rather than three: on
+ * every short landscape handset — 568×320, 667×375, 812×375, 800×360 — the
+ * "Başla" button sat below the fold, by sixty-seven pixels on the smallest.
+ * This is the first screen a new player ever sees and its only action was off
+ * the screen.
+ *
+ * Compacted rather than scrolled, and in that order: the gaps and the padding
+ * first because they cost nothing to read, then the portrait, then the
+ * explanation under the title, which is the one line a player can do without
+ * while they are typing a name into a field labelled "Adın".
+ *
+ * The small print stays. It is the sentence that says the name never leaves
+ * the device, and a privacy promise that disappears on small screens is worse
+ * than no promise.
+ */
+@container stage (max-height: 30rem) {
+  .sheet--who {
+    gap: var(--s-2);
+    padding: var(--s-3) var(--s-4);
+  }
+  .sheet--who .who__setup {
+    margin: 0.2rem 0 0;
+    gap: 0.7rem;
+  }
+  .sheet--who .who__art--big {
+    width: 54px;
+    height: 54px;
+  }
+  .sheet--who .sheet__meta {
+    display: none;
+  }
+  .sheet--who .sheet__hint--fine {
+    font-size: var(--fs-3xs);
+    line-height: 1.35;
+  }
+}
+
+/* Shorter still, and the portrait is the next thing that can go. */
+@container stage (max-height: 23rem) {
+  .sheet--who .sheet__kicker {
+    display: none;
+  }
+  .sheet--who .who__art--big {
+    display: none;
+  }
 }
 .sheet__hint--fine {
   color: var(--text-faint);

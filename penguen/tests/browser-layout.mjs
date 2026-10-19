@@ -30,9 +30,23 @@ import { launch, openGame, checklist } from './browser-kit.mjs';
  * So the two extremes are permanent residents now: the narrowest phone, and a
  * screen far wider than it is tall.
  */
+/*
+ * And then a sweep of twenty-four found the next gap, in the same way.
+ *
+ * Five shapes passed while four real phones did not: every landscape handset
+ * *shorter* than the 390 tested here. On 568×320 the "Başla" button on the
+ * name card — the first screen a new player ever sees — sat sixty-seven pixels
+ * below the fold, and the win card's button four. 844×390 could not see it
+ * because seventy extra pixels of height is exactly the difference.
+ *
+ * So the list grows by the two that found it: the shortest landscape phone
+ * still in daily use, and the ordinary one just above it.
+ */
 const SIZES = [
   ['telefon', 390, 844],
   ['yatay', 844, 390],
+  ['kısa yatay', 667, 375],
+  ['en kısa yatay', 568, 320],
   ['dar telefon', 320, 568],
   ['masaüstü', 1280, 800],
   ['geniş ekran', 2560, 1080],
@@ -63,7 +77,7 @@ const SCREENS = [
 const b = await launch();
 const { ok, finish } = checklist();
 
-console.log('\nArayüz düzeni — üç boyutta\n');
+console.log('\nArayüz düzeni — yedi boyutta\n');
 
 for (const [label, width, height] of SIZES) {
   console.log(`${label} (${width}×${height})`);
@@ -371,6 +385,6 @@ for (const [label, width, height] of SIZES) {
   await p.context().close();
 }
 
-const code = finish('arayüz üç boyutta da düzgün');
+const code = finish('arayüz yedi boyutta da düzgün');
 await b.close();
 process.exit(code);
