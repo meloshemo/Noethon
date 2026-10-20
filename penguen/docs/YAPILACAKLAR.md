@@ -76,7 +76,7 @@ sonra listenin durumu:
 | 2.4 | Arenanın dağarcığı / metriği | dağarcık **kapandı** (%5 → %1), metrik bir taban |
 | 2.5 | Küçük işler | biri sende (kullanıcı adı), biri tavan |
 | 2.6 | Arena odası ekrandan geniş | **kapandı** — masaüstünde %87 → %0 |
-| 2.7 | `skua.mjs` seyrek takılıyor | **açık** — elli koşuda bir, tekrarlanamadı |
+| 2.7 | `skua.mjs` seyrek takılıyor | **kapandı** — sebebi bulundu, yirmi beş koşuda sıfır |
 | 2.8 | Kamera ölü bölgesi | **kapandı** — 1185px → 0px |
 | 2.9 | İki nefes deliği şeridin altında | **yanlış alarm** — ölçüldü, deliğin yalnızca üst kenarı kırpılıyor |
 | 2.10 | Yüzen buz ve çöken taş | **geldi** — ikisi de, kalan biri için not |
@@ -222,6 +222,56 @@ gerçek ekranda 34 pikselden küçülmeyecek kadar.
 
 Dik telefonda oda bakılmaya değer hiçbir ölçekte sığmıyor ve doğru cevap geri
 çekilmemek; o ekranı hattın kenar işaretleri taşıyor.
+
+### 2.8 Ölü bölge — **kapandı**
+
+Kamera penguenin her adımını takip ediyordu: bir arenada tek bir noktanın
+doksan piksel sağına soluna beş saniye gidip gelince kamera 1185 piksel yol
+yapıyordu. Artık ekranın ortasında kameranın cevap vermediği bir kutu var —
+aynı ölçüm **1185px → 0px**.
+
+Kutu eksen ve chapter başına ayrı, çünkü risk her yerde aynı değil:
+
+| | Yatay | Dikey |
+|---|---|---|
+| Sahanlık | 86 | 28 |
+| Arena | 120 | 40 |
+| Dağ | 44 | 30 |
+| Deniz | 70 | **0** |
+
+Yataydaki kutu koşarken kapanıyor (koşmak gerçekten gitmektir), arenada
+kapanmıyor (bir odada hızlı gitmek bir yere gitmek değil). Dikey kutu düşerken
+açılıyor, çünkü düşüş öncüsü zemini göstermek için var.
+
+Denizin sıfırı tahmin değil: her bölümün her buzunun üstünde, kutunun izin
+verdiği en kötü yöne itildiğinde masaüstünde bir nefes deliği tam şeridin
+kenarında çıkıyor — orada harcanacak pay yok. Kural `tests/camera.mjs` içinde:
+**kutu, görünen bir şeyi gizlemeyecek.**
+
+### 2.9 İki nefes deliği — **yanlış alarmmış**
+
+Ölü bölge taramasında 53 ve 61. bölümlerde birer nefes deliğinin yan tutulan
+telefonda şeridin altında kaldığı çıkmıştı. Ölçünce öyle değil: delik ekranda
+65–175 arasında, şerit 97'de bitiyor. Yani **üst kenarının 32 pikseli** şeridin
+arkasında, geri kalan 78 piksel görünüyor — ve içine girilen ağzı zaten altta.
+
+Tarama deliğin `y`'sini, yani tavandaki üst kenarını okuyordu; yüzücünün
+baktığı yer orası değil. Kayıt duruyor ki bir dahaki sefere yeniden
+keşfedilmesin: **bu bir kusur değil.**
+
+### 2.7 `tests/skua.mjs` seyrek takılıyor — **kapandı**
+
+Elli koşuda bir düşüyordu ve bir daha tetiklenemiyordu. Sebebi bulundu:
+yönetmen, ölçülen dokuz yüz adımlık uçuş sırasında rastgele **ikinci bir kuş**
+fırlatabiliyor, ve o anda `w.skuas[0]` artık ölçülen uçuş değil.
+
+`ambushes`'i kapatmak yanlış araçtı — bütün güncellemeyi kapatıyor, yani
+havadaki kuş da donuyor. Durdurulması gereken şey fırlatıcılar. Yirmi beş
+koşuda sıfır hata.
+
+Not olarak duruyor, çünkü aynı tuzak bu projede üçüncü kez çıktı: bir testin
+ölçtüğü şeyin, ölçmek istediği şey olduğundan emin olmak gerekiyor. Yüzen buz
+paketi de iki kere aynı sebeple düştü.
 
 ### 2.8 Ölü bölge — **kapandı**
 
