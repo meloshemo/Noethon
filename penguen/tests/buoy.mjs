@@ -1,5 +1,6 @@
 /**
- * Yüzen buz — the only ice in the game the penguin changes by standing on it.
+ * Ağırlığa cevap veren buz — the only ice in the game the penguin changes by
+ * standing on it, in both of the places it exists.
  *
  * Every other piece of ice here is a clock or a shape. Cracking ice counts
  * down, melting ice counts around, a geyser throws, a slab swings on somebody
@@ -20,7 +21,7 @@
 import { World } from '../src/game/world.js';
 import { ALL_LEVELS } from '../src/game/chapters.js';
 import { Course } from '../src/game/terrain.js';
-import { BUOY, PENGUIN, scaleForLevel, reachFor } from '../src/game/config.js';
+import { BUOY, SAG, PENGUIN, scaleForLevel, reachFor } from '../src/game/config.js';
 import { generateLevel } from '../src/game/generator.js';
 
 const STEP = 1 / 120;
@@ -216,6 +217,53 @@ for (const def of levels) {
     pans.every((f) => f.load === 0 && f.y === f.baseY && f.draft > 0),
     `L${def.id}: ${pans.length} buz, hepsi su hattında başlıyor`,
   );
+}
+
+/* 7 --------------------------------------------------------------------- */
+console.log('\n7) Ve dağda aynı kural, dağın parasıyla');
+/*
+ * The mountain's sibling. Same physics, two differences that are both about
+ * what the chapter does when it goes wrong.
+ *
+ * The sea's version is allowed a draft far past what the composer promises,
+ * because the end of that is drowning: clean, instant, and the level starts
+ * again. A mountain does not drown anybody — a climber who rested too long on
+ * a ledge that kept going would be *stranded*, and a mechanic whose worst case
+ * is "jump off and die to continue" is a bug with a story. So up there the
+ * ledge stops exactly where the promise ends, and every step in a run is sized
+ * for it fully given.
+ */
+{
+  const climbs = ALL_LEVELS.filter((d) => (d.floes ?? []).some((f) => f.type === 'sag'));
+  check(climbs.length >= 2, `${climbs.length} tırmanışta çöken taş var`);
+  check(
+    SAG.rise < SAG.sink && SAG.sink < BUOY.sink,
+    `dağ denizden daha isteksiz veriyor: ${SAG.sink} < ${BUOY.sink} px/sn`,
+  );
+  for (const def of climbs) {
+    const w = new World(def, deps());
+    const hold = w.floes.find((f) => f.type === 'sag');
+    for (let i = 0; i < 1200; i++) hold.update(STEP, 0, {}, true);
+    check(
+      Math.abs(hold.y - (hold.baseY + SAG.drop)) < 1,
+      `L${def.id}: sonuna kadar ${Math.round(hold.y - hold.baseY)}px çöküyor, sözün tamamı`,
+    );
+    /*
+     * The promise itself, from outside the composer: the step out of a fully
+     * given ledge is still inside a jump. Measured against the ledge above it
+     * in the route, which is the one the climber is actually reaching for.
+     */
+    const route = def.route ?? [];
+    const at = route.findIndex((r) => r.type === 'sag');
+    const next = route[at + 1];
+    if (next) {
+      const rise = hold.baseY + SAG.drop - next.y;
+      check(
+        rise <= reachFor(def.scale ?? scaleForLevel(def.id)).height,
+        `L${def.id}: tamamen çökmüşken sonraki tutamak ${Math.round(rise)}px yukarıda`,
+      );
+    }
+  }
 }
 
 console.log('');

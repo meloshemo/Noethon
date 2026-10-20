@@ -174,7 +174,13 @@ const CLIMB_PLANS = [
       // The rope is cut to the width of the shaft, so its period is whatever
       // that width makes it. Nobody chose the timing.
       t.pendulum({ w: 130 });
-      t.steps({ n: 2, rise: 0.6, w: 135 });
+      /* Out of the longest shaft in the chapter, onto ice that gives.
+         Nothing on this level punishes waiting — that is said twice above, and
+         it is what makes the glare ice and the rope fair. This is the one
+         place it stops being true, and it is the last two holds rather than
+         the first: by here the bar is whatever the shaft left of it, and the
+         ledge that would fill it back up is going down while it does. */
+      t.sag({ n: 1, rise: 0.5, w: 135 });
       t.crown({ w: 250 });
       t.scatterFish(3, 58);
       // A coil beside the long chimney, level with the halfway nub.
@@ -259,7 +265,18 @@ const CLIMB_PLANS = [
       // be where you need it every other second.
       t.pendulum({ w: 130 });
       t.face({ height: 170, side: 1, exit: 165 });
-      t.steps({ n: 2, rise: 0.58, w: 135 });
+      /* And the last place to rest is the one that charges for it.
+         This level is called Brittle Steps and its subtitle says the place to
+         rest is not safe, and until now that meant *cracking*: the ledge gives
+         way, which is a fuse, which is the same sentence chapter one has been
+         saying since level four. Ice that gives *under you and comes back* is
+         a different one. The arm fills while the ledge falls, so the rest is
+         paid for in height, and the two things that were each other's answer
+         start pulling opposite ways.
+         One sagging ledge and the solid one out of it, which is the same two
+         holds the steps it replaces were — the geometry of this chapter is a
+         chain and this piece is not allowed to lengthen it. */
+      t.sag({ n: 1, rise: 0.5, w: 135 });
       t.crown({ w: 250 });
       t.scatterFish(3, 58);
       t.checkpoint(t.floes[4]);
@@ -472,7 +489,12 @@ const CLIMB_PLANS = [
       // everything around it does.
       t.pendulum({ w: 130 });
       t.face({ height: 180, side: -1, exit: 160 });
-      t.steps({ n: 2, rise: 0.58, w: 132 });
+      /* The level is called False Ice and every lie on it so far has been
+         about *existing*: the traverse that is not there, the ledge the rope
+         delivers you to that is not there. This one is about staying where it
+         was. Nothing vanishes, nothing cracks, and the hold is still wrong by
+         the time you use it. */
+      t.sag({ n: 1, rise: 0.48, w: 132 });
       t.crown({ w: 245 });
       t.scatterFish(3, 58);
       t.checkpoint(t.floes[4]);

@@ -532,6 +532,54 @@ export const BUOY = {
   float: 150,
 };
 
+/**
+ * Çöken taş — the same rule, in the one currency the mountain has.
+ *
+ * Floating ice trades *time* against *drowning*. On the wall there is no sea
+ * to drown in and standing still is not the sin — the chapter is built out of
+ * an arm that runs out, and a ledge is where it fills back up. A ledge is the
+ * mountain's one permission to rest.
+ *
+ * So this is the ledge that charges rent on it. It settles while a penguin is
+ * standing on it and rises back when it is free, which means the rest you took
+ * is paid for in *height*: the next hold is further away by exactly as long as
+ * you stayed. Two things that were each other's answer — the arm fills while
+ * the ledge falls — pulling in opposite directions is a question neither of
+ * them could ask alone.
+ *
+ * Slower and shallower than the sea's version. Ice on a rock face is held by
+ * something; it gives, it does not float. And the failure is a fall rather
+ * than a drowning, which is instant rather than a countdown, so the numbers
+ * have to leave a climber time to read what is happening to them.
+ */
+export const SAG = {
+  /** How fast it settles under a climber, in px/s. */
+  sink: 34,
+  /** And back, once nobody is on it. */
+  rise: 22,
+  /**
+   * How far it gives before it is resting on something and stops — and the
+   * whole of it is inside what the composer promises.
+   *
+   * This is the one place the mountain's version differs from the sea's, and
+   * the difference is the chapters' failure modes. Floating ice is allowed a
+   * draft far past its promise because the far end of that is *drowning*: a
+   * clean, instant, obviously-your-fault ending, and the level starts again.
+   * A mountain does not drown anybody. A climber who rested too long on a
+   * ledge that kept going would be **stranded** — standing somewhere with the
+   * next hold out of reach and nothing to do about it but fall on purpose —
+   * and a mechanic whose worst case is "now jump off and die to continue" is
+   * a bug with a story.
+   *
+   * So the ledge stops where the promise ends. Every step in a `sag` run,
+   * including the one out of it, is sized for this ledge fully given, so
+   * resting can make the next move hard and can never make it impossible.
+   * Forty pixels out of a rise budget of about a hundred and ten is the
+   * difference between a comfortable hop and nearly the whole jump.
+   */
+  drop: 40,
+};
+
 export const ICE = {
   /** "crack": time between first touch and collapse. */
   crackDelay: 0.85,

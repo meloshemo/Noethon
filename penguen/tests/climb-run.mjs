@@ -20,7 +20,7 @@
  */
 
 import { Player } from '../src/game/player.js';
-import { scaleForLevel, hushAt, glazeAt, sapAt, swingAt, ICE, WIND, windAt } from '../src/game/config.js';
+import { scaleForLevel, hushAt, glazeAt, sapAt, swingAt, ICE, WIND, SAG, windAt } from '../src/game/config.js';
 import { CLIMB_LEVELS, CLIMB_DRAFTS } from '../src/game/climb.js';
 
 
@@ -135,6 +135,41 @@ function swingTo(solids, t) {
   }
 }
 
+/**
+ * Ledges that give under the climber, moved the way the game moves them.
+ *
+ * Same treatment as the swinging slab above and for the same reason: the
+ * player is colliding against these very objects, so mutating them is what
+ * makes standing on one mean anything. The difference is that a swing is a
+ * pure function of the clock and this is not — it remembers how long somebody
+ * has been on it — so every attempt has to start from the top.
+ *
+ * Without it the solver proves a level nobody plays: it reads the ledge at the
+ * height the plan drew it, which is the one height it is not at by the time a
+ * climber who paused is jumping off it.
+ */
+function sagReset(solids) {
+  for (const f of solids) {
+    if (f.type !== 'sag') continue;
+    if (f.restY === undefined) f.restY = f.y;
+    f.y = f.restY;
+    f.dy = 0;
+  }
+}
+
+function sagTo(solids, p, dt) {
+  for (const f of solids) {
+    if (f.type !== 'sag') continue;
+    if (f.restY === undefined) f.restY = f.y;
+    const on = p.groundFloe === f;
+    const to = on ? f.restY + SAG.drop : f.restY;
+    const rate = on ? SAG.sink : SAG.rise;
+    const prev = f.y;
+    f.y = on ? Math.min(to, f.y + rate * dt) : Math.max(to, f.y - rate * dt);
+    f.dy = f.y - prev;
+  }
+}
+
 function makePlayer(def, x, surfaceY) {
   const p = new Player();
   p.setScale(def.scale ?? scaleForLevel(def.id));
@@ -172,6 +207,7 @@ function drowned(p, def) {
  * which is what a player does.
  */
 function tryJump(def, solids, a, b, { from, delay, hold, phase = 0 }) {
+  sagReset(solids);
   const p = makePlayer(def, a.x + a.w * from, a.y);
   const targetX = b.x + b.w / 2;
   // The top of the shaft is the exit ledge's own height: the route's node for a
@@ -202,6 +238,7 @@ function tryJump(def, solids, a, b, { from, delay, hold, phase = 0 }) {
 
     const axis = p.onGround ? dir : Math.sign(targetX - cx) || 0;
     swingTo(solids, t);
+    sagTo(solids, p, STEP);
     p.update(STEP, intentFor(def, p, { axis, jumpHeld: held, jumpPressed: pressed }, phase + t), solids, TUNING);
     t += STEP;
 
@@ -246,6 +283,7 @@ function tryJump(def, solids, a, b, { from, delay, hold, phase = 0 }) {
  * the hop onto the slab.
  */
 function trySwing(def, solids, a, b, { wait, hold, phase = 0 }) {
+  sagReset(solids);
   const slab = solids.find((f) => f.type === 'swing' && Math.abs(f.pivotX - (b.swingPivot ?? f.pivotX)) < 1);
   if (!slab) return false;
   const nearX = b.swing.nearX;
@@ -258,6 +296,7 @@ function trySwing(def, solids, a, b, { wait, hold, phase = 0 }) {
 
   for (let i = 0; i < 1600; i++) {
     swingTo(solids, t);
+    sagTo(solids, p, STEP);
     const onSlab = p.groundFloe === slab;
     // Ride: once aboard, do nothing at all and let the rope work.
     const axis = onSlab ? 0 : Math.sign(nearX - (p.x + p.w / 2)) || 0;
@@ -282,6 +321,7 @@ function trySwing(def, solids, a, b, { wait, hold, phase = 0 }) {
 }
 
 function tryWall(def, solids, a, b, { from, delay, mode, first, phase = 0 }, probe = {}) {
+  sagReset(solids);
   // The lowest the arms ever got on a step that worked.
   //
   // This is the chapter's real difficulty, the way breath is the sea's: how
@@ -414,6 +454,7 @@ function tryWall(def, solids, a, b, { from, delay, mode, first, phase = 0 }, pro
       if (p.stamina < p.staminaMax * 0.92) {
         axis = 0;
         swingTo(solids, t);
+        sagTo(solids, p, STEP);
         p.update(STEP, intentFor(def, p, { axis: 0, jumpHeld: false, jumpPressed: false }, phase + t), solids, TUNING);
         t += STEP;
         continue;
@@ -452,6 +493,7 @@ function tryWall(def, solids, a, b, { from, delay, mode, first, phase = 0 }, pro
     }
 
     swingTo(solids, t);
+    sagTo(solids, p, STEP);
     p.update(STEP, intentFor(def, p, { axis, jumpHeld, jumpPressed }, phase + t), solids, TUNING);
     floor = Math.min(floor, p.staminaFrac);
     t += STEP;

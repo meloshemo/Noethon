@@ -219,6 +219,22 @@ console.log("\n5) Bir kuş gökten iner ve uçarak gider");
     if (!probe.ambushes) continue;
     const w = new World(def, deps());
     const bird = w._launchSkua({ kind: 'lock' });
+    /*
+     * One bird, and only the one this loop launched.
+     *
+     * The director launches on a roll — `Math.random() > rate * dt` — and the
+     * nine hundred steps below are long enough for it to fire. When it did,
+     * `w.skuas[0]` stopped being the bird under test and the two measurements
+     * here were taken on a different flight: the pack failed about once in
+     * fifty runs and could not be reproduced on purpose, which is the worst
+     * kind of red.
+     *
+     * Switching `ambushes` off is the wrong tool — it gates the whole update,
+     * so the bird already in the air would freeze. The launchers are what has
+     * to stop.
+     */
+    w._launchHunt = () => {};
+    w._launchSkua = () => null;
     flights++;
     if (bird.fromY < w.camera.y) entered++;
 

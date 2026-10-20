@@ -6,7 +6,7 @@
  */
 
 import {
-  ICE, BUOY, STORM, BRAWL, WIND, SWING, ROT, windAt, swingAt, lobShot, tailWindow, lullWindow,
+  ICE, BUOY, SAG, STORM, BRAWL, WIND, SWING, ROT, windAt, swingAt, lobShot, tailWindow, lullWindow,
 } from './config.js';
 import { clamp, easeOutCubic, lerp } from '../core/util.js';
 
@@ -85,7 +85,14 @@ export class Floe {
      * separate things read it — the drawing, the hint, and the composer's own
      * check — and a fraction is the one form none of them can misread.
      */
-    this.draft = def.draft ?? BUOY.draft;
+    this.draft = def.draft ?? (def.type === 'sag' ? SAG.drop : BUOY.draft);
+    // Per-floe rather than per-type-at-use, because the two things that settle
+    // are the same physics at different speeds: ice floating on the sea gives
+    // quickly and comes back slowly, ice stuck to a rock face does both more
+    // grudgingly. A floe carries its own pair so nothing downstream has to
+    // know which chapter it is in.
+    this.sinkRate = def.sink ?? (def.type === 'sag' ? SAG.sink : BUOY.sink);
+    this.riseRate = def.rise ?? (def.type === 'sag' ? SAG.rise : BUOY.rise);
     this.load = 0;
   }
 
@@ -219,10 +226,10 @@ export class Floe {
      * on a raft really is going down with it rather than hovering at the
      * height it landed at.
      */
-    if (this.type === 'buoy') {
+    if (this.type === 'buoy' || this.type === 'sag') {
       const prevY = this.y;
       const to = riding ? this.baseY + this.draft : this.baseY;
-      const rate = riding ? BUOY.sink : BUOY.rise;
+      const rate = riding ? this.sinkRate : this.riseRate;
       this.y = riding
         ? Math.min(to, this.y + rate * dt)
         : Math.max(to, this.y - rate * dt);

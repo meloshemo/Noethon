@@ -1662,6 +1662,40 @@ export class Renderer {
       }
     }
 
+    /**
+     * Ice that gives under a climber, and shows it giving.
+     *
+     * The sea's version has the sea to tell the story: water comes over the
+     * top and anybody can read that. A mountain has nothing to compare a
+     * height against, so the tell has to be on the ice itself — strain, in the
+     * two places ice strains, opening from the ends in towards the middle as
+     * the load goes on. It is drawn faintly at rest too, which is the half
+     * that matters most: the player has to be able to pick this ledge out
+     * *before* standing on it, and a hold that looks ordinary until it moves
+     * is the one thing this game does not do.
+     */
+    if (f.type === 'sag') {
+      const load = f.load ?? 0;
+      ctx.strokeStyle = `rgba(120,170,210,${0.4 + load * 0.5})`;
+      ctx.lineWidth = 1.6 + load * 1.4;
+      ctx.lineCap = 'round';
+      for (const side of [-1, 1]) {
+        const sx = side < 0 ? x + w * 0.2 : x + w * 0.8;
+        ctx.beginPath();
+        ctx.moveTo(sx, y + 2);
+        ctx.lineTo(sx - side * (6 + load * 10), y + 9 + load * 5);
+        ctx.lineTo(sx + side * (3 + load * 6), y + 16 + load * 6);
+        ctx.stroke();
+      }
+      ctx.lineCap = 'butt';
+      // And a shadow in the gap it has opened above itself, so the drop reads
+      // as a drop rather than as the climber having misremembered.
+      if (load > 0.05) {
+        ctx.fillStyle = `rgba(10,24,44,${0.1 + load * 0.3})`;
+        ctx.fillRect(x + 4, y - (f.draft ?? 0) * load, w - 8, (f.draft ?? 0) * load);
+      }
+    }
+
     if (f.type === 'slip') {
       /**
        * A sheen over the whole patch, and then the streaks.

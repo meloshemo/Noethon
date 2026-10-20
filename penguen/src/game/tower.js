@@ -28,7 +28,7 @@
 
 import {
   reachFor, reachAt, climbBudget, kickGain, openingWidth, swingPeriod, swingAt,
-  CLIMB, PENGUIN, SWING, CHARGED, FIRM_ICE, SODDEN, settleFlags,
+  CLIMB, PENGUIN, SWING, CHARGED, FIRM_ICE, SODDEN, SAG, settleFlags,
 } from './config.js';
 import { nudgeClear } from '../core/util.js';
 
@@ -794,6 +794,44 @@ export class Tower {
    * refuses any shaft a full stamina bar cannot clear with margin, and refuses
    * any shaft so wide that a kick would lose height crossing it.
    */
+  /**
+   * Ledges that give under a climber: the mountain's version of floating ice.
+   *
+   * The sea's version trades time against drowning. Up here there is no sea
+   * and standing still is not the sin — this chapter is an arm that runs out,
+   * and a ledge is where it fills back up. A ledge is the one permission to
+   * rest the mountain gives.
+   *
+   * So this is the ledge that charges rent on it: it settles while somebody is
+   * standing on it and comes back when it is free, which means the rest was
+   * paid for in **height**. The next hold is further by exactly as long as you
+   * stayed. Two things that were each other's answer — the arm fills while the
+   * ledge falls — now pull opposite ways, and neither could ask that on its
+   * own.
+   *
+   * The whole promise is one number used three times: every step in the run,
+   * *including the one out of it*, is sized and ceilinged so it still works
+   * from `SAG.drop` lower — and the ledge stops there, so resting can make the
+   * next move hard and never impossible. The exit ledge is part of the verb
+   * — left to the plan it would be the first thing somebody got wrong, and
+   * getting it wrong means a climber who rested is stranded on a ledge that
+   * has quietly moved the next hold out of reach.
+   */
+  sag({ n = 2, rise = 0.46, w = 128, start = 1 } = {}) {
+    const ceiling = this.maxRise - SAG.drop;
+    if (ceiling < this.reach.height * 0.25) {
+      throw new Error(`çöken taş için yer yok: tavan ${Math.round(ceiling)}px`);
+    }
+    const up = () => Math.round(Math.min(ceiling, this.reach.height * rise));
+    let dir = start;
+    for (let i = 0; i < n; i++) {
+      dir = -this._step(dir, w, up(), 'sag', 'jump', { ceiling });
+    }
+    // Somewhere that does not move, reached from the lowest the last one goes.
+    dir = -this._step(dir, w, up(), 'solid', 'jump', { ceiling });
+    return this;
+  }
+
   chimney({ height = 380, span = null, rests = 0, hazard = null, lip = 0 } = {}) {
     let rim = 1;
     const inner = span ?? Math.round(this.reach.distance * 0.9);
