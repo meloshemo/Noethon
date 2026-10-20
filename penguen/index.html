@@ -9,13 +9,32 @@
 <meta name="theme-color" content="#08132a" />
 <meta name="color-scheme" content="dark" />
 
+<!--
+  The share card is a PNG, and the SVG it is rendered from is kept beside it.
+
+  Everything else in this project is drawn in code and the card was too. But a
+  social card is not drawn by this project: it is drawn by whoever is showing
+  the link, and none of the big ones render SVG. WhatsApp, Messenger, Twitter
+  and Slack all show nothing at all for an `og:image` that is an SVG, so every
+  share of this game was a blank rectangle with a title under it. The PNG is
+  generated from the same file, so there is still one drawing to change.
+-->
 <meta property="og:type" content="website" />
 <meta property="og:title" content="Pengu: Antarktika'dan Kaçış" />
 <meta property="og:description" content="Eriyen buzlar, kırılan zeminler ve büyüyen bir penguen. Kaçabilecek misin?" />
-<meta property="og:image" content="assets/og-card.svg" />
+<meta property="og:image" content="assets/og-card.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Pengu: Antarktika'dan Kaçış" />
+<meta name="twitter:description" content="Eriyen buzlar, kırılan zeminler ve büyüyen bir penguen. Kaçabilecek misin?" />
+<meta name="twitter:image" content="assets/og-card.png" />
 
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
-<link rel="apple-touch-icon" href="assets/favicon.svg" />
+<!-- Safari has never supported an SVG here, so an installed game had the
+     grey letter placeholder on the home screen of exactly the device the
+     game is made for. -->
+<link rel="apple-touch-icon" href="assets/icon-192.png" />
 <link rel="manifest" href="manifest.webmanifest" />
 
 <!--

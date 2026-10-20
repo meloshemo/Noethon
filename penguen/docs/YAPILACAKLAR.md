@@ -13,6 +13,33 @@ Son güncelleme: 2026-10-18 · dal `claude/penguen-game-dev-6ym6pg` · 76 bölü
 
 ---
 
+## 0. Çıkmaya hazır mı
+
+**Kod tarafı hazır. Kalan her şey senin elinde ve çoğu on dakikalık.**
+
+Ölçülmüş hâliyle:
+
+| | Durum |
+|---|---|
+| 76 bölüm, 4 chapter | Hepsi iki bağımsız katmanla geçilebilir kanıtlı |
+| 55 test paketi | Yeşil (45 node + paketleme + 10 tarayıcı) |
+| 24 gerçek cihaz şekli | Oynanış ve arayüz temiz, konsol temiz |
+| CI + yayın | İkisi de yeşil, canlı sürüm son commit |
+| Çevrimdışı | Servis çalışanı + tek dosya sürümü, testli |
+| Kayıt | Sürüm göçü testli |
+| Başarım | Simülasyon 0,1–0,8 ms, çizim 0,7–5,3 ms (CPU ×1–×4) |
+| Paylaşım kartı ve simgeler | PNG, her platformda görünür |
+
+**Bilmediğim tek teknik şey:** bu kutuda GPU yok, yani 780×1688 pikseli
+*boyamanın* gerçek bir telefonda kaça mal olduğunu ölçemiyorum. Oyunun kendi
+işi (yukarıdaki iki sayı) 16,7 ms bütçenin çok altında; geri kalanı donanım,
+ve cevabı 1.5'te.
+
+**Çıkmadan önce gereken, önem sırasıyla:** 1.5 (gerçek cihaz), 1.8 (yasal
+onay), 1.6 (uçak modu), 1.3 ve 1.4 (dal). Hiçbiri kod işi değil.
+
+---
+
 ## 1. Sende olanlar
 
 | | İş | Durum | Süre |
@@ -52,7 +79,8 @@ sonra listenin durumu:
 | 2.7 | `skua.mjs` seyrek takılıyor | **açık** — elli koşuda bir, tekrarlanamadı |
 | 2.8 | Kamera ölü bölgesi | **kapandı** — 1185px → 0px |
 | 2.9 | İki nefes deliği şeridin altında | **yanlış alarm** — ölçüldü, deliğin yalnızca üst kenarı kırpılıyor |
-| 2.10 | Yüzen buz | **geldi** — sıradaki iki fizik kuralı için not |
+| 2.10 | Yüzen buz ve çöken taş | **geldi** — ikisi de, kalan biri için not |
+| 2.11 | Paylaşım kartı ve simgeler | **kapandı** — SVG hiçbir platformda görünmüyordu |
 
 Oyunun en tekrarlı bölümü artık 47–61 (%4), ve o %4'ün tamamı 47'nin kendini
 öğreten alt kümesi.
@@ -261,6 +289,27 @@ cevap vermesi) her chapter'da farklı bir şey olurdu ve ikisi şu an **yok**:
 
 İkisi de yapılmadı, çünkü yüzen buz tek başına üç bölümü ve sonsuz modu
 değiştirdi ve bir turda bir fizik kuralı yeterli. Sıradaki tur için not.
+
+### 2.11 Paylaşım kartı ve ev ekranı simgesi — **kapandı**
+
+Çıkmadan önceki taramada çıktı ve ikisi de görünür kusurdu:
+
+- `og:image` bir **SVG**'ydi. WhatsApp, Messenger, Twitter ve Slack SVG
+  `og:image` için hiçbir şey göstermiyor — yani oyunun her paylaşımı altında
+  başlık olan boş bir dikdörtgendi.
+- `apple-touch-icon` da SVG'ydi. Safari bunu hiç desteklemedi, yani ana ekrana
+  eklenen oyun, tam da oyunun yapıldığı cihazda gri harf yer tutucusuyla
+  duruyordu.
+
+İkisi de aynı çizimden PNG'ye alındı (1200×630 kart, 192 ve 512 simge), yani
+değişecek tek bir çizim var. Manifest'teki `orientation` da `landscape`'ten
+`any`'ye alındı: oyun dik tutulduğunda **daha fazlasını** görüyor ve bu
+`tests/viewport.mjs` ile ölçülü, yani kurulumda yatayı dayatmak ölçümle
+çelişiyordu.
+
+Kalan tek belirsizlik: `og:image` göreli bir yol. Modern kazıyıcılar sayfa
+adresine göre çözüyor, ama bazıları mutlak adres istiyor. Kendi alan adını
+(1.7) alırsan mutlak yazmak beş saniyelik iş.
 
 ### 2.5 Küçük işler
 

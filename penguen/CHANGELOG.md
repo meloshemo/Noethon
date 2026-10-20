@@ -5,6 +5,64 @@ değiştiği yeterli. En yeni en üstte.
 
 ---
 
+## Çöken taş, ve çıkmadan önceki tarama
+
+### Dağın kendi "ağırlığa cevap veren zemin"i
+
+Yüzen buz zamanı boğulmaya karşı takas ediyor. Duvarda boğulacak deniz yok ve
+durmak günah değil: bu chapter biten bir koldan ibaret, ve bir taş kolun geri
+dolduğu yer — dağın dinlenmeye verdiği tek izin.
+
+Çöken taş o izne kira kesiyor. Üstünde durulurken çöküyor, boşalınca çıkıyor,
+yani **dinlenme yükseklikten ödeniyor**: birbirinin cevabı olan iki şey, kol
+dolarken taş düşüyor, ters yöne çekiyor.
+
+Denizin sürümünden tek farkı var ve o da chapter'ların başarısızlık biçimi.
+Yüzen buzun draft'ı sözünün çok ötesine gidiyor, çünkü o yolun sonu boğulmak:
+temiz, anlık, ve bölüm baştan başlıyor. Dağ kimseyi boğmuyor — uzun dinlenen
+bir tırmanıcı **mahsur** kalırdı, ve en kötü hâli "devam etmek için bilerek
+düş" olan bir mekanik, hikâyesi olan bir hatadır. O yüzden taş sözün bittiği
+yerde duruyor: 36, 38 ve 43'te, ve bir koşudaki her adım — çıkış adımı dahil —
+taş tamamen çökmüş hâline göre ölçülüyor.
+
+Çözücü taşı her adımda oyunun kuralıyla hareket ettiriyor ve **her denemede
+sıfırlıyor**, ki salıncaktan farkı bu: salıncak saatin saf fonksiyonu, bu
+değil — ne kadar durulduğunu hatırlıyor.
+
+### Elli koşuda bir düşen test çözüldü
+
+`tests/skua.mjs` bir turda bir kere düşmüş ve tekrarlanamamıştı. Sebebi
+bulundu: yönetmen, ölçülen dokuz yüz adımlık uçuş sırasında rastgele **ikinci
+bir kuş** fırlatabiliyor, ve `w.skuas[0]` o anda başka bir uçuş oluyor.
+`ambushes`'i kapatmak yanlış araç — bütün güncellemeyi kapatıyor, havadaki kuş
+donuyor; durdurulması gereken fırlatıcılar. Yirmi beş koşuda sıfır hata.
+
+### Ve çıkmadan önceki tarama iki görünür kusur buldu
+
+`og:image` bir SVG'ydi. WhatsApp, Messenger, Twitter ve Slack SVG kart için
+hiçbir şey göstermiyor: oyunun her paylaşımı, altında başlık olan boş bir
+dikdörtgendi. `apple-touch-icon` da SVG'ydi, ve Safari bunu hiç desteklemedi —
+ana ekrana eklenen oyun, tam da oyunun yapıldığı cihazda gri harf yer
+tutucusuyla duruyordu.
+
+İkisi de aynı çizimden PNG'ye alındı, yani değişecek tek bir çizim var.
+Manifest'teki `orientation` da `landscape`'ten `any`'ye alındı: oyun dik
+tutulduğunda daha fazlasını görüyor ve bu `tests/viewport.mjs` ile ölçülü,
+yani kurulumda yatayı dayatmak kendi ölçümüyle çelişiyordu.
+
+### Başarım, ilk kez ölçüldü
+
+| | CPU ×1 | CPU ×4 |
+|---|---|---|
+| Simülasyon | 0,1–0,2 ms | 0,1–0,8 ms |
+| Çizim (JS) | 0,7–1,2 ms | 3,6–5,3 ms |
+
+Onaltı buçuk milisaniyelik bütçenin çok altında, dört kat yavaşlatılmış bir
+işlemcide bile. Ölçülemeyen tek şey 780×1688 pikseli gerçekten **boyamanın**
+maliyeti: bu kutuda GPU yok, ve o sayı donanımın.
+
+---
+
 ## Yüzen buz: oyunun ilk "penguen de bir şey yapar" kuralı
 
 Bu oyundaki her buz parçası bir saat ya da bir şekildi. Çatlayan buz geriye
