@@ -1491,26 +1491,6 @@ kbd {
   to { opacity: 0; transform: translateY(-14px); }
 }
 
-/* ======================================================= Rotate hint */
-
-.rotate-hint {
-  position: absolute;
-  bottom: calc(var(--s-4) + var(--safe-b));
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 6;
-  padding: 0.5em 1em;
-  font-size: var(--fs-xs);
-  color: var(--text-muted);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--r-full);
-  backdrop-filter: var(--blur);
-  -webkit-backdrop-filter: var(--blur);
-  pointer-events: none;
-  animation: toast-in var(--t-base) var(--e-out);
-}
-
 /* ============================================================ Mobile */
 
 @media (max-width: 560px) {

@@ -390,7 +390,7 @@ node tests/browser-bundle.mjs    # tek dosya sürümü file:// üzerinden gerçe
 
 Biçim denetleyicisi değil, bu kod zaten tutarlı yazılıyor ve noktalı virgül
 tartışan bir araç burada hiçbir şey satın almıyor. Denetlenen şey, **gerçekten
-başa gelmiş** ve her seferinde sessizce bozulmuş on bir kural:
+başa gelmiş** ve her seferinde sessizce bozulmuş on üç kural:
 
 | Kural | Bozulunca ne oluyordu |
 |---|---|
@@ -406,6 +406,7 @@ başa gelmiş** ve her seferinde sessizce bozulmuş on bir kural:
 | Readme'nin test sayısı koşucununkiyle aynı | Belge yirmi dört paket diyordu, gerçek otuzdu |
 | Readme özet tablosundaki her sayı gerçek | Aynı tabloda üç ayrı sayı kaymıştı: paket sayısı, sözlük boyu, dosya boyutu |
 | Tuvale doğrudan metin yazılmıyor | Arenadaki sayaç Türkçe sabitti, İngilizce oynayan Türkçe okuyordu |
+| Arayüzün oyuncuya söylediği her sayı gerçek | Bölüm listesi "31 bölümden sonra" diyordu, gerçek 76; koleksiyon "yirmi penguen, iki yüz kombinasyon" diyordu, gerçek 29 ve 290 |
 
 ### Sürekli entegrasyon
 
@@ -1788,6 +1789,41 @@ el yapımı satırlar hareket ettiriyor. Aynı sebeple iki bayrak eklendi:
 bir araç bir kez çalıştırılıp sonra hafızadan tartışılıyor) ve `shelf-run` için
 `--sample=` (kanıt değil, "bu bir şeyi sıkıştırdı mı?" sorusunun saniyeler
 içinde cevabı).
+
+### Ve sonra kadranın hiç çevrilmediği ortaya çıktı
+
+`floorGap` aralığı aşağıdan kapattı, üç parça daha o tabana bağlandı, ve sonsuz
+koşu hâlâ el yapımı chapter'ın sonundan gevşekti. Sebebi aralığın kendisiydi.
+
+`Course`'un `tight` kadranı kurstaki **her** boşluğu çarpıyor. El yapımı
+sahanlık onu 1. bölümde 0,8'den 31. bölümde 1,3'e kadar çıkarıyor. Üretici
+hiçbir zaman geçirmiyordu, yani sonsuz koşunun tamamı — 77. bölüm de 977. bölüm
+de — **1,0'da**, yani 11. bölümün kullandığı değerde koşuyordu. Sonsuz modun el
+yapımı oyundan kolay ölçülmesinin asıl sebebi buydu: boşluk tabanı eksikti ama
+*ölçek* hiç başlamamıştı.
+
+```js
+const tight = lerp(1, 1.38, depth);
+```
+
+| Bölüm | önce | sonra |
+|---|---|---|
+| 296 | 0,413 | **0,241** |
+| 299 | 0,322 | **0,257** |
+| 302 | 0,396 | **0,324** |
+| 305 | 0,366 | **0,289** |
+
+El yapımı finalin (31. bölüm) toleransı 0,395; chapter bandının zor ucu 0,22.
+Yani derin sonsuz bölüm artık oyunun en zor el yapımı bölümünün **ötesinde**, ve
+tek tek en dar sıçrayışlar 0,0456'ya kadar iniyor — yirmi giriş
+kombinasyonundan biri. Soru "çok çok çok imkansız bölüm" ise, cevabı burası:
+el yapımı 76 bölüm oyunu öğretiyor, sonsuz koşu onu geri alıyor.
+
+Tavanın 1,45 değil 1,38 olması da bilerek: kadranın sonuna kadar bastırılması,
+birinin daha fazlasını istediği gün gidecek yer bırakmamak demek. Ve üretilmiş
+olması bunu mümkün kılıyor — bir plan sabit bir dizilim, bu bir çekiliş: uçlar
+daha seyrek geliyor ve doğrulayıcı her birini görüyor. Dört örneğin dördü de
+`validate-levels.mjs` ve `shelf-run.mjs` ile geçilebilir kanıtlı.
 
 ## Düşen buz düşmüyordu
 
@@ -3316,13 +3352,14 @@ penguendir.
 kalıyor. Seçici her dilin adını kendi dilinde yazıyor, tam da okuyamadığı bir
 arayüzde kalan oyuncu için.
 
-Eksik bir metin çökme değil, sessizce diğer dile düşme demek, o yüzden üç
+Eksik bir metin çökme değil, sessizce diğer dile düşme demek, o yüzden dört
 denetim var:
 
 | Denetim | Ne yapıyor |
 |---|---|
 | `tools/lint.mjs` | İki sözlükte birebir aynı anahtarlar var mı |
 | `tools/lint.mjs` | Kodun istediği her anahtar sözlükte var mı |
+| `tools/lint.mjs` | İki dilde de sayı veren cümleler gerçeği mi söylüyor |
 | `tests/browser-lang.mjs` | Dili değiştirip her ekranda Türkçe harf arıyor |
 
 Sonuncusu ilk koşuşunda dört gerçek boşluk buldu: chapter başlıkları, market
@@ -3502,7 +3539,7 @@ anlatmak değil, olan bir şeyi olduğundan iyi anlatmaktır.
 | Kimlik | Ad, `PNG-XXXXX` kimliği, 7 unvan, hepsi cihazda |
 | Hayalet | Kendi rekorun yanında koşuyor, paylaşım koduyla arkadaşınki de |
 | Müzik | Tek tema, 5 sahne, 5 katman, ses saatinde planlanıyor, ses dosyası yok |
-| Dil | Türkçe ve İngilizce, 316 metin, tarayıcıdan seçiliyor |
+| Dil | Türkçe ve İngilizce, 315 metin, tarayıcıdan seçiliyor |
 | Kayıt | Tek sürümlü JSON, ileri göç, dosyaya aktarma, tek tuşla silme |
 | Çevrimdışı | Servis çalışanı + tek dosya sürümü (694 KB) |
 | Girdi | Klavye, dokunmatik, gamepad |

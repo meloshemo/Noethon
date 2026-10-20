@@ -339,6 +339,54 @@ const BUNDLE = await (async () => {
   if (clean) ok(`readme özet tablosu gerçekle uyuşuyor — ${rows.length} satır`);
 }
 
+/**
+ * And the same rule for the numbers the *player* is shown.
+ *
+ * Check 13 guards the readme, which is read by whoever works on the game.
+ * Nothing guarded the sentences on the screens, and they were wrong by more:
+ * the level list said endless mode begins after **31** levels when it begins
+ * after seventy-six, and the collection said twenty penguins and two hundred
+ * combinations when there are twenty-nine and two hundred and ninety. A number
+ * the player is told is a promise; a number in a readme is a note.
+ *
+ * The sentences carry digits rather than words for exactly this reason. Spelt
+ * out they read better and cannot be checked, and a claim that cannot be
+ * checked is the one that goes stale — both of these did.
+ */
+async function uiClaims() {
+  const { KEYS, t, setLang } = await import(new URL('../src/core/i18n.js', import.meta.url));
+  const { CRAFTED_LEVELS } = await import(new URL('../src/game/config.js', import.meta.url));
+  const { SKINS, TRAILS } = await import(new URL('../src/game/skins.js', import.meta.url));
+  const { ALL_LEVELS } = await import(new URL('../src/game/chapters.js', import.meta.url));
+
+  const perLevel = new Set(ALL_LEVELS.map((d) => (d.fish ?? []).length));
+  const claims = [
+    ['levels.foot', [CRAFTED_LEVELS]],
+    ['skins.foot', [SKINS.length, TRAILS.length, SKINS.length * TRAILS.length]],
+    ['tip.fish', perLevel.size === 1 ? [[...perLevel][0]] : null],
+  ];
+
+  let clean = true;
+  for (const lang of KEYS.tr.length ? ['tr', 'en'] : []) {
+    setLang(lang);
+    for (const [key, want] of claims) {
+      if (!want) continue;
+      const text = t(key);
+      const got = (text.match(/\d+/g) ?? []).map(Number);
+      for (const n of want) {
+        if (!got.includes(n)) {
+          bad(`${lang}/${key}: ${n} demesi gerekirken "${text.slice(0, 54)}" diyor`);
+          clean = false;
+        }
+      }
+    }
+  }
+  setLang('tr');
+  if (clean) ok(`arayüzdeki sayılar gerçekle uyuşuyor — ${claims.length} cümle, 2 dil`);
+}
+
+await uiClaims();
+
 if (fails) {
   console.log(`\n✗ ${fails} sorun.`);
   process.exit(1);

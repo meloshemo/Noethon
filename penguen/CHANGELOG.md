@@ -5,6 +5,80 @@ değiştiği yeterli. En yeni en üstte.
 
 ---
 
+## Arayüz üç yerde yalan söylüyordu, ve sonsuz modun kadranı hiç çevrilmemişti
+
+### Oyunun oyuncuya söylediği sayılar
+
+Sözlükteki metinlerin ikisi İngilizcede değil, **iki dilde de** yanlıştı:
+
+| Nerede | Ne diyordu | Gerçek |
+|---|---|---|
+| Bölüm listesinin altı | "31 bölümden sonra sonsuz mod" | 76 |
+| Koleksiyonun altı | "yirmi penguen ve on iz, iki yüz kombinasyon" | 29, 10, 290 |
+
+İkisi de doğruydu yazıldıkları gün. Oyun büyüdü, cümleler büyümedi — ve bir
+sayıyı oyuncuya söylemek bir söz vermek. O yüzden `tools/lint.mjs`'e on üçüncü
+kural eklendi: sayı veren cümleler sözlükten okunup `CRAFTED_LEVELS`,
+`SKINS.length`, `TRAILS.length` ve bölüm başına balık ile karşılaştırılıyor,
+iki dilde. Eklendiği anda üçüncü bir kaymayı daha yakaladı — readme'nin sözlük
+boyu — ki zaten varolan on ikinci kuralın işi buydu.
+
+### Telefonu yan çevirme ipucu kaldırıldı
+
+Oyunun dikey telefonda bir oyuncuya söylediği **ilk şey** "yan çevirirsen oyun
+alanı büyür" idi. Yazıldığı gün doğruydu: görüş alanı "540 birim yüksek, en
+boy oranı genişliği belirler" diye çerçeveleniyordu, yani yatay telefon boş
+kenar boşluğundan başka bir şey kazandırmıyordu. `viewFor` bunu düzeltti, ve
+`tests/viewport.mjs` artık ipucunun **tersini** ölçüyor: çevirmek penguenin
+göründüğü boyu %15'ten az değiştiriyor ve dik tutulan telefon dünyadan *daha
+fazla* görüyor.
+
+Yani ipucu bir hatırlatma değil, oyunun kendisi hakkında yanlış bir ifadeydi —
+ve başlık ekranında duruyordu. Markup'ı, CSS'i, metni ve yönelim dinleyicisi
+kaldırıldı; yerinde ölçümü anlatan bir yorum var. Lig satırındaki "bu hafta
+zirvedesin" de dürüstleşti: skorlar bu cihazda duruyor, kimse kimseyle
+yarışmıyor, o yüzden artık "en üst kademe, bu hafta orada kaldın".
+
+### İngilizce taraması
+
+Üç yüz on beş anahtarın ikisi birden okunup karşılaştırıldı. Çeviri eksiği,
+Türkçe kaçağı, yer tutucu uyuşmazlığı yok; düzeltilen tek şey yukarıdaki
+sayılar ve lig cümlesiydi. `tests/browser-lang.mjs` her ekranı İngilizce
+gezip Türkçe harf arıyor, ve sessiz.
+
+### Sonsuz modun `tight` kadranı hiç çevrilmemişti
+
+`floorGap` sıçrama aralığını aşağıdan kapattı, üç parça daha o tabana bağlandı,
+ve sonsuz koşu hâlâ el yapımı chapter'ın sonundan gevşek ölçülüyordu. Sebebi
+aralığın kendisiydi: `Course`'un `tight` kadranı kurstaki her boşluğu çarpıyor,
+el yapımı sahanlık onu 0,8 → 1,3 arasında rampalıyor, **üretici hiç
+geçirmiyordu.** 77. bölüm de 977. bölüm de 1,0'da — 11. bölümün değerinde —
+koşuyordu.
+
+```js
+const tight = lerp(1, 1.38, depth);
+```
+
+296: 0,413 → **0,241** · 299: 0,322 → **0,257** · 302: 0,396 → **0,324** ·
+305: 0,366 → **0,289**
+
+El yapımı finalin toleransı 0,395, bandın zor ucu 0,22. Derin sonsuz bölüm artık
+oyunun en zor el yapımı bölümünün ötesinde ve en dar tek sıçrayışlar 0,0456 —
+yirmi giriş kombinasyonundan biri. Dördü de `validate-levels.mjs` ve
+`shelf-run.mjs` ile geçilebilir kanıtlı; tavan 1,45 yerine 1,38, çünkü sonuna
+kadar bastırılmış bir kadranın gidecek yeri kalmaz.
+
+### Kalması kararlaştırılanlar
+
+Ekonomi `tests/economy.mjs` ile dakika dakika yürütüldü: ilk kozmetik 4
+dakikada, her şey 308 günde. Sıçrama mekaniği, hayaletle yarış ve rekorla
+yarış kaldı — üçü de tutarlı ve çevrimdışı dürüst: hayalet oyuncunun kendi
+koşusu, rekor oyuncunun kendi rekoru, ve ikisi de bu cihazda duruyor. Arenaya
+yan rüzgâr **eklenmedi**: chapter'ın düello kanıtı düz çizgide giden atışlara
+dayanıyor, ve kanıtı bozan bir fizik kuralı bir yenilik değil.
+
+---
+
 ## Çöken taş, ve çıkmadan önceki tarama
 
 ### Dağın kendi "ağırlığa cevap veren zemin"i

@@ -66,7 +66,6 @@ export class UI {
       overlay: $('overlay'),
       hud: $('hud'),
       touch: $('touch'),
-      rotateHint: $('rotateHint'),
       hudLevel: $('hudLevel'),
       hudName: $('hudName'),
       hudFish: $('hudFish'),
@@ -201,8 +200,6 @@ export class UI {
     // told the moment they appear or disappear — not at the next resize, which
     // on a phone that is never rotated is never.
     this.game?.renderer?.measureChrome();
-    // The rotate hint belongs to the title screen only.
-    this._checkOrientation?.();
 
     // Settings were synced by whatever opened them, which is fine right up
     // until something else opens them. The screen's job is to show the truth,
@@ -1817,15 +1814,22 @@ export class UI {
       this._onReset?.();
     });
 
-    // Rotate hint for narrow portrait phones.
-    const checkOrientation = () => {
-      const portrait = window.innerHeight > window.innerWidth;
-      this.el.rotateHint.hidden = !(this._isTouch && portrait && this.screen === 'title');
-    };
-    window.addEventListener('resize', checkOrientation);
-    window.addEventListener('orientationchange', checkOrientation);
-    checkOrientation();
-    this._checkOrientation = checkOrientation;
+    /*
+     * The rotate hint is gone, and the reason is a measurement.
+     *
+     * It told players on a portrait phone to turn it sideways "for a bigger
+     * view", and that was true when it was written: the view was framed as
+     * "540 units tall, width follows the aspect", so a sideways phone bought
+     * nothing but empty margins. `viewFor` fixed that, and `tests/viewport.mjs`
+     * now asserts the opposite of the hint — rotating changes how big the
+     * penguin looks by under fifteen percent, and a phone held upright sees
+     * *more* of the world, not less.
+     *
+     * So the first thing the game said to a new player on a phone was advice
+     * that no longer helps, about a problem that no longer exists. A hint that
+     * is merely out of date is worse than no hint: it is the game being wrong
+     * about itself, on the title screen.
+     */
   }
 
   _bindBoard() {
@@ -1978,7 +1982,6 @@ export class UI {
       this.audio.ui('back');
       this.game.quitToMenu();
       this.refreshTitle();
-      this._checkOrientation();
     });
 
     $('nextBtn').addEventListener('click', () => {

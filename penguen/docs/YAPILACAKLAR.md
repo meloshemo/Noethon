@@ -8,7 +8,7 @@ kararlar (bir daha tartışılmasın diye nedeniyle birlikte duruyorlar).
 orada **adımlar** var, burada **durum** var. Bir iş bittiğinde işareti burada
 değişir.
 
-Son güncelleme: 2026-10-18 · dal `claude/penguen-game-dev-6ym6pg` · 76 bölüm ·
+Son güncelleme: 2026-10-20 · dal `claude/penguen-game-dev-6ym6pg` · 76 bölüm ·
 55 test paketi (45 node + paketleme + 10 tarayıcı)
 
 ---
@@ -29,6 +29,9 @@ Son güncelleme: 2026-10-18 · dal `claude/penguen-game-dev-6ym6pg` · 76 bölü
 | Kayıt | Sürüm göçü testli |
 | Başarım | Simülasyon 0,1–0,8 ms, çizim 0,7–5,3 ms (CPU ×1–×4) |
 | Paylaşım kartı ve simgeler | PNG, her platformda görünür |
+| İki dil | 315 metin, birebir eşit, sayı veren cümleler linte bağlı |
+| Zorluk | El yapımı eğri bandında; sonsuz koşu 31. bölümün ötesine geçiyor |
+| Ekonomi | İlk kozmetik 4 dk, her şey 308 gün — dakika dakika testli |
 
 **Bilmediğim tek teknik şey:** bu kutuda GPU yok, yani 780×1688 pikseli
 *boyamanın* gerçek bir telefonda kaça mal olduğunu ölçemiyorum. Oyunun kendi
@@ -81,6 +84,8 @@ sonra listenin durumu:
 | 2.9 | İki nefes deliği şeridin altında | **yanlış alarm** — ölçüldü, deliğin yalnızca üst kenarı kırpılıyor |
 | 2.10 | Yüzen buz ve çöken taş | **geldi** — ikisi de, kalan biri için not |
 | 2.11 | Paylaşım kartı ve simgeler | **kapandı** — SVG hiçbir platformda görünmüyordu |
+| 2.12 | Arayüzün söylediği sayılar | **kapandı** — üçü yanlıştı, on üçüncü lint kuralı bekçisi |
+| 2.13 | Sonsuz modun gevşekliği | **kapandı** — `tight` kadranı hiç çevrilmemişti |
 
 Oyunun en tekrarlı bölümü artık 47–61 (%4), ve o %4'ün tamamı 47'nin kendini
 öğreten alt kümesi.
@@ -170,6 +175,8 @@ ucunda. Buradan sonrası yeni parça ister, dial değil — çünkü `crevasse` 
 `orcaGap` zaten tabanın üstünde sabit duruyor ve kalan gevşeklik sıçramanın
 kendisinde değil, kursun **ritminde**: bir avuç zor sıçrama, aralarında bol
 bol kolay zemin.
+
+Buradan sonrası 2.13'te: kadran gerçekten vardı, üretici onu hiç çevirmiyordu.
 
 ### 2.3 Zirvenin kalan kol gücü hedefin üstünde — ve kaldırılamıyor
 
@@ -273,54 +280,6 @@ Not olarak duruyor, çünkü aynı tuzak bu projede üçüncü kez çıktı: bir
 ölçtüğü şeyin, ölçmek istediği şey olduğundan emin olmak gerekiyor. Yüzen buz
 paketi de iki kere aynı sebeple düştü.
 
-### 2.8 Ölü bölge — **kapandı**
-
-Kamera penguenin her adımını takip ediyordu: bir arenada tek bir noktanın
-doksan piksel sağına soluna beş saniye gidip gelince kamera 1185 piksel yol
-yapıyordu. Artık ekranın ortasında kameranın cevap vermediği bir kutu var —
-aynı ölçüm **1185px → 0px**.
-
-Kutu eksen ve chapter başına ayrı, çünkü risk her yerde aynı değil:
-
-| | Yatay | Dikey |
-|---|---|---|
-| Sahanlık | 86 | 28 |
-| Arena | 120 | 40 |
-| Dağ | 44 | 30 |
-| Deniz | 70 | **0** |
-
-Yataydaki kutu koşarken kapanıyor (koşmak gerçekten gitmektir), arenada
-kapanmıyor (bir odada hızlı gitmek bir yere gitmek değil). Dikey kutu düşerken
-açılıyor, çünkü düşüş öncüsü zemini göstermek için var.
-
-Denizin sıfırı tahmin değil: her bölümün her buzunun üstünde, kutunun izin
-verdiği en kötü yöne itildiğinde masaüstünde bir nefes deliği tam şeridin
-kenarında çıkıyor — orada harcanacak pay yok. Kural `tests/camera.mjs` içinde:
-**kutu, görünen bir şeyi gizlemeyecek.**
-
-### 2.9 İki nefes deliği — **yanlış alarmmış**
-
-Ölü bölge taramasında 53 ve 61. bölümlerde birer nefes deliğinin yan tutulan
-telefonda şeridin altında kaldığı çıkmıştı. Ölçünce öyle değil: delik ekranda
-65–175 arasında, şerit 97'de bitiyor. Yani **üst kenarının 32 pikseli** şeridin
-arkasında, geri kalan 78 piksel görünüyor — ve içine girilen ağzı zaten altta.
-
-Tarama deliğin `y`'sini, yani tavandaki üst kenarını okuyordu; yüzücünün
-baktığı yer orası değil. Kayıt duruyor ki bir dahaki sefere yeniden
-keşfedilmesin: **bu bir kusur değil.**
-
-### 2.7 `tests/skua.mjs` seyrek takılıyor
-
-Kamera turunda elli koşuda bir kere düştü ve bir daha tekrarlanamadı: arka
-arkaya elli koşuda sıfır hata, değişiklikten önceki kodda da sıfır. Kuşun
-kanat salınımı `Math.random()` ile başlıyor, yani paket gerçekten
-deterministik değil.
-
-Tahmin yürütüp tetiklenmesini göremediğim bir testi değiştirmek, hatayı
-düzeltmek değil gizlemek olur. Buraya yazılıyor ki bir dahaki sefere
-"bilinmeyen bir şey" değil, **bilinen bir şey** olsun: düşerse önce kuşun
-tohumuna bakılmalı.
-
 ### 2.10 Yüzen buz geldi — bir sonraki fizik kuralı için not
 
 Chapter I'in yeni fiili `buoys`: ağırlığa cevap veren tek zemin. 20, 26 ve 30.
@@ -361,6 +320,58 @@ Kalan tek belirsizlik: `og:image` göreli bir yol. Modern kazıyıcılar sayfa
 adresine göre çözüyor, ama bazıları mutlak adres istiyor. Kendi alan adını
 (1.7) alırsan mutlak yazmak beş saniyelik iş.
 
+### 2.12 Arayüzün oyuncuya söylediği sayılar — **kapandı**
+
+Üçü yanlıştı, ve ikisi iki dilde birden:
+
+| Nerede | Ne diyordu | Gerçek |
+|---|---|---|
+| Bölüm listesi | "31 bölümden sonra sonsuz mod" | 76 |
+| Koleksiyon | "yirmi penguen, iki yüz kombinasyon" | 29 ve 290 |
+| Readme özeti | "316 metin" | 315 |
+
+Üçü de yazıldıkları gün doğruydu. Oyun büyüdü, cümleler büyümedi. `lint`'in on
+üçüncü kuralı artık sözlükten okuyup `CRAFTED_LEVELS`, `SKINS.length`,
+`TRAILS.length` ve bölüm başına balıkla karşılaştırıyor — iki dilde, her
+push'ta.
+
+Aynı taramada **yan çevirme ipucu** kaldırıldı: dikey telefondaki bir oyuncuya
+oyunun söylediği ilk şey, `tests/viewport.mjs`'in tersini ölçtüğü bir tavsiyeydi
+(çevirmek penguenin boyunu %15'ten az değiştiriyor, dik telefon daha fazlasını
+görüyor). Lig satırındaki "bu hafta zirvedesin" de "en üst kademe, bu hafta
+orada kaldın" oldu — skorlar bu cihazda duruyor, kimse kimseyle yarışmıyor.
+
+Üç yüz on beş anahtarın İngilizcesi bir bütün olarak da okundu: eksik metin,
+Türkçe kaçağı ya da yer tutucu uyuşmazlığı yok.
+
+### 2.13 Sonsuz koşu el yapımı oyundan gevşekti — **kapandı**
+
+`Course`'un `tight` kadranı kurstaki **her** boşluğu çarpıyor; el yapımı
+sahanlık onu 0,8 → 1,3 arasında rampalıyor; üretici hiç geçirmiyordu. Yani
+sonsuz koşunun tamamı — 77. bölüm de 977. bölüm de — 11. bölümün değerinde,
+**1,0'da** koşuyordu. 2.2'de aranan gevşekliğin asıl sebebi buydu: taban
+eksikti ama ölçek hiç başlamamıştı.
+
+```js
+const tight = lerp(1, 1.38, depth);
+```
+
+| Bölüm | Önce | Sonra |
+|---|---|---|
+| 296 | 0,413 | **0,241** |
+| 299 | 0,322 | **0,257** |
+| 302 | 0,396 | **0,324** |
+| 305 | 0,366 | **0,289** |
+
+Taban hedefi 0,22, el yapımı finalin toleransı 0,395. Derin sonsuz bölüm artık
+oyunun en zor el yapımı bölümünün ötesinde; en dar tek sıçrayışlar 0,0456, yani
+yirmi giriş kombinasyonundan biri. "Çok çok çok imkansız bölüm" sorusunun
+cevabı burası — ve dördü de iki katmanla geçilebilir kanıtlı, çünkü doğrulayıcı
+üretilmiş her bölümü de görüyor.
+
+Tavan `Course`'un sınırı olan 1,45 değil 1,38: sonuna kadar bastırılmış bir
+kadranın, birinin daha fazlasını istediği gün gidecek yeri kalmaz.
+
 ### 2.5 Küçük işler
 
 - Sütun başları penguenden dar (44px baş, 49px gövde, 21 yerde). Durmak
@@ -382,6 +393,9 @@ tartışman gerekir.
 | Ödüllü reklam | **yapılmadı** | Web'de ödüllü reklam desteği zayıf, ritmi bozar |
 | Uygulama mağazası | **ertelendi** | Capacitor ile bir hafta; önce web sürümü oynansın |
 | Gerçek zamanlı çok oyunculu | **yapılmadı** | WebSocket + eşleştirme + rollback + hile koruması = oyunun geri kalanı kadar iş. `ghost.js` asenkron karşılığını veriyor |
+| Sıçrama mekaniği, hayaletle yarış, rekorla yarış | **kaldı** | Üçü de tutarlı ve çevrimdışı dürüst: hayalet oyuncunun kendi koşusu, rekor kendi rekoru, ikisi de bu cihazda. Kaldırmak oyunun tek "tekrar oyna" sebebini alır |
+| Arenaya yan rüzgâr | **yapılmadı** | Chapter'ın düello kanıtı düz çizgide giden atışlara dayanıyor; kanıtı bozan bir fizik kuralı yenilik değil |
+| El yapımı chapter'ları daha da sıkmak | **tavan** | I'in `tight`'ı 1,30'da doyuyor (1,45'te doğrulayıcı yirmi bir hata veriyor), II'nin 46'sı çözücünün tırmanabildiği yükseklikte, IV'ün metriği yoğunlukla gevşiyor. Sıkmak plan plan geometri ister — ve sonsuz koşu o işi 2.13'ten sonra zaten yapıyor |
 
 ---
 

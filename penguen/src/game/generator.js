@@ -136,7 +136,26 @@ export function generateLevel(id, opts = {}) {
    */
   const floorGap = (base, top) => lerp(base, top, depth);
 
-  const c = new Course({ scale });
+  /**
+   * And the dial the endless run never touched at all.
+   *
+   * `tight` multiplies every gap the composer lays, and the crafted shelf
+   * ramps it from 0.8 at the first level to 1.3 at the thirty-first. The
+   * generator ran every course at **1.0** — flat, for ever — which is most of
+   * why the endless run measured easier than the chapter it comes after. The
+   * floor rule above closed the range from below; this is the range itself,
+   * and it had been sitting at the value level eleven uses.
+   *
+   * It climbs past where the crafted chapter stops, because the endless course
+   * is allowed to: a plan is a fixed arrangement and this is a draw, so the
+   * extremes are rarer and the validator sees every one of them. The ceiling
+   * is `Course`'s own 1.45, and the last stretch is left under it on purpose —
+   * a dial pressed flat against its stop has nowhere to go the day somebody
+   * wants more.
+   */
+  const tight = lerp(1, 1.38, depth);
+
+  const c = new Course({ scale, tight });
 
   // Always open on safe, level ice. Whatever the seed does afterwards, the
   // first seconds are somewhere to stand and read the course ahead.
