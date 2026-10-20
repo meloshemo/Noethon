@@ -32,6 +32,7 @@ Son güncelleme: 2026-10-20 · dal `claude/penguen-game-dev-6ym6pg` · 76 bölü
 | İki dil | 315 metin, birebir eşit, sayı veren cümleler linte bağlı |
 | Zorluk | El yapımı eğri bandında; sonsuz koşu 31. bölümün ötesine geçiyor |
 | Ekonomi | İlk kozmetik 4 dk, her şey 308 gün — dakika dakika testli |
+| Ritim | Ölüm → tekrar 0,72 sn · bitiş → kart 0,87 sn · sıradaki → oyun 0,02 sn |
 
 **Bilmediğim tek teknik şey:** bu kutuda GPU yok, yani 780×1688 pikseli
 *boyamanın* gerçek bir telefonda kaça mal olduğunu ölçemiyorum. Oyunun kendi

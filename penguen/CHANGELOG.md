@@ -68,6 +68,23 @@ yirmi giriş kombinasyonundan biri. Dördü de `validate-levels.mjs` ve
 `shelf-run.mjs` ile geçilebilir kanıtlı; tavan 1,45 yerine 1,38, çünkü sonuna
 kadar bastırılmış bir kadranın gidecek yeri kalmaz.
 
+### Oyunun ritmi de ölçüldü
+
+Zor bir oyunun ölçülmesi gereken sayısı sıçrama genişliği değil, **ölüm ile
+tekrar oynanabilir olmak arasındaki süre**. Tarayıcıda, dört chapter'da:
+
+| Geçiş | Süre |
+|---|---|
+| Ölüm → yeniden oynanabilir | 709–724 ms (5, 31, 40, 55 ve 70. bölümlerde) |
+| Bitiş → kazanma kartı | 868 ms |
+| "Sıradaki" → oynanıyor | 20 ms |
+
+Dört chapter'da aynı, çünkü yükleme yok: bölüm bir veri yapısı, ve tekrar
+denemek kontrol noktasına geri koymaktan ibaret. 0,72 saniyelik ölüm duraklaması
+`config.js` içinde tek sayı — zorluk yukarı çıkarken tekrar döngüsünün bir
+saniyenin altında kalması, imkansıza yaklaşan bölümlerin dayanılabilir olmasının
+tek sebebi.
+
 ### Kalması kararlaştırılanlar
 
 Ekonomi `tests/economy.mjs` ile dakika dakika yürütüldü: ilk kozmetik 4
