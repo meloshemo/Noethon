@@ -39,8 +39,14 @@ Son güncelleme: 2026-10-22 · dal `claude/penguen-game-dev-6ym6pg` · 76 bölü
 işi (yukarıdaki iki sayı) 16,7 ms bütçenin çok altında; geri kalanı donanım,
 ve cevabı 1.5'te.
 
-**Çıkmadan önce gereken, önem sırasıyla:** 1.5 (gerçek cihaz), 1.8 (yasal
-onay), 1.6 (uçak modu), 1.3 ve 1.4 (dal). Hiçbiri kod işi değil.
+**Çıkmadan önce gereken, önem sırasıyla:** 1.5 (gerçek cihazda oyna) ve 1.8
+(yasal metinleri onayla). 1.3 bir dakikalık bir depo ayarı ve çıkmayı
+engellemiyor; 1.7 isteğe bağlı. Hiçbiri kod işi değil.
+
+1.6 kapandı: uçak modu kontrolü artık her koşuda otomatik yapılıyor — ve
+otomatikleşirken gerçek bir hata buldu (2.14). Gerçek bir telefonda radyoyu
+kapatıp bakmak yine de otuz saniye, çünkü tarayıcının "offline"ı ile kapalı
+bir radyo aynı şey değil.
 
 ---
 
@@ -57,8 +63,15 @@ onay), 1.6 (uçak modu), 1.3 ve 1.4 (dal). Hiçbiri kod işi değil.
 | 1.7 | Kendi alan adı | **açık, isteğe bağlı** | 10 dk + DNS |
 | 1.8 | Yasal metinleri okuyup onayla | **açık, senin kararın** | 10 dk |
 
-Adımların hepsi `docs/BILGISAYARDA.md` içinde. İkisi bitti, kalanlar senin
+Adımların hepsi `docs/BILGISAYARDA.md` içinde. Dördü kapandı, kalanlar senin
 hesabını, cihazını ya da kararını istiyor.
+
+**1.8 için hazırlık yapıldı:** iki dildeki gizlilik ve kullanım metinleri
+baştan sona okundu, yer tutucu ya da boş alan yok, ve "ne saklanıyor" listesi
+kaydın gerçek alanlarıyla karşılaştırılıp tamamlandı (2.15). Senden istenen
+şey metni yazmak değil, **okuyup onaylamak**: dördü de
+`docs/GIZLILIK.md`, `docs/PRIVACY.md`, `docs/KULLANIM-SARTLARI.md` ve
+`docs/TERMS.md`.
 
 **1.5 neden en değerli:** testler mekaniği kanıtlıyor, **hissi** kanıtlamıyor.
 Otomatik bir testin göremediği tek şey bu. Kötü hissettiren her şeyin ayarı
