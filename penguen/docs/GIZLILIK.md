@@ -1,6 +1,6 @@
 # Gizlilik Politikası
 
-**Son güncelleme:** 19 Ağustos 2026
+**Son güncelleme:** 22 Ekim 2026
 **Ürün:** Pengu: Antarktika'dan Kaçış (web oyunu)
 
 ## Kısası
@@ -39,6 +39,10 @@ bir kayıtta duruyor. İçindekiler:
 | Günün görevleri ve serin | Günlük içerik |
 | Hayalet kayıtların | Kendi rekor koşuların, tekrar izlenebilsin diye |
 | İçe aktardığın rakip kodları | Sıralama tablosu |
+| Oyun istatistiklerin | Unvanlar ve başarımlar bunlardan hesaplanıyor |
+| Lig puanın | Haftalık kademe |
+| Yarım kalan koşunun yeri | "Devam et" seni bıraktığın yere koysun diye |
+| Anıtın boyu | Markettaki bitmeyen şey |
 
 Bunların hiçbiri cihazından çıkmıyor.
 

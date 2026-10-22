@@ -138,7 +138,28 @@ if (
   'serviceWorker' in navigator &&
   location.protocol.startsWith('http')
 ) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => undefined);
+  window.addEventListener('load', async () => {
+    try {
+      await navigator.serviceWorker.register('sw.js');
+      // The visit that installs the worker is the one the worker does not see:
+      // every module was fetched before it existed, so none of them are cached
+      // and the game does not come back offline until a *second* online visit.
+      // The browser kept the receipt of what this page loaded, so hand it over
+      // and let the worker put those files away. Only when uncontrolled —
+      // afterwards the fetch handler has already seen everything.
+      if (navigator.serviceWorker.controller) return;
+      const reg = await navigator.serviceWorker.ready;
+      const worker = navigator.serviceWorker.controller ?? reg.active;
+      if (!worker) return;
+      worker.postMessage({
+        type: 'warm',
+        urls: performance
+          .getEntriesByType('resource')
+          .map((e) => e.name)
+          .filter((u) => u.startsWith(location.origin)),
+      });
+    } catch {
+      // Offline play is a bonus the player was never promised in this session.
+    }
   });
 }

@@ -63,22 +63,50 @@ Koşuyor. Her `git push`'ta iki iş çalışıyor:
 | İş | Ne yapıyor | Süre |
 |---|---|---|
 | **Bölümler ve kurallar** | lint + 45 node paketi + paketleme | ~2 dk |
-| **Mekanikler** | Chromium indirip 10 tarayıcı paketi | ~3 dk |
+| **Mekanikler** | Chromium indirip 11 tarayıcı paketi | ~3 dk |
 
 - Noethon deposunda: `.github/workflows/pengu-ci.yml`
 - cld deposunda: `.github/workflows/ci.yml`
 
-**Sende kalan (isteğe bağlı, 1 dk):** `main` dalını koru — bu hâlâ açık.
-Settings → Branches → Add rule → `main` → *Require status checks to pass* →
-`Bölümler ve kurallar` seç. Böylece testi düşüren bir değişiklik main'e
-giremiyor.
+### Sende kalan: `main`'i koru (1 dk)
+
+Bende bu ayarı yapacak bir araç yok — depo ayarları tarayıcıdan, senin
+hesabınla yapılıyor. Yayına giden depo `meloshemo/cld` olduğu için koruma asıl
+orada anlamlı.
+
+1. <https://github.com/meloshemo/cld/settings/rules> → **New ruleset** →
+   *New branch ruleset*
+2. **Name:** `main korumalı` · **Enforcement status:** `Active`
+3. **Target branches** → *Add target* → *Include default branch*
+4. Kutulardan ikisini işaretle:
+   - **Require status checks to pass** → *Add checks* → iki işi de ekle:
+     `Bölümler ve kurallar` ve `Mekanikler (gerçek tarayıcı)`
+     (adlar `ci.yml`'deki `name:` alanlarından geliyor; listede çıkmıyorsa
+     bir kere push edip Actions'ın onları görmesini bekle)
+   - **Block force pushes**
+5. **Create**
+
+Eski arayüzü tercih edersen aynısı: Settings → Branches → *Add rule* → `main`
+→ *Require status checks to pass* → aynı iki iş.
+
+**Kontrol:** kasten bozuk bir satırla bir dal açıp PR aç; `main`'e
+birleştirme düğmesi testler yeşillenene kadar kapalı olmalı.
+
+Tek kişilik bir projede bunun kazandırdığı şey, kendi yanlışına karşı bir
+duvar: testi düşüren bir değişiklik yayına **giremiyor**, çünkü `deploy.yml`
+zaten yeşil olmadan yayınlamıyor ve bu kural aynı şeyi `main`'in kendisi için
+söylüyor.
 
 ---
 
-## 3. Dalı birleştir (senin kararın)
+## 3. Dalı birleştir (senin kararın) — **şimdilik hayır**
 
-Şu an bütün iş `claude/penguen-game-dev-6ym6pg` dalında. **Pull request
-açılmadı**, çünkü açmamı istemedin.
+Soruldu, karar verildi: dala dokunulmuyor. Oyun zaten `meloshemo/cld` main'den
+canlı yayınlanıyor, yani çıkmak için birleştirme gerekmiyor;
+`claude/penguen-game-dev-6ym6pg` geliştirme dalı olarak duruyor.
+
+Fikrin değişirse, iki yolu da aşağıda. **Pull request açılmadı**, çünkü açmamı
+istemedin.
 
 İstersen:
 
@@ -112,7 +140,9 @@ Windows `ipconfig`.
 
 Bakılacaklar, sırayla:
 
-- [ ] **Dikey ve yatay**: telefonu çevir, oyun kesilmesin
+- [ ] **Dikey ve yatay**: telefonu çevir, oyun kesilmesin *(testlendi:
+      `browser-layout.mjs` koşu sırasında çeviriyor — burada bakılacak olan
+      hissi, kesilip kesilmediği değil)*
 - [ ] **Dokunmatik butonlar**: başparmak nereye düşüyor, çok küçük mü
 - [ ] **Bölüm 32-46 (tırmanış)**: duvara tutunmak parmakla nasıl
 - [ ] **Bölüm 47-61 (dalış)**: basılı tutmak yorucu mu
@@ -129,9 +159,14 @@ Bir şey kötü hissettiriyorsa not al ve söyle; ayar değerlerinin hepsi
 
 ---
 
-## 5. Offline çalışıyor mu (2 dk)
+## 5. Offline çalışıyor mu (2 dk) — **testle kanıtlı**
 
-Yeni eklendi: `sw.js`. İlk açılış **online** olmalı, sonrası offline.
+`tests/browser-offline.mjs` bunu her koşuda yapıyor: tek bir online ziyaret,
+ağ kapalı, yenile, bölüm oyna. Yine de gerçek bir telefonda uçak moduna alıp
+bakmak otuz saniye — tarayıcının "offline"ı ile radyonun kapalı olması aynı şey
+değil.
+
+`sw.js`: **tek bir** online açılış yetiyor, sonrası offline.
 
 1. `npm start` ile aç, bir bölüm oyna
 2. DevTools → Application → Service Workers → `pengu-v1` görünmeli

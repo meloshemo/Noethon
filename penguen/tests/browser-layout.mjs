@@ -385,6 +385,89 @@ for (const [label, width, height] of SIZES) {
   await p.context().close();
 }
 
+/*
+ * And one thing no fixed shape can catch: turning the phone *during* a run.
+ *
+ * The device checklist opens with it — "telefonu çevir, oyun kesilmesin" — and
+ * it was the one line on that list a test could answer. A rotation is not a new
+ * page: the stage changes shape under a level that is already being played, the
+ * view is recomputed, the camera reframes, and the pads move to the other
+ * edges. Every one of those is a chance to drop the run on the floor.
+ */
+console.log('\nOyun sırasında telefonu çevirmek\n');
+{
+  const { page: p, errors } = await openGame(b, { width: 390, height: 844 });
+
+  const read = () =>
+    p.evaluate(() => {
+      const g = window.__pengu;
+      const w = g.world;
+      const r = g.renderer;
+      const stage = document.querySelector('.stage').getBoundingClientRect();
+      return {
+        level: w.def.id,
+        name: w.def.name,
+        state: g.state,
+        status: w.status,
+        deaths: w.deaths,
+        // Counted, not the array itself: two reads of the same live array are
+        // the same object, and an identity check would pass without looking.
+        taken: w.fish.filter((f) => f.taken).length,
+        x: Math.round(w.player.x),
+        penguin: Math.round(r.viewScale * w.player.h),
+        onScreen: (() => {
+          const sx = (w.player.centerX - w.camera.x) * r.viewScale + r.offsetX;
+          const sy = (w.player.y - w.camera.y) * r.viewScale + r.offsetY;
+          return sx > 0 && sx < stage.width && sy > 0 && sy < stage.height;
+        })(),
+      };
+    });
+
+  // The teaching level, because its opening is a long flat run: a level with a
+  // gap would answer "does holding right for a second and a half kill you",
+  // which is a question about level twelve and not about rotating a phone.
+  await p.evaluate(() => window.__pengu.startLevel(1));
+  await p.waitForTimeout(300);
+  await p.evaluate(() => {
+    const i = window.__pengu.input;
+    i._sources.touch.add('right');
+    i._sync();
+  });
+  await p.waitForTimeout(600);
+
+  const upright = await read();
+  await p.setViewportSize({ width: 844, height: 390 });
+  await p.waitForTimeout(500);
+  const sideways = await read();
+  await p.setViewportSize({ width: 390, height: 844 });
+  await p.waitForTimeout(500);
+  const back = await read();
+  await p.evaluate(() => {
+    const i = window.__pengu.input;
+    i._sources.touch.delete('right');
+    i._sync();
+  });
+
+  ok('çevirince koşu kesilmiyor',
+    sideways.state === 'playing' && sideways.status === 'playing', sideways.name);
+  ok('aynı bölüm, aynı penguen',
+    sideways.level === upright.level && sideways.deaths === upright.deaths
+      && sideways.taken === upright.taken);
+  ok('penguen yürümeye devam etti', sideways.x > upright.x, `${upright.x} → ${sideways.x}px`);
+  ok('çevirdikten sonra da ekranda', sideways.onScreen && back.onScreen);
+  // The property `tests/viewport.mjs` pins analytically, held here by a real
+  // stage that actually changed shape under a running level.
+  ok('penguenin boyu aynı kalıyor',
+    Math.abs(sideways.penguin - upright.penguin) / upright.penguin < 0.15,
+    `${upright.penguin}px → ${sideways.penguin}px`);
+  ok('geri çevirince de koşu duruyor',
+    back.state === 'playing' && back.status === 'playing' && back.level === upright.level
+      && back.x > sideways.x, `${sideways.x} → ${back.x}px`);
+  ok('çevirirken konsol temiz', errors.length === 0, errors.slice(0, 2).join(' | '));
+
+  await p.context().close();
+}
+
 const code = finish('arayüz yedi boyutta da düzgün');
 await b.close();
 process.exit(code);

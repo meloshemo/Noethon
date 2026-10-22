@@ -385,6 +385,64 @@ async function uiClaims() {
   if (clean) ok(`arayüzdeki sayılar gerçekle uyuşuyor — ${claims.length} cümle, 2 dil`);
 }
 
+/**
+ * And the other promise: the list of what the game keeps about you.
+ *
+ * The privacy notice — in `docs/GIZLILIK.md`, `docs/PRIVACY.md` and on the
+ * game's own Legal screen — does not say "some things are stored". It
+ * enumerates them, one line each, which is the only version of that promise
+ * worth making. An enumeration is a claim that the list is complete, and this
+ * one had quietly stopped being: the save grew statistics, league points,
+ * missions, a resume point and a monument, and none of the five were named.
+ *
+ * Nothing left the device either way, so no test could have failed. That is
+ * exactly why it needs a tripwire rather than a reader: a new field in the
+ * save is added for a reason that has nothing to do with privacy, by somebody
+ * who is not thinking about the Legal screen at that moment.
+ *
+ * So this knows every field the save has today. Add one, and the build stops
+ * and asks whether the player has been told.
+ */
+async function saveFields() {
+  // No localStorage in node: `Storage.load` catches that and hands back a
+  // fresh save, which is precisely the shape this wants to inspect.
+  const { Storage } = await import(new URL('../src/core/storage.js', import.meta.url));
+  const known = new Set([
+    'version',
+    'unlocked',
+    'levels',
+    'settings',
+    'stats',
+    'coins',
+    'upgrades',
+    'daily',
+    'missions',
+    'skins',
+    'skin',
+    'trails',
+    'trail',
+    'session',
+    'monument',
+    'league',
+    'name',
+    'profile',
+    'ghosts',
+    'rivals',
+  ]);
+  const fields = Object.keys(Storage.load());
+  const fresh = fields.filter((f) => !known.has(f));
+  const gone = [...known].filter((k) => !fields.includes(k));
+  if (fresh.length) {
+    bad(`kayıtta yeni alan var: ${fresh.join(', ')} — gizlilik metni ne saklandığını sayıyor`);
+  }
+  if (gone.length) {
+    bad(`kayıttan alan kalkmış: ${gone.join(', ')} — gizlilik metninden de çıkmalı`);
+  }
+  if (!fresh.length && !gone.length) ok(`kaydın her alanı yazılı — ${fields.length} alan`);
+}
+
+await saveFields();
+
 await uiClaims();
 
 if (fails) {

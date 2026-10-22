@@ -8,8 +8,8 @@ kararlar (bir daha tartışılmasın diye nedeniyle birlikte duruyorlar).
 orada **adımlar** var, burada **durum** var. Bir iş bittiğinde işareti burada
 değişir.
 
-Son güncelleme: 2026-10-20 · dal `claude/penguen-game-dev-6ym6pg` · 76 bölüm ·
-55 test paketi (45 node + paketleme + 10 tarayıcı)
+Son güncelleme: 2026-10-22 · dal `claude/penguen-game-dev-6ym6pg` · 76 bölüm ·
+56 test paketi (45 node + paketleme + 11 tarayıcı)
 
 ---
 
@@ -22,10 +22,10 @@ Son güncelleme: 2026-10-20 · dal `claude/penguen-game-dev-6ym6pg` · 76 bölü
 | | Durum |
 |---|---|
 | 76 bölüm, 4 chapter | Hepsi iki bağımsız katmanla geçilebilir kanıtlı |
-| 55 test paketi | Yeşil (45 node + paketleme + 10 tarayıcı) |
+| 56 test paketi | Yeşil (45 node + paketleme + 11 tarayıcı) |
 | 24 gerçek cihaz şekli | Oynanış ve arayüz temiz, konsol temiz |
 | CI + yayın | İkisi de yeşil, canlı sürüm son commit |
-| Çevrimdışı | Servis çalışanı + tek dosya sürümü, testli |
+| Çevrimdışı | **Tek online ziyaret yetiyor** — gerçek tarayıcıda, ağ kapalı, bölüm oynanarak testli |
 | Kayıt | Sürüm göçü testli |
 | Başarım | Simülasyon 0,1–0,8 ms, çizim 0,7–5,3 ms (CPU ×1–×4) |
 | Paylaşım kartı ve simgeler | PNG, her platformda görünür |
@@ -50,10 +50,10 @@ onay), 1.6 (uçak modu), 1.3 ve 1.4 (dal). Hiçbiri kod işi değil.
 |---|---|---|---|
 | 1.1 | GitHub Pages'i aç (`meloshemo/cld`) | **bitti** — canlı, deploy #64 yeşil | — |
 | 1.2 | CI'nın çalıştığını gör | **bitti** — her push'ta iki iş koşuyor | — |
-| 1.3 | `main` dalını koru (status check zorunlu) | **açık** | 1 dk |
-| 1.4 | Dalı `main`'e birleştir | **açık, senin kararın** | 2 dk |
-| 1.5 | Gerçek cihazda oyna ve his notu al | **açık — en değerli iş** | 30 dk |
-| 1.6 | Offline'ı doğrula (uçak modu) | **açık** | 2 dk |
+| 1.3 | `main` dalını koru (status check zorunlu) | **açık** — tam tıklama yolu `BILGISAYARDA.md` §2'de, bende araç yok | 1 dk |
+| 1.4 | Dalı `main`'e birleştir | **kapandı** — "şimdilik dokunma" dedin; yayın zaten cld/main'den | — |
+| 1.5 | Gerçek cihazda oyna ve his notu al | **açık — en değerli iş** (listenin ilk maddesi testlendi) | 30 dk |
+| 1.6 | Offline'ı doğrula (uçak modu) | **bitti** — otomatikleşti, ve bir hata buldu (2.14) | — |
 | 1.7 | Kendi alan adı | **açık, isteğe bağlı** | 10 dk + DNS |
 | 1.8 | Yasal metinleri okuyup onayla | **açık, senin kararın** | 10 dk |
 
@@ -87,6 +87,8 @@ sonra listenin durumu:
 | 2.11 | Paylaşım kartı ve simgeler | **kapandı** — SVG hiçbir platformda görünmüyordu |
 | 2.12 | Arayüzün söylediği sayılar | **kapandı** — üçü yanlıştı, on üçüncü lint kuralı bekçisi |
 | 2.13 | Sonsuz modun gevşekliği | **kapandı** — `tight` kadranı hiç çevrilmemişti |
+| 2.14 | Çevrimdışı ilk ziyarette çalışmıyordu | **kapandı** — 2 dosya → 40 dosya |
+| 2.15 | Gizlilik listesi eksik sayıyordu | **kapandı** — beş alan eklendi, on dördüncü lint kuralı bekçisi |
 
 Oyunun en tekrarlı bölümü artık 47–61 (%4), ve o %4'ün tamamı 47'nin kendini
 öğreten alt kümesi.
@@ -372,6 +374,35 @@ cevabı burası — ve dördü de iki katmanla geçilebilir kanıtlı, çünkü 
 
 Tavan `Course`'un sınırı olan 1,45 değil 1,38: sonuna kadar bastırılmış bir
 kadranın, birinin daha fazlasını istediği gün gidecek yeri kalmaz.
+
+### 2.14 Çevrimdışı söz bir ziyaret eksikti — **kapandı**
+
+Uçak modu kontrolü (1.6) otomatikleştirilince ortaya çıktı: oyunu **bir kere**
+sinyalle açmak yetmiyordu. Önbellekte iki kayıt vardı, `./` ve `./index.html`;
+kırk modülün hiçbiri yoktu, çünkü hepsi servis çalışanı kurulmadan önce
+istenmişti. İkinci online ziyaret düzeltiyordu — ama önemli olan ziyaret ilki.
+
+Precache listesi çözüm değil: derleme adımı olmayan bir projede elle yazılan
+liste bayatlar. Tarayıcı ne yüklediğini zaten biliyor; sayfa artık
+`performance.getEntriesByType('resource')` çıktısını çalışana veriyor.
+
+| | Önce | Sonra |
+|---|---|---|
+| Tek ziyaretten sonra önbellek | 2 dosya | **40 dosya** |
+| Sinyalsiz yenileme | açılmıyor | **bölüm oynanıyor** |
+
+`tests/browser-offline.mjs` 56. paket. Düzeltme geri alınınca altı kontrolden
+düşüyor.
+
+### 2.15 Gizlilik metni eksik sayıyordu — **kapandı**
+
+"Ne saklanıyor" listesi madde madde yazılmış, yani tam olduğunu iddia ediyor.
+Değildi: istatistikler, lig puanı, günün görevleri, yarım kalan koşunun yeri ve
+anıtın boyu kayda sonradan eklendi, listeye eklenmedi. Hiçbiri cihazdan
+çıkmadığı için hiçbir test düşemezdi.
+
+İki doküman ve oyunun Yasal ekranı tamamlandı; `lint`'in on dördüncü kuralı
+kaydın yirmi alanını tanıyor ve yenisi çıkarsa build duruyor.
 
 ### 2.5 Küçük işler
 

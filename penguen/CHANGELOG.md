@@ -5,6 +5,62 @@ değiştiği yeterli. En yeni en üstte.
 
 ---
 
+## Çevrimdışı sözü bir ziyaret eksikti
+
+### Ölçülmüş hâli: oyunu bir kere online açmak yetmiyordu
+
+`sw.js`'in iki kuralı da doğruydu ve `tests/offline.mjs` ikisini de sürüyordu.
+Eksik olan, testin soramadığı soruydu: **ilk ziyaret.**
+
+Gerçek bir tarayıcıda yürütüldü. Oyunu bir kere sinyalle aç, ağı kes, yenile —
+ve oyun gelmiyor. Önbellekte iki kayıt var, `./` ve `./index.html`; oyunun
+yapıldığı **kırk modülün hiçbiri yok.** Sebebi basit ve tamamen sıra meselesi:
+modüller servis çalışanı kurulmadan önce istenmişti, yani çalışan onları hiç
+görmedi. İkinci bir online ziyaret düzeltiyor — ki hiçbir teselli değil, çünkü
+önemli olan ziyaret ilki: metroya inmeden önceki peronda yapılan.
+
+Çözüm bir precache listesi **olamaz**: bu projede derleme adımı yok, elle
+yazılan bir modül listesi birinin dosya eklediği gün bayatlar, ve bayat bir
+liste hiç listesizlikten kötüdür (programın beşte dördünü saklar). Ama tarayıcı
+sayfanın ne yüklediğini zaten biliyor ve söylüyor:
+`performance.getEntriesByType('resource')`. Artık sayfa bu listeyi çalışana
+veriyor, çalışan da onu saklıyor. Liste bayatlayamaz, çünkü liste değil — az
+önce olan yüklemenin ölçümü.
+
+| | Önce | Sonra |
+|---|---|---|
+| Tek online ziyaretten sonra önbellek | 2 dosya | **40 dosya** |
+| Sinyalsiz yenileme | açılmıyor | **açılıyor, bölüm oynanıyor** |
+
+`tests/browser-offline.mjs` (yeni, 56. paket) hikâyeyi olduğu gibi sürüyor: bir
+ziyaret, ağ kapalı, bölüm oyna. Düzeltme geri alınınca paket altı kontrolden
+düşüyor — yani ölçtüğü şey gerçekten bu.
+
+### Telefonu oyun sırasında çevirmek
+
+Cihaz listesinin ilk maddesiydi ve testle cevaplanabilecek tek maddesiydi.
+`tests/browser-layout.mjs`'e eklendi: 1. bölüm koşarken ekran dikeyden yataya,
+sonra geri. Koşu kesilmiyor, aynı bölüm, ölüm sayısı aynı, penguen yürümeye
+devam ediyor (431 → 601 → 772px), her iki yönde de ekranda, ve boyu %15'ten az
+değişiyor — `tests/viewport.mjs`'in analitik olarak çivilediği özelliğin gerçek
+bir sahnede, altında oynanan bir bölümle tutulmuş hâli.
+
+### Gizlilik metni sayıyordu ama eksik sayıyordu
+
+"Ne saklanıyor" listesi — iki dokümanda ve oyunun Yasal ekranında — maddeler
+hâlinde yazılmış. Madde hâlinde yazmak, listenin **tam** olduğunu iddia
+etmektir, ve artık değildi: kayıt büyürken istatistikler, lig puanı, günün
+görevleri, yarım kalan koşunun yeri ve anıtın boyu eklendi; beşi de
+listelenmemişti.
+
+Hiçbiri cihazdan çıkmıyor, yani hiçbir test düşemezdi. Tam da bu yüzden okuyan
+birine değil bir tele ihtiyacı var: kayda yeni bir alan, Yasal ekranını o anda
+düşünmeyen biri tarafından, başka bir sebeple ekleniyor. `lint`'in on dördüncü
+kuralı kaydın bütün alanlarını tanıyor; yeni bir alan çıktığında build duruyor
+ve oyuncuya söylenip söylenmediğini soruyor.
+
+---
+
 ## Arayüz üç yerde yalan söylüyordu, ve sonsuz modun kadranı hiç çevrilmemişti
 
 ### Oyunun oyuncuya söylediği sayılar

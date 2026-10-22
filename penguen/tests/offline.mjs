@@ -44,12 +44,25 @@ class FakeResponse {
 }
 
 class FakeCache {
-  constructor() { this.map = new Map(); }
+  /**
+   * `fetch` is handed in because `cache.add` is not a setter.
+   *
+   * The real one goes to the network and *rejects* when the response is not
+   * ok, which is the whole behaviour the warm-up relies on: one missing module
+   * must not take the other thirty-nine with it. A fake that simply stored the
+   * url would make that check pass by never testing it.
+   */
+  constructor(net) { this.map = new Map(); this.net = net; }
   async match(req) { return this.map.get(key(req))?.clone() ?? undefined; }
   async put(req, res) { this.map.set(key(req), res); }
   async delete(req) { return this.map.delete(key(req)); }
   async keys() { return [...this.map.keys()].map((url) => ({ url })); }
   async addAll(urls) { for (const u of urls) this.map.set(u, new FakeResponse('seed')); }
+  async add(url) {
+    const res = await this.net(url);
+    if (!res.ok) throw new Error('bad response');
+    this.map.set(url, res);
+  }
 }
 
 const key = (req) => (typeof req === 'string' ? req : req.url);
@@ -61,7 +74,7 @@ async function loadWorker() {
   const caches = {
     store: new Map(),
     async open(name) {
-      if (!this.store.has(name)) this.store.set(name, new FakeCache());
+      if (!this.store.has(name)) this.store.set(name, new FakeCache((u) => fetch(u)));
       return this.store.get(name);
     },
     async keys() { return [...this.store.keys()]; },
@@ -104,6 +117,13 @@ async function get(w, url, { mode = 'no-cors' } = {}) {
   };
   w.listeners.fetch(event);
   return served === undefined ? undefined : await served;
+}
+
+/** Hand the worker the list of what a page just loaded. */
+async function warm(w, urls) {
+  const waits = [];
+  w.listeners.message?.({ data: { type: 'warm', urls }, waitUntil: (pr) => waits.push(pr) });
+  await Promise.all(waits);
 }
 
 const PAGE = 'https://pengu.test/index.html';
@@ -206,6 +226,52 @@ console.log('\n6) Başkasının adresine karışmıyor');
   const w = await loadWorker();
   const served = await get(w, 'https://example.com/tracker.js');
   check('dış adres dokunulmadan geçiyor', served === undefined);
+}
+
+/* 7 --------------------------------------------------------------------- */
+console.log("\n7) İlk ziyaret de sayılıyor");
+// The visit that installs the worker is the visit the worker cannot see: every
+// module was fetched before it existed. Measured in a real browser, that left
+// the cache holding the page and nothing else, and the game did not come back
+// with the network off until a *second* online visit. The page now hands over
+// what it loaded; this is that handover, driven.
+{
+  const w = await loadWorker();
+  w.net.map.set(PAGE, new FakeResponse('<html>v1</html>'));
+  w.net.map.set(MOD, new FakeResponse('v1 kod'));
+  w.net.map.set(CSS, new FakeResponse('v1 stil'));
+  await warm(w, [PAGE, MOD, CSS, 'https://başkası.test/analytics.js']);
+  const cache = await w.caches.open('pengu-v1');
+  check('modül ilk ziyarette saklandı', Boolean(await cache.match(MOD)));
+  check('stil ilk ziyarette saklandı', Boolean(await cache.match(CSS)));
+  check('başkasının adresi saklanmadı', !(await cache.match('https://başkası.test/analytics.js')));
+}
+
+/* 8 --------------------------------------------------------------------- */
+console.log('\n8) Ve ısıtma, elindekini yeniden indirmiyor');
+// This runs on a connection somebody is about to lose. Re-fetching forty files
+// the cache already holds would spend exactly the seconds that matter.
+{
+  const w = await loadWorker();
+  w.net.map.set(PAGE, new FakeResponse('<html>v1</html>'));
+  w.net.map.set(MOD, new FakeResponse('v1 kod'));
+  await get(w, PAGE, { mode: 'navigate' });
+  await get(w, MOD);
+  const before = w.net.calls.length;
+  await warm(w, [PAGE, MOD]);
+  check('ağa yeniden gidilmedi', w.net.calls.length === before);
+}
+
+/* 9 --------------------------------------------------------------------- */
+console.log('\n9) Bir dosya düşerse ötekiler kalıyor');
+{
+  const w = await loadWorker();
+  w.net.map.set(MOD, new FakeResponse('v1 kod'));
+  // CSS is deliberately missing from the network: `cache.add` rejects for it.
+  await warm(w, [MOD, CSS]);
+  const cache = await w.caches.open('pengu-v1');
+  check('sağlam dosya saklandı', Boolean(await cache.match(MOD)));
+  check('eksik dosya ısıtmayı düşürmedi', !(await cache.match(CSS)));
 }
 
 if (fails) {

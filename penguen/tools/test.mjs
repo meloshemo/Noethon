@@ -76,6 +76,7 @@ const BROWSER_SUITES = [
   ['tests/browser-brawl.mjs', 'kar topu mekaniği'],
   ['tests/browser-charged.mjs', 'yüklü balıklar (tarayıcı)'],
   ['tests/browser-session.mjs', 'yarım kalan koşu'],
+  ['tests/browser-offline.mjs', 'sinyalsiz açılış'],
   ['tests/browser-lang.mjs', 'diller'],
   ['tests/browser-gamepad.mjs', 'kumanda kolu'],
   ['tests/browser-bundle.mjs', 'tek dosya sürümü'],

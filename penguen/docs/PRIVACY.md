@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Last updated:** 20 August 2026
+**Last updated:** 22 October 2026
 **Product:** Pengu: Escape from Antarctica (web game)
 
 *Turkish original: [GIZLILIK.md](GIZLILIK.md). Both texts say the same thing.*
@@ -43,6 +43,10 @@ called `pengu.save.v1`:
 | Daily objectives and streak | The daily content |
 | Your ghost recordings | Your own record runs, so they can be replayed |
 | Rival codes you imported | The leaderboard |
+| Your play statistics | Titles and achievements are worked out from them |
+| Your league points | The weekly tier |
+| Where an interrupted run left off | So "Continue" puts you back where you were |
+| The height of your monument | The thing in the shop that never finishes |
 
 None of it leaves your device.
 

@@ -303,6 +303,31 @@ Bunun testi yoktu; `tests/offline.mjs` artık servis çalışanını **çalışt
 Tarayıcı gerekmiyor: bir servis çalışanı bir `fetch` işleyicisidir, ona bir
 önbellek ve bir ağ verirsen ne servis ettiğini söyler.
 
+### Ve "ilk açılış online olmalı" bir açılış eksikti
+
+Yukarıdaki iki kural da doğru, ve `tests/offline.mjs` ikisini de sürüyor. Ama
+testin soramadığı bir soru vardı: **ilk ziyaret.** Gerçek bir tarayıcıda
+yürütülünce çıktı — oyunu bir kere sinyalle aç, ağı kes, yenile, ve oyun
+gelmiyor. Önbellekte iki kayıt var (`./` ve `./index.html`), kırk modülün
+hiçbiri yok: hepsi servis çalışanı kurulmadan önce istenmişti, yani çalışan
+onları hiç görmedi. İkinci bir online ziyaret düzeltiyordu, ki önemli olan
+ziyaret ilki.
+
+Precache listesi çözüm değil — derleme adımı olmayan bir projede elle yazılan
+modül listesi birinin dosya eklediği gün bayatlar, ve bayat bir liste hiç
+listesizlikten kötüdür. Ama tarayıcı sayfanın ne yüklediğini zaten biliyor:
+`performance.getEntriesByType('resource')`. Sayfa artık bu listeyi çalışana
+veriyor, çalışan da sahip olmadıklarını saklıyor. Liste bayatlayamaz, çünkü
+liste değil — az önce olan yüklemenin ölçümü.
+
+| | Önce | Sonra |
+|---|---|---|
+| Tek online ziyaretten sonra önbellek | 2 dosya | **40 dosya** |
+| Sinyalsiz yenileme | açılmıyor | **bölüm oynanıyor** |
+
+`tests/browser-offline.mjs` hikâyeyi olduğu gibi sürüyor: bir ziyaret, ağ
+kapalı, bölüm oyna.
+
 ## Çalıştırma
 
 ES modülleri `file://` üzerinden çalışmaz, bu yüzden bir sunucu gerekiyor, ve
@@ -323,8 +348,9 @@ yayınlıyor.
 ### Çevrimdışı
 
 `sw.js` bir servis çalışanı: sayfanın kendisi **ağ öncelikli** (yeni sürüm
-kaçmasın), geri kalan her şey **önbellek öncelikli, arkada tazelenen**. İlk
-açılış online olmalı; sonrası uçakta da çalışır. Tek dosya sürümü kasten
+kaçmasın), geri kalan her şey **önbellek öncelikli, arkada tazelenen**. Tek bir
+online açılış yetiyor — sayfa yüklediklerinin listesini çalışana veriyor —
+sonrası uçakta da çalışır. Tek dosya sürümü kasten
 kaydetmiyor, yanında `sw.js` olmayan bir sayfanın onu araması, kusursuz çalışan
 bir sayfanın konsoluna hata yazmaktan başka bir işe yaramaz.
 
@@ -343,7 +369,7 @@ geçmez, hata verip durur.
 
 ## Testler
 
-Tek komut, 55 paket (45 node + paketleme + 10 tarayıcı), kendi sunucusunu
+Tek komut, 56 paket (45 node + paketleme + 11 tarayıcı), kendi sunucusunu
 kurup kapatıyor ve portu doluysa bir yanına kayıyor:
 
 ```bash
@@ -390,7 +416,7 @@ node tests/browser-bundle.mjs    # tek dosya sürümü file:// üzerinden gerçe
 
 Biçim denetleyicisi değil, bu kod zaten tutarlı yazılıyor ve noktalı virgül
 tartışan bir araç burada hiçbir şey satın almıyor. Denetlenen şey, **gerçekten
-başa gelmiş** ve her seferinde sessizce bozulmuş on üç kural:
+başa gelmiş** ve her seferinde sessizce bozulmuş on dört kural:
 
 | Kural | Bozulunca ne oluyordu |
 |---|---|
@@ -407,6 +433,7 @@ başa gelmiş** ve her seferinde sessizce bozulmuş on üç kural:
 | Readme özet tablosundaki her sayı gerçek | Aynı tabloda üç ayrı sayı kaymıştı: paket sayısı, sözlük boyu, dosya boyutu |
 | Tuvale doğrudan metin yazılmıyor | Arenadaki sayaç Türkçe sabitti, İngilizce oynayan Türkçe okuyordu |
 | Arayüzün oyuncuya söylediği her sayı gerçek | Bölüm listesi "31 bölümden sonra" diyordu, gerçek 76; koleksiyon "yirmi penguen, iki yüz kombinasyon" diyordu, gerçek 29 ve 290 |
+| Kaydın her alanı gizlilik metninde sayılı | Kayıt istatistikleri, lig puanını, görevleri, kaldığın yeri ve anıtı büyüttü; "ne saklanıyor" listesi beşini de saymıyordu |
 
 ### Sürekli entegrasyon
 
@@ -3543,7 +3570,7 @@ anlatmak değil, olan bir şeyi olduğundan iyi anlatmaktır.
 | Kayıt | Tek sürümlü JSON, ileri göç, dosyaya aktarma, tek tuşla silme |
 | Çevrimdışı | Servis çalışanı + tek dosya sürümü (694 KB) |
 | Girdi | Klavye, dokunmatik, gamepad |
-| Test | 45 node + paketleme + 10 tarayıcı paketi, hepsi tek komutta |
+| Test | 45 node + paketleme + 11 tarayıcı paketi, hepsi tek komutta |
 | Zorluk | Ölçülen eğri: `node tools/difficulty.mjs` |
 
 ### Yok, ve neden

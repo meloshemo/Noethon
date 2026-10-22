@@ -107,3 +107,46 @@ self.addEventListener('fetch', (event) => {
     }),
   );
 });
+
+/**
+ * The first visit used to cache the page and nothing else.
+ *
+ * Measured rather than reasoned about: load the game once with a signal, pull
+ * the plug, reload — and it does not come back. The cache holds two entries,
+ * `./` and `./index.html`, and the forty modules the game is made of are not
+ * among them. A second online visit fixes it, because by then this worker is
+ * controlling the page and sees every request.
+ *
+ * That gap is the whole first visit, and it is exactly the visit somebody has
+ * on the train platform before the train goes underground. The promise the
+ * game makes about itself — open it once with a signal and it is yours — was
+ * off by one load.
+ *
+ * The fix cannot be a precache list: this project has no build step, so a
+ * hand-written list of modules goes stale the day somebody adds a file, and a
+ * stale list is worse than none (it caches four fifths of a program). But the
+ * browser already knows precisely what the page loaded, down to the last
+ * module, and will say so — `performance.getEntriesByType('resource')`. So the
+ * page tells the worker, and the worker caches that. The list cannot go stale
+ * because it is not a list; it is a measurement of the load that just happened.
+ *
+ * Only on the visit this worker did not control, because on every other visit
+ * the fetch handler above has already cached everything. And never anything
+ * already held: this runs on a connection somebody is about to lose, not on a
+ * spare one.
+ */
+self.addEventListener('message', (event) => {
+  const data = event.data;
+  if (!data || data.type !== 'warm' || !Array.isArray(data.urls)) return;
+  event.waitUntil(
+    caches.open(CACHE).then(async (cache) => {
+      const held = new Set((await cache.keys()).map((k) => k.url));
+      const want = [...new Set(data.urls)].filter(
+        (u) => u.startsWith(self.location.origin) && !held.has(u),
+      );
+      // One failure is one file, not the warm-up: a module that 404s must not
+      // take the other thirty-nine down with it.
+      await Promise.all(want.map((u) => cache.add(u).catch(() => undefined)));
+    }),
+  );
+});
