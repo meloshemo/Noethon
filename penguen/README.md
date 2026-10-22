@@ -328,6 +328,11 @@ liste değil — az önce olan yüklemenin ölçümü.
 `tests/browser-offline.mjs` hikâyeyi olduğu gibi sürüyor: bir ziyaret, ağ
 kapalı, bölüm oyna.
 
+Isıtmanın bedeli de ölçüldü: `cache.add` sunucuya otuz sekiz fazladan istek
+atıyor, yani oyunu ikinci kez indiriyor. `fetch(u, { cache: 'force-cache' })`
+tarayıcının kendi kopyasını istediği için **bir** istek. Bayatlık riski yok:
+değişmiş bir sayfa bu önbelleği zaten boşaltıyor.
+
 ## Çalıştırma
 
 ES modülleri `file://` üzerinden çalışmaz, bu yüzden bir sunucu gerekiyor, ve

@@ -144,9 +144,28 @@ self.addEventListener('message', (event) => {
       const want = [...new Set(data.urls)].filter(
         (u) => u.startsWith(self.location.origin) && !held.has(u),
       );
+      // `cache.add` would be shorter and would cost a second download of the
+      // whole game: it fetches with the default cache mode on a server that
+      // may send no caching headers at all, and locally that measured as
+      // thirty-eight extra requests on the one visit a player is waiting
+      // through. `force-cache` asks for the browser's own copy first — the
+      // copy this very page is running on — and only goes to the network for
+      // what is genuinely missing. Staleness is not a risk here by
+      // construction: a page that came back *changed* has already emptied this
+      // cache above, so there is nothing old to prefer.
+      //
       // One failure is one file, not the warm-up: a module that 404s must not
       // take the other thirty-nine down with it.
-      await Promise.all(want.map((u) => cache.add(u).catch(() => undefined)));
+      await Promise.all(
+        want.map(async (u) => {
+          try {
+            const res = await fetch(u, { cache: 'force-cache' });
+            if (res && res.ok) await cache.put(u, res.clone());
+          } catch {
+            /* one file short is still thirty-nine files warm */
+          }
+        }),
+      );
     }),
   );
 });

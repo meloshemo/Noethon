@@ -36,6 +36,21 @@ veriyor, çalışan da onu saklıyor. Liste bayatlayamaz, çünkü liste değil 
 ziyaret, ağ kapalı, bölüm oyna. Düzeltme geri alınınca paket altı kontrolden
 düşüyor — yani ölçtüğü şey gerçekten bu.
 
+Ve ısıtmanın bedeli de ölçüldü, çünkü bu iş yanlış yapılırsa **oyunun tamamını
+ikinci kez indirmek** demek. `cache.add` kısa yazılışı tam olarak bunu yapıyor:
+sunucuya otuz sekiz fazladan istek, hem de oyuncunun beklediği tek ziyarette.
+`fetch(u, { cache: 'force-cache' })` önce tarayıcının kendi kopyasını istiyor —
+sayfanın şu an üstünde çalıştığı kopyayı — ve ağa yalnızca gerçekten eksik olan
+için gidiyor.
+
+| Isıtma yöntemi | Sunucuya giden fazladan istek |
+|---|---|
+| `cache.add` | 38 |
+| `fetch(..., force-cache)` | **1** |
+
+Bayatlık riski yok, kurgu gereği: değişmiş bir sayfa yukarıdaki kuralla bu
+önbelleği zaten boşaltıyor, yani tercih edilecek eski bir şey kalmıyor.
+
 ### Telefonu oyun sırasında çevirmek
 
 Cihaz listesinin ilk maddesiydi ve testle cevaplanabilecek tek maddesiydi.

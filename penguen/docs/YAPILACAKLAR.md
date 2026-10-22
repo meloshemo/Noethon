@@ -394,6 +394,9 @@ liste bayatlar. Tarayıcı ne yüklediğini zaten biliyor; sayfa artık
 `tests/browser-offline.mjs` 56. paket. Düzeltme geri alınınca altı kontrolden
 düşüyor.
 
+Bedeli de ölçüldü: `cache.add` ile sunucuya 38 fazladan istek (oyunu ikinci kez
+indirmek), `force-cache` ile **1**.
+
 ### 2.15 Gizlilik metni eksik sayıyordu — **kapandı**
 
 "Ne saklanıyor" listesi madde madde yazılmış, yani tam olduğunu iddia ediyor.
