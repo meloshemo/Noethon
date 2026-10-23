@@ -236,6 +236,68 @@ if (!QUIET) {
 }
 
 /*
+ * The three read-only modes, restored after an edit deleted them.
+ *
+ * They were lost in the rewrite that split the upload in two — and the way
+ * that showed up is worth keeping: the workflow's "ask Play for the version
+ * number" step sat there for fifty-four seconds and then failed, because
+ * without its branch the script fell through into the upload path and tried
+ * to send a bundle that had not been built yet.
+ */
+if (NEXT_CODE || STATUS || AUTH_ONLY) {
+  const { data: edit } = await play.edits.insert({ packageName });
+  const editId = edit.id;
+
+  if (NEXT_CODE) {
+    // Every bundle Play has ever accepted for this application: a version code
+    // is spent for good, whatever happened to the release that used it.
+    const { data } = await play.edits.bundles.list({ packageName, editId });
+    const seen = (data.bundles ?? []).map((b) => Number(b.versionCode));
+    await play.edits.delete({ packageName, editId });
+    console.log(String(Math.max(0, ...seen) + 1));
+    process.exit(0);
+  }
+
+  if (STATUS) {
+    const tracks = await play.edits.tracks.list({ packageName, editId });
+    const bundles = await play.edits.bundles.list({ packageName, editId });
+    console.log(
+      `\n  yüklü paketler ${(bundles.data.bundles ?? []).map((b) => b.versionCode).join(', ') || '(yok)'}`,
+    );
+    for (const t of tracks.data.tracks ?? []) {
+      for (const r of t.releases ?? []) {
+        console.log(
+          `  ${t.track.padEnd(12)} ${r.status} · ${(r.versionCodes ?? []).join(',') || '—'}`,
+        );
+      }
+    }
+    for (const lang of ['tr-TR', 'en-US']) {
+      try {
+        const { data } = await play.edits.listings.get({ packageName, editId, language: lang });
+        console.log(`  ${lang.padEnd(12)} ${data.title}`);
+      } catch {
+        console.log(`  ${lang.padEnd(12)} (henüz yazılmamış)`);
+      }
+    }
+    await play.edits.delete({ packageName, editId });
+    console.log('\n✓ Durum okundu. Hiçbir şey değiştirilmedi.');
+    process.exit(0);
+  }
+
+  // AUTH_ONLY: opening an edit already proves the key is valid, the service
+  // account is linked to this developer account and it has rights on this
+  // application. Throwing it away changes nothing on the store.
+  const tracks = await play.edits.tracks.list({ packageName, editId });
+  console.log('  ✓ anahtar geçerli ve bu uygulamaya yetkili');
+  console.log(
+    `  ✓ kanallar      ${(tracks.data.tracks ?? []).map((t) => t.track).join(', ') || '(henüz yok)'}`,
+  );
+  await play.edits.delete({ packageName, editId });
+  console.log('\n✓ Bağlantı sağlam. Hiçbir şey değiştirilmedi.');
+  process.exit(0);
+}
+
+/*
  * Two edits rather than one, and the reason is a 403.
  *
  * Play applies nothing until the commit, and it checks permissions *there* —
