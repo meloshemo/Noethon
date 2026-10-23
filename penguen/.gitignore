@@ -5,7 +5,10 @@ node_modules/
 *.log
 dist/
 
-# The Android project is generated from android/twa-manifest.json by
-# tools/twa.mjs — only the settings file is kept.
-android/*
-!android/twa-manifest.json
+# The Android project is source; what the build puts into it is not. The
+# packed game comes from tools/bundle.mjs and is rebuilt every time.
+android/.gradle/
+android/build/
+android/app/build/
+android/app/src/main/assets/pengu.html
+android/local.properties

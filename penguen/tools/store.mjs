@@ -545,6 +545,29 @@ async function drawn(browser) {
   await writeFile(resolve(OUT, 'play/icon-512.png'), png(512, 512, small, { alpha: true }));
   made.push('play/icon-512.png');
 
+  /*
+   * And the launcher icons inside the Android application itself.
+   *
+   * Five densities, because a launcher picks the one that fits its grid, and
+   * letting it scale a 512 down at install time is how an icon ends up soft
+   * on the one screen everybody sees it on. These are written into `android/`
+   * rather than `store/`: they are part of the application, not of a listing.
+   */
+  for (const [px, density] of [
+    [48, 'mdpi'],
+    [72, 'hdpi'],
+    [96, 'xhdpi'],
+    [144, 'xxhdpi'],
+    [192, 'xxxhdpi'],
+  ]) {
+    const pixels = Uint8Array.from(await raster(px));
+    const file = `android/app/src/main/res/mipmap-${density}/ic_launcher.png`;
+    const out = resolve(root, file);
+    await mkdir(dirname(out), { recursive: true });
+    await writeFile(out, png(px, px, pixels, { alpha: true }));
+    made.push(file);
+  }
+
   await ctx.close();
   return made;
 }

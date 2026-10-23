@@ -1,14 +1,16 @@
 # The Android package, built on demand.
 #
-# Play's copy of this game is a TWA — a thin shell around the published
-# address — and this builds it. Run it from the Actions tab (Run workflow) and
-# download the result from the run's artifacts.
+# Play's copy of this game is not a shell around a website: the whole game —
+# all 76 levels, the endless mode, the daily — is one self-contained HTML file
+# built by `tools/bundle.mjs` and shipped inside the package. The application
+# has no network permission and nothing to download, so it plays the same on a
+# plane as it does on wifi.
 #
-# What comes out:
+# Run it from the Actions tab (Run workflow) and take the result from the run's
+# artifacts:
 #
-#   pengu-android/app-release.aab          → Play Console'a yüklenen dosya
-#   pengu-android/app-debug.apk            → telefona kurup denemek için
-#   pengu-android/assetlinks.json          → imza varsa, siteye konacak dosya
+#   pengu-android/app-release.aab   → Play Console'a yüklenen dosya
+#   pengu-android/app-debug.apk     → telefona kurup denemek için
 #
 # Signing is optional and lives in repository secrets. Without them the bundle
 # comes out unsigned — enough to prove the build works and to sideload the
@@ -19,15 +21,15 @@
 #   ANDROID_KEY_PASSWORD
 #   ANDROID_KEY_ALIAS         (varsayılan: pengu)
 #
-# Making that keystore is one command and it has to be kept: lose it and this
-# application can never be updated again. See docs/MAGAZA.md §5.
-name: Android paketi (TWA)
+# That keystore is made once and has to be kept: lose it and this application
+# can never be updated again. See docs/MAGAZA.md §5.
+name: Android paketi
 
 on:
   workflow_dispatch:
     inputs:
       versionCode:
-        description: 'Android versionCode (her yüklemede artmalı)'
+        description: 'versionCode (Play her yüklemede artan bir tamsayı istiyor)'
         required: false
         default: ''
       versionName:
@@ -46,41 +48,24 @@ jobs:
         with:
           node-version: '20'
 
-      # The TWA template is built with a toolchain that wants JDK 17; the
-      # runner's default is newer and Gradle refuses it.
+      # The Android Gradle Plugin wants JDK 17; the runner's default is newer.
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Sürüm numaralarını yaz
-        if: inputs.versionCode != '' || inputs.versionName != ''
+      - name: Oyunu pakete koy
         run: |
-          node -e '
-            const fs = require("fs");
-            const p = "android/twa-manifest.json";
-            const j = JSON.parse(fs.readFileSync(p, "utf8"));
-            const code = process.env.VCODE, name = process.env.VNAME;
-            if (code) { j.appVersionCode = Number(code); }
-            if (name) { j.appVersionName = name; j.appVersion = name; }
-            fs.writeFileSync(p, JSON.stringify(j, null, 2) + "\n");
-            console.log("versionCode", j.appVersionCode, "versionName", j.appVersionName);
-          '
-        env:
-          VCODE: ${{ inputs.versionCode }}
-          VNAME: ${{ inputs.versionName }}
+          node tools/android.mjs \
+            ${{ inputs.versionCode != '' && format('--code={0}', inputs.versionCode) || '' }} \
+            ${{ inputs.versionName != '' && format('--name={0}', inputs.versionName) || '' }}
 
-      - name: Bubblewrap
-        run: npm install --no-save @bubblewrap/core
-
-      - name: Android projesini üret
-        run: node tools/twa.mjs
-
+      # The runner's own Gradle, so there is no wrapper jar in the repository:
+      # a binary nobody can read, kept in a project whose whole point is that
+      # every file in it can be read.
       - name: Paketle
         working-directory: android
-        run: |
-          chmod +x gradlew
-          ./gradlew --no-daemon bundleRelease assembleDebug
+        run: gradle --no-daemon bundleRelease assembleDebug
 
       - name: İmzala
         if: env.KEYSTORE != ''
@@ -98,36 +83,14 @@ jobs:
             -storepass "$STORE_PASS" -keypass "$KEY_PASS" \
             -sigalg SHA256withRSA -digestalg SHA-256 \
             android/app/build/outputs/bundle/release/app-release.aab "$alias_name"
-          # The fingerprint the site has to publish for the address bar to go
-          # away. With Play App Signing the one that matters is Google's, not
-          # this one — see docs/MAGAZA.md §6 — but for a sideloaded test build
-          # this is the right answer.
-          fp=$("$JAVA_HOME/bin/keytool" -list -v \
-                -keystore "$RUNNER_TEMP/upload.keystore" \
-                -storepass "$STORE_PASS" -alias "$alias_name" \
-              | grep -oE 'SHA256: [0-9A-F:]+' | head -1 | cut -d' ' -f2)
-          node -e '
-            const fs = require("fs");
-            const id = JSON.parse(fs.readFileSync("android/twa-manifest.json", "utf8")).packageId;
-            fs.writeFileSync("assetlinks.json", JSON.stringify([{
-              relation: ["delegate_permission/common.handle_all_urls"],
-              target: {
-                namespace: "android_app",
-                package_name: id,
-                sha256_cert_fingerprints: [process.env.FP],
-              },
-            }], null, 2) + "\n");
-          '
           rm -f "$RUNNER_TEMP/upload.keystore"
-        continue-on-error: false
+          echo "imzalandı"
 
       - name: Toparla
         run: |
           mkdir -p out
-          cp android/app/build/outputs/bundle/release/app-release.aab out/ 2>/dev/null || true
-          cp android/app/build/outputs/apk/debug/app-debug.apk out/ 2>/dev/null || true
-          cp assetlinks.json out/ 2>/dev/null || true
-          cp android/twa-manifest.json out/
+          cp android/app/build/outputs/bundle/release/app-release.aab out/
+          cp android/app/build/outputs/apk/debug/app-debug.apk out/
           ls -la out
 
       - uses: actions/upload-artifact@v4
