@@ -60,6 +60,12 @@ jobs:
       # integration", because creating a Pages site needs admin rights the
       # workflow's own token is not allowed to hold. That is a deliberate limit
       # on GitHub's side, not a misconfiguration here.
+      # Neither of these is web content: `store/` is the pictures the store
+      # upload form wants and `android/` is an application's source. They live
+      # in the repository because the workflows that use them run here; the
+      # site has no reason to carry them.
+      - name: Yayına gitmeyecekler
+        run: rm -rf store android
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

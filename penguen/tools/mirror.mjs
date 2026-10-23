@@ -36,9 +36,21 @@ const PUBLISH = [
   'assets',
   'docs',
   '.github',
-  // The TWA settings: the Android package is generated from this one file by
-  // tools/twa.mjs, in CI, in the published repository.
+  // The Android application's sources: the package is built from these, in
+  // CI, in the published repository.
   'android',
+  /*
+   * And the store images, which are not web content and were deliberately
+   * left out of here — until the Play upload failed on their absence.
+   *
+   * The uploader runs in *this* repository, because that is where the
+   * workflows live, and it hands Play the screenshots along with the bundle.
+   * Keeping them out of the copy kept them away from the one job that needs
+   * them. They stay out of the *deploy* instead: `deploy.yml` drops this
+   * folder before the site is published, so no player downloads seven
+   * megabytes of pictures meant for an upload form.
+   */
+  'store',
   'index.html',
   // The four legal pages, because a store listing points a reviewer at one of
   // them by URL. `tools/legal.mjs` writes them from the markdown in docs/.
