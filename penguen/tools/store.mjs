@@ -657,7 +657,26 @@ if (problems.length) {
   for (const p of problems) console.log(`  ✗ ${p}`);
 }
 console.log(`\n✓ ${count} dosya — ${secs} sn — ${OUT.replace(root + '/', '')}`);
+/*
+ * A note in the folder rather than a count.
+ *
+ * The first version wrote "files: N" — the number this run happened to make —
+ * so regenerating one scene left a note claiming the folder held four files.
+ * A number that is wrong after the second run is worse than no number.
+ */
 await writeFile(
   resolve(OUT, 'URETILDI.txt'),
-  `Bu klasördeki her şey "node tools/store.mjs" ile üretildi.\nSon üretim: ${new Date().toISOString()}\nDosya sayısı: ${count}\n`,
+  [
+    'Bu klasördeki her şey "node tools/store.mjs" ile üretiliyor — elle',
+    'düzenlemeyin, bir sonraki koşuda üstüne yazılır.',
+    '',
+    'Hangi dosya hangi forma gider, metinler ve form cevapları:',
+    '  docs/MAGAZA.md',
+    '',
+    'Boyutları denetleyen paket:',
+    '  node tests/store.mjs',
+    '',
+    `Son koşu: ${new Date().toISOString().slice(0, 10)}`,
+    '',
+  ].join('\n'),
 );

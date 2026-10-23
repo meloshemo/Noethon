@@ -1,3 +1,10 @@
-Bu klasördeki her şey "node tools/store.mjs" ile üretildi.
-Son üretim: 2026-10-23T06:18:04.141Z
-Dosya sayısı: 4
+Bu klasördeki her şey "node tools/store.mjs" ile üretiliyor — elle
+düzenlemeyin, bir sonraki koşuda üstüne yazılır.
+
+Hangi dosya hangi forma gider, metinler ve form cevapları:
+  docs/MAGAZA.md
+
+Boyutları denetleyen paket:
+  node tests/store.mjs
+
+Son koşu: 2026-10-23
