@@ -236,138 +236,115 @@ if (!QUIET) {
 }
 
 /*
- * Everything from here is one "edit": Play's own transaction. Nothing is
- * visible to anybody until the commit at the end, so a failure halfway
- * through leaves the live listing exactly as it was.
- */
-const { data: edit } = await play.edits.insert({ packageName });
-const editId = edit.id;
-// Silent in `--next-code`: that mode's whole output is a number a workflow
-// reads, and a second line of friendly prose made GitHub treat the pair as
-// one malformed value.
-if (!QUIET) console.log(`\n  düzenleme      ${editId}`);
-
-/*
- * `--auth`: does the key work, and does it have the rights?
+ * Two edits rather than one, and the reason is a 403.
  *
- * Worth its own mode because the alternative is finding out in the middle of
- * a real upload. Opening an edit already proves the whole chain — the key is
- * valid, the service account is linked to this developer account, and it has
- * permission on *this* application — and throwing the edit away changes
- * nothing on the store.
+ * Play applies nothing until the commit, and it checks permissions *there* —
+ * so a single edit holding both a release and a listing fails as a whole with
+ * "The caller does not have permission" and says nothing about which of the
+ * two the account was missing. An afternoon can go into guessing.
+ *
+ * Split, each half names itself when it fails: the listing needs *Edit store
+ * listing*, the release needs *Release to testing tracks*. And when only one
+ * permission is missing, the other half still lands.
  */
-if (NEXT_CODE) {
-  // Every bundle Play has ever accepted for this application, including the
-  // ones in closed tracks and the ones that were never promoted: a version
-  // code is spent for good, whatever happened to the release that used it.
-  const { data } = await play.edits.bundles.list({ packageName, editId });
-  const seen = (data.bundles ?? []).map((b) => Number(b.versionCode));
-  await play.edits.delete({ packageName, editId });
-  console.log(String(Math.max(0, ...seen) + 1));
-  process.exit(0);
-}
-
-if (STATUS) {
-  const tracks = await play.edits.tracks.list({ packageName, editId });
-  const bundles = await play.edits.bundles.list({ packageName, editId });
-  console.log(`\n  yüklü paketler ${(bundles.data.bundles ?? []).map((b) => b.versionCode).join(', ') || '(yok)'}`);
-  for (const t of tracks.data.tracks ?? []) {
-    for (const r of t.releases ?? []) {
+async function withEdit(what, body) {
+  const { data: edit } = await play.edits.insert({ packageName });
+  try {
+    await body(edit.id);
+    await play.edits.commit({ packageName, editId: edit.id });
+    console.log(`  ✓ ${what} — işlendi`);
+    return true;
+  } catch (e) {
+    const code = e?.code ?? e?.response?.status;
+    console.log(`  ✗ ${what} — ${code === 403 ? 'izin yok' : e.message}`);
+    if (code === 403) {
       console.log(
-        `  ${t.track.padEnd(12)} ${r.status} · ${(r.versionCodes ?? []).join(',') || '—'}` +
-          `${r.name ? ` · ${r.name}` : ''}`,
+        `    Play Console → Kullanıcılar ve izinler → servis hesabı → Pengu →\n` +
+          `    "${what === 'listeleme' ? 'Mağaza kaydını düzenle' : 'Test kanallarına sürüm yayınla'}" kutusu işaretli olmalı.`,
       );
     }
-  }
-  for (const lang of ['tr-TR', 'en-US']) {
     try {
-      const { data } = await play.edits.listings.get({ packageName, editId, language: lang });
-      console.log(`  ${lang.padEnd(12)} ${data.title}`);
+      await play.edits.delete({ packageName, editId: edit.id });
     } catch {
-      console.log(`  ${lang.padEnd(12)} (henüz yazılmamış)`);
+      /* already gone */
     }
+    return false;
   }
-  await play.edits.delete({ packageName, editId });
-  console.log('\n✓ Durum okundu. Hiçbir şey değiştirilmedi.');
-  process.exit(0);
-}
-
-if (AUTH_ONLY) {
-  const tracks = await play.edits.tracks.list({ packageName, editId });
-  console.log('  ✓ anahtar geçerli ve bu uygulamaya yetkili');
-  console.log(
-    `  ✓ kanallar      ${(tracks.data.tracks ?? []).map((t) => t.track).join(', ') || '(henüz yok)'}`,
-  );
-  await play.edits.delete({ packageName, editId });
-  console.log('\n✓ Bağlantı sağlam. Hiçbir şey değiştirilmedi.');
-  process.exit(0);
 }
 
 const { createReadStream } = await import('node:fs');
 
-const bundle = await play.edits.bundles.upload({
-  packageName,
-  editId,
-  media: { mimeType: 'application/octet-stream', body: createReadStream(resolve(root, AAB)) },
-});
-const uploaded = bundle.data.versionCode;
-console.log(`  ✓ paket yüklendi — versionCode ${uploaded}`);
-
-await play.edits.tracks.update({
-  packageName,
-  editId,
-  track: TRACK,
-  requestBody: {
-    track: TRACK,
-    releases: [
-      {
-        versionCodes: [String(uploaded)],
-        status: 'draft',
-        releaseNotes: Object.entries(texts).map(([language, t]) => ({
-          language,
-          text: t.releaseNotes,
-        })),
+/* --- the listing: texts and pictures ---------------------------------- */
+const listingOk = await withEdit('listeleme', async (editId) => {
+  for (const [language, t] of Object.entries(texts)) {
+    await play.edits.listings.update({
+      packageName,
+      editId,
+      language,
+      requestBody: {
+        language,
+        title: t.title,
+        shortDescription: t.shortDescription,
+        fullDescription: t.fullDescription,
       },
-    ],
-  },
+    });
+    for (const [imageType, files] of Object.entries(shots[language])) {
+      if (!files.length) continue;
+      // Replaced rather than added: without this every run would stack another
+      // six screenshots onto the listing until Play refused the ninth.
+      await play.edits.images.deleteall({ packageName, editId, language, imageType });
+      for (const file of files) {
+        await play.edits.images.upload({
+          packageName,
+          editId,
+          language,
+          imageType,
+          media: {
+            mimeType: file.endsWith('.png') ? 'image/png' : 'image/jpeg',
+            body: createReadStream(file),
+          },
+        });
+      }
+    }
+    console.log(`    ${language}: metin + ${shots[language].phoneScreenshots.length} telefon görseli`);
+  }
 });
-console.log(`  ✓ ${TRACK} kanalına kondu — taslak olarak`);
 
-for (const [language, t] of Object.entries(texts)) {
-  await play.edits.listings.update({
+/* --- the release: the bundle itself ----------------------------------- */
+const releaseOk = await withEdit('sürüm', async (editId) => {
+  const bundle = await play.edits.bundles.upload({
     packageName,
     editId,
-    language,
+    media: { mimeType: 'application/octet-stream', body: createReadStream(resolve(root, AAB)) },
+  });
+  const uploaded = bundle.data.versionCode;
+  console.log(`    paket yüklendi — versionCode ${uploaded}`);
+  await play.edits.tracks.update({
+    packageName,
+    editId,
+    track: TRACK,
     requestBody: {
-      language,
-      title: t.title,
-      shortDescription: t.shortDescription,
-      fullDescription: t.fullDescription,
+      track: TRACK,
+      releases: [
+        {
+          versionCodes: [String(uploaded)],
+          status: 'draft',
+          releaseNotes: Object.entries(texts).map(([language, t]) => ({
+            language,
+            text: t.releaseNotes,
+          })),
+        },
+      ],
     },
   });
-  console.log(`  ✓ ${language} metinleri yazıldı`);
+});
 
-  for (const [imageType, files] of Object.entries(shots[language])) {
-    if (!files.length) continue;
-    // Replaced rather than added: without this, every run would stack another
-    // six screenshots onto the listing until Play refused the eighth.
-    await play.edits.images.deleteall({ packageName, editId, language, imageType });
-    for (const file of files) {
-      await play.edits.images.upload({
-        packageName,
-        editId,
-        language,
-        imageType,
-        media: {
-          mimeType: file.endsWith('.png') ? 'image/png' : 'image/jpeg',
-          body: createReadStream(file),
-        },
-      });
-    }
-    console.log(`  ✓ ${language} ${imageType} — ${files.length} görsel`);
-  }
+if (!listingOk || !releaseOk) {
+  console.log('\n✗ Yarım kaldı. Eksik izni verdikten sonra aynı düğmeye tekrar bas.');
+  process.exit(1);
 }
 
-await play.edits.commit({ packageName, editId });
 console.log('\n✓ Gönderildi. Play Console → Release → sürümü incele ve yayına al.');
 console.log('  Sürüm "taslak" durumda: hiçbir şey sen onaylamadan yayınlanmıyor.');
+process.exit(0);
+
