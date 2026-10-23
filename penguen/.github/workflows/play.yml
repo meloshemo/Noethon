@@ -1,0 +1,111 @@
+# Play Console'a yükleme.
+#
+# Builds the Android package, then hands Play everything a listing is made of:
+# the bundle, both languages' titles and descriptions, the release notes, the
+# screenshots and the feature graphic. The release lands as a **draft** on the
+# chosen track — nothing goes live without somebody pressing the button in the
+# console.
+#
+# Needs one secret, and it is not a password:
+#
+#   PLAY_SERVICE_ACCOUNT_JSON   Play Console → Setup → API access
+#
+# A service account is a key scoped to publishing this one application, kept
+# in GitHub's secret store, revocable from the console at any time. See the
+# header of tools/play.mjs for the four steps that create it.
+#
+# What this cannot do — because the API cannot — is create the Play account or
+# the application entry. Those exist first; everything after is here.
+name: Play'e yükle
+
+on:
+  workflow_dispatch:
+    inputs:
+      track:
+        description: 'Kanal'
+        required: true
+        default: internal
+        type: choice
+        options: [internal, alpha, beta, production]
+      versionCode:
+        description: 'versionCode (Play her yüklemede artan bir tamsayı istiyor)'
+        required: true
+      versionName:
+        description: 'Sürüm adı (x.y.z)'
+        required: true
+        default: '1.0.0'
+
+jobs:
+  publish:
+    name: Paketle ve yükle
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # Checked before anything is built: a missing secret two minutes in is a
+      # build nobody needed.
+      - name: Sır var mı
+        env:
+          KEY: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "PLAY_SERVICE_ACCOUNT_JSON tanımlı değil — tools/play.mjs başlığındaki dört adım."
+            exit 1
+          fi
+          if [ -z "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+            echo "ANDROID_KEYSTORE_BASE64 tanımlı değil — imzasız paket Play'e yüklenmiyor."
+            exit 1
+          fi
+
+      - name: Oyunu pakete koy
+        run: node tools/android.mjs --code=${{ inputs.versionCode }} --name=${{ inputs.versionName }}
+
+      - name: Paketle
+        working-directory: android
+        run: gradle --no-daemon bundleRelease
+
+      - name: İmzala
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          set -euo pipefail
+          alias_name="${KEY_ALIAS:-pengu}"
+          echo "$KEYSTORE" | base64 -d > "$RUNNER_TEMP/upload.keystore"
+          "$JAVA_HOME/bin/jarsigner" \
+            -keystore "$RUNNER_TEMP/upload.keystore" \
+            -storepass "$STORE_PASS" -keypass "$KEY_PASS" \
+            -sigalg SHA256withRSA -digestalg SHA-256 \
+            android/app/build/outputs/bundle/release/app-release.aab "$alias_name"
+          rm -f "$RUNNER_TEMP/upload.keystore"
+
+      - name: Google kitaplığı
+        run: npm install --no-save googleapis
+
+      - name: Yükle
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          node tools/play.mjs \
+            --track=${{ inputs.track }} \
+            --aab=android/app/build/outputs/bundle/release/app-release.aab
+
+      # Kept whatever happens: the exact file that was uploaded, so what is on
+      # Play can be compared with something.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pengu-play-${{ inputs.versionCode }}
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 90

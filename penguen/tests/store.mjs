@@ -229,6 +229,37 @@ console.log('\n5) Listeleme metinleri sınırların içinde');
   check('hiçbiri boş değil', found.every((f) => f.text.trim().length > 0));
 }
 
+/* 6 --------------------------------------------------------------------- */
+console.log("\n6) Play'e yüklenecek şey eksiksiz");
+/*
+ * `tools/play.mjs` hands Play the listing out of `docs/MAGAZA.md` and
+ * `store/play/`. Its dry run is the same code path as the real upload, minus
+ * the network, so running it here means a missing field or a vanished
+ * screenshot is a failed test rather than a half-written listing on a store.
+ *
+ * It also guards a bug this pack would otherwise have missed entirely: the
+ * App Store's fields were once headed exactly like Play's, and the uploader
+ * cheerfully picked the App Store's shorter name for the Play listing.
+ */
+{
+  const { spawnSync } = await import('node:child_process');
+  const run = spawnSync(process.execPath, [resolve(root, 'tools/play.mjs'), '--dry'], {
+    cwd: root,
+    encoding: 'utf8',
+  });
+  const out = `${run.stdout}${run.stderr}`;
+  check('kuru koşu geçiyor', run.status === 0, out.trim().split('\n').slice(-1)[0]);
+  check(
+    "Play'in adı Play'den geliyor",
+    out.includes("Pengu: Antarktika'dan Kaçış") && out.includes('Pengu: Escape from Antarctica'),
+    out.match(/ad\s+(.*)/)?.[1] ?? '',
+  );
+  check(
+    'iki dilde de altı telefon görseli',
+    (out.match(/6 telefon/g) ?? []).length === 2,
+  );
+}
+
 if (fails) {
   console.log(`\n✗ ${fails} kontrol düştü.`);
   process.exit(1);

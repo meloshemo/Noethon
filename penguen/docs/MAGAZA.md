@@ -219,13 +219,13 @@ daily level. Works offline, no ads and no purchases.
 
 ## 3. Metinler — App Store
 
-### Uygulama adı · TR (en çok 30)
+### App Store adı · TR (en çok 30)
 
 ```
 Pengu: Antarktika Kaçışı
 ```
 
-### Uygulama adı · EN (en çok 30)
+### App Store adı · EN (en çok 30)
 
 ```
 Pengu: Escape Antarctica
@@ -449,6 +449,33 @@ Sonra GitHub → `meloshemo/cld` → Settings → Secrets and variables → Acti
 Bundan sonra her koşu imzalı `.aab` üretiyor. **Anahtar dosyasını yedekle:**
 kaybolursa bu uygulama bir daha güncellenemez.
 
+### Yükleme de otomatik — ama önce hesap
+
+Paket hazır olduktan sonra formları elle doldurmak gerekmiyor: `Play'e yükle`
+iş akışı paketi üretiyor, imzalıyor ve Play'e **metinleriyle, görselleriyle**
+birlikte gönderiyor. Metinler `docs/MAGAZA.md`'den, görseller `store/play/`
+içinden okunuyor, yani mağazadaki listeleme ile burada yazılan şey ayrışamıyor.
+
+Sürüm **taslak** olarak iniyor: sen Play Console'da onaylamadan hiçbir şey
+yayına çıkmıyor.
+
+Gereken tek sır bir şifre değil, bir **servis hesabı**:
+
+1. Play Console → **Setup → API access** → servis hesabı oluştur
+2. Google Cloud'da o hesaba bir **JSON anahtar** ürettir
+3. Play Console → **Users and permissions** → servis hesabına bu uygulama için
+   *Release to testing tracks* ve *Edit store listing* yetkisi ver
+4. JSON'un tamamını GitHub'da `PLAY_SERVICE_ACCOUNT_JSON` sırrı olarak sakla
+
+Anahtar GitHub'ın sır kasasında duruyor, koşu içinde kullanılıp siliniyor,
+kapsamı tek bir uygulamanın yayını, ve istediğin an Play Console'dan iptal
+edebiliyorsun. **Google şifreni hiçbir yere yazma** — ne buraya, ne bir dosyaya:
+bu işin doğru yolu bu değil ve gerekmiyor da.
+
+API'nin yapamadığı iki şey var ve ikisi de senin: **hesabı açmak** (25 $,
+kimlik doğrulaması) ve **uygulama kaydını oluşturmak** (Play Console → Create
+app). API var olan bir uygulamayı düzenliyor.
+
 ### Play Console'da sıra
 
 1. Hesap (25 $, kimlik doğrulaması birkaç gün sürebiliyor)
@@ -488,5 +515,5 @@ Mac olduğu gün yapılacak iş: `android/` projesinin iOS karşılığı (bir
 - [ ] Gerçek telefonda oynandı (yapılacaklar 1.5)
 - [ ] Uçak modunda açıldı
 - [ ] İmza anahtarı üretildi, sırlar konuldu ve anahtar yedeklendi (§5)
-- [ ] İmzalı `.aab` indirildi
+- [ ] İmzalı `.aab` indirildi (ya da `Play'e yükle` iş akışı koşturuldu)
 - [ ] Debug APK telefonda açıldı ve bir bölüm oynandı

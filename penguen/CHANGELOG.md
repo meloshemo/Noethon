@@ -5,6 +5,42 @@ değiştiği yeterli. En yeni en üstte.
 
 ---
 
+## Play'e yükleme de otomatik — şifreyle değil, servis hesabıyla
+
+Soru şuydu: "hesabıma gir, her şeyi sen yap." Cevabın iki yarısı var.
+
+**Yapılamayan:** Bir Google şifresiyle giriş yapmak. Böyle bir erişim bende
+yok, olmamalı da — ve bu kutunun dışarı çıkışı zaten kısıtlı, tarayıcı
+kontrolü de yok. Hesap açmak, kimlik doğrulaması, yirmi beş dolar ve Play'de
+**uygulama kaydını oluşturmak** API'nin de yapamadığı şeyler; onlar kişinin
+kendi yapacağı adımlar.
+
+**Yapılan:** Geri kalan her şey. `tools/play.mjs` Play'in API'sine paketi,
+iki dildeki adı, kısa ve tam açıklamayı, sürüm notlarını, altı telefon ve üç
+tablet görselini ve öne çıkan görseli gönderiyor. Metinler `docs/MAGAZA.md`'den,
+görseller `store/play/` içinden okunuyor — yani mağazadaki listeleme ile
+depodaki metin ayrışamıyor, üçüncü bir kopya yok.
+
+Sürüm **taslak** olarak iniyor. Hiçbir şey onaylanmadan yayına çıkmıyor.
+
+Erişim bir şifre değil, **servis hesabı**: yalnızca bu uygulamayı yayınlamaya
+yetkili, GitHub'ın sır kasasında duran, istendiği an Play Console'dan iptal
+edilebilen bir anahtar.
+
+### Ve kuru koşu ilk denemede bir hata buldu
+
+`--dry` hiçbir şey göndermeden bütün listelemeyi kurup yazdırıyor. İlk
+koşuşunda Play'in Türkçe adı olarak **"Pengu: Antarktika Kaçışı"** çıktı — o
+App Store'un adı. Sebebi, `docs/MAGAZA.md` içinde iki mağazanın alanlarının
+aynı başlıkla yazılmış olmasıydı: insan hangi bölümde olduğuna bakıp ayırt
+ediyor, ayrıştırıcı ayırt edemiyor.
+
+Başlıklar ayrıldı, ayrıştırıcı da yalnızca Play bölümünü okuyor, ve kuru koşu
+artık `tests/store.mjs` içinde her push'ta yürüyor — çünkü bu hatanın canlı
+hâli, mağazada yanlış adla duran bir oyun olurdu.
+
+---
+
 ## Yön değişti: web sürümü değil, Android paketi — ve oyun paketin içinde
 
 Karar sahibinin cümlesi açıktı: web sürümü olmayacak, Android öncelik. Bu,
