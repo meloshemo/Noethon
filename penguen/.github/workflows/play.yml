@@ -21,6 +21,12 @@ name: Play'e yükle
 on:
   workflow_dispatch:
     inputs:
+      only:
+        description: 'Yalnızca bir yarısı (izin düzeltildikten sonra tekrar denemek için)'
+        required: false
+        default: ''
+        type: choice
+        options: ['', listing, release]
       track:
         description: 'Kanal'
         required: true
@@ -118,6 +124,7 @@ jobs:
         run: |
           node tools/play.mjs \
             --track=${{ inputs.track }} \
+            ${{ inputs.only != '' && format('--only={0}', inputs.only) || '' }} \
             --aab=android/app/build/outputs/bundle/release/app-release.aab
 
       - name: Sonrası ne görünüyor

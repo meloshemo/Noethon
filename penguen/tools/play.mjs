@@ -67,6 +67,15 @@ const NEXT_CODE = process.argv.includes('--next-code');
 const STATUS = process.argv.includes('--status');
 const QUIET = NEXT_CODE;
 const TRACK = arg('track', 'internal');
+/*
+ * `--only=listing` / `--only=release`.
+ *
+ * A retry after a permission is fixed should not cost another version code:
+ * the release half had already landed twice while the listing was refused,
+ * and Play keeps every version code it has ever seen. This lets the half that
+ * failed be retried on its own.
+ */
+const ONLY = arg('only', null);
 const AAB = arg('aab', 'out/app-release.aab');
 
 /* ------------------------------------------------------------- the texts */
@@ -195,7 +204,7 @@ if (DRY) {
   process.exit(0);
 }
 
-if (!aabBytes && !AUTH_ONLY && !NEXT_CODE && !STATUS) {
+if (!aabBytes && !AUTH_ONLY && !NEXT_CODE && !STATUS && ONLY !== 'listing') {
   console.log('\n✗ Yüklenecek paket yok. Önce "Android paketi" iş akışını koştur.');
   process.exit(1);
 }
@@ -337,7 +346,7 @@ async function withEdit(what, body) {
 const { createReadStream } = await import('node:fs');
 
 /* --- the listing: texts and pictures ---------------------------------- */
-const listingOk = await withEdit('listeleme', async (editId) => {
+const listingOk = ONLY === 'release' ? true : await withEdit('listeleme', async (editId) => {
   for (const [language, t] of Object.entries(texts)) {
     await play.edits.listings.update({
       packageName,
@@ -373,7 +382,7 @@ const listingOk = await withEdit('listeleme', async (editId) => {
 });
 
 /* --- the release: the bundle itself ----------------------------------- */
-const releaseOk = await withEdit('sürüm', async (editId) => {
+const releaseOk = ONLY === 'listing' ? true : await withEdit('sürüm', async (editId) => {
   const bundle = await play.edits.bundles.upload({
     packageName,
     editId,
