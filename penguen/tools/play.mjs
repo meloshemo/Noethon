@@ -242,7 +242,10 @@ if (!QUIET) {
  */
 const { data: edit } = await play.edits.insert({ packageName });
 const editId = edit.id;
-console.log(`\n  düzenleme      ${editId}`);
+// Silent in `--next-code`: that mode's whole output is a number a workflow
+// reads, and a second line of friendly prose made GitHub treat the pair as
+// one malformed value.
+if (!QUIET) console.log(`\n  düzenleme      ${editId}`);
 
 /*
  * `--auth`: does the key work, and does it have the rights?
