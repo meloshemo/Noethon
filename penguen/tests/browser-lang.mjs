@@ -21,6 +21,22 @@ const { ok, finish } = checklist();
 /** Letters that only ever appear in Turkish words. */
 const TURKISH = /[çğıöşüÇĞİÖŞÜ]/;
 
+/**
+ * And the Turkish words that are spelled in plain ASCII.
+ *
+ * The letter test above is most of the job and it has a blind spot the width
+ * of a word: "penguen" has no Turkish letter in it. The collection screen
+ * counted "10 / 29 penguen" in the English build from the day it was written,
+ * through every run of this pack, and what finally caught it was a store
+ * screenshot being looked at by eye.
+ *
+ * So: words that cannot be English, matched whole. Anything that is also an
+ * English word — market, final, lig — stays off this list on purpose; a check
+ * that cries wolf gets deleted.
+ */
+const TURKISH_WORDS =
+  /\b(penguen|penguenler|izler|kalan|deneme|puan|hedef|seri|sonsuz|ayarlar|geri|kapat|oyna|rekor|bolum|balik)\b/i;
+
 const screens = ['title', 'levels', 'howto', 'shop', 'skins', 'board', 'settings', 'profile'];
 
 /** Everything a player can read on one screen, as one string. */
@@ -79,6 +95,8 @@ for (const name of screens) {
     (w) => !w.includes('Testçi') && w !== 'Türkçe',
   );
   ok(`${name} ekranında Türkçe kalmadı`, leaked.length === 0, leaked.slice(0, 4).join(' · '));
+  const word = text.match(TURKISH_WORDS);
+  ok(`${name} ekranında Türkçe kelime kalmadı`, !word, word ? word[0] : '');
 }
 
 /* 4 ------------------------------------------------------------------ */
@@ -87,7 +105,7 @@ console.log('\n4) Oyun içi metinler');
   await p.evaluate(() => window.__pengu.startLevel(15));
   await p.waitForTimeout(600);
   const hud = await p.evaluate(() => document.getElementById('hud').innerText.replace(/\s+/g, ' '));
-  ok('HUD İngilizce', !TURKISH.test(hud), hud.slice(0, 60));
+  ok('HUD İngilizce', !TURKISH.test(hud) && !TURKISH_WORDS.test(hud), hud.slice(0, 60));
   const legend = await p.evaluate(() => {
     window.__pengu.ui.showScreen('howto');
     return document.getElementById('iceLegend').innerText.replace(/\s+/g, ' ');

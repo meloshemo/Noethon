@@ -36,6 +36,27 @@ oyunun yanlış resmi.
 `tests/store.mjs` (57. paket) her dosyanın boyutunu başlığından okuyup iki
 mağazanın kuralıyla karşılaştırıyor.
 
+### Ve mağaza görselleri bir çeviri hatası buldu
+
+İngilizce ekran görüntüsünde koleksiyon sayacı **"10 / 29 penguen"** diyordu.
+Satır `ui.js` içinde elle kuruluyordu — `${owned} / ${list.length} ${trails ?
+'iz' : 'penguen'}` — ve yazıldığı günden beri İngilizce oynayan herkes bunu
+görüyordu.
+
+`tests/browser-lang.mjs` her ekranı İngilizce gezip Türkçe harf arıyor ve bunu
+kaçırdı, çünkü **"penguen" kelimesinde Türkçe harf yok.** Kör nokta tam bir
+kelime genişliğinde: ç, ğ, ı, ö, ş, ü taraması ASCII ile yazılan Türkçe
+kelimeyi göremiyor.
+
+İki şey yapıldı: sayaç sözlüğe taşındı (`ui.collectionMeta`), ve pakete tam
+kelime eşleşen bir liste eklendi — penguen, izler, kalan, deneme, puan, hedef,
+seri, sonsuz, ayarlar, geri, kapat, oyna, rekor. İngilizce karşılığı olan
+hiçbir kelime listeye girmedi (market, final, lig): yanlış alarm veren bir
+denetim silinir. Düzeltme geri alındığında paket düşüyor.
+
+Bulan şey bir test değildi; bir ekran görüntüsüne bakmaktı. Mağaza görsellerinin
+oyunun kendisinden alınmasının ikinci faydası bu.
+
 ### Ve metinler, karakter karakter sayılı
 
 `docs/MAGAZA.md` iki mağazanın bütün formunu tek yerde tutuyor: iki dilde ad,

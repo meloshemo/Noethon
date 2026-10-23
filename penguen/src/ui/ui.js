@@ -599,7 +599,13 @@ export class UI {
       grid.append(card);
     }
 
-    this.el.skinsMeta.textContent = `${owned} / ${list.length} ${trails ? 'iz' : 'penguen'}`;
+    // Written out of the dictionary rather than built here: this line said
+    // "10 / 29 penguen" in the English build for as long as it existed, and
+    // the thing that found it was a store screenshot.
+    this.el.skinsMeta.textContent = t(trails ? 'ui.collectionMetaTrails' : 'ui.collectionMeta', {
+      n: owned,
+      total: list.length,
+    });
   }
 
   /**

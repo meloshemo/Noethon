@@ -29,7 +29,7 @@ Son güncelleme: 2026-10-23 · dal `claude/penguen-game-dev-6ym6pg` · 76 bölü
 | Kayıt | Sürüm göçü testli |
 | Başarım | Simülasyon 0,1–0,8 ms, çizim 0,7–5,3 ms (CPU ×1–×4) |
 | Paylaşım kartı ve simgeler | PNG, her platformda görünür |
-| İki dil | 315 metin, birebir eşit, sayı veren cümleler linte bağlı |
+| İki dil | 317 metin, birebir eşit, sayı veren cümleler linte bağlı |
 | Zorluk | El yapımı eğri bandında; sonsuz koşu 31. bölümün ötesine geçiyor |
 | Ekonomi | İlk kozmetik 4 dk, her şey 308 gün — dakika dakika testli |
 | Ritim | Ölüm → tekrar 0,72 sn · bitiş → kart 0,87 sn · sıradaki → oyun 0,02 sn |
@@ -107,6 +107,7 @@ sonra listenin durumu:
 | 2.15 | Gizlilik listesi eksik sayıyordu | **kapandı** — beş alan eklendi, on dördüncü lint kuralı bekçisi |
 | 2.16 | Mağaza görselleri ve metinleri | **geldi** — `tools/store.mjs`, `docs/MAGAZA.md`, 57. test paketi |
 | 2.17 | Yasal metinlerin açılabilir adresi | **geldi** — `tools/legal.mjs`, on beşinci lint kuralı bekçisi |
+| 2.18 | İngilizcede Türkçe kalan sayaç | **kapandı** — "10 / 29 penguen", mağaza görseli buldu |
 
 Oyunun en tekrarlı bölümü artık 47–61 (%4), ve o %4'ün tamamı 47'nin kendini
 öğreten alt kümesi.
@@ -456,6 +457,19 @@ dördünü sayfaya çeviriyor, `lint` sayfaların metinlerle aynı şeyi söyled
 her koşuda doğruluyor.
 
 Adres: `https://meloshemo.github.io/cld/privacy.html`
+
+### 2.18 İngilizce koleksiyon sayacı Türkçeydi — **kapandı**
+
+Mağaza görselleri çekilirken görüldü: İngilizce koleksiyon ekranı
+"10 / 29 penguen" diyordu. Satır `ui.js` içinde elle kuruluyordu.
+
+`tests/browser-lang.mjs` bunu kaçırdı çünkü **"penguen" kelimesinde Türkçe
+harf yok** — paketin taraması ç, ğ, ı, ö, ş, ü arıyor. Kör nokta tam bir
+kelime genişliğinde.
+
+Sayaç sözlüğe taşındı ve pakete tam kelime eşleşen bir Türkçe kelime listesi
+eklendi. İngilizce karşılığı olan kelimeler listeye alınmadı; yanlış alarm
+veren denetim silinir.
 
 ### 2.5 Küçük işler
 

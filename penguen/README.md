@@ -3577,7 +3577,7 @@ anlatmak değil, olan bir şeyi olduğundan iyi anlatmaktır.
 | Kimlik | Ad, `PNG-XXXXX` kimliği, 7 unvan, hepsi cihazda |
 | Hayalet | Kendi rekorun yanında koşuyor, paylaşım koduyla arkadaşınki de |
 | Müzik | Tek tema, 5 sahne, 5 katman, ses saatinde planlanıyor, ses dosyası yok |
-| Dil | Türkçe ve İngilizce, 315 metin, tarayıcıdan seçiliyor |
+| Dil | Türkçe ve İngilizce, 317 metin, tarayıcıdan seçiliyor |
 | Kayıt | Tek sürümlü JSON, ileri göç, dosyaya aktarma, tek tuşla silme |
 | Çevrimdışı | Servis çalışanı + tek dosya sürümü (694 KB) |
 | Girdi | Klavye, dokunmatik, gamepad |
