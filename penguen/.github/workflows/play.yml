@@ -28,8 +28,9 @@ on:
         type: choice
         options: [internal, alpha, beta, production]
       versionCode:
-        description: 'versionCode (Play her yüklemede artan bir tamsayı istiyor)'
-        required: true
+        description: 'versionCode — boş bırak, Play en yüksek olanın bir fazlasını versin'
+        required: false
+        default: ''
       versionName:
         description: 'Sürüm adı (x.y.z)'
         required: true
@@ -66,8 +67,29 @@ jobs:
             exit 1
           fi
 
+      - name: Google kitaplığı
+        run: npm install --no-save googleapis
+
+      # Asked of Play rather than typed: "this version code has already been
+      # used" is the commonest way an upload fails, and it fails *after* the
+      # build, because the number is baked into the bundle at compile time.
+      - name: Sürüm numarasını Play'e sor
+        id: ver
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          set -euo pipefail
+          given="${{ inputs.versionCode }}"
+          if [ -n "$given" ]; then
+            code="$given"
+          else
+            code=$(node tools/play.mjs --next-code)
+          fi
+          echo "versionCode: $code"
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+
       - name: Oyunu pakete koy
-        run: node tools/android.mjs --code=${{ inputs.versionCode }} --name=${{ inputs.versionName }}
+        run: node tools/android.mjs --code=${{ steps.ver.outputs.code }} --name=${{ inputs.versionName }}
 
       - name: Paketle
         working-directory: android
@@ -90,9 +112,6 @@ jobs:
             android/app/build/outputs/bundle/release/app-release.aab "$alias_name"
           rm -f "$RUNNER_TEMP/upload.keystore"
 
-      - name: Google kitaplığı
-        run: npm install --no-save googleapis
-
       - name: Yükle
         env:
           PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
@@ -101,11 +120,17 @@ jobs:
             --track=${{ inputs.track }} \
             --aab=android/app/build/outputs/bundle/release/app-release.aab
 
+      - name: Sonrası ne görünüyor
+        if: always()
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: node tools/play.mjs --status || true
+
       # Kept whatever happens: the exact file that was uploaded, so what is on
       # Play can be compared with something.
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: pengu-play-${{ inputs.versionCode }}
+          name: pengu-play-${{ steps.ver.outputs.code }}
           path: android/app/build/outputs/bundle/release/app-release.aab
           retention-days: 90

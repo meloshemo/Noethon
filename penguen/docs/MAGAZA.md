@@ -506,6 +506,14 @@ Cevapların hepsi §4'te; konsoldan doldurulması gerekenler şunlar:
 Store listing (ad, açıklamalar, görseller) ve sürüm yüklemesi **elle
 yapılmasın** — `Play'e yükle` iş akışı ikisini de yapıyor.
 
+### Sürüm numarasını artık düşünmen gerekmiyor
+
+`Play'e yükle` iş akışında versionCode kutusunu **boş bırak**: Play'e o güne
+kadar kabul ettiği en yüksek numara soruluyor ve bir fazlası kullanılıyor.
+"Bu sürüm numarası zaten kullanılmış" hatası, bir yüklemenin düşmesinin en
+yaygın sebebi, ve paket derlenirken numara içine gömüldüğü için hata hep
+*yapıdan sonra* geliyor. Bir API çağrısı bütün o sınıfı ortadan kaldırıyor.
+
 ### Önce bağlantı testi
 
 Sır konduktan sonra, bir şey yüklemeden önce: Actions → **Play bağlantı

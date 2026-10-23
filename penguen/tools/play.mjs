@@ -51,6 +51,21 @@ const arg = (name, fallback = null) => {
 };
 const DRY = process.argv.includes('--dry');
 const AUTH_ONLY = process.argv.includes('--auth');
+/*
+ * `--next-code`: Play'e sor, bir fazlasını söyle.
+ *
+ * "This version code has already been used" is the single most common way an
+ * upload fails, and it fails *after* the build — the number is baked into the
+ * bundle at compile time, so by the time Play complains there is nothing to
+ * do but build again. Asking Play first costs one API call and removes the
+ * whole class: whatever the highest version code it has ever seen is, the
+ * next one is that plus one.
+ *
+ * Prints the number and nothing else, so a workflow can read it.
+ */
+const NEXT_CODE = process.argv.includes('--next-code');
+const STATUS = process.argv.includes('--status');
+const QUIET = NEXT_CODE;
 const TRACK = arg('track', 'internal');
 const AAB = arg('aab', 'out/app-release.aab');
 
@@ -148,8 +163,8 @@ async function images() {
 const texts = await listing();
 const shots = await images();
 
-console.log('Play listelemesi hazırlanıyor...\n');
-for (const [lang, t] of Object.entries(texts)) {
+if (!QUIET) console.log('Play listelemesi hazırlanıyor...\n');
+for (const [lang, t] of Object.entries(QUIET ? {} : texts)) {
   console.log(`  ${lang}`);
   console.log(`    ad            ${t.title}`);
   console.log(`    kısa açıklama ${[...t.shortDescription].length} karakter`);
@@ -169,9 +184,9 @@ for (const [lang, t] of Object.entries(texts)) {
 let aabBytes = null;
 try {
   aabBytes = (await stat(resolve(root, AAB))).size;
-  console.log(`\n  paket          ${AAB} · ${(aabBytes / 1024 / 1024).toFixed(1)} MB`);
+  if (!QUIET) console.log(`\n  paket          ${AAB} · ${(aabBytes / 1024 / 1024).toFixed(1)} MB`);
 } catch {
-  console.log(`\n  paket          ${AAB} — yok`);
+  if (!QUIET) console.log(`\n  paket          ${AAB} — yok`);
 }
 
 if (DRY) {
@@ -180,7 +195,7 @@ if (DRY) {
   process.exit(0);
 }
 
-if (!aabBytes && !AUTH_ONLY) {
+if (!aabBytes && !AUTH_ONLY && !NEXT_CODE && !STATUS) {
   console.log('\n✗ Yüklenecek paket yok. Önce "Android paketi" iş akışını koştur.');
   process.exit(1);
 }
@@ -215,8 +230,10 @@ if (!packageName || !versionCode) {
   console.log('\n✗ applicationId / versionCode okunamadı — android/app/build.gradle');
   process.exit(1);
 }
-console.log(`\n  uygulama       ${packageName} (versionCode ${versionCode})`);
-console.log(`  kanal          ${TRACK}`);
+if (!QUIET) {
+  console.log(`\n  uygulama       ${packageName} (versionCode ${versionCode})`);
+  console.log(`  kanal          ${TRACK}`);
+}
 
 /*
  * Everything from here is one "edit": Play's own transaction. Nothing is
@@ -236,6 +253,42 @@ console.log(`\n  düzenleme      ${editId}`);
  * permission on *this* application — and throwing the edit away changes
  * nothing on the store.
  */
+if (NEXT_CODE) {
+  // Every bundle Play has ever accepted for this application, including the
+  // ones in closed tracks and the ones that were never promoted: a version
+  // code is spent for good, whatever happened to the release that used it.
+  const { data } = await play.edits.bundles.list({ packageName, editId });
+  const seen = (data.bundles ?? []).map((b) => Number(b.versionCode));
+  await play.edits.delete({ packageName, editId });
+  console.log(String(Math.max(0, ...seen) + 1));
+  process.exit(0);
+}
+
+if (STATUS) {
+  const tracks = await play.edits.tracks.list({ packageName, editId });
+  const bundles = await play.edits.bundles.list({ packageName, editId });
+  console.log(`\n  yüklü paketler ${(bundles.data.bundles ?? []).map((b) => b.versionCode).join(', ') || '(yok)'}`);
+  for (const t of tracks.data.tracks ?? []) {
+    for (const r of t.releases ?? []) {
+      console.log(
+        `  ${t.track.padEnd(12)} ${r.status} · ${(r.versionCodes ?? []).join(',') || '—'}` +
+          `${r.name ? ` · ${r.name}` : ''}`,
+      );
+    }
+  }
+  for (const lang of ['tr-TR', 'en-US']) {
+    try {
+      const { data } = await play.edits.listings.get({ packageName, editId, language: lang });
+      console.log(`  ${lang.padEnd(12)} ${data.title}`);
+    } catch {
+      console.log(`  ${lang.padEnd(12)} (henüz yazılmamış)`);
+    }
+  }
+  await play.edits.delete({ packageName, editId });
+  console.log('\n✓ Durum okundu. Hiçbir şey değiştirilmedi.');
+  process.exit(0);
+}
+
 if (AUTH_ONLY) {
   const tracks = await play.edits.tracks.list({ packageName, editId });
   console.log('  ✓ anahtar geçerli ve bu uygulamaya yetkili');
