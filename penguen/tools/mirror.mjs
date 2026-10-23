@@ -36,6 +36,9 @@ const PUBLISH = [
   'assets',
   'docs',
   '.github',
+  // The TWA settings: the Android package is generated from this one file by
+  // tools/twa.mjs, in CI, in the published repository.
+  'android',
   'index.html',
   // The four legal pages, because a store listing points a reviewer at one of
   // them by URL. `tools/legal.mjs` writes them from the markdown in docs/.
