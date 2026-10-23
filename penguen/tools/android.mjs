@@ -61,7 +61,10 @@ const has = {
 };
 
 const problems = [];
-if (!/^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/.test(has.id ?? '')) {
+// Upper case is legal in a package segment and this application uses it:
+// Play has the entry as `com.Pengu`, and an application id is fixed for the
+// life of a listing.
+if (!/^[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)+$/.test(has.id ?? '')) {
   problems.push(`applicationId Android kurallarına uymuyor: ${has.id}`);
 }
 if (!/^\d+\.\d+\.\d+$/.test(has.name ?? '')) problems.push(`versionName x.y.z olmalı: ${has.name}`);

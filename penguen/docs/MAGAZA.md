@@ -281,7 +281,7 @@ Formların geri kalanı tek satırlık şeyler, ama her biri bir yerde isteniyor
 | Alan | Değer |
 |---|---|
 | Sürüm | `1.0.0` · Android `versionCode: 1` · iOS `build: 1` |
-| Paket adı / Bundle ID | `io.github.meloshemo.pengu` |
+| Paket adı / Bundle ID | `com.Pengu` — Play'de kayıt böyle açıldı, değiştirilemiyor |
 | Kategori | Play: Oyun → Arcade · App Store: Games → Arcade (ikincil: Action) |
 | Etiketler (Play, en çok 5) | platform, arcade, tek oyunculu, çevrimdışı, beceri |
 | Destek adresi | `https://github.com/meloshemo/cld/issues` |
