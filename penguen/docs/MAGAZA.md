@@ -269,6 +269,53 @@ Apple'ın sınırı da 4000.
 
 ---
 
+## 3b. Kalan küçük alanlar
+
+Formların geri kalanı tek satırlık şeyler, ama her biri bir yerde isteniyor.
+
+| Alan | Değer |
+|---|---|
+| Sürüm | `1.0.0` · Android `versionCode: 1` · iOS `build: 1` |
+| Paket adı / Bundle ID | `io.github.meloshemo.pengu` |
+| Kategori | Play: Oyun → Arcade · App Store: Games → Arcade (ikincil: Action) |
+| Etiketler (Play, en çok 5) | platform, arcade, tek oyunculu, çevrimdışı, beceri |
+| Destek adresi | `https://github.com/meloshemo/cld/issues` |
+| Pazarlama / web adresi | `https://meloshemo.github.io/cld/` |
+| Gizlilik politikası | `https://meloshemo.github.io/cld/privacy.html` |
+| Kullanım şartları | `https://meloshemo.github.io/cld/terms.html` |
+
+**Destek e-postası:** Play bunu listelemede **herkese açık** gösteriyor. Günlük
+adresini vermek istemezsen yeni bir adres açmak beş dakika; vereceksen bilerek
+ver.
+
+**Telif satırı (App Store "Copyright"):** `2026 <adın soyadın>` — mağaza burada
+bir kişi ya da şirket adı istiyor, rumuz kabul edilmiyor.
+
+### Apple inceleme notu · EN (en çok 4000)
+
+```
+No account, no login, no server. Everything runs on the device.
+
+The game is a browser-based game packaged with Capacitor. It is fully
+playable offline: all 76 levels, the endless mode and the daily level are
+generated on the device, and no network request is made at any point.
+
+To verify the offline behaviour: launch once, enable Airplane Mode, then
+relaunch. The game starts and plays normally.
+
+There is no user-generated content, no chat, no advertising and no
+purchases. Nothing is collected or transmitted.
+```
+
+### Play uygulama erişimi notu · TR (en çok 500)
+
+```
+Giriş gerekmiyor. Oyunun tamamı ilk açılıştan itibaren erişilebilir; hesap,
+şifre veya özel bir kod yok.
+```
+
+---
+
 ## 4. Form cevapları
 
 ### Play — Veri güvenliği (Data safety)
