@@ -5,6 +5,48 @@ değiştiği yeterli. En yeni en üstte.
 
 ---
 
+## Yön değişti: web sürümü değil, Android paketi — ve oyun paketin içinde
+
+Karar sahibinin cümlesi açıktı: web sürümü olmayacak, Android öncelik. Bu,
+bir gün önce kurulan TWA'yı yanlış araç yapıyor — TWA yayındaki bir adresi
+açan ince bir kabuk, yani kapatılacak bir siteye bağımlı olurdu ve tam ekran
+olabilmek için origin kökünde `assetlinks.json` isterdi.
+
+Onun yerine **oyunun kendisi pakete giriyor.** `tools/bundle.mjs`'in ürettiği
+tek dosya sürümü — 696 KB, 76 bölümün tamamı, sonsuz mod, günün bölümü — bir
+WebView'in açtığı `assets/pengu.html`. Ağ izni yok, indirilecek bir şey yok,
+açılmak için internet gerekmiyor. Ve en sinir bozucu mağaza sorunu bu kararla
+birlikte yok oluyor: uygulama bir adrese bağlı olmadığı için alan adı
+doğrulaması diye bir iş kalmıyor.
+
+`android/` artık okunabilir, elle yazılmış küçük bir proje: bir activity, bir
+WebView, bir dosya. İki karar ölçülmüş sebeplerden:
+
+- **Sayfa `file://` değil.** `file://` opak bir origin demek, opak origin
+  `localStorage` yok demek, o da her açılışta sıfırlanan kayıt, rekor ve
+  koleksiyon demek. `WebViewAssetLoader` aynı baytları
+  `https://appassets.androidplatform.net` üstünden veriyor — gerçek bir
+  origin, gerçek depolama, ve bunun için hiçbir şey cihazdan çıkmıyor.
+- **Geri tuşu bir oyun eylemi.** Tek sayfa olan bir uygulamada geçmiş yok.
+  Tuş oyuna soruyor: oynarken duraklat, duraklamışken menüye, başka ekrandan
+  başlığa, başlıktaysa çık.
+
+O soru bir sözleşme, ve sözleşmeler sessizce bozulur: ifade `state`,
+`togglePause`, `quitToMenu` ve `ui.showScreen` adlarını anıyor; biri yeniden
+adlandırılsa tuş sessizce "uygulamayı kapat"a dönerdi — koşunun ortasında,
+hiçbir hata vermeden, buradan denenemeyen bir pakette. O yüzden
+`tests/browser-bundle.mjs` sözleşmeyi **paketlenen dosyanın kendisine** karşı
+denetliyor.
+
+`.github/workflows/android.yml` elle tetikleniyor, iki dakikada `.aab` ve
+telefona kurulabilen `.apk` veriyor. Üçüncü koşu yeşil: 2,4 MB.
+
+İmzalama bilerek dışarıda: anahtar CI içinde üretilip saklansaydı, ona erişen
+herkes bu uygulamanın güncellemesini imzalayabilirdi. `keytool` komutu ve dört
+sırrın adı `docs/MAGAZA.md` §5'te.
+
+---
+
 ## Android paketi artık bir düğme
 
 Play'in kopyası bir TWA: yayındaki adresi tam ekran açan ince bir Android

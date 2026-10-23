@@ -98,7 +98,47 @@ console.log('\n3) Simülasyon dönüyor');
 }
 
 /* 4 ------------------------------------------------------------------ */
-console.log('\n4) Konsol');
+console.log("\n4) Android'in geri tuşu bu dosyayla konuşabiliyor");
+/*
+ * The Android application is this file in a WebView, and its back button is
+ * not a history button — there is no history. It asks the game what to do,
+ * with the expression in `MainActivity.onBackPressed`, and acts on the answer.
+ *
+ * That expression names four things across the bundle: `state`, `togglePause`,
+ * `quitToMenu` and `ui.showScreen`. Rename any of them and the button quietly
+ * becomes "close the app" — in the middle of a run, with no error anywhere, on
+ * a build nobody can try from here. So the contract is checked against the
+ * same file that ships.
+ */
+{
+  const BACK = `(function(){try{var g=window.__pengu;if(!g)return 'exit';
+    if(g.state==='playing'){g.togglePause();return 'handled';}
+    if(g.state==='paused'){g.quitToMenu();return 'handled';}
+    var s=g.ui&&g.ui.screen;
+    if(s&&s!=='title'){g.ui.showScreen('title');return 'handled';}
+    return 'exit';}catch(e){return 'exit';}})()`;
+
+  await p.evaluate(() => window.__pengu.startLevel(15));
+  await p.waitForTimeout(300);
+  const playing = await p.evaluate(BACK);
+  const paused = await p.evaluate(() => window.__pengu.state);
+  ok('oynarken duraklatıyor', playing === 'handled' && paused === 'paused', `${playing} · ${paused}`);
+
+  const second = await p.evaluate(BACK);
+  const menu = await p.evaluate(() => window.__pengu.state);
+  ok('duraklamışken menüye dönüyor', second === 'handled' && menu !== 'playing', `${second} · ${menu}`);
+
+  await p.evaluate(() => window.__pengu.ui.showScreen('levels'));
+  const fromScreen = await p.evaluate(BACK);
+  const screen = await p.evaluate(() => window.__pengu.ui.screen);
+  ok('başka ekrandan başlığa dönüyor', fromScreen === 'handled' && screen === 'title', `${screen}`);
+
+  const atTitle = await p.evaluate(BACK);
+  ok('başlıkta uygulamayı kapatıyor', atTitle === 'exit', atTitle);
+}
+
+/* 5 ------------------------------------------------------------------ */
+console.log('\n5) Konsol');
 ok('hata yok', errors.length === 0, errors.slice(0, 3).join(' | '));
 
 const code = finish('tek dosya sürümü çalışıyor');

@@ -3599,6 +3599,40 @@ anlatmak değil, olan bir şeyi olduğundan iyi anlatmaktır.
 
 ---
 
+## Android paketi: oyun bir siteyi açmıyor, oyunun kendisi içeride
+
+Mağazadaki kopya yayındaki bir adresi açan kabuk değil. `tools/bundle.mjs`'in
+ürettiği **tek dosya sürümü** — 76 bölümün tamamı, sonsuz mod, günün bölümü,
+696 KB — paketin içinde `assets/pengu.html` olarak duruyor. Ağ izni yok,
+indirilecek bir şey yok, açılmak için internet gerekmiyor.
+
+```bash
+node tools/android.mjs                  # oyunu pakete koy, sürümü denetle
+cd android && gradle bundleRelease      # ya da: Actions → Android paketi
+```
+
+`android/` okunabilir, elle yazılmış küçük bir proje: bir activity, bir
+WebView, bir dosya. İki karar ölçülmüş sebeplerden:
+
+- **Sayfa `file://` değil**, `https://appassets.androidplatform.net` üstünden
+  servis ediliyor. `file://` opak bir origin demek, opak origin `localStorage`
+  yok demek, o da her açılışta sıfırlanan kayıt demek. `WebViewAssetLoader`
+  aynı baytları gerçek bir origin'den veriyor ve bunun için hiçbir şey
+  cihazdan çıkmıyor.
+- **Geri tuşu bir geçmiş tuşu değil.** Tek sayfalık bir uygulamada geçmiş yok;
+  tuş oyuna soruyor: oynarken duraklat, duraklamışken menüye, başka ekrandan
+  başlığa, başlıktaysa çık.
+
+O soru bir sözleşme ve sözleşmeler sessizce bozulur — ifade `state`,
+`togglePause`, `quitToMenu` ve `ui.showScreen` adlarını anıyor. Biri yeniden
+adlandırılırsa tuş sessizce "uygulamayı kapat"a dönerdi, koşunun ortasında,
+hiçbir hata vermeden. `tests/browser-bundle.mjs` sözleşmeyi paketlenen
+dosyanın kendisine karşı denetliyor.
+
+Uygulamanın **tek bir izni yok** — ne ağ, ne depolama, ne konum. Gizlilik
+metnindeki "hiçbir veri cihazından çıkmıyor" cümlesi, manifest'te tek bir
+`uses-permission` satırı olmadığı için paketin kendisiyle doğrulanabiliyor.
+
 ## Mağaza görselleri oyunun kendisinden alınıyor
 
 Bir mağaza listelemesi, resimle verilmiş bir söz dizisi — ve o sözlerin

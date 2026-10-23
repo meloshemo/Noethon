@@ -25,14 +25,19 @@ bu yedi megabayt oyunu açan hiç kimseye indirilmiyor.
 | | Play | App Store |
 |---|---|---|
 | Hesap | Play Console, **tek seferlik 25 $** | Apple Developer, **yılda 99 $** |
-| Gereken makine | herhangi biri | **macOS + Xcode** |
-| Paketleme | TWA (Bubblewrap) — web sürümünü sarmalar | Capacitor — WKWebView sarmalar |
-| En büyük risk | Digital Asset Links (aşağıda, §6) | Apple 4.2 "yeterli işlevsellik" |
-| Oyun hazır mı | **evet** | **evet**, ama §6'daki uyarıyı oku |
+| Gereken makine | **hiçbiri** — paketi CI üretiyor | **macOS + Xcode** |
+| Paketleme | Oyun paketin içinde (WebView) | Aynısı, WKWebView ile |
+| En büyük risk | yok sayılır | Apple 4.2 "yeterli işlevsellik" |
+| Durum | **paket hazır, üretiliyor** | ertelendi — Mac yok |
 
-Oyun zaten web'de yayında ve kurulabilir (PWA): telefonda tarayıcıdan "ana
-ekrana ekle" dendiğinde tam ekran, çevrimdışı çalışan bir uygulama oluyor.
-Mağazalar bunun üstüne bir dağıtım kanalı; oyunun kendisi için gerekli değil.
+**Öncelik Android, ve oyun paketin içinde.** Uygulama bir siteyi açan kabuk
+değil: `tools/bundle.mjs`'in ürettiği tek dosya sürümü — 76 bölümün tamamı,
+sonsuz mod, günün bölümü — paketin içinde duruyor. Ağ izni yok, indirilecek
+bir şey yok, açılması için internet gerekmiyor.
+
+Bunun bir yan etkisi, en sinir bozucu mağaza sorununun ortadan kalkması:
+uygulama yayındaki bir adrese bağlı olmadığı için `assetlinks.json`, origin
+kökü, alan adı doğrulaması diye bir iş kalmıyor.
 
 ---
 
@@ -131,10 +136,10 @@ Günün bölümü her gün herkes için aynı; dört hedef, bir seri.
 
 İNTERNETSİZ, REKLAMSIZ, HESAPSIZ
 
-Oyun bir kere açıldıktan sonra tamamen çevrimdışı çalışıyor. Reklam yok,
-satın alma yok, hesap yok, takip yok. Hiçbir veri cihazından çıkmıyor —
-oyunun ağ üzerinden konuştuğu tek bir adres bile yok ve bu kaynak kodunda
-denetleniyor.
+Oyun tamamen çevrimdışı çalışıyor: her şey uygulamanın içinde, indirilecek
+hiçbir şey yok. Reklam yok, satın alma yok, hesap yok, takip yok. Uygulamanın
+tek bir izni bile yok — ne ağ, ne depolama, ne konum — ve hiçbir veri
+cihazından çıkmıyor.
 
 29 penguen ve 10 iz kazanılıyor, satın alınmıyor. Balıkları topla,
 rekorları kır, hayaletinle yarış, arkadaşının rekorunu koda çevirip
@@ -179,10 +184,10 @@ four objectives and a streak.
 
 OFFLINE, NO ADS, NO ACCOUNT
 
-One online launch and the game is yours offline for good. No ads, no
-purchases, no accounts, no tracking. Nothing leaves your device — the
-game has no address it talks to at all, and that is checked in the
-source.
+The game is fully offline: everything is inside the app and there is
+nothing to download. No ads, no purchases, no accounts, no tracking. The
+app asks for no permissions at all — not network, not storage, not
+location — and nothing ever leaves your device.
 
 29 penguins and 10 trails are earned, not bought. Collect fish, beat
 records, race your own ghost, turn a friend's record into a code and
@@ -378,47 +383,61 @@ eskidiğini söylüyor.
 
 ---
 
-## 5. Play'e paketleme (TWA) — düğmeye basmak yeterli
+## 5. Android paketi — düğmeye basmak yeterli
 
-Oyun zaten bir PWA, yani Play için ayrı bir sürüm yazmak gerekmiyor: TWA
-(Trusted Web Activity) yayındaki adresi tam ekran, tarayıcı çubuğu olmadan
-gösteren ince bir Android paketi. **Kurulu bir şey gerekmiyor, paketi CI
-üretiyor.**
+Bilgisayarına hiçbir şey kurman gerekmiyor; paketi CI üretiyor.
 
-> GitHub → `meloshemo/cld` → **Actions** → *Android paketi (TWA)* →
-> **Run workflow**
+> GitHub → `meloshemo/cld` → **Actions** → *Android paketi* → **Run workflow**
 
 İki dakika sonra koşunun altındaki **Artifacts** bölümünde `pengu-android`
-duruyor; içinde:
+duruyor:
 
 | Dosya | Ne işe yarıyor |
 |---|---|
 | `app-release.aab` | Play Console'a yüklenen dosya |
 | `app-debug.apk` | Telefona kurup denemek için (1.5'teki iş) |
-| `assetlinks.json` | İmza sırrı tanımlıysa, siteye konacak dosya |
-| `twa-manifest.json` | O paketin hangi ayarlarla çıktığı |
 
-Ayarlar `android/twa-manifest.json` içinde ve okunabilir: uygulama kimliği
-`io.github.meloshemo.pengu`, tam ekran, yönelim serbest, durum çubuğu
-`#08132a`, açılış ekranı `#050d1c`, `minSdkVersion` 24. Sürüm numarasını
-tetiklerken kutucuktan verebilirsin (Play her yüklemede artan bir
-`versionCode` istiyor).
+Sürüm numarasını tetiklerken kutucuklardan verebilirsin: Play her yüklemede
+artan bir `versionCode` istiyor.
+
+### Paketin içinde ne var
+
+`android/` küçük ve okunabilir bir Android projesi: bir activity, bir WebView,
+bir dosya. O dosya `tools/bundle.mjs`'in ürettiği tek dosya sürümü — 696 KB,
+oyunun tamamı — ve `tests/browser-bundle.mjs` onu gerçek tarayıcıda açıp bölüm
+oynuyor. Yani mağazadaki şey ile depodaki şey ayrışamıyor; ortada ikinci bir
+kopya yok.
+
+İki ayrıntı, ikisi de ölçülmüş sebeplerle:
+
+- Sayfa `file://` değil, `https://appassets.androidplatform.net` üstünden
+  servis ediliyor. `file://` opak bir origin demek, opak origin `localStorage`
+  yok demek, o da **her açılışta sıfırlanan kayıt** demek. Asset loader aynı
+  baytları gerçek bir origin'den veriyor; bunun için hiçbir şey cihazdan
+  çıkmıyor.
+- Geri tuşu bir geçmiş tuşu değil: oynarken duraklatıyor, duraklamışken
+  menüye, başka ekrandayken başlığa dönüyor, yalnızca başlıktayken uygulamayı
+  kapatıyor. Bu sözleşme `tests/browser-bundle.mjs` içinde, paketlenen dosyanın
+  kendisine karşı denetleniyor.
+
+Uygulamanın **hiçbir izni yok**: ağ, depolama, konum, sensör, kimlik — hiçbiri.
+Manifest'te tek bir `uses-permission` satırı yok, yani gizlilik metnindeki
+"hiçbir veri cihazından çıkmıyor" cümlesi paketin kendisiyle doğrulanabiliyor.
 
 ### İmzalama — tek elle yapılması gereken şey
 
 İmzasız paket Play'e yüklenmiyor, ve imza anahtarı **senin** olmak zorunda:
-burada üretilip bir yere yazılsa, o anahtara erişen herkes senin uygulamanın
+CI içinde üretilip bir yere yazılsaydı, ona erişen herkes bu uygulamanın
 güncellemesini imzalayabilirdi.
 
-Anahtarı bir kere üret (bilgisayarında, Java kuruluysa):
+Anahtarı bir kere üret (Java kuruluysa, bilgisayarında):
 
 ```bash
 keytool -genkeypair -v -keystore android.keystore \
   -alias pengu -keyalg RSA -keysize 2048 -validity 10000
 ```
 
-Sonra GitHub → `meloshemo/cld` → Settings → Secrets and variables → Actions,
-ve dört sır:
+Sonra GitHub → `meloshemo/cld` → Settings → Secrets and variables → Actions:
 
 | Sır | Değer |
 |---|---|
@@ -430,85 +449,36 @@ ve dört sır:
 Bundan sonra her koşu imzalı `.aab` üretiyor. **Anahtar dosyasını yedekle:**
 kaybolursa bu uygulama bir daha güncellenemez.
 
-### Elle yapmak istersen
+### Play Console'da sıra
 
-```bash
-npm install -g @bubblewrap/cli
-bubblewrap init --manifest=https://meloshemo.github.io/cld/manifest.webmanifest
-bubblewrap build
-```
-
-Aynı sonucu veriyor; farkı, soruları senin cevaplaman ve makinende bir JDK ile
-Android SDK istemesi.
+1. Hesap (25 $, kimlik doğrulaması birkaç gün sürebiliyor)
+2. "Create app" → ad, dil, oyun, ücretsiz
+3. §2'deki metinler, §1'deki görseller
+4. §4'teki formlar (veri güvenliği, içerik derecelendirme)
+5. Internal testing → `.aab` yükle → kendi telefonunda dene
+6. Production → gönder
 
 ---
 
-## 6. Dikkat: Digital Asset Links, ve Pages'in tuzağı
+## 6. iOS — ertelendi, ama aynı yoldan
 
-TWA'nın adres çubuğunu gizlemesi için Android, **origin kökünden** bir dosya
-okuyor:
+Aynı yaklaşım iPhone'da da çalışıyor: WKWebView içinde aynı tek dosya. Fark,
+Apple'ın istedikleri:
 
-```
-https://meloshemo.github.io/.well-known/assetlinks.json
-```
+- **macOS + Xcode** gerekiyor, uzaktan yapılamıyor.
+- Apple Developer üyeliği yılda 99 $.
+- 4.2 "minimum functionality" kuralı web sarmalayıcıları reddedebiliyor. Bu
+  oyunun durumu iyi — tamamen çevrimdışı, 76 bölüm, dokunmatik kumanda ve oyun
+  kolu desteği, hiçbir şey sunucudan gelmiyor — ama kararı inceleme ekibi
+  veriyor. §3'teki inceleme notu tam da bunun için yazıldı: "uçak modunda açıp
+  bölüm oynayın" cümlesi gerçekten işe yarıyor.
 
-Dikkat: `/cld/` değil, **kökten**. GitHub Pages'te proje sayfasının kökü sana
-ait değil — `meloshemo.github.io` adresinin kökünü `meloshemo.github.io` adlı
-depo yayınlıyor. Yani iki yoldan biri gerekiyor:
+Mac olduğu gün yapılacak iş: `android/` projesinin iOS karşılığı (bir
+`WKWebView`, `assets/pengu.html`, aynı geri tuşu sözleşmesi) ve
+`store/appstore/` içindeki hazır görseller.
 
-1. **`meloshemo.github.io` adlı bir depo aç** ve içine tek dosya koy:
-   `.well-known/assetlinks.json`
-2. **Kendi alan adını al** (yapılacaklar 1.7) ve oyunu onun köküne yayınla.
 
-Dosyanın içeriğini `bubblewrap` üretiyor (`assetlinks.json`), içinde imza
-anahtarının SHA-256 parmak izi var:
-
-```json
-[{
-  "relation": ["delegate_permission/common.handle_all_urls"],
-  "target": {
-    "namespace": "android_app",
-    "package_name": "io.github.meloshemo.pengu",
-    "sha256_cert_fingerprints": ["<bubblewrap'in verdiği parmak izi>"]
-  }
-}]
-```
-
-Bu dosya yoksa uygulama yine çalışıyor — ama üstünde oyunun adresini yazan
-bir çubukla, yani tam ekran değil. Mağazaya göndermeden önce telefonda bir
-kere bakmaya değer.
-
----
-
-## 7. App Store'a paketleme (Capacitor)
-
-iOS'ta bir PWA doğrudan gönderilemiyor; bir kabuk gerekiyor.
-
-```bash
-npm install @capacitor/core @capacitor/cli @capacitor/ios
-npx cap init Pengu io.github.meloshemo.pengu --web-dir=.
-npx cap add ios
-npx cap open ios          # Xcode açılır; macOS gerekiyor
-```
-
-Xcode tarafında: `store/appstore/icon-1024.png` simge olarak, yönelim hepsi
-açık, durum çubuğu gizli, arka plan `#050d1c`.
-
-**Dürüst uyarı:** Apple'ın 4.2 "minimum functionality" kuralı, bir web
-sitesini sarmalamaktan ibaret uygulamaları reddediyor. Bu oyunun durumu
-iyi — tamamen çevrimdışı çalışıyor, 76 bölümü var, dokunmatik kumandası ve
-oyun kolu desteği var, hiçbir şeyi sunucudan çekmiyor — ama kararı veren
-inceleme ekibi. Reddedilirse ilk bakılacak yer, uygulamanın çevrimdışı
-açıldığını göstermek: inceleme notuna "uçak modunda açıp bölüm oynayın"
-yazmak gerçekten işe yarıyor.
-
-Sırası gelmişse: Play'i önce yapmak mantıklı. Ucuz, makine istemiyor ve
-oyunun mağazada nasıl göründüğünü bir kere görmek, App Store'un 99 dolarına
-karar vermeyi kolaylaştırıyor.
-
----
-
-## 8. Gönderim öncesi son liste
+## 7. Gönderim öncesi son liste
 
 - [ ] Android paketi üretildi (Actions → *Android paketi (TWA)*)
 - [ ] `node tools/test.mjs` yeşil
@@ -517,5 +487,6 @@ karar vermeyi kolaylaştırıyor.
 - [ ] Gizlilik adresi tarayıcıda açılıyor
 - [ ] Gerçek telefonda oynandı (yapılacaklar 1.5)
 - [ ] Uçak modunda açıldı
-- [ ] Bubblewrap imza anahtarı yedeklendi
-- [ ] `assetlinks.json` origin kökünde yayında (§6)
+- [ ] İmza anahtarı üretildi, sırlar konuldu ve anahtar yedeklendi (§5)
+- [ ] İmzalı `.aab` indirildi
+- [ ] Debug APK telefonda açıldı ve bir bölüm oynandı
