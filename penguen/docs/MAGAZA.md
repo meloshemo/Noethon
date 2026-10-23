@@ -378,30 +378,68 @@ eskidiğini söylüyor.
 
 ---
 
-## 5. Play'e paketleme (TWA)
+## 5. Play'e paketleme (TWA) — düğmeye basmak yeterli
 
 Oyun zaten bir PWA, yani Play için ayrı bir sürüm yazmak gerekmiyor: TWA
 (Trusted Web Activity) yayındaki adresi tam ekran, tarayıcı çubuğu olmadan
-gösteren ince bir Android paketi.
+gösteren ince bir Android paketi. **Kurulu bir şey gerekmiyor, paketi CI
+üretiyor.**
+
+> GitHub → `meloshemo/cld` → **Actions** → *Android paketi (TWA)* →
+> **Run workflow**
+
+İki dakika sonra koşunun altındaki **Artifacts** bölümünde `pengu-android`
+duruyor; içinde:
+
+| Dosya | Ne işe yarıyor |
+|---|---|
+| `app-release.aab` | Play Console'a yüklenen dosya |
+| `app-debug.apk` | Telefona kurup denemek için (1.5'teki iş) |
+| `assetlinks.json` | İmza sırrı tanımlıysa, siteye konacak dosya |
+| `twa-manifest.json` | O paketin hangi ayarlarla çıktığı |
+
+Ayarlar `android/twa-manifest.json` içinde ve okunabilir: uygulama kimliği
+`io.github.meloshemo.pengu`, tam ekran, yönelim serbest, durum çubuğu
+`#08132a`, açılış ekranı `#050d1c`, `minSdkVersion` 24. Sürüm numarasını
+tetiklerken kutucuktan verebilirsin (Play her yüklemede artan bir
+`versionCode` istiyor).
+
+### İmzalama — tek elle yapılması gereken şey
+
+İmzasız paket Play'e yüklenmiyor, ve imza anahtarı **senin** olmak zorunda:
+burada üretilip bir yere yazılsa, o anahtara erişen herkes senin uygulamanın
+güncellemesini imzalayabilirdi.
+
+Anahtarı bir kere üret (bilgisayarında, Java kuruluysa):
+
+```bash
+keytool -genkeypair -v -keystore android.keystore \
+  -alias pengu -keyalg RSA -keysize 2048 -validity 10000
+```
+
+Sonra GitHub → `meloshemo/cld` → Settings → Secrets and variables → Actions,
+ve dört sır:
+
+| Sır | Değer |
+|---|---|
+| `ANDROID_KEYSTORE_BASE64` | `base64 -w0 android.keystore` çıktısı |
+| `ANDROID_KEYSTORE_PASSWORD` | keystore şifresi |
+| `ANDROID_KEY_PASSWORD` | anahtar şifresi |
+| `ANDROID_KEY_ALIAS` | `pengu` |
+
+Bundan sonra her koşu imzalı `.aab` üretiyor. **Anahtar dosyasını yedekle:**
+kaybolursa bu uygulama bir daha güncellenemez.
+
+### Elle yapmak istersen
 
 ```bash
 npm install -g @bubblewrap/cli
 bubblewrap init --manifest=https://meloshemo.github.io/cld/manifest.webmanifest
-bubblewrap build          # → app-release-bundle.aab ve imza anahtarı
+bubblewrap build
 ```
 
-Sorulardan önemli olanlar:
-
-| Soru | Cevap |
-|---|---|
-| Application ID | `io.github.meloshemo.pengu` |
-| Display mode | `fullscreen` |
-| Orientation | `any` (oyun ikisinde de ölçülü) |
-| Status bar / nav bar rengi | `#08132a` |
-| Splash rengi | `#050d1c` |
-
-İlk `bubblewrap build` bir **imza anahtarı** üretiyor. O anahtar kaybolursa
-aynı uygulamayı bir daha güncelleyemezsin — yedekle.
+Aynı sonucu veriyor; farkı, soruları senin cevaplaman ve makinende bir JDK ile
+Android SDK istemesi.
 
 ---
 
@@ -472,6 +510,7 @@ karar vermeyi kolaylaştırıyor.
 
 ## 8. Gönderim öncesi son liste
 
+- [ ] Android paketi üretildi (Actions → *Android paketi (TWA)*)
 - [ ] `node tools/test.mjs` yeşil
 - [ ] `node tools/store.mjs` ile görseller tazelendi
 - [ ] `node tools/legal.mjs` ile yasal sayfalar tazelendi

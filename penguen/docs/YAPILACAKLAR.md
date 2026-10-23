@@ -63,7 +63,8 @@ bir radyo aynı şey değil.
 | 1.6 | Offline'ı doğrula (uçak modu) | **bitti** — otomatikleşti, ve bir hata buldu (2.14) | — |
 | 1.7 | Kendi alan adı | **açık, isteğe bağlı** — TWA için gerekli olabilir (`MAGAZA.md` §6) | 10 dk + DNS |
 | 1.8 | Yasal metinleri okuyup onayla | **açık, senin kararın** | 10 dk |
-| 1.9 | Play Console hesabı (25 $, tek sefer) | **açık, senin kararın** | 20 dk |
+| 1.9 | Play Console hesabı (25 $, tek sefer) | **açık, senin kararın** — paket hazır, üretiliyor | 20 dk |
+| 1.9b | İmza anahtarı üret + 4 GitHub sırrı | **açık** — `MAGAZA.md` §5, tek komut | 10 dk |
 | 1.10 | Apple Developer hesabı (99 $/yıl) + macOS | **açık, senin kararın** | 1 sa |
 
 Adımların hepsi `docs/BILGISAYARDA.md` içinde. Dördü kapandı, kalanlar senin
@@ -107,6 +108,7 @@ sonra listenin durumu:
 | 2.15 | Gizlilik listesi eksik sayıyordu | **kapandı** — beş alan eklendi, on dördüncü lint kuralı bekçisi |
 | 2.16 | Mağaza görselleri ve metinleri | **geldi** — `tools/store.mjs`, `docs/MAGAZA.md`, 57. test paketi |
 | 2.17 | Yasal metinlerin açılabilir adresi | **geldi** — `tools/legal.mjs`, on beşinci lint kuralı bekçisi |
+| 2.19 | Android paketi | **geldi** — Actions'ta düğme, ikinci koşu yeşil, 5,8 MB |
 | 2.18 | İngilizcede Türkçe kalan sayaç | **kapandı** — "10 / 29 penguen", mağaza görseli buldu |
 
 Oyunun en tekrarlı bölümü artık 47–61 (%4), ve o %4'ün tamamı 47'nin kendini

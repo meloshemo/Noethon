@@ -5,6 +5,34 @@ değiştiği yeterli. En yeni en üstte.
 
 ---
 
+## Android paketi artık bir düğme
+
+Play'in kopyası bir TWA: yayındaki adresi tam ekran açan ince bir Android
+kabuğu. İkinci bir kod tabanı yok ve olmamalı — Play'deki şey web'deki şey.
+
+Bubblewrap'in CLI'ı etkileşimli: JDK'yı, SDK'yı, renkleri, imza anahtarını
+soruyor. Bir kere elle yapan için uygun, tekrarlanabilir olması gereken bir
+yapı için değil. O yüzden ayarlar `android/twa-manifest.json` içinde duruyor ve
+proje, Bubblewrap'in **kendi üreticisi** doğrudan çağrılarak kuruluyor —
+`init`'in kullandığı aynı kod yolu, soruları olmadan.
+
+`.github/workflows/android.yml` elle tetikleniyor ve çıkanlar: Play'e
+yüklenecek `app-release.aab`, telefona kurulabilen `app-debug.apk`, imza sırrı
+tanımlıysa `assetlinks.json`, ve paketin hangi ayarlarla çıktığı.
+
+**İlk koşu düştü, ve bu iyi oldu:** `androidbrowserhelper` kütüphanesi
+`minSdk 24` beyan ediyor, Bubblewrap'in varsayılanı 21, ve manifest
+birleştirici aşağı doğru birleşmiyor. Hata kırk saniyelik bir Gradle koşusunun
+içinden geliyordu; artık `tools/twa.mjs` ilk saniyede söylüyor. İkinci koşu
+yeşil: 5,8 MB'lık paket indirilebilir durumda.
+
+İmzalama bilerek dışarıda: anahtar burada üretilip bir yere yazılsaydı, ona
+erişen herkes bu uygulamanın güncellemesini imzalayabilirdi. Anahtar bir kere
+`keytool` ile üretiliyor, dört GitHub sırrı olarak konuyor, ve ondan sonra her
+koşu imzalı `.aab` veriyor.
+
+---
+
 ## Mağaza dosyası: görseller oyunun kendisinden, metinler sayılarıyla
 
 ### 39 görsel, hiçbiri elle çizilmedi
