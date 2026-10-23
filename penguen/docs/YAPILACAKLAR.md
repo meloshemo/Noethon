@@ -66,7 +66,7 @@ bir radyo aynı şey değil.
 | 1.9 | Play Console hesabı (25 $, tek sefer) | **açık, senin kararın** — paket hazır, üretiliyor | 20 dk |
 | 1.9b | İmza anahtarı üret + 4 GitHub sırrı | **açık** — `MAGAZA.md` §5, tek komut | 10 dk |
 | 1.9c | Play'de uygulama kaydı aç (Create app) | **açık** — API bunu yapamıyor | 5 dk |
-| 1.9d | Servis hesabı + `PLAY_SERVICE_ACCOUNT_JSON` sırrı | **açık** — sonrası otomatik | 10 dk |
+| 1.9d | Servis hesabı + `PLAY_SERVICE_ACCOUNT_JSON` sırrı | **açık** — sonrası otomatik; önce *Play bağlantı testi* | 10 dk |
 | 1.10 | Apple Developer hesabı (99 $/yıl) + macOS | **ertelendi** — Mac olduğu gün | — |
 
 Adımların hepsi `docs/BILGISAYARDA.md` içinde. Dördü kapandı, kalanlar senin

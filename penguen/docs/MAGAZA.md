@@ -476,6 +476,43 @@ API'nin yapamadığı iki şey var ve ikisi de senin: **hesabı açmak** (25 $,
 kimlik doğrulaması) ve **uygulama kaydını oluşturmak** (Play Console → Create
 app). API var olan bir uygulamayı düzenliyor.
 
+### Create app formu — alan alan
+
+Bu form API'den doldurulamıyor, ve iki dakikalık. Yazılacaklar:
+
+| Alan | Değer |
+|---|---|
+| App name | `Pengu: Antarktika'dan Kaçış` |
+| Default language | Türkçe (Türkiye) — İngilizcesini API yazıyor |
+| App or game | **Game** |
+| Free or paid | **Free** — sonradan ücretliye çevrilemiyor, tersi serbest |
+| Declarations | Developer Program Policies ✓ · US export laws ✓ |
+
+Uygulama kaydı açıldıktan sonra Play'in "Set up your app" listesi çıkıyor.
+Cevapların hepsi §4'te; konsoldan doldurulması gerekenler şunlar:
+
+| Görev | Cevap |
+|---|---|
+| App access | Tüm içerik açık, giriş gerekmiyor |
+| Ads | Uygulama reklam içermiyor |
+| Content rating | Anket — §4'teki gerçek durum |
+| Target audience | 13+ (içerik herkese uygun) |
+| News app | Hayır |
+| Data safety | Veri toplanmıyor, paylaşılmıyor (§4) |
+| Government apps | Hayır |
+| Financial features | Hiçbiri |
+| Privacy policy | `https://meloshemo.github.io/cld/privacy.html` |
+
+Store listing (ad, açıklamalar, görseller) ve sürüm yüklemesi **elle
+yapılmasın** — `Play'e yükle` iş akışı ikisini de yapıyor.
+
+### Önce bağlantı testi
+
+Sır konduktan sonra, bir şey yüklemeden önce: Actions → **Play bağlantı
+testi**. Play'de bir düzenleme açıp hemen siliyor; mağazada hiçbir şey
+değişmiyor ama anahtarın geçerli olduğunu, bu geliştirici hesabına bağlı
+olduğunu ve bu uygulamaya yetkili olduğunu kanıtlıyor.
+
 ### Play Console'da sıra
 
 1. Hesap (25 $, kimlik doğrulaması birkaç gün sürebiliyor)

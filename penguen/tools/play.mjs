@@ -50,6 +50,7 @@ const arg = (name, fallback = null) => {
   return hit ? hit.slice(name.length + 3) : fallback;
 };
 const DRY = process.argv.includes('--dry');
+const AUTH_ONLY = process.argv.includes('--auth');
 const TRACK = arg('track', 'internal');
 const AAB = arg('aab', 'out/app-release.aab');
 
@@ -179,7 +180,7 @@ if (DRY) {
   process.exit(0);
 }
 
-if (!aabBytes) {
+if (!aabBytes && !AUTH_ONLY) {
   console.log('\n✗ Yüklenecek paket yok. Önce "Android paketi" iş akışını koştur.');
   process.exit(1);
 }
@@ -225,6 +226,26 @@ console.log(`  kanal          ${TRACK}`);
 const { data: edit } = await play.edits.insert({ packageName });
 const editId = edit.id;
 console.log(`\n  düzenleme      ${editId}`);
+
+/*
+ * `--auth`: does the key work, and does it have the rights?
+ *
+ * Worth its own mode because the alternative is finding out in the middle of
+ * a real upload. Opening an edit already proves the whole chain — the key is
+ * valid, the service account is linked to this developer account, and it has
+ * permission on *this* application — and throwing the edit away changes
+ * nothing on the store.
+ */
+if (AUTH_ONLY) {
+  const tracks = await play.edits.tracks.list({ packageName, editId });
+  console.log('  ✓ anahtar geçerli ve bu uygulamaya yetkili');
+  console.log(
+    `  ✓ kanallar      ${(tracks.data.tracks ?? []).map((t) => t.track).join(', ') || '(henüz yok)'}`,
+  );
+  await play.edits.delete({ packageName, editId });
+  console.log('\n✓ Bağlantı sağlam. Hiçbir şey değiştirilmedi.');
+  process.exit(0);
+}
 
 const { createReadStream } = await import('node:fs');
 
