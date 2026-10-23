@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gizlilik Politikası — Dev Aynası</title>
+<meta name="robots" content="index, follow">
+<style>
+  :root { color-scheme: dark light; }
+  body {
+    margin: 0; padding: 2.5rem 1.25rem 5rem;
+    background: #0a0710; color: #e8e1ee;
+    font: 16px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 46rem; margin: 0 auto; }
+  a { color: #d8b26a; }
+  h1, h2, h3, h4 { line-height: 1.25; color: #f4ecdf; }
+  h1 { font-size: 1.9rem; margin: 0 0 .4rem; }
+  h2 { font-size: 1.3rem; margin: 2.2rem 0 .6rem;
+       border-top: 1px solid rgba(216,178,106,.22); padding-top: 1.1rem; }
+  h3 { font-size: 1.05rem; margin: 1.5rem 0 .4rem; color: #d8b26a; }
+  code { background: rgba(216,178,106,.12); padding: .12em .4em;
+         border-radius: .25em; font-size: .92em; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: .95rem; }
+  th, td { border: 1px solid rgba(216,178,106,.22); padding: .5rem .65rem;
+           text-align: left; vertical-align: top; }
+  th { background: rgba(216,178,106,.08); }
+  blockquote { margin: 1rem 0; padding: .6rem 1rem;
+               border-left: 3px solid #d8b26a; background: rgba(216,178,106,.06); }
+  .ust { display: flex; justify-content: space-between; align-items: baseline;
+         gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem;
+         font-size: .9rem; color: #9a8fa8; }
+  .alt { margin-top: 3rem; padding-top: 1rem; font-size: .85rem; color: #9a8fa8;
+         border-top: 1px solid rgba(216,178,106,.22); }
+  @media (prefers-color-scheme: light) {
+    body { background: #fbf8f4; color: #241c2e; }
+    h1, h2, h3, h4 { color: #1a1222; }
+    h3 { color: #8d6f3f; }
+    a { color: #8d6f3f; }
+    th { background: rgba(141,111,63,.08); }
+    th, td, h2, .alt { border-color: rgba(141,111,63,.25); }
+    .ust, .alt { color: #6b6076; }
+    blockquote { border-left-color: #8d6f3f; background: rgba(141,111,63,.06); }
+    code { background: rgba(141,111,63,.12); }
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="ust">
+    <span>Dev Aynası</span>
+    <a href="privacy.html">English</a>
+  </div>
+<h1>Gizlilik Politikası — Dev Aynası</h1>
+<p><strong>Son güncelleme:</strong> 28 Ağustos 2026</p>
+<p><strong>Yürürlük tarihi:</strong> yayın günü</p>
+<h2>Kısaca</h2>
+<p>Dev Aynası hiçbir kişisel veri toplamaz. Hesap açmanız gerekmez, e-posta</p>
+<p>istemez, reklam ve analiz izleyicisi içermez. Oyunun tuttuğu her şey</p>
+<p>(ilerlemeniz, en iyi süreleriniz, ayarlarınız) yalnızca kendi cihazınızda</p>
+<p>kalır.</p>
+<h2>1. Toplanan veriler</h2>
+<h3>1.1 Tek kişilik oyun</h3>
+<p>Hiçbir veri sunucuya gönderilmez. Aşağıdakiler tarayıcınızın yerel</p>
+<p>depolamasında (<code>localStorage</code>) yalnızca sizin cihazınızda saklanır:</p>
+<table><thead><tr><th>Anahtar</th><th>İçerik</th></tr></thead><tbody>
+<tr><td><code>dev-aynasi:en-iyi:&lt;bölüm&gt;</code></td><td>O bölümdeki en iyi süreniz (saniye)</td></tr>
+<tr><td><code>dev-aynasi:acilan</code></td><td>Açtığınız son bölümün numarası</td></tr>
+<tr><td><code>dev-aynasi:devam</code></td><td>Yarıda bıraktığınız oyun: bölüm, salon tohumu, geçen süre</td></tr>
+<tr><td><code>dev-aynasi:sonsuz-rekor</code></td><td>Sonsuz salonda geçtiğiniz oda sayısı rekoru</td></tr>
+<tr><td><code>dev-aynasi:ayarlar</code></td><td>Parlaklık, "az hareket" ve otomatik çözünürlük tercihleri</td></tr>
+<tr><td><code>dev-aynasi:dil</code></td><td>Dil seçiminiz (Türkçe ya da İngilizce)</td></tr>
+<tr><td><code>dev-aynasi:cevrimici</code></td><td>Çevrimiçi yarış alanlarına <strong>kendi yazdığınız</strong> takma ad, oda kodu ve sunucu adresi</td></tr>
+</tbody></table>
+<p>Bu kayıtlar bize ulaşmaz, başka kimseyle paylaşılmaz. Tarayıcınızın site</p>
+<p>verilerini temizlediğinizde (Android'de: uygulama verilerini silince)</p>
+<p>hepsi gider.</p>
+<p><code>dev-aynasi:cevrimici</code> içindeki takma ad yalnızca bir sonraki yarışta alanı</p>
+<p>sizin için önceden doldurmak üzere saklanır; siz çevrimiçi moda girmedikçe</p>
+<p>hiçbir yere gönderilmez.</p>
+<h3>1.2 Çevrimiçi yarış (multiplayer)</h3>
+<p>Çevrimiçi mod açıldığında, yalnızca oyunun çalışması için gereken şunlar</p>
+<p>sunucuya gönderilir ve <strong>yalnızca oyun sürerken bellekte tutulur</strong>:</p>
+<ul>
+<li>Girdiğiniz takma ad (kendiniz yazarsınız; gerçek adınız olmak zorunda değil)</li>
+<li>Salon içindeki konumunuz (x, y) ve bölümünüz</li>
+<li>Oda kodu ve süreniz</li>
+</ul>
+<p>Oda boşaldığında bu bilgiler sunucudan tamamen silinir. Veritabanı yoktur,</p>
+<p>kalıcı kayıt tutulmaz, IP adresleri günlüğe yazılmaz.</p>
+<h2>2. Toplamadığımız veriler</h2>
+<ul>
+<li>Ad, soyad, e-posta, telefon, adres</li>
+<li>Konum bilgisi (GPS), cihaz kimliği, reklam kimliği</li>
+<li>Kişi listesi, fotoğraf, mikrofon, kamera</li>
+<li>Çerez tabanlı reklam ve izleme verisi</li>
+</ul>
+<h2>3. Üçüncü taraflar</h2>
+<p><strong>Üçüncü taraf yoktur.</strong> Oyun çalışırken hiçbir dış siteye istek atmaz.</p>
+<p>Yazı tipleri de dahil her şey oyunun içindedir; oyun çevrimdışı da aynı</p>
+<p>şekilde çalışır. (1.8.0 öncesinde yazı tipleri Google Fonts üzerinden</p>
+<p>yükleniyordu ve bu istek sırasında IP adresiniz Google'a ulaşıyordu. Bu</p>
+<p>bağlantı tamamen kaldırıldı.)</p>
+<p>Steam üzerinden dağıtılan sürümde Valve'ın, Google Play üzerinden dağıtılan</p>
+<p>sürümde Google'ın kendi veri işleme kuralları geçerlidir; oyunun kendisi bu</p>
+<p>mağazalara ek bir veri göndermez.</p>
+<h3>3.1 Android sürümü</h3>
+<p>Android paketi oyunun web sürümünün birebir aynısıdır; bir WebView içinde</p>
+<p>çalışır. Tek izin <code>INTERNET</code>'tir ve yalnızca çevrimiçi yarış için</p>
+<p>kullanılır. Tek kişilik oyun internet olmadan da çalışır. Reklam kimliği</p>
+<p>istenmez, analiz paketi (SDK) yoktur, çökme raporu gönderilmez. Android'in</p>
+<p>kendi yedekleme özelliği açıktır: en iyi süreleriniz cihaz yedeğinize</p>
+<p>girebilir — bu yedek Google hesabınızda durur, bize ulaşmaz.</p>
+<h2>4. Çocuklar</h2>
+<p>Oyun her yaşa uygundur ve hiçbir yaş grubundan kişisel veri toplamaz.</p>
+<h2>5. Haklarınız</h2>
+<p>Kişisel veri işlemediğimiz için silme veya erişim talebi gerektirecek bir</p>
+<p>kaydımız bulunmuyor. Cihazınızdaki kayıtları tarayıcınızın "site verilerini</p>
+<p>temizle" seçeneğiyle dilediğiniz an silebilirsiniz.</p>
+<h2>6. Değişiklikler</h2>
+<p>Bu politika değişirse güncel sürüm oyunun deposunda yayımlanır ve yukarıdaki</p>
+<p>tarih güncellenir.</p>
+<h2>7. İletişim</h2>
+<p>Osman Melih Yılmaz — y.osmanmelih@gmail.com</p>
+  <div class="alt">
+    Dev Aynası · <a href="mailto:y.osmanmelih@gmail.com">y.osmanmelih@gmail.com</a>
+  </div>
+</main>
+</body>
+</html>
