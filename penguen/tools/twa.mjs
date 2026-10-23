@@ -47,6 +47,18 @@ function auditable(json) {
   if (!Number.isInteger(json.appVersionCode) || json.appVersionCode < 1) {
     problems.push(`appVersionCode tamsayı olmalı: ${json.appVersionCode}`);
   }
+  /*
+   * Twenty-four, and measured rather than chosen.
+   *
+   * Bubblewrap's own default is 21, and the first CI build died on it: the
+   * browser-helper library this shell is built from declares `minSdk 24`, and
+   * the manifest merger refuses to merge downwards. Android 7 is from 2016, so
+   * the cost of the floor is close to nobody — but the error message arrives
+   * forty seconds into a Gradle run, and this is cheaper.
+   */
+  if ((json.minSdkVersion ?? 0) < 24) {
+    problems.push(`minSdkVersion en az 24 olmalı (kütüphane öyle istiyor): ${json.minSdkVersion}`);
+  }
   // Play counts this one and refuses an upload that repeats it, so the mistake
   // is worth catching before the upload rather than after.
   if (!/^\d+\.\d+\.\d+$/.test(json.appVersionName ?? '')) {
