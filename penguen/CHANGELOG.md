@@ -5,6 +5,78 @@ değiştiği yeterli. En yeni en üstte.
 
 ---
 
+## Mağaza dosyası: görseller oyunun kendisinden, metinler sayılarıyla
+
+### 39 görsel, hiçbiri elle çizilmedi
+
+`tools/store.mjs` iki mağazanın istediği her görseli üretiyor: Play için
+telefon (1080×1920) ve tablet (1920×1200), App Store için 6,9" iPhone
+(1320×2868) ve 13" iPad (2064×2752), iki dilde, altı sahne — her chapter'dan
+bir tane, artı bölüm listesi ve koleksiyon. Üstüne öne çıkan görsel (1024×500,
+iki dilde) ve iki simge.
+
+Hepsi **oyunun kendisi**, tarayıcı testlerinin kullandığı tutamaçla sürülüyor.
+Kayıt önce tohumlanıyor, çünkü yepyeni bir kayıt boş fotoğraflanıyor — kilitli
+bölümler, sıfır yıldız, boş koleksiyon — ki bu ilk otuz saniyenin doğru,
+oyunun yanlış resmi.
+
+Üç şey ölçülerek öğrenildi:
+
+- **Penguene zıplatmak yanlış araçtı.** Koşturup zıplatmak 20. bölümde boşluğu
+  geçmedi; fotoğraf suya düşüş ve "1" yazan deneme sayacı oldu. İstenen kare
+  zaten sıçrayış değilmiş: arkasında katil balina havadayken duran yarım saniye.
+- **Su altında derinlik verilmez, ölçülür.** Elle seçilen derinlik deniz
+  tabanının altına düştü, yüzücü kareden çıktı, seviyeye kilitli kamera
+  kımıldamadı. Artık sütundaki bütün katılar sıralanıp en geniş açıklık
+  bulunuyor.
+- **İki simge iki zıt kural.** Apple alfa kanalı olan simgeyi reddediyor,
+  Google 32 bitlik — yani alfa kanallı — PNG istiyor. Tarayıcıdan çıkan her şey
+  RGBA olduğu için PNG'ler elle yazılıyor: bir IHDR, bir IDAT, bir IEND.
+
+`tests/store.mjs` (57. paket) her dosyanın boyutunu başlığından okuyup iki
+mağazanın kuralıyla karşılaştırıyor.
+
+### Ve metinler, karakter karakter sayılı
+
+`docs/MAGAZA.md` iki mağazanın bütün formunu tek yerde tutuyor: iki dilde ad,
+kısa açıklama, tam açıklama, anahtar kelimeler, tanıtım metni, sürüm notu —
+on altı alan, her biri sınırıyla birlikte yazılı ve testte sayılıyor. Üstüne
+veri güvenliği, içerik derecelendirme ve gizlilik formlarının cevapları,
+Bubblewrap ve Capacitor adımları.
+
+İki şey oraya **uyarı** olarak yazıldı, çünkü ikisi de bir gün yakar:
+
+- TWA'nın adres çubuğunu gizlemesi için Android `assetlinks.json`'ı **origin
+  kökünden** okuyor. GitHub Pages proje sayfasında o kök sana ait değil —
+  `meloshemo.github.io` adlı ayrı bir depo ya da kendi alan adın gerekiyor.
+- Apple'ın 4.2 kuralı web sitesi sarmalayan uygulamaları reddediyor. Bu oyunun
+  durumu iyi (tamamen çevrimdışı, 76 bölüm, dokunmatik ve oyun kolu) ama kararı
+  inceleme ekibi veriyor.
+
+### Yasal metinler artık birer sayfa
+
+İki mağaza da gizlilik politikası için **açılabilir bir adres** istiyor, ve
+dört metin `docs/` içinde markdown'dı: statik bir sunucu onları düz metin
+olarak veriyor, yani inceleyen kişi boru işaretleri ve diyezler görüyordu.
+
+`tools/legal.mjs` dördünü de sayfaya çeviriyor — `gizlilik.html`,
+`privacy.html`, `kullanim-sartlari.html`, `terms.html` — oyunun renkleriyle,
+telefonda okunur, tek dosya, stil dosyasına bağlı değil (bir hukuk sayfasının
+yarım yüklenmesi okunmaz gelmesi demek).
+
+Sayfa, metnin ikinci kopyası olduğu an ikisinden biri yanlış kalır ve hangisi
+olduğunu kimse bilmez. O yüzden `lint`'in on beşinci kuralı dördünü yeniden
+üretip karşılaştırıyor: bir metin değişip sayfa tazelenmezse build duruyor.
+
+### Manifest de artık kendini gösteriyor
+
+Chrome'un kurulum penceresi `screenshots` alanını kullanıyor: onunla oyun bir
+mağaza listelemesi gibi, kendi resmiyle öneriliyor; onsuz bir satır yazı ve bir
+simge. Dar ve geniş birer görsel eklendi (540×960 ve 1280×720, `assets/`
+içinde, küçük tutuldu), `categories` ve `id` da yazıldı.
+
+---
+
 ## Çevrimdışı sözü bir ziyaret eksikti
 
 ### Ölçülmüş hâli: oyunu bir kere online açmak yetmiyordu

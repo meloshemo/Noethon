@@ -37,6 +37,12 @@ const PUBLISH = [
   'docs',
   '.github',
   'index.html',
+  // The four legal pages, because a store listing points a reviewer at one of
+  // them by URL. `tools/legal.mjs` writes them from the markdown in docs/.
+  'gizlilik.html',
+  'privacy.html',
+  'kullanim-sartlari.html',
+  'terms.html',
   'manifest.webmanifest',
   'sw.js',
   'package.json',

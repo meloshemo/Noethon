@@ -65,6 +65,7 @@ const NODE_SUITES = [
   ['tests/headroom.mjs', 'sıçrayış tavanı'],
   ['tests/pose.mjs', 'ifade katmanı'],
   ['tests/economy.mjs', 'ekonomi dengesi'],
+  ['tests/store.mjs', 'mağaza görselleri'],
   ['tests/ghost.mjs', 'hayalet kodlaması'],
 ];
 

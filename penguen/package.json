@@ -11,6 +11,8 @@
   "scripts": {
     "start": "node tools/serve.mjs",
     "build": "node tools/bundle.mjs",
+    "store": "node tools/store.mjs",
+    "legal": "node tools/legal.mjs",
     "lint": "node tools/lint.mjs",
     "test": "node tools/test.mjs",
     "test:node": "node tools/test.mjs --no-browser",

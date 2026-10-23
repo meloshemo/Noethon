@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Privacy — Pengu</title>
+<meta name="robots" content="index, follow">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: clamp(1.25rem, 4vw, 3rem) clamp(1rem, 5vw, 2rem) 4rem;
+    background: #050d1c;
+    color: #dbe7f4;
+    font: 16px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 46rem; margin: 0 auto; }
+  h1 { font-size: clamp(1.7rem, 5vw, 2.3rem); line-height: 1.15; margin: 0 0 0.6em; color: #fff; }
+  h2 { font-size: 1.25rem; margin: 2.2em 0 0.6em; color: #9ad4f2; }
+  h3 { font-size: 1.05rem; margin: 1.8em 0 0.5em; color: #9ad4f2; }
+  p { margin: 0 0 1em; }
+  a { color: #7fd1ff; }
+  code {
+    background: #0e1f38; border: 1px solid #1d3a5c; border-radius: 4px;
+    padding: 0.1em 0.35em; font-size: 0.92em;
+  }
+  ul { padding-left: 1.2em; margin: 0 0 1em; }
+  li { margin: 0.25em 0; }
+  hr { border: 0; border-top: 1px solid #1d3a5c; margin: 2.5em 0; }
+  blockquote {
+    margin: 1.5em 0; padding: 0.8em 1.1em;
+    background: #0a1830; border-left: 3px solid #2b6a8f; border-radius: 0 8px 8px 0;
+  }
+  blockquote p:last-child { margin-bottom: 0; }
+  table { border-collapse: collapse; width: 100%; margin: 0 0 1.4em; font-size: 0.95em; }
+  th, td { text-align: left; padding: 0.5em 0.7em; border-bottom: 1px solid #16304f; vertical-align: top; }
+  th { color: #9ad4f2; font-weight: 600; }
+  .back { display: inline-block; margin-bottom: 2em; color: #7fd1ff; text-decoration: none; }
+  .back:hover { text-decoration: underline; }
+  @media (max-width: 30rem) { table { display: block; overflow-x: auto; } }
+</style>
+</head>
+<body>
+<main>
+<a class="back" href="./">← Back to the game</a>
+<h1>Privacy Policy</h1>
+<p><strong>Last updated:</strong> 22 October 2026 <strong>Product:</strong> Pengu: Escape from Antarctica (web game)</p>
+<p><em>Turkish original: <a href="gizlilik.html">GIZLILIK.md</a>. Both texts say the same thing.</em></p>
+<h2>The short version</h2>
+<p>This game collects <strong>nothing about you.</strong> It has no server, no accounts, no cookies, no ads and no analytics. There is not one address it talks to over the network.</p>
+<p>That is not a promise, it is a <strong>tested fact.</strong> The repository contains no <code>fetch</code>, no <code>XMLHttpRequest</code>, no <code>WebSocket</code> and no third-party script, and two separate checks keep it that way:</p>
+<ul><li><code>tools/lint.mjs</code> looks for an external address in every file and fails the build if it finds one.</li><li><code>tests/browser-identity.mjs</code> opens the game in a real browser and reads the <code>performance</code> records: apart from the game's own files there must be <strong>not a single request.</strong></li></ul>
+<p>Those checks earn their keep. The first version of the game pulled its typeface from Google Fonts, which meant every launch reached two other companies' servers before a single pixel was drawn. The test caught it. The webfont was removed and the device's own typefaces are used instead.</p>
+<h2>What is stored, and where</h2>
+<p>Everything sits in <strong>your browser</strong>, inside <code>localStorage</code>, in a single record called <code>pengu.save.v1</code>:</p>
+<table><thead><tr><th>What</th><th>Why</th></tr></thead><tbody><tr><td>Your name</td><td>So it appears on your records and on ghost codes you share</td></tr><tr><td>Your penguin id (<code>PNG-XXXXX</code>)</td><td>So two players with the same name are not confused</td></tr><tr><td>The day you started</td><td>The "playing since" line on your identity card</td></tr><tr><td>Level progress</td><td>Stars, best times, attempts, fish collected</td></tr><tr><td>Your fish and purchases</td><td>The shop and the collection</td></tr><tr><td>The penguin and trail you wear</td><td>How you look</td></tr><tr><td>Your settings</td><td>Sound, music, reduced motion, easy mode, language</td></tr><tr><td>Daily objectives and streak</td><td>The daily content</td></tr><tr><td>Your ghost recordings</td><td>Your own record runs, so they can be replayed</td></tr><tr><td>Rival codes you imported</td><td>The leaderboard</td></tr><tr><td>Your play statistics</td><td>Titles and achievements are worked out from them</td></tr><tr><td>Your league points</td><td>The weekly tier</td></tr><tr><td>Where an interrupted run left off</td><td>So "Continue" puts you back where you were</td></tr><tr><td>The height of your monument</td><td>The thing in the shop that never finishes</td></tr></tbody></table>
+<p>None of it leaves your device.</p>
+<h2>Personal data</h2>
+<p><strong>You</strong> type the name and it does not have to be your real one: the field arrives with an invented one already in it, and leaving it alone is fine. The game does not touch your IP address, location, device id, contacts, photos or anything of that sort, and it asks the browser for no such permission.</p>
+<p>The only browser capabilities the game uses:</p>
+<ul><li><strong>localStorage</strong>, for your save</li><li><strong>Web Audio</strong>, for sound (not the microphone, it only produces sound)</li><li><strong>Gamepad API</strong>, if a controller is plugged in (it only reads the buttons)</li><li><strong>Fullscreen and screen orientation</strong>, when you ask for them</li></ul>
+<h2>What goes out when you share</h2>
+<p>Finish a level and you can press "Share your code". Inside that code:</p>
+<ul><li>The name you typed</li><li>The level number and your time</li><li>A compressed recording of your inputs (your ghost)</li></ul>
+<p>The code is a string of text, and where you paste it is entirely your decision. The game sends it <strong>nowhere</strong> by itself, and it never asks you for anybody else's code. Paste somebody's code and you race their ghost, that is all.</p>
+<h2>Hosting</h2>
+<p>The game is published on GitHub Pages. As with opening any website, GitHub's servers see your IP address and browser details in their standard access logs while they serve the request. That is the unavoidable consequence of <em>downloading</em> the site; once the game has loaded it makes no further requests. That processing belongs to the hosting service, not to the game: <a href="https://docs.github.com/site-policy/privacy-policies/github-privacy-statement">GitHub Privacy Statement</a>.</p>
+<p>Download the single-file build (<code>dist/pengu.html</code>) and play offline and even that goes away.</p>
+<h2>Children</h2>
+<p>The game suits any age. No chat, no user content, no spending, no ads. Since no personal data is collected there is nothing that needs a parent to consent to. The same holds under 13: with nothing collected, no "collection" happens in the COPPA sense.</p>
+<h2>What your rights amount to</h2>
+<p>Because no data is handed to a "data controller", no processing takes place in the sense the GDPR and Turkey's KVKK define. There are buttons that give you the same outcomes anyway:</p>
+<table><thead><tr><th>Your right</th><th>Where it is</th></tr></thead><tbody><tr><td>Access / portability</td><td><strong>Settings → Legal and data → Export my save</strong> (downloads JSON)</td></tr><tr><td>Erasure</td><td><strong>Settings → Reset progress</strong>. The save is deleted entirely and cannot be recovered</td></tr><tr><td>Rectification</td><td>Change your name from the <strong>Identity</strong> screen whenever you like</td></tr><tr><td>Objection</td><td>There is no processing. Closing the game is enough</td></tr></tbody></table>
+<p>Clearing the browser's site data does the same job.</p>
+<h2>Changes</h2>
+<p>If this text changes, the date at the top changes with it and the change shows up in the repository history. The game carries no version number: whatever is published is the current state of the <code>main</code> branch.</p>
+<h2>Contact</h2>
+<p>Questions, bug reports and requests: the <em>Issues</em> section of the repository.</p>
+</main>
+</body>
+</html>

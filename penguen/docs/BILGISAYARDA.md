@@ -62,7 +62,7 @@ Koşuyor. Her `git push`'ta iki iş çalışıyor:
 
 | İş | Ne yapıyor | Süre |
 |---|---|---|
-| **Bölümler ve kurallar** | lint + 45 node paketi + paketleme | ~2 dk |
+| **Bölümler ve kurallar** | lint + 46 node paketi + paketleme | ~2 dk |
 | **Mekanikler** | Chromium indirip 11 tarayıcı paketi | ~3 dk |
 
 - Noethon deposunda: `.github/workflows/pengu-ci.yml`
@@ -218,6 +218,25 @@ aynı; birini değiştirirsen diğerini de değiştir.
 
 Bu dördünün hiçbiri yoksa metinleri olduğu gibi bırakabilirsin; oyunun içindeki
 *Ayarlar → Yasal ve veri* ekranı aynı şeyleri özetliyor.
+
+---
+
+## 7c. Mağazaya göndermek istersen
+
+Her şey tek dosyada: **[`docs/MAGAZA.md`](MAGAZA.md)** — iki mağazanın
+metinleri (iki dilde, sınırlarıyla), form cevapları, paketleme adımları ve iki
+tuzak.
+
+Görseller komutla üretiliyor, elle çizilmiyor:
+
+```bash
+npm run store      # 39 dosya → store/ (~75 sn)
+npm run legal      # yasal metinler → yayınlanabilir sayfalar
+```
+
+Kısa hâli: **Play önce.** Tek seferlik 25 dolar, özel makine istemiyor ve
+oyunun mağazada nasıl durduğunu bir kere görmek App Store'un yıllık 99
+dolarına karar vermeyi kolaylaştırıyor.
 
 ---
 

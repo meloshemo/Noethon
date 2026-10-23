@@ -441,6 +441,31 @@ async function saveFields() {
   if (!fresh.length && !gone.length) ok(`kaydın her alanı yazılı — ${fields.length} alan`);
 }
 
+/**
+ * And the legal pages, which are generated and therefore can rot.
+ *
+ * `docs/*.md` is the text; `tools/legal.mjs` turns four of them into pages a
+ * store listing can link to. Two copies of a privacy policy is one copy too
+ * many — the moment they disagree, the one the reviewer reads is the one
+ * nobody edited. So the pages are regenerated into memory here and compared.
+ */
+async function legalPages() {
+  const { build } = await import(new URL('./legal.mjs', import.meta.url));
+  const made = await build();
+  const stale = [];
+  for (const m of made) {
+    const have = await readFile(resolve(root, m.to), 'utf8').catch(() => null);
+    if (have !== m.html) stale.push(m.to);
+  }
+  if (stale.length) {
+    bad(`yasal sayfalar eskimiş: ${stale.join(', ')} — "node tools/legal.mjs" ile tazele`);
+  } else {
+    ok(`yasal sayfalar metinlerle aynı — ${made.length} sayfa`);
+  }
+}
+
+await legalPages();
+
 await saveFields();
 
 await uiClaims();

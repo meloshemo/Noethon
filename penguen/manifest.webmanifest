@@ -2,6 +2,11 @@
   "name": "Pengu — Antarktika'dan Kaçış",
   "short_name": "Pengu",
   "description": "Yeni doğmuş bir penguen, eriyen buzlar arasında Antarktika'dan kaçmaya çalışıyor.",
+  "categories": [
+    "games",
+    "entertainment"
+  ],
+  "id": "pengu",
   "lang": "tr",
   "start_url": ".",
   "scope": ".",
@@ -33,6 +38,22 @@
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "assets/screenshot-narrow.jpg",
+      "sizes": "540x960",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Buz sahanlığında sıçrayış"
+    },
+    {
+      "src": "assets/screenshot-wide.jpg",
+      "sizes": "1280x720",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Zirveye tırmanış"
     }
   ]
 }

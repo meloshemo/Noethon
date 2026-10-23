@@ -8,8 +8,8 @@ kararlar (bir daha tartışılmasın diye nedeniyle birlikte duruyorlar).
 orada **adımlar** var, burada **durum** var. Bir iş bittiğinde işareti burada
 değişir.
 
-Son güncelleme: 2026-10-22 · dal `claude/penguen-game-dev-6ym6pg` · 76 bölüm ·
-56 test paketi (45 node + paketleme + 11 tarayıcı)
+Son güncelleme: 2026-10-23 · dal `claude/penguen-game-dev-6ym6pg` · 76 bölüm ·
+57 test paketi (46 node + paketleme + 11 tarayıcı)
 
 ---
 
@@ -22,7 +22,7 @@ Son güncelleme: 2026-10-22 · dal `claude/penguen-game-dev-6ym6pg` · 76 bölü
 | | Durum |
 |---|---|
 | 76 bölüm, 4 chapter | Hepsi iki bağımsız katmanla geçilebilir kanıtlı |
-| 56 test paketi | Yeşil (45 node + paketleme + 11 tarayıcı) |
+| 57 test paketi | Yeşil (46 node + paketleme + 11 tarayıcı) |
 | 24 gerçek cihaz şekli | Oynanış ve arayüz temiz, konsol temiz |
 | CI + yayın | İkisi de yeşil, canlı sürüm son commit |
 | Çevrimdışı | **Tek online ziyaret yetiyor** — gerçek tarayıcıda, ağ kapalı, bölüm oynanarak testli |
@@ -33,6 +33,7 @@ Son güncelleme: 2026-10-22 · dal `claude/penguen-game-dev-6ym6pg` · 76 bölü
 | Zorluk | El yapımı eğri bandında; sonsuz koşu 31. bölümün ötesine geçiyor |
 | Ekonomi | İlk kozmetik 4 dk, her şey 308 gün — dakika dakika testli |
 | Ritim | Ölüm → tekrar 0,72 sn · bitiş → kart 0,87 sn · sıradaki → oyun 0,02 sn |
+| Mağaza dosyası | 39 görsel üretiliyor, 16 metin sınırlarının içinde, formların cevapları yazılı |
 
 **Bilmediğim tek teknik şey:** bu kutuda GPU yok, yani 780×1688 pikseli
 *boyamanın* gerçek bir telefonda kaça mal olduğunu ölçemiyorum. Oyunun kendi
@@ -60,8 +61,10 @@ bir radyo aynı şey değil.
 | 1.4 | Dalı `main`'e birleştir | **kapandı** — "şimdilik dokunma" dedin; yayın zaten cld/main'den | — |
 | 1.5 | Gerçek cihazda oyna ve his notu al | **açık — en değerli iş** (listenin ilk maddesi testlendi) | 30 dk |
 | 1.6 | Offline'ı doğrula (uçak modu) | **bitti** — otomatikleşti, ve bir hata buldu (2.14) | — |
-| 1.7 | Kendi alan adı | **açık, isteğe bağlı** | 10 dk + DNS |
+| 1.7 | Kendi alan adı | **açık, isteğe bağlı** — TWA için gerekli olabilir (`MAGAZA.md` §6) | 10 dk + DNS |
 | 1.8 | Yasal metinleri okuyup onayla | **açık, senin kararın** | 10 dk |
+| 1.9 | Play Console hesabı (25 $, tek sefer) | **açık, senin kararın** | 20 dk |
+| 1.10 | Apple Developer hesabı (99 $/yıl) + macOS | **açık, senin kararın** | 1 sa |
 
 Adımların hepsi `docs/BILGISAYARDA.md` içinde. Dördü kapandı, kalanlar senin
 hesabını, cihazını ya da kararını istiyor.
@@ -102,6 +105,8 @@ sonra listenin durumu:
 | 2.13 | Sonsuz modun gevşekliği | **kapandı** — `tight` kadranı hiç çevrilmemişti |
 | 2.14 | Çevrimdışı ilk ziyarette çalışmıyordu | **kapandı** — 2 dosya → 40 dosya |
 | 2.15 | Gizlilik listesi eksik sayıyordu | **kapandı** — beş alan eklendi, on dördüncü lint kuralı bekçisi |
+| 2.16 | Mağaza görselleri ve metinleri | **geldi** — `tools/store.mjs`, `docs/MAGAZA.md`, 57. test paketi |
+| 2.17 | Yasal metinlerin açılabilir adresi | **geldi** — `tools/legal.mjs`, on beşinci lint kuralı bekçisi |
 
 Oyunun en tekrarlı bölümü artık 47–61 (%4), ve o %4'ün tamamı 47'nin kendini
 öğreten alt kümesi.
@@ -419,6 +424,38 @@ anıtın boyu kayda sonradan eklendi, listeye eklenmedi. Hiçbiri cihazdan
 
 İki doküman ve oyunun Yasal ekranı tamamlandı; `lint`'in on dördüncü kuralı
 kaydın yirmi alanını tanıyor ve yenisi çıkarsa build duruyor.
+
+### 2.16 Mağaza görselleri ve metinleri — **geldi**
+
+`node tools/store.mjs` iki mağazanın istediği 39 dosyayı üretiyor ve hepsi
+oyunun kendisinden alınıyor, çizilmiyor:
+
+| Hedef | Boyut | Kaç |
+|---|---|---|
+| Play telefon | 1080×1920 | 6 sahne × 2 dil |
+| Play tablet | 1920×1200 | 3 sahne × 2 dil |
+| App Store 6,9" iPhone | 1320×2868 | 6 sahne × 2 dil |
+| App Store 13" iPad | 2064×2752 | 3 sahne × 2 dil |
+| Öne çıkan görsel | 1024×500 | 2 dil |
+| Simgeler | 512 (alfalı) · 1024 (alfasız) | 2 |
+
+`store/` klasörü `mirror.mjs` listesinde **yok**, yani bu yedi megabayt yayına
+gitmiyor. `tests/store.mjs` boyutları dosya başlığından okuyor;
+`docs/MAGAZA.md` iki mağazanın bütün form cevaplarını ve on altı listeleme
+metnini sınırlarıyla birlikte tutuyor.
+
+Mağaza formlarında iki tuzak var ve ikisi de `MAGAZA.md`'de yazılı: TWA için
+`assetlinks.json` **origin kökünde** olmak zorunda (Pages proje sayfasında o
+kök senin değil), ve Apple'ın 4.2 kuralı web sarmalayıcıları reddedebiliyor.
+
+### 2.17 Yasal metinler artık birer sayfa — **geldi**
+
+İki mağaza da gizlilik politikası için açılabilir bir adres istiyor; dört metin
+markdown'dı ve statik sunucu onları düz metin veriyordu. `tools/legal.mjs`
+dördünü sayfaya çeviriyor, `lint` sayfaların metinlerle aynı şeyi söylediğini
+her koşuda doğruluyor.
+
+Adres: `https://meloshemo.github.io/cld/privacy.html`
 
 ### 2.5 Küçük işler
 

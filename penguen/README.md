@@ -374,7 +374,7 @@ geçmez, hata verip durur.
 
 ## Testler
 
-Tek komut, 56 paket (45 node + paketleme + 11 tarayıcı), kendi sunucusunu
+Tek komut, 57 paket (46 node + paketleme + 11 tarayıcı), kendi sunucusunu
 kurup kapatıyor ve portu doluysa bir yanına kayıyor:
 
 ```bash
@@ -421,7 +421,7 @@ node tests/browser-bundle.mjs    # tek dosya sürümü file:// üzerinden gerçe
 
 Biçim denetleyicisi değil, bu kod zaten tutarlı yazılıyor ve noktalı virgül
 tartışan bir araç burada hiçbir şey satın almıyor. Denetlenen şey, **gerçekten
-başa gelmiş** ve her seferinde sessizce bozulmuş on dört kural:
+başa gelmiş** ve her seferinde sessizce bozulmuş on beş kural:
 
 | Kural | Bozulunca ne oluyordu |
 |---|---|
@@ -439,6 +439,7 @@ başa gelmiş** ve her seferinde sessizce bozulmuş on dört kural:
 | Tuvale doğrudan metin yazılmıyor | Arenadaki sayaç Türkçe sabitti, İngilizce oynayan Türkçe okuyordu |
 | Arayüzün oyuncuya söylediği her sayı gerçek | Bölüm listesi "31 bölümden sonra" diyordu, gerçek 76; koleksiyon "yirmi penguen, iki yüz kombinasyon" diyordu, gerçek 29 ve 290 |
 | Kaydın her alanı gizlilik metninde sayılı | Kayıt istatistikleri, lig puanını, görevleri, kaldığın yeri ve anıtı büyüttü; "ne saklanıyor" listesi beşini de saymıyordu |
+| Yasal sayfalar metinleriyle aynı şeyi söylüyor | Gizlilik metni iki kopya olurdu ve ikisinden biri yanlış kalırdı |
 
 ### Sürekli entegrasyon
 
@@ -564,13 +565,18 @@ tools/
   serve.mjs                bağımlılıksız statik sunucu
   bundle.mjs               tek dosyaya düzleştirme
   lint.mjs                 proje kuralları
+  store.mjs                mağaza görselleri — oyunun kendisinden
+  legal.mjs                yasal metinler → yayınlanabilir sayfalar
   test.mjs                 hepsini koşan tek komut
   difficulty.mjs           ölçülen zorluk eğrisi (testi düşürmez, alet)
   mirror.mjs               bağımsız depoya kopyalama
 docs/
   GIZLILIK.md · PRIVACY.md          gizlilik, iki dilde
   KULLANIM-SARTLARI.md · TERMS.md   kullanım şartları, iki dilde
+  MAGAZA.md                         iki mağaza için metinler, cevaplar, adımlar
+  YAPILACAKLAR.md                   tek iş listesi
   BILGISAYARDA.md                   uzaktan yapılamayan işler
+store/                              mağaza görselleri (yayına gitmez)
 ```
 
 ### Parkurlar piksel değil, cümle
@@ -3575,7 +3581,7 @@ anlatmak değil, olan bir şeyi olduğundan iyi anlatmaktır.
 | Kayıt | Tek sürümlü JSON, ileri göç, dosyaya aktarma, tek tuşla silme |
 | Çevrimdışı | Servis çalışanı + tek dosya sürümü (694 KB) |
 | Girdi | Klavye, dokunmatik, gamepad |
-| Test | 45 node + paketleme + 11 tarayıcı paketi, hepsi tek komutta |
+| Test | 46 node + paketleme + 11 tarayıcı paketi, hepsi tek komutta |
 | Zorluk | Ölçülen eğri: `node tools/difficulty.mjs` |
 
 ### Yok, ve neden
@@ -3592,6 +3598,47 @@ anlatmak değil, olan bir şeyi olduğundan iyi anlatmaktır.
 | **Tehlike zamanlaması çözücüde yok** | Çözücüler zeminin ulaşılabilir olduğunu kanıtlıyor; gayzerin patlama anı, orkanın sıçrama anı ve fokun devriyesi saat meselesi ve `validate-levels.mjs` içinde kontrol ediliyor. |
 
 ---
+
+## Mağaza görselleri oyunun kendisinden alınıyor
+
+Bir mağaza listelemesi, resimle verilmiş bir söz dizisi — ve o sözlerin
+bayatlamasının olağan yolu, birinin bir çizim programında bir kere mockup
+yapıp oyunu onun ötesine geliştirmesi.
+
+```bash
+node tools/store.mjs          # 39 dosya, ~75 sn
+node tools/store.mjs --list   # hedefler ve sahneler
+```
+
+Buradaki her ekran görüntüsü **oyunun kendisi**: tarayıcı testlerinin
+kullandığı aynı tutamaçla sürülüyor, iki mağazanın piksel piksel istediği
+ölçülerde. 440×956 ekranı ×3 yoğunlukta açmak 1320×2868 ediyor, ki Apple'ın
+6,9" iPhone karesi tam o.
+
+Kayıt da önce tohumlanıyor, çünkü yepyeni bir kayıt **boş** fotoğraflanıyor:
+kilitli bölümler, sıfır yıldız, boş koleksiyon. Bu, ilk otuz saniyenin doğru
+ama oyunun yanlış resmi. Görüntüler bir haftadır oynanmış gibi duran bir
+kayıtla alınıyor — uydurma değil, gerçek kayıt şekline yazılmış ilerleme.
+
+Üç şey ölçülerek öğrenildi ve kodda yazılı duruyor:
+
+- **Zıplattırmak yanlış araç.** İlk sürüm penguene sağa koşturup zıplatıyordu;
+  bunun boşluğu geçip geçmediği o bölüme ait bir soru, ve 20. bölümde geçmedi.
+  Fotoğraf, suya düşüş ve "1" yazan bir deneme sayacı oldu. İstenen kare zaten
+  sıçrayış değildi: arkasında katil balina havadayken, boşluk daha geçilmemişken
+  duran yarım saniye.
+- **Su altında derinlik verilmez, ölçülür.** Elle seçilen bir derinlik deniz
+  tabanının altına düştü, yüzücü kareden çıktı, kamera — seviyeye kilitli —
+  olduğu yerde kaldı. Artık o sütundaki bütün katılar sıralanıp aralarındaki
+  en geniş boşluk bulunuyor.
+- **İki simge iki zıt kural.** Apple alfa kanalı olan simgeyi reddediyor,
+  Google 32 bitlik yani alfa kanallı PNG istiyor. Tarayıcının verdiği her şey
+  RGBA olduğu için PNG'ler burada elle yazılıyor: bir IHDR, bir IDAT, bir IEND.
+
+`tests/store.mjs` hepsinin boyutunu dosya başlığından okuyup iki mağazanın
+kuralıyla karşılaştırıyor, `docs/MAGAZA.md`'deki on altı listeleme metnini de
+karakter karakter sayıyor. Mağaza formu bir alanı reddettiğinde öğrenilecek
+şey değil bunlar.
 
 ## Tarayıcı desteği
 
