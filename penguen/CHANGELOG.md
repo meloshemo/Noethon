@@ -5,6 +5,51 @@ değiştiği yeterli. En yeni en üstte.
 
 ---
 
+## Oyun Play'de: paket, metinler ve görseller API'den gitti
+
+`Play'e yükle` düğmesi ucundan ucuna çalıştı. Play'in kendi okuması:
+
+```
+  yüklü paketler 1, 2
+  internal     draft · 2
+  tr-TR        Pengu: Antarktika'dan Kaçış
+  en-US        Pengu: Escape from Antarctica
+```
+
+Yani imzalı paket internal test kanalında taslak sürüm olarak duruyor, iki
+dilin adı, kısa ve tam açıklaması, altışar telefon ve üçer tablet görseli ile
+öne çıkan görsel listelemede. Hiçbiri forma elle yazılmadı; hepsi
+`docs/MAGAZA.md` ve `store/play/` içinden okundu.
+
+### Yolda dört şey kırıldı ve dördü de ders bıraktı
+
+- **Görseller yayın deposunda yoktu.** Yükleyici orada çalışıyor, ve ben
+  görselleri "yayına gitmesin" diye oraya kopyalamıyordum: onlara ihtiyacı olan
+  tek işten de uzak tutmuşum. Artık kopyalanıyorlar, yayından `deploy.yml`
+  çıkarıyor.
+- **Paket adı uyuşmuyordu.** Play kaydı `com.Pengu` olarak açılmış, ben
+  `io.github.meloshemo.pengu` derliyordum. Bir application id listelemenin ömrü
+  boyunca sabit; ekran görüntüsünden okunup düzeltildi.
+- **`--next-code` iki satır yazıyordu.** Biri sayı, biri nezaket. GitHub ikisini
+  tek değer sanıp "Invalid format" dedi.
+- **Kendi düzenlemem üç modu sildi.** Yüklemeyi ikiye bölerken `--next-code`,
+  `--status` ve `--auth` dalları gitti; iş akışı elli dört saniye bekleyip
+  düştü, çünkü dalsız betik doğrudan yükleme yoluna düşüp henüz derlenmemiş
+  paketi göndermeye çalıştı.
+
+### Ve asıl 403
+
+Tek bir düzenlemede hem sürüm hem listeleme varken Play `commit` sırasında
+"The caller does not have permission" diyor ve **hangisinin** reddedildiğini
+söylemiyor. İkiye bölününce cevap tek satır oldu: sürüm geçti, listeleme
+düştü, eksik olan *Mağaza kaydını düzenle* izniydi. İzin verilince ikisi de
+geçti.
+
+Bir de `--only=listing`: yarım kalan tarafı tek başına tekrar denemek, her
+denemede bir sürüm numarası daha harcamadan.
+
+---
+
 ## Play'e yükleme de otomatik — şifreyle değil, servis hesabıyla
 
 Soru şuydu: "hesabıma gir, her şeyi sen yap." Cevabın iki yarısı var.

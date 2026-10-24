@@ -63,10 +63,12 @@ bir radyo aynı şey değil.
 | 1.6 | Offline'ı doğrula (uçak modu) | **bitti** — otomatikleşti, ve bir hata buldu (2.14) | — |
 | 1.7 | Kendi alan adı | **gerekmiyor** — paket bir adrese bağlı değil | — |
 | 1.8 | Yasal metinleri okuyup onayla | **açık, senin kararın** | 10 dk |
-| 1.9 | Play Console hesabı (25 $, tek sefer) | **açık, senin kararın** — paket hazır, üretiliyor | 20 dk |
-| 1.9b | İmza anahtarı üret + 4 GitHub sırrı | **açık** — `MAGAZA.md` §5, tek komut | 10 dk |
-| 1.9c | Play'de uygulama kaydı aç (Create app) | **açık** — API bunu yapamıyor | 5 dk |
-| 1.9d | Servis hesabı + `PLAY_SERVICE_ACCOUNT_JSON` sırrı | **açık** — sonrası otomatik; önce *Play bağlantı testi* | 10 dk |
+| 1.9 | Play Console hesabı | **bitti** — uygulama kaydı açıldı (`com.Pengu`) | — |
+| 1.9b | İmza anahtarı + 4 GitHub sırrı | **bitti** — paket imzalı yükleniyor | — |
+| 1.9c | Play'de uygulama kaydı | **bitti** | — |
+| 1.9d | Servis hesabı + izinler | **bitti** — paket ve listeleme API'den gidiyor |
+| 1.9e | Play'de "Set up your app" formları | **açık** — veri güvenliği, içerik derecelendirme, hedef kitle (cevaplar `MAGAZA.md` §4'te) | 20 dk |
+| 1.9f | Internal test kullanıcısı ekle ve sürümü yayına al | **açık, senin kararın** | 10 dk |
 | 1.10 | Apple Developer hesabı (99 $/yıl) + macOS | **ertelendi** — Mac olduğu gün | — |
 
 Adımların hepsi `docs/BILGISAYARDA.md` içinde. Dördü kapandı, kalanlar senin
@@ -111,7 +113,7 @@ sonra listenin durumu:
 | 2.16 | Mağaza görselleri ve metinleri | **geldi** — `tools/store.mjs`, `docs/MAGAZA.md`, 57. test paketi |
 | 2.17 | Yasal metinlerin açılabilir adresi | **geldi** — `tools/legal.mjs`, on beşinci lint kuralı bekçisi |
 | 2.19 | Android paketi | **geldi** — oyun paketin içinde, ağ izni yok, 2,4 MB |
-| 2.20 | Play'e yükleme | **geldi** — metin ve görsellerle birlikte, taslak sürüm olarak |
+| 2.20 | Play'e yükleme | **çalıştı** — paket internal kanalda taslak, listeleme iki dilde yazıldı |
 | 2.18 | İngilizcede Türkçe kalan sayaç | **kapandı** — "10 / 29 penguen", mağaza görseli buldu |
 
 Oyunun en tekrarlı bölümü artık 47–61 (%4), ve o %4'ün tamamı 47'nin kendini
