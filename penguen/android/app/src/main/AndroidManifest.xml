@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+  <!--
+    No permissions at all. The game has no network code, no storage access, no
+    sensors and no identifiers — and the privacy notice says exactly that, so
+    the manifest has to be able to back it up.
+  -->
+
+  <application
+      android:allowBackup="true"
+      android:icon="@mipmap/ic_launcher"
+      android:roundIcon="@mipmap/ic_launcher"
+      android:label="@string/app_name"
+      android:supportsRtl="false"
+      android:hardwareAccelerated="true"
+      android:theme="@style/Theme.Pengu">
+
+    <activity
+        android:name=".MainActivity"
+        android:exported="true"
+        android:screenOrientation="fullUser"
+        android:launchMode="singleTask"
+        android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode|density"
+        android:theme="@style/Theme.Pengu">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
+      </intent-filter>
+    </activity>
+  </application>
+</manifest>

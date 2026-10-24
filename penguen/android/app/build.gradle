@@ -1,0 +1,51 @@
+plugins {
+  id 'com.android.application'
+}
+
+android {
+  // The code's own package, which never changes and never needs to: it names
+  // the R class and the activity, nothing a store sees.
+  namespace 'io.github.meloshemo.pengu'
+  compileSdk 35
+
+  defaultConfig {
+    /*
+     * What Play knows this application as, and it is **not** ours to choose.
+     *
+     * The entry was created in the console as `com.Pengu`, and an application
+     * id is fixed for the life of a listing: upload a bundle with any other
+     * id and Play rejects it as a different application. It is deliberately
+     * separate from `namespace` above — the code package can stay what it is.
+     */
+    applicationId 'com.Pengu'
+    // Android 7. The WebView on anything older predates most of what this
+    // game draws with, and by 7 the WebView is an updatable system component.
+    minSdk 24
+    targetSdk 35
+    // Play refuses an upload that repeats a versionCode. `tools/android.mjs`
+    // can stamp these from the workflow's inputs.
+    versionCode 1
+    versionName '1.0.0'
+  }
+
+  buildTypes {
+    release {
+      // Nothing to shrink: there is one activity and no libraries to speak
+      // of, and a shrinker here would only make the stack traces worse.
+      minifyEnabled false
+    }
+  }
+
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_17
+    targetCompatibility JavaVersion.VERSION_17
+  }
+}
+
+dependencies {
+  // The asset loader, and the reason the game is served from
+  // https://appassets.androidplatform.net rather than file://. A file:// page
+  // has an opaque origin, which means no localStorage — and no localStorage
+  // means the save, the records and the collection are gone every launch.
+  implementation 'androidx.webkit:webkit:1.12.1'
+}

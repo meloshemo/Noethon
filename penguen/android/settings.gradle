@@ -1,0 +1,27 @@
+/*
+ * Pengu, as an Android application.
+ *
+ * Nothing here is generated: this is a small, readable Android project whose
+ * only job is to open one file. The game is built into a single self-contained
+ * HTML document by `tools/bundle.mjs` and shipped inside the package, so the
+ * application has no address to reach and nothing to download — it works the
+ * same on a plane as it does on a desk.
+ */
+pluginManagement {
+  repositories {
+    google()
+    mavenCentral()
+    gradlePluginPortal()
+  }
+}
+
+dependencyResolutionManagement {
+  repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+  repositories {
+    google()
+    mavenCentral()
+  }
+}
+
+rootProject.name = 'Pengu'
+include ':app'

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!--
+    The window is the game's own background colour from the first frame, so the
+    launch does not flash white before the canvas paints.
+  -->
+  <style name="Theme.Pengu" parent="@android:style/Theme.Material.NoActionBar.Fullscreen">
+    <item name="android:windowBackground">@color/pengu_background</item>
+    <item name="android:statusBarColor">@color/pengu_background</item>
+    <item name="android:navigationBarColor">@color/pengu_background</item>
+    <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+  </style>
+</resources>

@@ -1,0 +1,1082 @@
+/**
+ * The penguin.
+ *
+ * Movement is deliberately forgiving: coyote time, jump buffering and a
+ * variable-height jump. Those three make a platformer feel "fair", which is
+ * exactly what the early levels need.
+ */
+
+import {
+  PHYS, PENGUIN, BOOST, COIL, QUANTUM, SLACK, ROT, GEAR, CLIMB, SWIM, WIND, HUSH, CURRENT, breathFor,
+} from './config.js';
+import { clamp, damp, rectsOverlap } from '../core/util.js';
+
+/**
+ * Every rotten kind, in one place, so no decay loop can quietly forget one.
+ *
+ * Read from the definitions rather than typed out again. It was typed out
+ * again — here, in `entities.js` and in the generator — which is three lists
+ * that have to be edited together and no way to notice when they are not.
+ */
+const CURSES = Object.keys(ROT);
+
+export class Player {
+  constructor() {
+    this.scale = 1;
+    /** Shop upgrades, resolved to plain multipliers by the world. */
+    this.boost = { jump: 0, speed: 0, grip: 0, wind: 0 };
+    /**
+     * Active gear, in levels owned. 0 means the penguin does not have it and
+     * none of the code below does anything at all.
+     */
+    this.gear = { wings: 0, rocket: 0 };
+    /**
+     * Glide seconds a diamond penguin adds. Kept separate from the wings so a
+     * penguin that lengthens the glide is useless without them — the perk
+     * improves a thing you own, it does not hand you the thing.
+     */
+    this.glideBonus = 0;
+    /** Speed-fish charge: seconds remaining. */
+    this.charge = 0;
+    /**
+     * The charged fish: seconds remaining on each.
+     *
+     * These three are the whole point of the colours. The game has one button,
+     * so the only honest way to add a verb is to change what that button means
+     * for a few seconds, rather than to ask the player for a second button.
+     */
+    this.coil = 0;
+    this.quantum = 0;
+    this.slack = 0;
+    /** True while a coil is wound and unspent. */
+    this.coilArmed = false;
+    /** One blink per airborne stretch, so it can never become flight. */
+    this.quantumUsed = false;
+    /** Counts down after a blink, so the world can draw where you were. */
+    this.blinked = 0;
+    /** Set for one frame when the coil releases, so the world can hear it. */
+    this.uncoiled = false;
+    /** Rotten-fish curses: { heavy, slick, dizzy, blind } → seconds left. */
+    this.curse = Object.fromEntries(CURSES.map((k) => [k, 0]));
+    /** Afterimages, so the boost reads as speed rather than as a colour. */
+    this.trail = [];
+    /**
+     * A short ring buffer of where the penguin has been, kept always and
+     * reused in place so it produces no garbage. The cosmetic trail paints
+     * from this — which is why a trail costs nothing but eighteen objects.
+     */
+    this.history = Array.from({ length: 18 }, () => ({ x: 0, y: 0, age: 1 }));
+    this._histAt = 0;
+    this._histAcc = 0;
+    this.reset(0, 0);
+  }
+
+  setScale(scale) {
+    this.scale = scale;
+    this.w = PENGUIN.w * scale;
+    this.h = PENGUIN.h * scale;
+  }
+
+  /** Thrown by a geyser — briefly ignores ground contact so it reads clean. */
+  launch(vx, vy) {
+    this.vx = vx;
+    this.drift = 0;
+    this.driftY = 0;
+    this.vy = vy;
+    this.onGround = false;
+    this.groundFloe = null;
+    this.coyote = 0;
+    this.buffer = 0;
+    this.squashX = 0.7;
+    this.squashY = 1.4;
+    this.launched = 0.35;
+  }
+
+  reset(x, y) {
+    this.setScale(this.scale);
+    this.x = x - this.w / 2;
+    this.y = y - this.h;
+    this.vx = 0;
+    this.vy = 0;
+    this.drift = 0;
+    this.driftY = 0;
+    this.onGround = false;
+    this.groundFloe = null;
+    this.coyote = 0;
+    this.buffer = 0;
+    this.facing = 1;
+    this.squashX = 1;
+    this.squashY = 1;
+    this.walkPhase = 0;
+    this.blink = 2 + Math.random() * 3;
+    this.alive = true;
+    this.slideAmount = 0;
+    this.airTime = 0;
+    this.wasOnGround = false;
+    this.landedThisFrame = false;
+    this.jumpedThisFrame = false;
+    this.launched = 0;
+    this.charge = 0;
+    this.coil = 0;
+    this.quantum = 0;
+    this.slack = 0;
+    this.coilArmed = false;
+    this.quantumUsed = false;
+    this.blinked = 0;
+    this.uncoiled = false;
+    this.curse = Object.fromEntries(CURSES.map((k) => [k, 0]));
+    this.trail.length = 0;
+    for (const p of this.history) {
+      p.x = x;
+      p.y = y;
+      p.age = 1;
+    }
+    this.gliding = false;
+    /** Inside a rising column this frame — drawn, and read by the HUD. */
+    this.lifted = false;
+    /** What gravity ran at last frame. 1 everywhere but inside a hush. */
+    this.gravityScale = 1;
+    this.glideLeft = this.glideMax;
+    this.rocketLeft = this.rocketMax;
+    this.burn = 0;
+    this.rocketCool = 0;
+    /** Set for one frame when the motor fires, so the world can make a noise. */
+    this.rocketFired = false;
+
+    /* --- climbing ---------------------------------------------------- */
+    /** Which side the gripped wall is on: -1 left, +1 right, 0 not gripping. */
+    this.wallSide = 0;
+    this.clinging = false;
+    /** Hands on glare ice: a wall is there, and it will not be held. */
+    this.glazed = false;
+    this.climbing = false;
+    this.stamina = this.staminaMax;
+    /** Seconds the wall just kicked off stays ungrabbable, and which one. */
+    this.noGrab = 0;
+    this.noGrabSide = 0;
+    /** Set for one frame on a kick-off, so the world can spray chips. */
+    this.wallJumped = false;
+    /** Pulling over the head of a wall rather than climbing its face. */
+    this.mantling = false;
+    /** Seconds a wall kick is immune to the jump-cut. */
+    this.kickGrace = 0;
+    /** The block currently being gripped, so the climb knows where its top is. */
+    this.wallBlock = null;
+    /** The block being pulled over, kept until the penguin is standing on it. */
+    this.mantleBlock = null;
+
+    /* --- under the ice ----------------------------------------------- */
+    /** Vertical water carrying the body, px/s, down positive. */
+    this.driftY = 0;
+    /**
+     * Set by the world for a dive level. Nothing reads it anywhere else, so a
+     * shelf level and a mountain level behave exactly as they always have.
+     */
+    this.submerged = false;
+    /** Seconds of breath left. Only meaningful while submerged. */
+    this.breath = SWIM.breath;
+    /** Diving this frame — the button is down. Drawn, and used for bubbles. */
+    this.diving = false;
+    /** Head is in air: at a hole in the ice, or above the surface. */
+    this.breathing = false;
+  }
+
+  /**
+   * How long the penguin can hang.
+   *
+   * Crampons help here for the same reason they help on polished ice — they
+   * are the one upgrade that is about the *contact* rather than about power —
+   * but they only lengthen the bar, they never remove it.
+   */
+  get staminaMax() {
+    // Crampons help because they are about contact; rosin is bought for this
+    // and nothing else, which is why it is a multiplier rather than another
+    // term — it should be worth more on a chapter that is entirely holding on.
+    const base = CLIMB.stamina + CLIMB.gripBonus * (this.boost?.grip ?? 0);
+    return base * (1 + (this.boost?.hold ?? 0));
+  }
+
+  get staminaFrac() {
+    return this.staminaMax > 0 ? this.stamina / this.staminaMax : 0;
+  }
+
+  /**
+   * How long a lungful lasts.
+   *
+   * Crampons do nothing here — they are about contact — but the growth curve
+   * does: a bigger bird has bigger lungs, which is the one place in the game
+   * where getting heavier is purely good news, and it is the chapter where the
+   * penguin has already earned it.
+   */
+  get breathMax() {
+    // `breathFor` stays the number the sea is *composed* against — the
+    // composer and the validator both size their corridors from it, and they
+    // do it for a penguin who owns nothing. What a particular player is
+    // carrying is added here and nowhere else.
+    return breathFor(this.scale) * (1 + (this.boost?.lungs ?? 0));
+  }
+
+  get breathFrac() {
+    return this.breathMax > 0 ? this.breath / this.breathMax : 0;
+  }
+
+  get swimSpeed() {
+    return this.moveSpeed * SWIM.speed;
+  }
+
+  /*
+   * Frozen feathers.
+   *
+   * Both of these read the curse rather than the inventory, so the wings and
+   * the motor stop being there at all for a few seconds — not weaker, gone.
+   * That is the point of it: every other rotten fish makes the penguin worse
+   * at what it was doing, and this one takes away the thing the player *bought
+   * to answer* being in trouble. The most expensive habit in the game is
+   * "there is always the glide", and this is the fish that argues with it.
+   */
+  get glideMax() {
+    if (!this.gear.wings || this.curse.stiff > 0) return 0;
+    const tier = this.gear.wings === 1 ? 1 : this.gear.wings === 2 ? 1.7 : 2.6;
+    return GEAR.wings.stamina * tier + (this.glideBonus ?? 0);
+  }
+
+  get rocketMax() {
+    if (this.curse.stiff > 0) return 0;
+    return this.gear.rocket ?? 0;
+  }
+
+  /** Ate something rotten. Re-eating refreshes rather than stacks. */
+  afflict(kind) {
+    const spec = ROT[kind];
+    if (!spec) return;
+    this.curse[kind] = Math.max(this.curse[kind], spec.duration);
+    this.squashX = 1.25;
+    this.squashY = 0.78;
+  }
+
+  get cursed() {
+    return CURSES.some((k) => this.curse[k] > 0);
+  }
+
+  /** Swallowed a speed fish. Refreshes rather than stacks. */
+  energise(seconds = BOOST.duration) {
+    this.charge = Math.max(this.charge, seconds);
+    this.squashX = 0.82;
+    this.squashY = 1.2;
+  }
+
+  get charged() {
+    return this.charge > 0;
+  }
+
+  /**
+   * Swallowed one of the charged fish.
+   *
+   * All three refresh rather than stack, like every other pickup, and all
+   * three are deliberately short: a fish is a sentence, not a paragraph.
+   */
+  chargeFish(kind) {
+    if (kind === 'coil') {
+      this.coil = Math.max(this.coil, COIL.duration);
+      this.coilArmed = true;
+      this.squashX = 1.18;
+      this.squashY = 0.84;
+    } else if (kind === 'quantum') {
+      this.quantum = Math.max(this.quantum, QUANTUM.duration);
+      if (this.onGround) this.quantumUsed = false;
+      this.squashX = 0.86;
+      this.squashY = 1.16;
+    } else if (kind === 'slack') {
+      this.slack = Math.max(this.slack, SLACK.duration);
+      this.squashX = 0.9;
+      this.squashY = 1.12;
+    }
+  }
+
+  /**
+   * What the rest of the world runs at, right now.
+   *
+   * The slack fish does not slow the penguin, and it does not slow time on the
+   * ground — it slows everything else, and only while you are in the air. That
+   * makes it a fish about a single jump: leap into a wall of falling seracs and
+   * the seracs nearly stop while you do not. Standing under it does nothing at
+   * all, which is what keeps it from being a difficulty switch.
+   */
+  get worldRate() {
+    // Not underwater, for the reason given on `_swim`: down there the button
+    // is already the depth control and the penguin is never on the ground, so
+    // none of the three fish can mean anything without meaning it constantly.
+    if (this.submerged) return 1;
+    return this.slack > 0 && !this.onGround && !this.clinging ? SLACK.rate : 1;
+  }
+
+  /**
+   * Is the body clear of every solid, if it stood at this x?
+   *
+   * Only the blink asks. It is the guard that keeps a teleport from posting a
+   * penguin through a wall, which is the one thing a mechanic like this must
+   * never do to a game whose levels are proved solvable by geometry.
+   */
+  _clearAt(x, y, solids) {
+    const box = { x, y, w: this.w, h: this.h };
+    for (const f of solids) {
+      if (!f.solid) continue;
+      if (rectsOverlap(box, { x: f.x, y: f.y, w: f.w, h: f.h })) return false;
+    }
+    return true;
+  }
+
+  get box() {
+    return { x: this.x, y: this.y, w: this.w, h: this.h };
+  }
+
+  get centerX() {
+    return this.x + this.w / 2;
+  }
+
+  get jumpVelocity() {
+    const base = PHYS.jumpVelocity * (1 - PENGUIN.jumpPenaltyPerScale * (this.scale - 1));
+    const rot = this.curse.heavy > 0 ? ROT.heavy.jump : 0;
+    return base * (1 + this.boost.jump + (this.charged ? BOOST.jump : 0) + rot);
+  }
+
+  get moveSpeed() {
+    const base = PHYS.moveSpeed * (1 - PENGUIN.speedPenaltyPerScale * (this.scale - 1));
+    const rot = this.curse.heavy > 0 ? ROT.heavy.speed : 0;
+    return base * (1 + this.boost.speed + (this.charged ? BOOST.speed : 0) + rot);
+  }
+
+  /**
+   * @param {number} dt
+   * @param {{axis:number, jumpHeld:boolean, jumpPressed:boolean}} intent
+   * @param {Array} floes
+   * @param {object} tuning coyote-time multiplier etc. from assist mode
+   */
+  update(dt, intent, floes, tuning, events) {
+    this.landedThisFrame = false;
+    this.jumpedThisFrame = false;
+    this.wasOnGround = this.onGround;
+    if (this.submerged) {
+      this._swim(dt, intent, floes, events);
+      return;
+    }
+
+    // Slick is the fourth curse, and it is the only one that changes what the
+    // ground *is* rather than what the penguin is. Every floe underfoot
+    // behaves like polished ice, so speed, jump and reach are all untouched
+    // and the penguin loses the one thing it never thinks about: stopping.
+    const slippery = this.groundFloe?.slippery || this.curse.slick > 0;
+    // Crampons pull the slip factor back toward normal ground friction.
+    const slipFactor = PHYS.slipFriction + (1 - PHYS.slipFriction) * this.boost.grip;
+    const accel = this.onGround ? PHYS.groundAccel : PHYS.airAccel;
+    const friction = this.onGround
+      ? PHYS.groundFriction * (slippery ? slipFactor : 1)
+      : PHYS.airFriction;
+
+    this.launched = Math.max(0, this.launched - dt);
+    this.charge = Math.max(0, this.charge - dt);
+    this.quantum = Math.max(0, this.quantum - dt);
+    this.slack = Math.max(0, this.slack - dt);
+    this.blinked = Math.max(0, this.blinked - dt);
+    this.uncoiled = false;
+    for (const k of CURSES) {
+      this.curse[k] = Math.max(0, this.curse[k] - dt);
+    }
+    if (this.onGround) this.quantumUsed = false;
+    // Dizzy swaps the controls. Done here rather than at the input layer so it
+    // applies to touch, keyboard and gamepad without any of them knowing.
+    if (this.curse.dizzy > 0) intent = { ...intent, axis: -intent.axis };
+
+    if (this.charge > 0) {
+      // Sampled positions, oldest first — the renderer fades them out behind.
+      this.trail.push({ x: this.x, y: this.y, f: this.facing, life: 0.22 });
+      if (this.trail.length > 8) this.trail.shift();
+    }
+    for (let i = this.trail.length - 1; i >= 0; i--) {
+      this.trail[i].life -= dt;
+      if (this.trail[i].life <= 0) this.trail.splice(i, 1);
+    }
+
+    // Kicking off a wall means holding *toward* that wall at the moment you
+    // leave it — so without this, air control immediately drags the penguin
+    // back into the ice it just pushed away from and the kick eats itself. For
+    // the length of the no-regrab window, steering into the wall you just left
+    // does nothing. Steering away, or letting go, works normally.
+    if (this.noGrab > 0 && Math.sign(intent.axis) === this.noGrabSide) {
+      intent = { ...intent, axis: 0 };
+    }
+
+    const target = intent.axis * this.moveSpeed;
+    if (this.launched > 0) {
+      // Tumbling: steering is heavily damped, but not gone — the player can
+      // still fight for a landing, which is what keeps this fair.
+      this.vx += intent.axis * PHYS.airAccel * 0.25 * dt;
+    } else if (intent.axis !== 0) {
+      const boosted = this.charged ? 1.35 : 1;
+      const rate = (slippery && this.onGround ? accel * (0.35 + 0.65 * this.boost.grip) : accel) * boosted;
+      this.vx += Math.sign(target - this.vx) * rate * dt;
+      // Don't overshoot the target speed in a single step.
+      if (Math.sign(target - this.vx) !== Math.sign(target) && Math.abs(this.vx) > Math.abs(target)) {
+        this.vx = target;
+      }
+      this.vx = clamp(this.vx, -Math.abs(target), Math.abs(target));
+      this.facing = Math.sign(intent.axis);
+    } else {
+      const drop = friction * dt;
+      this.vx = Math.abs(this.vx) <= drop ? 0 : this.vx - Math.sign(this.vx) * drop;
+    }
+
+    /**
+     * Wind, in its own channel.
+     *
+     * This used to be `vx += push * dt`, which looked right and did nothing.
+     * The steering above clamps `vx` to the walk speed every single frame, so
+     * whatever the wind added on one frame was taken straight back on the
+     * next: a storm could lean on a penguin for four seconds and move the
+     * landing spot by nothing. That is the entire reason the weather read as
+     * decoration.
+     *
+     * Kept separate, steering owns the speed the player asked for and the wind
+     * owns the speed the weather gave, and neither can erase the other. The
+     * drag term is what stops it running away: drift approaches `push / drag`
+     * and no further, so a tailwind is a bonus with a ceiling rather than an
+     * accelerating slide into the sea.
+     */
+    // Vertical water is a swimming thing only; out of the sea the channel is
+    // cleared, exactly as the current's is.
+    this.driftY = 0;
+    this.drift += (intent.push ?? 0) * dt;
+    this.drift -= this.drift * (this.onGround ? WIND.dragGround : WIND.dragAir) * dt;
+    /**
+     * Rising air.
+     *
+     * Applied as an upward acceleration rather than a velocity, so a column
+     * does not teleport a falling penguin: you enter it moving down, you slow,
+     * you stop, you climb. That takes about a third of a second and it is the
+     * whole feel of the thing — a gust catches you rather than grabbing you.
+     */
+    this.lifted = (intent.lift ?? 0) > 0 && !this.onGround;
+    if (this.lifted) this.vy -= intent.lift * dt;
+
+    // --- Jump: buffered press + coyote time ---------------------------
+    if (intent.jumpPressed) this.buffer = PHYS.jumpBuffer;
+    this.buffer = Math.max(0, this.buffer - dt);
+    this.coyote = this.onGround ? PHYS.coyoteTime * (tuning.coyote ?? 1) : Math.max(0, this.coyote - dt);
+
+    /**
+     * The coil.
+     *
+     * A held spring rather than a stat. While it is wound, the next jump — one
+     * jump — leaves the ice at roughly twice the usual speed, and the wind-up
+     * is spent whether that jump cleared anything or not.
+     *
+     * And if it is never spent, it goes off by itself. That is deliberate: a
+     * spring that quietly evaporated would make the fish a free gift, and
+     * every charged fish is meant to be a decision with a clock on it. Swallow
+     * a coil at the wrong moment and it will throw you somewhere you did not
+     * choose. If it runs out in mid-air it stays wound until the ice is back
+     * underfoot, because a spring needs something to push against.
+     */
+    this.coil = Math.max(0, this.coil - dt);
+    const springing = this.coilArmed && this.coil <= 0 && this.onGround;
+    if ((this.buffer > 0 && this.coyote > 0) || springing) {
+      const wound = this.coilArmed;
+      this.vy = this.jumpVelocity * (wound ? COIL.jump : 1);
+      this.coilArmed = false;
+      this.buffer = 0;
+      this.coyote = 0;
+      this.onGround = false;
+      this.groundFloe = null;
+      this.squashX = wound ? 0.64 : 0.78;
+      this.squashY = wound ? 1.5 : 1.25;
+      this.jumpedThisFrame = true;
+      this.uncoiled = wound;
+      // A spring that goes off by itself is not the player's jump, so the
+      // variable-height cut must not touch it. Without this the release was
+      // shaved to a third the moment it fired, because a player who never
+      // pressed the button is by definition not holding it — the involuntary
+      // launch was being punished for being involuntary.
+      if (springing) this.kickGrace = Math.max(this.kickGrace, 0.28);
+      events?.onJump?.(wound);
+    }
+
+    // --- The wall ------------------------------------------------------
+    // Grip first, because everything below it — the motor, the wings, gravity
+    // itself — has to know whether the penguin is currently holding on.
+    this.wallJumped = false;
+    this.noGrab = this.onGround ? 0 : Math.max(0, this.noGrab - dt);
+    this.wallBlock = null;
+    const wall = this.onGround ? 0 : this._probeWall(floes);
+    const holdingInto = wall !== 0 && Math.sign(intent.axis) === wall;
+    // Verglas. The wall is there and it is the same wall; there is simply
+    // nothing to hold on to across this band. See `GLAZE`: it is what turns a
+    // move on this mountain into one you cannot take back halfway.
+    this.glazed = wall !== 0 && (intent.grip ?? 1) <= 0;
+    const barred = (this.noGrab > 0 && this.noGrabSide === wall) || this.glazed;
+    // Once the pull-over has started, the grip is latched. The probe loses the
+    // face the moment the body moves in over the top — which is exactly the
+    // moment the penguin must not be dropped.
+    const topping =
+      this.mantleBlock &&
+      !this.onGround &&
+      this.y + this.h <= this.mantleBlock.y + 8 &&
+      this.centerX > this.mantleBlock.x - this.w &&
+      this.centerX < this.mantleBlock.x + this.mantleBlock.w + this.w;
+    if (topping) this.wallBlock = this.mantleBlock;
+    this.clinging = (holdingInto || topping) && !barred && this.stamina > 0;
+    this.climbing = false;
+    if (!this.clinging) {
+      this.wallSide = 0;
+      this.mantling = false;
+      this.mantleBlock = null;
+    } else if (topping && wall === 0) {
+      this.wallSide = this.centerX < this.mantleBlock.x ? 1 : -1;
+    }
+    else {
+      this.wallSide = wall;
+      // A tap kicks off. Checked before the motor so the same button means the
+      // same thing it always has: press to leave where you are.
+      if (intent.jumpPressed) {
+        this.vx = -wall * CLIMB.kickX;
+        this.vy = this.jumpVelocity * CLIMB.kickY;
+        this.stamina = Math.max(0, this.stamina - CLIMB.kickCost);
+        this.noGrab = CLIMB.regrab;
+        this.noGrabSide = wall;
+        this.clinging = false;
+        this.wallSide = 0;
+        this.facing = -wall;
+        this.buffer = 0;
+        this.jumpedThisFrame = true;
+        this.wallJumped = true;
+        // A kick is fired by a *tap*, so the button is already up by the next
+        // frame — and the variable-height jump cut would then shave two thirds
+        // off it. Playing it the way the control is designed to be played was
+        // being punished, and the shaft became uncrossable for exactly the
+        // players who used the mechanic correctly. The impulse is protected
+        // for as long as it takes to leave the wall.
+        this.kickGrace = CLIMB.regrab;
+        this.squashX = 0.76;
+        this.squashY = 1.28;
+        events?.onWallJump?.(wall);
+      }
+    }
+    if (this.onGround) this.stamina = Math.min(this.staminaMax, this.stamina + CLIMB.regen * dt);
+
+    /**
+     * The blink.
+     *
+     * Press the button in mid-air and the penguin is simply somewhere else,
+     * three and a bit bodies further along, carrying every bit of the velocity
+     * it already had. Keeping the velocity is what stops this being a second
+     * jump: it moves you across and never up, so a blink can cross a gap no
+     * jump can reach and still cannot gain a single metre of height by itself.
+     *
+     * It is swept rather than teleported. The destination is walked toward in
+     * quarter-body steps and the last clear one wins, so a blink into a cliff
+     * puts the penguin against the cliff instead of inside it.
+     */
+    this.blinkedThisFrame = false;
+    if (
+      this.quantum > 0 &&
+      intent.jumpPressed &&
+      !this.onGround &&
+      !this.clinging &&
+      !this.jumpedThisFrame &&
+      !this.quantumUsed
+    ) {
+      const step = this.w * 0.25;
+      const want = QUANTUM.bodies * this.w;
+      let moved = 0;
+      while (moved < want) {
+        const next = Math.min(step, want - moved);
+        if (!this._clearAt(this.x + this.facing * (moved + next), this.y, floes)) break;
+        moved += next;
+      }
+      if (moved > 0) {
+        for (let i = 0; i < 5; i++) {
+          const back = moved * (1 - i / 5);
+          this.trail.push({ x: this.x + this.facing * (moved - back), y: this.y, f: this.facing, life: 0.3 });
+        }
+        this.x += this.facing * moved;
+        this.quantumUsed = true;
+        this.blinked = 0.28;
+        this.blinkedThisFrame = true;
+        this.buffer = 0;
+        events?.onBlink?.();
+      }
+    }
+
+    // --- Gear ---------------------------------------------------------
+    // Both meters refill only on the ground: gear turns a jump you already
+    // committed to into one you can still argue with, never into flight.
+    this.rocketFired = false;
+    this.rocketCool = Math.max(0, this.rocketCool - dt);
+    this.burn = Math.max(0, this.burn - dt);
+    if (this.onGround) {
+      this.glideLeft = this.glideMax;
+      this.rocketLeft = this.rocketMax;
+    }
+
+    // The motor: a tap in mid-air, once the jump itself is spent. Checked
+    // before the glide so a tap is a burst and a hold is a glide, which is the
+    // whole reason both fit on one button.
+    if (
+      this.rocketMax > 0 &&
+      intent.jumpPressed &&
+      !this.onGround &&
+      !this.clinging &&
+      !this.jumpedThisFrame &&
+      !this.blinkedThisFrame &&
+      this.rocketLeft > 0 &&
+      this.rocketCool <= 0
+    ) {
+      this.vy = Math.min(this.vy, GEAR.rocket.power);
+      this.rocketLeft--;
+      this.rocketCool = GEAR.rocket.cooldown;
+      this.burn = GEAR.rocket.burn;
+      this.rocketFired = true;
+      this.squashX = 0.74;
+      this.squashY = 1.34;
+      this.buffer = 0;
+      events?.onRocket?.();
+    }
+
+    // Wings: held, on the way down, while there is stamina left.
+    this.gliding =
+      this.glideMax > 0 &&
+      intent.jumpHeld &&
+      !this.onGround &&
+      !this.clinging &&
+      this.vy > 60 &&
+      this.burn <= 0 &&
+      this.glideLeft > 0;
+    if (this.gliding) {
+      this.glideLeft = Math.max(0, this.glideLeft - dt);
+      // Spread wings also carry you forward a little, which is what makes a
+      // glide a decision about distance rather than just a slower fall.
+      this.vx += Math.sign(this.facing) * GEAR.wings.lift * dt * (intent.axis === 0 ? 1 : 0.4);
+    }
+
+    // Releasing the button early cuts the jump short — but only a jump. A
+    // geyser throw is not the player's to cut, and letting the same code path
+    // damp it turned the eruption into a hop.
+    this.kickGrace = Math.max(0, this.kickGrace - dt);
+    if (!intent.jumpHeld && this.vy < 0 && this.launched <= 0 && this.kickGrace <= 0) {
+      this.vy *= 1 - (1 - PHYS.jumpCut) * Math.min(1, dt * 30);
+    }
+
+    /**
+     * Gravity, which is no longer a constant.
+     *
+     * `intent.gravity` is 1 everywhere in the game except inside a hush
+     * pocket, where it is a little under a half. That single multiplier is the
+     * deepest change anything in this codebase makes: wind moves where a jump
+     * lands and a geyser changes how one starts, but this changes what a jump
+     * *is*. Reach roughly doubles in both directions at once.
+     *
+     * Terminal velocity is scaled with it. Without that, a penguin that
+     * dropped into the pocket already falling kept the speed it arrived with
+     * and the hush appeared not to work at the exact moment it was needed —
+     * on the way in from above, which is how most players meet one.
+     */
+    this.gravityScale = intent.gravity ?? 1;
+    const g = (this.vy < 0 ? PHYS.gravityUp : PHYS.gravityDown) * this.gravityScale;
+    const cap = PHYS.maxFall * (this.gravityScale < 1 ? HUSH.fall : 1);
+    this.vy = Math.min(cap, this.vy + g * dt);
+    if (this.gliding) this.vy = Math.min(this.vy, PHYS.maxFall * GEAR.wings.fallFactor);
+
+    // Holding on replaces gravity outright. Hanging still costs; creeping
+    // upward costs more than twice as much; and when the bar empties the wall
+    // simply stops being a wall — the penguin does not fall *off*, it stops
+    // being able to hold on, which is a distinction the player can feel.
+    if (this.clinging) {
+      /* Wet ice charges by the second, not by the pixel.
+         The bar has always been spent by *distance* — a longer wall costs more
+         because it takes longer. A sodden band spends it by time instead, so
+         the same climb made slowly costs more than the same climb made well,
+         which is the one thing the mountain could not previously say. */
+      const sap = intent.sap ?? 1; 
+      // Topping out. Once the feet clear the head of the wall there is nothing
+      // left to climb, and hanging there creeping sideways at grip speed would
+      // take two seconds — so the pull-over happens at running pace and the
+      // penguin ends up standing on top of what it was hanging from. Without
+      // this a wall is a dead end: you can reach its top and never get onto it.
+      const head = this.wallBlock ? this.wallBlock.y : -Infinity;
+      if (this.y + this.h <= head + 6) {
+        this.mantleBlock = this.wallBlock;
+        const block = this.wallBlock;
+        // The pull-over ends when the penguin is over the thing it climbed.
+        // Left running, it sails straight across a narrow wall head and off
+        // the far side — you would top out and immediately fall, which is the
+        // opposite of what topping out means.
+        const over =
+          block && this.centerX > block.x + 6 && this.centerX < block.x + block.w - 6;
+        if (over) {
+          // Standing on it now, not hanging off it.
+          //
+          // The pull-over *finishes* here rather than handing back to gravity
+          // and hoping: the penguin is set down on the thing it climbed. Left
+          // to drift it hovers a few pixels above ground it has already
+          // reached, burning the rest of the bar, and a climb that succeeded
+          // reads as one that did not.
+          this.clinging = false;
+          this.wallSide = 0;
+          this.mantling = false;
+          this.mantleBlock = null;
+          this.vx = 0;
+          // A pixel into the block and a whisker of downward speed, so the
+          // ordinary landing code picks it up this frame — setting `onGround`
+          // here would only be overwritten by the collision pass below.
+          this.vy = 20;
+          this.y = block.y - this.h + 1;
+        } else {
+          // Aimed at the middle of what is being climbed rather than shoved
+          // blindly sideways. The head of a column is barely wider than the
+          // penguin, and a constant push sails straight over it.
+          const to = block.x + block.w / 2 - this.centerX;
+          this.vx = clamp(to * 6, -this.moveSpeed * 0.9, this.moveSpeed * 0.9);
+          this.vy = -CLIMB.climbSpeed * 0.35;
+          this.stamina -= CLIMB.drainClimb * dt * sap;
+          this.climbing = true;
+          this.mantling = true;
+        }
+      } else if (intent.jumpHeld) {
+        this.mantling = false;
+        this.vy = -CLIMB.climbSpeed;
+        this.stamina -= CLIMB.drainClimb * dt * sap;
+        this.climbing = true;
+      } else {
+        this.mantling = false;
+        this.vy = CLIMB.slideSpeed;
+        this.stamina -= CLIMB.drainHold * dt * sap;
+      }
+      // Stay pressed into the ice, otherwise the probe loses the wall the
+      // instant friction eats the sideways speed and the grip flickers. While
+      // pulling over the top the sideways speed is the whole point, so it is
+      // left alone.
+      if (!this.mantling) this.vx = this.wallSide * 24;
+      if (this.stamina <= 0) {
+        this.stamina = 0;
+        this.clinging = false;
+        this.wallSide = 0;
+        events?.onSlip?.();
+      }
+    }
+
+    // --- Move & resolve, one axis at a time ---------------------------
+    const ridden = this.groundFloe;
+    if (ridden && this.onGround) {
+      this.x += ridden.dx;
+      this.y += ridden.dy;
+    }
+
+    this.x += (this.vx + this.drift) * dt;
+    this._resolveX(floes);
+
+    this.y += this.vy * dt;
+    const prevGround = this.groundFloe;
+    this.onGround = false;
+    this.groundFloe = null;
+    this._resolveY(floes, events);
+
+    if (this.onGround && !this.wasOnGround) {
+      this.landedThisFrame = true;
+      const impact = clamp(Math.abs(this.vy) / 900, 0, 1);
+      this.squashX = 1 + 0.28 * impact;
+      this.squashY = 1 - 0.26 * impact;
+      events?.onLand?.(impact, this.groundFloe);
+    }
+    if (!this.onGround && prevGround && !this.jumpedThisFrame) this.coyote = PHYS.coyoteTime * (tuning.coyote ?? 1);
+
+    this.airTime = this.onGround ? 0 : this.airTime + dt;
+
+    // --- Cosmetics ----------------------------------------------------
+    this.squashX = damp(this.squashX, 1, 14, dt);
+    this.squashY = damp(this.squashY, 1, 14, dt);
+    if (this.onGround && Math.abs(this.vx) > 20) this.walkPhase += dt * (4 + Math.abs(this.vx) / 40);
+    else this.walkPhase = damp(this.walkPhase % (Math.PI * 2), 0, 6, dt);
+    this.slideAmount = damp(this.slideAmount, slippery && Math.abs(this.vx) > 60 ? 1 : 0, 8, dt);
+    this.blink -= dt;
+    if (this.blink < -0.14) this.blink = 2.4 + Math.random() * 3.2;
+
+    // Breadcrumb for the cosmetic trail, on a fixed clock rather than per
+    // frame, so the spacing is the same at 60 and 144 Hz.
+    for (const p of this.history) p.age = Math.min(1, p.age + dt * 1.9);
+    this._histAcc += dt;
+    if (this._histAcc >= 0.035) {
+      this._histAcc = 0;
+      const slot = this.history[this._histAt];
+      slot.x = this.x + this.w / 2;
+      slot.y = this.y + this.h * 0.6;
+      slot.age = 0;
+      this._histAt = (this._histAt + 1) % this.history.length;
+    }
+  }
+
+  /**
+   * Swimming.
+   *
+   * A separate integration rather than gravity with different numbers, because
+   * a swimming body is not a falling body with a smaller `g`. It has no ground
+   * state, no coyote time, no jump to buffer and no wall to hold — none of
+   * those questions mean anything down here — and threading them through the
+   * land update with `if (!this.submerged)` in a dozen places would have made
+   * both halves harder to read and neither of them safer.
+   *
+   * What it *does* share is the collision solver, so ice is ice: the same
+   * boxes, resolved on the same two passes, in the same order.
+   *
+   * None of the three charged fish works down here, and that is a decision
+   * rather than an oversight. All three are re-readings of the jump button,
+   * and underwater that button is already the depth control: holding it is how
+   * you sink. A blink fired on every dive would not be a tool, it would be a
+   * twitch. So the sea gets no charged fish, and the levels below the ice are
+   * composed knowing it — their pressure is the lungful, and the answer to a
+   * lungful has to be the route you chose, not a fish you found.
+   */
+  _swim(dt, intent, floes, events) {
+    this.onGround = false;
+    this.groundFloe = null;
+    this.clinging = false;
+    this.wallSide = 0;
+    this.gliding = false;
+
+    this.charge = Math.max(0, this.charge - dt);
+    this.quantum = Math.max(0, this.quantum - dt);
+    this.slack = Math.max(0, this.slack - dt);
+    this.blinked = Math.max(0, this.blinked - dt);
+    for (const k of CURSES) {
+      this.curse[k] = Math.max(0, this.curse[k] - dt);
+    }
+    if (this.curse.dizzy > 0) intent = { ...intent, axis: -intent.axis };
+
+    if (this.charge > 0) {
+      this.trail.push({ x: this.x, y: this.y, f: this.facing, life: 0.22 });
+      if (this.trail.length > 8) this.trail.shift();
+    }
+    for (let i = this.trail.length - 1; i >= 0; i--) {
+      this.trail[i].life -= dt;
+      if (this.trail[i].life <= 0) this.trail.splice(i, 1);
+    }
+
+    // Sideways. Water carries a body: there is no friction cliff at the moment
+    // you let go, you keep going and slow down over a second or so. That coast
+    // is most of why swimming feels like swimming rather than like walking in
+    // a room with no floor.
+    const top = this.swimSpeed;
+    if (intent.axis !== 0) {
+      this.vx += Math.sign(intent.axis) * SWIM.accel * dt;
+      this.vx = clamp(this.vx, -top, top);
+      this.facing = Math.sign(intent.axis);
+    } else {
+      const drop = SWIM.drag * dt;
+      this.vx = Math.abs(this.vx) <= drop ? 0 : this.vx - Math.sign(this.vx) * drop;
+    }
+    /**
+     * Moving water, and it does not belong in `vx`.
+     *
+     * It lived there for a long time on the reasoning that a current pushes a
+     * swimmer rather than blowing past one — which is true, and is not the
+     * question. The swim branch *does* have a steering clamp: `vx` is pinned
+     * to the cruise speed a few lines above this one, every frame, and the
+     * push was added after it. So a current never kept more than a single
+     * frame's worth. Measured, the strongest water in the chapter moved this
+     * bird two pixels a second out of four hundred and eighty.
+     *
+     * `drift` is the channel that survives the clamp, which is precisely why
+     * the wind is in it. Water is not wind, though, and the difference is in
+     * what the channel converges on: a gust pushes against drag and settles
+     * at `push / drag`, whereas a body in the sea simply ends up going the
+     * speed the sea is going. So this is a chase toward the flow rather than
+     * an accumulation against a drag term, and it is cleared on land the same
+     * way it always was.
+     */
+    const flow = intent.flow ?? 0;
+    this.drift += (flow - this.drift) * Math.min(1, CURRENT.grip * dt);
+
+    // Up is free, down is held. A penguin floats; it has to *work* to go
+    // under, and that is the whole control: the button is the depth.
+    this.diving = Boolean(intent.jumpHeld);
+    if (this.diving) {
+      this.vy = Math.min(SWIM.sinkMax, this.vy + (SWIM.dive - SWIM.buoyancy) * dt);
+    } else {
+      this.vy = Math.max(-SWIM.riseMax, this.vy - SWIM.buoyancy * dt);
+    }
+    /**
+     * The vertical half of the same vector, carried the same way.
+     *
+     * Written first as a shift of the two clamps above, on the reasoning that
+     * cruising up and cruising down are speeds relative to the water. That is
+     * true, it settles at exactly the right terminal speed, and measured in a
+     * real flume it did almost nothing: a swimmer with the button released
+     * left a channel 3.4 body heights tall in 0.22 seconds against the
+     * strongest water in the game, and in 0.23 seconds against none.
+     *
+     * Buoyancy is why. It takes a sixth of a second to reach a free rise and
+     * covers twenty pixels doing it, so inside a narrow channel the swimmer is
+     * *always* on the acceleration ramp and never reaches either cap — and the
+     * ramp is buoyancy in both cases. A cap that is never reached is a number
+     * in a config file.
+     *
+     * Water carries a body from the first frame. So it lives where the
+     * horizontal current lives, in a drift channel that chases the water over
+     * about an eighth of a second, and the caps go back to being what they
+     * always were.
+     */
+    this.driftY += ((intent.flume ?? 0) - this.driftY) * Math.min(1, CURRENT.grip * dt);
+
+    this.x += (this.vx + this.drift) * dt;
+    this._resolveX(floes);
+    this.y += (this.vy + this.driftY) * dt;
+    this._resolveY(floes, events);
+
+    this.airTime = 0;
+    this.squashX = damp(this.squashX, 1, 14, dt);
+    this.squashY = damp(this.squashY, 1, 14, dt);
+    this.walkPhase += dt * (3 + Math.abs(this.vx) / 90);
+    this.blink -= dt;
+    if (this.blink < -0.14) this.blink = 2.4 + Math.random() * 3.2;
+
+    for (const p of this.history) p.age = Math.min(1, p.age + dt * 1.9);
+    this._histAcc += dt;
+    if (this._histAcc >= 0.035) {
+      this._histAcc = 0;
+      const slot = this.history[this._histAt];
+      slot.x = this.x + this.w / 2;
+      slot.y = this.y + this.h * 0.6;
+      slot.age = 0;
+      this._histAt = (this._histAt + 1) % this.history.length;
+    }
+  }
+
+  /**
+   * Which side a climbable wall is on, or 0.
+   *
+   * A probe rather than a collision result: while clinging the sideways speed
+   * is nearly nothing, so there is no push-out to read, and grip would flicker
+   * on and off every other frame. Reaching a few pixels past the body each way
+   * asks the question the player is actually asking — "is there ice here?"
+   *
+   * Only surfaces marked climbable count. Tunnel roofs and cliff faces stay
+   * exactly as solid and exactly as ungrippable as they have always been, so
+   * nothing in the first thirty-one levels changes underfoot.
+   */
+  _probeWall(solids) {
+    /* Numb claws: nothing can be held. The same channel glare ice uses, so a
+       cursed climber and a climber on verglas are in exactly the same
+       situation — which is the one this chapter already knows how to be in. */
+    if (this.curse.clumsy > 0) return 0;
+    const REACH = 4;
+    const top = this.y + this.h * 0.15;
+    const h = this.h * 0.7;
+    // Mantling. Grip survives a little past the top of the wall, so a climb
+    // can finish by pulling over the edge instead of stopping dead one body
+    // length short of it. Without this every wall in the game would need a
+    // ledge bolted to its side, and topping out — the most satisfying move in
+    // climbing — would not exist.
+    const MANTLE = this.h * 0.5;
+    const right = this.x + this.w;
+    for (const f of solids) {
+      if (!f.solid || !f.climb) continue;
+      if (top + h <= f.y - MANTLE || top >= f.y + f.h) continue;
+      // The body has to be *against the face*, not merely overlapping the
+      // block: a wide block would otherwise be grippable from inside it.
+      if (right >= f.x - REACH && right <= f.x + REACH) {
+        this.wallBlock = f;
+        return 1;
+      }
+      if (this.x >= f.x + f.w - REACH && this.x <= f.x + f.w + REACH) {
+        this.wallBlock = f;
+        return -1;
+      }
+    }
+    return 0;
+  }
+
+  _resolveX(floes) {
+    const box = this.box;
+    for (const f of floes) {
+      if (!f.solid) continue;
+      const fb = { x: f.x, y: f.y, w: f.w, h: f.h };
+      if (!rectsOverlap(box, fb)) continue;
+      // Only push out sideways if we're clearly beside the floe, not on top.
+      const overlapTop = box.y + box.h - fb.y;
+      if (overlapTop < 8) continue;
+
+      // Ledge assist.
+      //
+      // Coming up the side of a ledge and missing its lip by a few pixels used
+      // to stop the jump dead against the wall of it — the penguin was a
+      // finger's width short and got nothing. That is barely noticeable on a
+      // shelf, where you approach platforms from the side at the same height,
+      // and it is constant on a mountain, where every jump arrives at a ledge
+      // from underneath and beside it.
+      //
+      // So a near miss on the way up is pulled onto the ledge instead. The
+      // assist is a fraction of the penguin's own height, which makes it a few
+      // percent of a jump: enough that "I made that" is never answered with
+      // "no you didn't", small enough that it never reaches something the
+      // level was not measured to give you.
+      if (this.vy < 0 && overlapTop < this.h * 0.3 && f.type !== 'rock') {
+        this.y = fb.y - this.h;
+        this.vy = Math.min(this.vy, -40);
+        box.y = this.y;
+        continue;
+      }
+      // Which way the penguin was actually going, not which way it was
+      // steering: walk into a wall on a tailwind and the wind is what has to
+      // stop at it.
+      const move = this.vx + this.drift;
+      if (move > 0) this.x = fb.x - this.w;
+      else if (move < 0) this.x = fb.x + fb.w;
+      else continue;
+      this.vx = 0;
+      this.drift = 0;
+      box.x = this.x;
+    }
+  }
+
+  _resolveY(floes, events) {
+    const box = this.box;
+    // Which way the penguin is actually going, not which way it is swimming —
+    // the same distinction `_resolveX` draws for a tailwind. Inside a flume the
+    // water can be carrying a body downwards while it is still trying to rise,
+    // and the surface it meets is the one it is really travelling into.
+    const moveY = this.vy + this.driftY;
+    for (const f of floes) {
+      if (!f.solid) continue;
+      const fb = { x: f.x, y: f.y, w: f.w, h: f.h };
+      if (!rectsOverlap(box, fb)) continue;
+
+      if (moveY >= 0 && box.y + box.h - moveY * 0.016 <= fb.y + fb.h * 0.8) {
+        // Landing on top.
+        this.y = fb.y - this.h;
+        this.vy = 0;
+        this.driftY = 0;
+        this.onGround = true;
+        this.groundFloe = f;
+        events?.onStand?.(f);
+      } else if (moveY < 0) {
+        // Rising with the feet already level with the top of the block is a
+        // pull-over, not a head-bump. Treating it as a bump teleports the
+        // penguin to the *bottom* of whatever it was climbing — the whole
+        // height of the wall, in one frame, at the exact moment the climb was
+        // about to succeed.
+        const overlapTop = box.y + box.h - fb.y;
+        if (overlapTop < 10) {
+          this.y = fb.y - this.h;
+          this.vy = 0;
+          this.onGround = true;
+          this.groundFloe = f;
+          events?.onStand?.(f);
+        } else {
+          // Bonked the underside.
+          this.y = fb.y + fb.h;
+          this.vy = 40;
+          this.driftY = 0;
+        }
+      }
+      box.y = this.y;
+    }
+  }
+}

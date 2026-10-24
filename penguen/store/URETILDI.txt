@@ -1,0 +1,10 @@
+Bu klasördeki her şey "node tools/store.mjs" ile üretiliyor — elle
+düzenlemeyin, bir sonraki koşuda üstüne yazılır.
+
+Hangi dosya hangi forma gider, metinler ve form cevapları:
+  docs/MAGAZA.md
+
+Boyutları denetleyen paket:
+  node tests/store.mjs
+
+Son koşu: 2026-10-23

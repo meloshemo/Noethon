@@ -1,0 +1,35 @@
+# Bağlantı testi: anahtar çalışıyor mu?
+#
+# Opens an edit on Play and throws it away. That one call proves the whole
+# chain — the service account key is valid, it is linked to this developer
+# account, and it has rights on this application — and changes nothing on the
+# store. Worth having on its own button, because the alternative is finding
+# out in the middle of a real upload.
+name: Play bağlantı testi
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: Anahtarı dene
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Metinler ve görseller yerinde mi
+        run: node tools/play.mjs --dry
+      - name: Google kitaplığı
+        run: npm install --no-save googleapis
+      - name: Anahtarı dene
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -z "$PLAY_SERVICE_ACCOUNT_JSON" ]; then
+            echo "PLAY_SERVICE_ACCOUNT_JSON tanımlı değil."
+            echo "Dört adım: tools/play.mjs dosyasının başında."
+            exit 1
+          fi
+          node tools/play.mjs --auth
