@@ -1,0 +1,48 @@
+# The game lives in penguen/ inside this repository, so its checks run from
+# there. The mirror repository has the same two workflows at its own root,
+# without the working-directory — same suite, one copy per layout.
+name: Pengu CI
+
+on:
+  push:
+    branches: ['**']
+    paths: ['penguen/**', '.github/workflows/pengu-ci.yml']
+  pull_request:
+    paths: ['penguen/**']
+  workflow_dispatch:
+
+concurrency:
+  group: pengu-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  node:
+    name: Bölümler ve kurallar
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Testler (tarayıcısız)
+        run: node tools/test.mjs --no-browser --verbose
+        working-directory: penguen
+
+  browser:
+    name: Mekanikler (gerçek tarayıcı)
+    runs-on: ubuntu-latest
+    needs: node
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Bağımlılıklar
+        run: npm install --no-audit --no-fund
+        working-directory: penguen
+      - name: Chromium
+        run: npx playwright install --with-deps chromium
+        working-directory: penguen
+      - name: Tarayıcı testleri
+        run: node tools/test.mjs --only-browser --verbose
+        working-directory: penguen

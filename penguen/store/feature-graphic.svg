@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 500" width="1024" height="500">
+  <!--
+    Google Play's feature graphic: 1024 × 500, no transparency, and the top
+    banner of the listing on a phone. The rule it is drawn around is that Play
+    crops it and lays the app icon and title over the left third on some
+    surfaces, so nothing that has to be read lives there.
+  -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#08132a"/>
+      <stop offset="0.52" stop-color="#122c50"/>
+      <stop offset="1" stop-color="#2b6a8f"/>
+    </linearGradient>
+    <linearGradient id="aur" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#5ce1a6" stop-opacity="0"/>
+      <stop offset="0.45" stop-color="#5ce1a6" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#9b8cff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="ice" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f4fbff"/>
+      <stop offset="1" stop-color="#bcdff2"/>
+    </linearGradient>
+    <linearGradient id="deep" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0d2f52"/>
+      <stop offset="1" stop-color="#071b33"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1024" height="500" fill="url(#sky)"/>
+  <path d="M0 120 Q256 70 512 118 T1024 108 L1024 200 Q768 158 512 200 T0 192 Z" fill="url(#aur)"/>
+
+  <g fill="#ffffff" opacity="0.7">
+    <circle cx="96" cy="64" r="1.8"/><circle cx="286" cy="40" r="1.4"/><circle cx="542" cy="74" r="2"/>
+    <circle cx="760" cy="48" r="1.6"/><circle cx="912" cy="92" r="1.8"/><circle cx="404" cy="98" r="1.2"/>
+    <circle cx="648" cy="132" r="1.4"/><circle cx="188" cy="150" r="1.2"/><circle cx="860" cy="168" r="1.5"/>
+  </g>
+
+  <!-- Mountains behind, the way the fourth chapter draws them. -->
+  <path d="M560 360 L700 236 L840 360 Z" fill="#17406b" opacity="0.65"/>
+  <path d="M760 360 L880 268 L1000 360 Z" fill="#17406b" opacity="0.5"/>
+
+  <!-- Water, and what is under it. -->
+  <rect y="372" width="1024" height="128" fill="url(#deep)"/>
+  <path d="M0 372 Q128 364 256 372 T512 372 T768 372 T1024 372 L1024 382 L0 382Z" fill="#134066"/>
+
+  <!-- The shelf: four floes and the gap that is the whole game. -->
+  <g>
+    <path d="M60 352 h190 l-13 24 h-164 Z" fill="url(#ice)"/>
+    <path d="M330 330 h150 l-11 24 h-128 Z" fill="url(#ice)"/>
+    <path d="M556 356 h140 l-11 22 h-118 Z" fill="url(#ice)"/>
+    <path d="M770 326 h170 l-12 24 h-146 Z" fill="url(#ice)"/>
+  </g>
+
+  <!-- A fish on the far floe, because the gap is crossed for a reason. -->
+  <g transform="translate(846 306)">
+    <ellipse cx="0" cy="0" rx="11" ry="7" fill="#ffb648"/>
+    <path d="M10 0 20 -6 20 6Z" fill="#ffb648"/>
+    <circle cx="-4" cy="-1.6" r="1.5" fill="#0e1723"/>
+  </g>
+
+  <!-- The arc he is on, drawn the way the game draws an aim line. -->
+  <path d="M236 338 Q318 252 404 322" fill="none" stroke="#9fd2ec" stroke-opacity="0.45"
+        stroke-width="3" stroke-dasharray="9 11" stroke-linecap="round"/>
+
+  <!-- Mid-jump, over the gap, where the game lives. -->
+  <g transform="translate(316 244) rotate(-11) scale(1.5)">
+    <ellipse cx="0" cy="20" rx="17" ry="19" fill="#3f4a5c"/>
+    <ellipse cx="0" cy="22" rx="11" ry="14" fill="#f6fbff"/>
+    <ellipse cx="0" cy="0" rx="13" ry="11" fill="#3f4a5c"/>
+    <ellipse cx="-6" cy="-1" rx="3.4" ry="3.8" fill="#fff"/>
+    <ellipse cx="5" cy="-1" rx="3.4" ry="3.8" fill="#fff"/>
+    <circle cx="-5.2" cy="-0.6" r="1.7" fill="#0e1723"/>
+    <circle cx="5.4" cy="-0.6" r="1.7" fill="#0e1723"/>
+    <path d="M0 3.5 7 6 0 8.5Z" fill="#ff9c3f"/>
+    <ellipse cx="-7" cy="38" rx="5" ry="2.4" fill="#ff9c3f"/>
+    <ellipse cx="7" cy="38" rx="5" ry="2.4" fill="#ff9c3f"/>
+  </g>
+
+  <text x="512" y="150" text-anchor="middle" font-family="Outfit, system-ui, sans-serif"
+        font-size="86" font-weight="800" fill="#ffffff" letter-spacing="-3">Pengu</text>
+  <!-- Replaced per language by tools/store.mjs: one drawing, two listings. -->
+  <text x="512" y="196" text-anchor="middle" font-family="Outfit, system-ui, sans-serif"
+        font-size="22" font-weight="600" fill="#8fc4e2" letter-spacing="5">{{SUB}}</text>
+</svg>

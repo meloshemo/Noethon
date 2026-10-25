@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gizlilik — Pengu</title>
+<meta name="robots" content="index, follow">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: clamp(1.25rem, 4vw, 3rem) clamp(1rem, 5vw, 2rem) 4rem;
+    background: #050d1c;
+    color: #dbe7f4;
+    font: 16px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 46rem; margin: 0 auto; }
+  h1 { font-size: clamp(1.7rem, 5vw, 2.3rem); line-height: 1.15; margin: 0 0 0.6em; color: #fff; }
+  h2 { font-size: 1.25rem; margin: 2.2em 0 0.6em; color: #9ad4f2; }
+  h3 { font-size: 1.05rem; margin: 1.8em 0 0.5em; color: #9ad4f2; }
+  p { margin: 0 0 1em; }
+  a { color: #7fd1ff; }
+  code {
+    background: #0e1f38; border: 1px solid #1d3a5c; border-radius: 4px;
+    padding: 0.1em 0.35em; font-size: 0.92em;
+  }
+  ul { padding-left: 1.2em; margin: 0 0 1em; }
+  li { margin: 0.25em 0; }
+  hr { border: 0; border-top: 1px solid #1d3a5c; margin: 2.5em 0; }
+  blockquote {
+    margin: 1.5em 0; padding: 0.8em 1.1em;
+    background: #0a1830; border-left: 3px solid #2b6a8f; border-radius: 0 8px 8px 0;
+  }
+  blockquote p:last-child { margin-bottom: 0; }
+  table { border-collapse: collapse; width: 100%; margin: 0 0 1.4em; font-size: 0.95em; }
+  th, td { text-align: left; padding: 0.5em 0.7em; border-bottom: 1px solid #16304f; vertical-align: top; }
+  th { color: #9ad4f2; font-weight: 600; }
+  .back { display: inline-block; margin-bottom: 2em; color: #7fd1ff; text-decoration: none; }
+  .back:hover { text-decoration: underline; }
+  @media (max-width: 30rem) { table { display: block; overflow-x: auto; } }
+</style>
+</head>
+<body>
+<main>
+<a class="back" href="./">← Oyuna dön</a>
+<h1>Gizlilik Politikası</h1>
+<p><strong>Son güncelleme:</strong> 22 Ekim 2026 <strong>Ürün:</strong> Pengu: Antarktika'dan Kaçış (web oyunu)</p>
+<h2>Kısası</h2>
+<p>Bu oyun senin hakkında <strong>hiçbir şey toplamıyor.</strong> Sunucusu yok, hesap sistemi yok, çerez kullanmıyor, reklam göstermiyor, analitik çalıştırmıyor. Oyunun ağ üzerinden konuştuğu tek bir adres yok.</p>
+<p>Bu bir söz değil, <strong>test edilen bir gerçek.</strong> Depoda <code>fetch</code>, <code>XMLHttpRequest</code>, <code>WebSocket</code> ya da üçüncü taraf bir script çağrısı yok, ve iki ayrı kontrol bunun böyle kalmasını sağlıyor:</p>
+<ul><li><code>tools/lint.mjs</code> her dosyada dış adres arıyor ve bulursa derlemeyi düşürüyor.</li><li><code>tests/browser-identity.mjs</code> oyunu gerçek bir tarayıcıda açıp <code>performance</code> kayıtlarına bakıyor: kendi dosyaları dışında <strong>tek bir istek</strong> olmamalı.</li></ul>
+<p>Bu kontroller boşuna değil. İlk hâlinde oyun yazı tipini Google Fonts'tan çekiyordu. Yani her açılışta, tek piksel çizilmeden önce, iki başka şirketin sunucusuna bağlanıyordu. Test bunu yakaladı; yazı tipi kaldırıldı ve yerine cihazın kendi yazı tipleri kullanılıyor.</p>
+<h2>Ne saklanıyor, nerede</h2>
+<p>Her şey <strong>senin tarayıcında</strong>, <code>localStorage</code> içinde, <code>pengu.save.v1</code> adlı tek bir kayıtta duruyor. İçindekiler:</p>
+<table><thead><tr><th>Ne</th><th>Neden</th></tr></thead><tbody><tr><td>Adın</td><td>Rekorlarında ve paylaştığın hayalet kodlarında görünsün diye</td></tr><tr><td>Penguen kimliğin (<code>PNG-XXXXX</code>)</td><td>Aynı adı taşıyan iki oyuncu birbirine karışmasın diye</td></tr><tr><td>Başladığın tarih</td><td>Kimlik kartındaki "başladığın gün"</td></tr><tr><td>Bölüm ilerlemen</td><td>Yıldızlar, rekor süreler, deneme sayısı, toplanan balık</td></tr><tr><td>Balığın ve aldıkların</td><td>Market ve koleksiyon</td></tr><tr><td>Giydiğin penguen ve iz</td><td>Görünüşün</td></tr><tr><td>Ayarların</td><td>Ses, müzik, az hareket, kolay mod</td></tr><tr><td>Günün görevleri ve serin</td><td>Günlük içerik</td></tr><tr><td>Hayalet kayıtların</td><td>Kendi rekor koşuların, tekrar izlenebilsin diye</td></tr><tr><td>İçe aktardığın rakip kodları</td><td>Sıralama tablosu</td></tr><tr><td>Oyun istatistiklerin</td><td>Unvanlar ve başarımlar bunlardan hesaplanıyor</td></tr><tr><td>Lig puanın</td><td>Haftalık kademe</td></tr><tr><td>Yarım kalan koşunun yeri</td><td>"Devam et" seni bıraktığın yere koysun diye</td></tr><tr><td>Anıtın boyu</td><td>Markettaki bitmeyen şey</td></tr></tbody></table>
+<p>Bunların hiçbiri cihazından çıkmıyor.</p>
+<h2>Kişisel veri</h2>
+<p>Adı <strong>sen</strong> yazıyorsun ve gerçek adın olmak zorunda değil: alan zaten uydurma bir adla dolu geliyor ve olduğu gibi bırakabilirsin. Oyun IP adresi, konum, cihaz kimliği, kişi listesi, fotoğraf ya da benzeri hiçbir şeye erişmiyor; tarayıcıdan böyle bir izin istemiyor.</p>
+<p>Oyunun eriştiği tek tarayıcı yeteneği:</p>
+<ul><li><strong>localStorage</strong>, kaydın için</li><li><strong>Web Audio</strong>, sesler için (mikrofon değil, yalnızca ses üretiyor)</li><li><strong>Gamepad API</strong>, oyun kolu bağlıysa (yalnızca tuşlarını okur)</li><li><strong>Tam ekran ve ekran yönü</strong>, istediğinde</li></ul>
+<h2>Paylaştığında ne gidiyor</h2>
+<p>Bir bölümü bitirince "Kodunu paylaş" diyebilirsin. O kodun içinde şunlar var:</p>
+<ul><li>Yazdığın ad</li><li>Bölüm numarası ve süren</li><li>Koşunun sıkıştırılmış hareket kaydı (hayaletin)</li></ul>
+<p>Kod bir metin dizisi; nereye yapıştıracağına sen karar veriyorsun. Oyun bu kodu kendiliğinden <strong>hiçbir yere göndermiyor</strong> ve senden kimseye ait bir kod istemiyor. Birinin kodunu yapıştırırsan onun hayaletiyle yarışırsın, o kadar.</p>
+<h2>Barındırma</h2>
+<p>Oyun GitHub Pages üzerinde yayınlanıyor. Herhangi bir web sitesini açtığında olduğu gibi, GitHub'ın sunucuları isteği karşılarken IP adresini ve tarayıcı bilgini standart erişim kayıtlarında görür. Bu, siteyi <em>indirmenin</em> kaçınılmaz sonucu; oyun bir kere yüklendikten sonra bir daha hiçbir istek yapmıyor. Bu, oyunun değil barındırma hizmetinin işlemesi: <a href="https://docs.github.com/site-policy/privacy-policies/github-privacy-statement">GitHub Gizlilik Bildirimi</a>.</p>
+<p>Oyunu tek dosya olarak indirip (<code>dist/pengu.html</code>) çevrimdışı oynarsan bu da ortadan kalkar.</p>
+<h2>Çocuklar</h2>
+<p>Oyun her yaşa uygun. Sohbet yok, kullanıcı içeriği yok, harcama yok, reklam yok. Kişisel veri toplanmadığı için ebeveyn onayı gerektiren bir işleme de yok. 13 yaş altı için de aynı: toplanan bir şey olmadığından COPPA anlamında "toplama" gerçekleşmiyor.</p>
+<h2>Haklarının karşılığı</h2>
+<p>Veriler bir "veri sorumlusuna" aktarılmadığı için KVKK ve GDPR'ın tanımladığı anlamda bir işleme yapılmıyor. Yine de aynı sonuçları veren tuşlar var:</p>
+<table><thead><tr><th>Hakkın</th><th>Karşılığı</th></tr></thead><tbody><tr><td>Erişim / taşınabilirlik</td><td><strong>Ayarlar → Yasal ve veri → Kaydımı dosyaya aktar</strong> (JSON indirir)</td></tr><tr><td>Silme</td><td><strong>Ayarlar → İlerlemeyi sıfırla</strong>. Kaydın tamamen silinir, geri alınamaz</td></tr><tr><td>Düzeltme</td><td>Adını <strong>Kimlik</strong> ekranından istediğin zaman değiştirirsin</td></tr><tr><td>İtiraz</td><td>İşleme yok; oyunu kapatmak yeterli</td></tr></tbody></table>
+<p>Tarayıcının site verilerini temizlemek de aynı işi görür.</p>
+<h2>Değişiklikler</h2>
+<p>Bu metin değişirse en üstteki tarih değişir ve değişiklik depo geçmişinde görünür. Oyun sürüm numarası taşımıyor; yayınlanan her şey depodaki <code>main</code> dalının o anki hâli.</p>
+<h2>İletişim</h2>
+<p>Soru, hata bildirimi ve talepler için: depodaki <em>Issues</em> bölümü.</p>
+</main>
+</body>
+</html>
